@@ -10,8 +10,10 @@ const statusClass = (status: string) =>
 const tokenKey = (value: string) =>
   value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'blank';
 
-const tokenClass = (kind: 'unit' | 'rank' | 'race', value: string) =>
-  `roster-token roster-token--${kind} roster-token--${kind}-${tokenKey(value)}`;
+/** Unit is carried by a coloured dot beside the name of the wing, not a pill:
+ *  one filled shape per row is enough colour to scan by. */
+const unitDotClass = (unit: string) =>
+  `roster-unit__dot roster-unit__dot--${tokenKey(unit)}`;
 
 /**
  * Ranks are grouped into seniority tiers rather than coloured individually.
@@ -63,15 +65,17 @@ export function RosterView() {
         ]}
       />
 
-      <div className="table-frame">
+      {/* Ten columns did not fit the page and did not survive a phone at all.
+          Race rides with the name and unit with the rank, which leaves eight
+          columns wide enough to read; below 860px the same rows are restyled
+          as cards by the data-label attributes. */}
+      <div className="table-frame table-frame--roster">
         <table className="roster-table">
           <caption>Muster roll, by unit and rank</caption>
           <thead>
             <tr>
-              <th scope="col">Name</th>
-              <th scope="col">Unit</th>
-              <th scope="col">Rank</th>
-              <th scope="col">Race</th>
+              <th scope="col">Name &amp; race</th>
+              <th scope="col">Posting</th>
               <th scope="col">Status</th>
               <th scope="col" className="num">Hours</th>
               <th scope="col">Owed</th>
@@ -83,34 +87,35 @@ export function RosterView() {
           <tbody>
             {members.map((member) => (
               <tr key={`${member.row}-${member.name}`}>
-                <th scope="row" className="roster-name">{member.name}</th>
-                <td>
+                <th scope="row" className="roster-name">
+                  {member.name}
+                  {/* Race is descriptive rather than administrative, so it sits
+                      under the name as a subline instead of holding a column. */}
+                  <span className="roster-race">{member.race || 'Race unrecorded'}</span>
+                </th>
+                <td className="roster-posting" data-label="Posting">
                   {/* Titled because a long value is clipped to its column. */}
-                  <span className={tokenClass('unit', member.unit)} title={member.unit || undefined}>
-                    {member.unit || '-'}
-                  </span>
-                </td>
-                <td>
                   <span className={rankClass(member.rank)} title={member.rank || undefined}>
-                    {member.rank || '-'}
+                    {member.rank || 'Unranked'}
+                  </span>
+                  <span className="roster-unit" title={member.unit || undefined}>
+                    <span className={unitDotClass(member.unit)} />
+                    {member.unit || 'Unassigned'}
                   </span>
                 </td>
-                {/* Race is descriptive rather than administrative, so it reads
-                    as plain text — one less pill, and the table fits. */}
-                <td className="roster-race">{member.race || '-'}</td>
-                <td>
+                <td className="roster-status" data-label="Status">
                   {member.status && (
                     <span className={statusClass(member.status)}>{member.status}</span>
                   )}
                 </td>
-                <td className="num">{member.hours.toFixed(2)}</td>
-                <td><Mark on={member.owed} /></td>
-                <td><Mark on={member.paid} /></td>
-                <td>{member.lastActive || '-'}</td>
-                {/* Notes run to 188 characters. Wrapping them made rows three
-                    times taller than their neighbours, so they are clipped to
-                    one line with the full text on hover. */}
-                <td className="roster-notes" title={member.notes || undefined}>
+                <td className="num" data-label="Hours">{member.hours.toFixed(2)}</td>
+                <td data-label="Owed"><Mark on={member.owed} /></td>
+                <td data-label="Paid"><Mark on={member.paid} /></td>
+                <td data-label="Last active">{member.lastActive || '-'}</td>
+                {/* Notes run to 188 characters. Wrapping them in full made rows
+                    three times taller than their neighbours, so they are held
+                    to two lines with the whole note on hover. */}
+                <td className="roster-notes" data-label="Notes" title={member.notes || undefined}>
                   {member.notes || '-'}
                 </td>
               </tr>
