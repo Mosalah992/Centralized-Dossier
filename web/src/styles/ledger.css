@@ -226,136 +226,144 @@ td.wrap {
   min-width: 16rem;
 }
 
-/* Roster coding follows the live sheet's scan language: compact coloured
-   pills for administrative fields, without turning the parchment into a grid. */
+/* Roster coding. The sheet itself has no colour language here — every Unit,
+   Rank and Race cell is the same dark navy on the same amber text — so this
+   scheme is the archive's own, chosen to be scannable rather than decorative.
+   The table is sized to fit the page: no forced width, nothing off-screen. */
 .roster-table {
-  min-width: 88rem;
+  table-layout: fixed;
+  width: 100%;
+  font-size: 0.88rem;
+}
+
+/* Fixed layout divides width equally unless told otherwise, which clipped the
+   longer pills and broke names across three lines. These are budgeted to the
+   content each column actually holds, and total 100%. */
+.roster-table th:nth-child(1), .roster-table td:nth-child(1) { width: 17%; }  /* Name */
+.roster-table th:nth-child(2), .roster-table td:nth-child(2) { width: 12%; }  /* Unit */
+.roster-table th:nth-child(3), .roster-table td:nth-child(3) { width: 12%; }  /* Rank */
+.roster-table th:nth-child(4), .roster-table td:nth-child(4) { width: 7%; }   /* Race */
+.roster-table th:nth-child(5), .roster-table td:nth-child(5) { width: 10%; }  /* Status */
+.roster-table th:nth-child(6), .roster-table td:nth-child(6) { width: 6%; }   /* Hours */
+.roster-table th:nth-child(7), .roster-table td:nth-child(7) { width: 5%; }   /* Owed */
+.roster-table th:nth-child(8), .roster-table td:nth-child(8) { width: 5%; }   /* Paid */
+.roster-table th:nth-child(9), .roster-table td:nth-child(9) { width: 12%; }  /* Last active */
+.roster-table th:nth-child(10), .roster-table td:nth-child(10) { width: 14%; } /* Notes */
+
+.roster-table th,
+.roster-table td {
+  padding-inline: 0.55rem;
 }
 
 .roster-name {
   color: #8a4b12;
   font-weight: 700;
+  white-space: normal;
 }
 
-.roster-discord {
-  color: #a85f16;
-  font-variant-numeric: tabular-nums;
+.roster-race {
+  color: var(--ink-soft);
 }
 
+/* Notes reach 188 characters. Clipped to their column with the full text in a
+   tooltip, so one long note cannot inflate the height of its row. */
 .roster-notes {
   color: #8a4b12;
+  max-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .roster-token {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 7.8rem;
-  max-width: 13rem;
+  width: 100%;
+  max-width: 100%;
   min-height: 1.35rem;
-  padding: 0.13rem 0.8rem 0.16rem;
+  padding: 0.13rem 0.5rem 0.16rem;
   border-radius: 999px;
   color: var(--parchment);
   background: linear-gradient(180deg, #6d6558, #4e463b);
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   line-height: 1.1;
   text-align: center;
+  /* "Grand Ambassador" and "Diplomatic Wing" are longer than their column;
+     clip rather than spill past the pill's edge. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   text-shadow: 0 1px rgba(0, 0, 0, 0.38);
   box-shadow:
     inset 0 1px rgba(255, 255, 255, 0.18),
     inset 0 -7px 12px rgba(0, 0, 0, 0.16);
 }
 
+/* Unit — four values in the sheet, and all four are coloured. Leaving the
+   largest wing (61 of 98 members) on the grey fallback made the roster read as
+   undifferentiated. */
 .roster-token--unit-command {
   background: linear-gradient(180deg, #7443a0, #4c2a78);
+}
+
+.roster-token--unit-militant-wing {
+  background: linear-gradient(180deg, #9a3327, #6b1d14);
 }
 
 .roster-token--unit-diplomatic-wing {
   background: linear-gradient(180deg, #1677cf, #0753a0);
 }
 
-.roster-token--unit-justiciar,
-.roster-token--unit-inquisition {
-  background: linear-gradient(180deg, #343a46, #1f2530);
+.roster-token--unit-administrative-wing {
+  background: linear-gradient(180deg, #2f7e6a, #1b5348);
 }
 
 .roster-token--unit-blank {
   background: linear-gradient(180deg, #8a8170, #5f5546);
 }
 
-.roster-token--rank-first-emissary,
-.roster-token--rank-inquisitor {
-  color: #0c4054;
-  background: linear-gradient(180deg, #d7eef6, #a9cfdd);
-  text-shadow: none;
-}
-
-.roster-token--rank-high-justiciar {
-  background: linear-gradient(180deg, #d71919, #a40505);
-}
-
-.roster-token--rank-battlereeve {
-  color: #061826;
-  background: linear-gradient(180deg, #87c8ee, #54a5da);
-  text-shadow: none;
-}
-
-.roster-token--rank-justiciar {
+/* Rank — by seniority tier, so all 23 ranks are covered by six colours that
+   descend in weight from command to entry. */
+.roster-token--tier-command {
   color: #211704;
   background: linear-gradient(180deg, #ffd33d, #e3ae00);
   text-shadow: none;
 }
 
-.roster-token--rank-canonreeve {
-  background: linear-gradient(180deg, #2f7e95, #1d5b70);
+.roster-token--tier-justiciar {
+  background: linear-gradient(180deg, #d71919, #a40505);
 }
 
-.roster-token--rank-advisor {
-  background: linear-gradient(180deg, #a81cff, #7800c7);
-}
-
-.roster-token--rank-grand-ambassador,
-.roster-token--rank-ambassador {
+.roster-token--tier-diplomatic {
   background: linear-gradient(180deg, #1574d6, #0755aa);
 }
 
-.roster-token--rank-blank {
-  color: var(--ink-soft);
-  background: linear-gradient(180deg, #e5dcc7, #c9bda2);
-  text-shadow: none;
+.roster-token--tier-talon {
+  background: linear-gradient(180deg, #343a46, #1f2530);
 }
 
-.roster-token--race-altmer {
-  color: #2c1700;
-  background: linear-gradient(180deg, #ffb02d, #ee8f00);
-  text-shadow: none;
+.roster-token--tier-officer {
+  background: linear-gradient(180deg, #2f7e95, #1d5b70);
 }
 
-.roster-token--race-khajiit {
-  color: #2b2d2d;
-  background: linear-gradient(180deg, #f3f1ec, #d3d2cc);
-  text-shadow: none;
+.roster-token--tier-soldier {
+  background: linear-gradient(180deg, #6a7f45, #46572a);
 }
 
-.roster-token--race-nord {
-  color: #1d3141;
-  background: linear-gradient(180deg, #d9eef9, #b5d6e6);
-  text-shadow: none;
-}
-
-.roster-token--race-imperial,
-.roster-token--race-breton {
+.roster-token--tier-support {
   color: #35240d;
   background: linear-gradient(180deg, #e8cf97, #c6a761);
   text-shadow: none;
 }
 
-.roster-token--race-dark-elf,
-.roster-token--race-dunmer {
-  background: linear-gradient(180deg, #706179, #44384f);
+.roster-token--tier-entry {
+  color: var(--ink-soft);
+  background: linear-gradient(180deg, #e5dcc7, #c9bda2);
+  text-shadow: none;
 }
 
-.roster-token--race-blank {
+.roster-token--tier-blank {
   color: var(--ink-soft);
   background: linear-gradient(180deg, #e5dcc7, #c9bda2);
   text-shadow: none;

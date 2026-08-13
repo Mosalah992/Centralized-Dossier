@@ -13,6 +13,32 @@ const tokenKey = (value: string) =>
 const tokenClass = (kind: 'unit' | 'rank' | 'race', value: string) =>
   `roster-token roster-token--${kind} roster-token--${kind}-${tokenKey(value)}`;
 
+/**
+ * Ranks are grouped into seniority tiers rather than coloured individually.
+ * The sheet carries 23 distinct ranks; 23 colours is a rainbow, and colouring
+ * only the rare senior ones leaves the bulk of the roster undifferentiated
+ * grey. Six tiers stay scannable and cover every rank.
+ *
+ * Matched by substring, longest-specific first, so a rank added to the sheet
+ * lands in a sensible tier instead of falling out of the scheme.
+ */
+const RANK_TIERS: [RegExp, string][] = [
+  [/emissary|high justiciar|canonreeve|battlereeve|inquisitor|advisor/i, 'command'],
+  [/justiciar/i, 'justiciar'],
+  [/ambassador/i, 'diplomatic'],
+  [/talon/i, 'talon'],
+  [/officer|quartermaster|lead medical|steward/i, 'officer'],
+  [/soldier/i, 'soldier'],
+  [/staff|supply|medical|assistant/i, 'support'],
+  [/recruit|intern/i, 'entry'],
+];
+
+const rankTier = (rank: string) =>
+  RANK_TIERS.find(([pattern]) => pattern.test(rank))?.[1] ?? 'blank';
+
+const rankClass = (rank: string) =>
+  `roster-token roster-token--rank roster-token--tier-${rank ? rankTier(rank) : 'blank'}`;
+
 export function RosterView() {
   const volume = useVolume('roster');
 
@@ -46,7 +72,6 @@ export function RosterView() {
               <th scope="col">Unit</th>
               <th scope="col">Rank</th>
               <th scope="col">Race</th>
-              <th scope="col">Discord</th>
               <th scope="col">Status</th>
               <th scope="col" className="num">Hours</th>
               <th scope="col">Owed</th>
@@ -60,19 +85,19 @@ export function RosterView() {
               <tr key={`${member.row}-${member.name}`}>
                 <th scope="row" className="roster-name">{member.name}</th>
                 <td>
-                  <span className={tokenClass('unit', member.unit)}>{member.unit || '-'}</span>
+                  {/* Titled because a long value is clipped to its column. */}
+                  <span className={tokenClass('unit', member.unit)} title={member.unit || undefined}>
+                    {member.unit || '-'}
+                  </span>
                 </td>
                 <td>
-                  <span className={tokenClass('rank', member.rank)}>{member.rank || '-'}</span>
+                  <span className={rankClass(member.rank)} title={member.rank || undefined}>
+                    {member.rank || '-'}
+                  </span>
                 </td>
-                <td>
-                  <span className={tokenClass('race', member.race)}>{member.race || '-'}</span>
-                </td>
-                <td className="roster-discord">
-                  {member.discord.length
-                    ? member.discord.map((handle) => `@${handle}`).join(' / ')
-                    : '-'}
-                </td>
+                {/* Race is descriptive rather than administrative, so it reads
+                    as plain text — one less pill, and the table fits. */}
+                <td className="roster-race">{member.race || '-'}</td>
                 <td>
                   {member.status && (
                     <span className={statusClass(member.status)}>{member.status}</span>
@@ -82,7 +107,12 @@ export function RosterView() {
                 <td><Mark on={member.owed} /></td>
                 <td><Mark on={member.paid} /></td>
                 <td>{member.lastActive || '-'}</td>
-                <td className="wrap roster-notes">{member.notes || '-'}</td>
+                {/* Notes run to 188 characters. Wrapping them made rows three
+                    times taller than their neighbours, so they are clipped to
+                    one line with the full text on hover. */}
+                <td className="roster-notes" title={member.notes || undefined}>
+                  {member.notes || '-'}
+                </td>
               </tr>
             ))}
           </tbody>

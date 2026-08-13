@@ -5,6 +5,7 @@ import { getVolume } from '../../shared/volumes';
 import { bindingVars } from './theme';
 import { Shelf } from './components/Shelf';
 import { Notice } from './components/Notice';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { RosterView, StatisticsView } from './views/Personnel';
 import { LedgerView, StipendsView } from './views/Finance';
 import { CalendarView, HonorView } from './views/Honors';
@@ -41,11 +42,14 @@ export default function App() {
               Return to the cabinet
             </button>
             {/* Remounting per slug restarts the page-opening animation and
-                discards the previous volume's state. */}
-            {(() => {
-              const View = VIEWS[route.slug];
-              return <View key={route.slug} />;
-            })()}
+                discards the previous volume's state. The boundary keeps a
+                failure inside the volume instead of blanking the archive. */}
+            <ErrorBoundary resetKey={route.slug}>
+              {(() => {
+                const View = VIEWS[route.slug];
+                return <View key={route.slug} />;
+              })()}
+            </ErrorBoundary>
           </div>
         )}
 
