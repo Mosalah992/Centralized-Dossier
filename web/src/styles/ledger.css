@@ -460,10 +460,11 @@ td.wrap {
   border-bottom: 1px solid rgba(90, 70, 30, 0.16);
 }
 
-/* A framed plate, whatever shape the painting arrived in. */
-.emissary__portrait {
+/* A framed plate, whatever shape the painting arrived in. The aspect is set
+   per plate below: the emissaries sat alone, the pair sat together. */
+.emissary__portrait,
+.pair__portrait {
   margin: 0;
-  aspect-ratio: 3 / 4;
   border: 1px solid color-mix(in srgb, var(--cover) 40%, rgba(90, 70, 30, 0.35));
   outline: 4px solid color-mix(in srgb, var(--foil) 26%, transparent);
   outline-offset: -7px;
@@ -471,11 +472,16 @@ td.wrap {
   box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
 }
 
-.emissary__portrait img {
+.emissary__portrait img,
+.pair__portrait img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.emissary__portrait {
+  aspect-ratio: 3 / 4;
 }
 
 /* Verux. The plate hangs; the painting has been removed. */
@@ -501,7 +507,8 @@ td.wrap {
   opacity: 0.85;
 }
 
-.emissary__name {
+.emissary__name,
+.honoree__name {
   font-size: 1.15rem;
   letter-spacing: 0.1em;
   color: color-mix(in srgb, var(--cover) 40%, var(--ink));
@@ -514,25 +521,54 @@ td.wrap {
   color: #8a4b12;
 }
 
-.emissary__deeds {
+.emissary__deeds,
+.honoree__deeds {
   margin: 1rem 0 0;
   padding: 0;
   list-style: none;
 }
 
-.emissary__deeds li {
+.emissary__deeds li,
+.honoree__deeds li {
   position: relative;
   padding: 0.35rem 0 0.35rem 1.4rem;
   color: var(--ink-soft);
 }
 
-.emissary__deeds li::before {
+.emissary__deeds li::before,
+.honoree__deeds li::before {
   content: '\2726'; /* ✦ */
   position: absolute;
   left: 0;
   top: 0.35rem;
   color: var(--gold);
   font-size: 0.8rem;
+}
+
+/* One plate, two records. The portrait leads and the records run beside it,
+   dropping under it when there is no room for two columns. */
+.pair {
+  margin: 1.6rem 0 0;
+  display: grid;
+  grid-template-columns: minmax(0, 19rem) 1fr;
+  gap: 1.8rem;
+  align-items: start;
+  padding-bottom: 2.2rem;
+  border-bottom: 1px solid rgba(90, 70, 30, 0.16);
+}
+
+/* The painting's own proportions, declared so the row does not jump as it
+   decodes. */
+.pair__portrait {
+  aspect-ratio: 1212 / 1184;
+}
+
+.pair__records {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 1.6rem;
 }
 
 /* Censor bars where deeds would stand. */
@@ -563,12 +599,18 @@ td.wrap {
 }
 
 @media (max-width: 640px) {
-  .emissary {
+  .emissary,
+  .pair {
     grid-template-columns: 1fr;
   }
 
   .emissary__portrait {
     width: min(13rem, 70%);
+    margin-inline: auto;
+  }
+
+  .pair__portrait {
+    width: min(18rem, 100%);
     margin-inline: auto;
   }
 }

@@ -7,6 +7,7 @@ import type { CalendarDay } from '../../../shared/types';
 import indumoril from '../assets/indumoril.jpg';
 import ganaril from '../assets/ganaril.jpg';
 import malen from '../assets/malen.jpg';
+import celerielElvander from '../assets/celeriel-elvander.webp';
 
 /* The First Emissaries are the hall's own record, kept here rather than in the
    sheet: their deeds are settled history, and one of them is deliberately
@@ -57,6 +58,33 @@ const FIRST_EMISSARIES: Emissary[] = [
       'Successfully re-established the Thalmor Embassy in Skyrim after 25 years of diminished Thalmor presence in the province.',
       'Bestowed the rights of full Thalmor membership to our honored allies, the Bosmer and the Khajiit.',
       'He died with honor, protecting his beloved wife from a rampaging Dremora.',
+    ],
+  },
+];
+
+/* Neither of these holds the First Emissary's office, and they sat for one
+   portrait together, so they are honoured as a pair under their own heading
+   rather than squeezed into the emissaries' single-figure plates. */
+interface Honoree {
+  name: string;
+  deeds: string[];
+}
+
+const HONORED_PAIR: Honoree[] = [
+  {
+    name: 'Lady Celeriel',
+    deeds: [
+      "Established the backbone of the Embassy's archives, creating the foundation for its records and intelligence.",
+      'Distinguished herself as a brilliant inspector and hunter, pursuing threats with precision and determination.',
+      'Remained devoted to her husband until the very end, embodying loyalty both in duty and in her personal life.',
+    ],
+  },
+  {
+    name: 'Justiciar Elvander',
+    deeds: [
+      "Served the Dominion with distinction, upholding the authority and duties entrusted to the Justiciar's office.",
+      'Demonstrated discipline and commitment in carrying out his responsibilities within the Embassy.',
+      'Contributed to the security and stability of the Embassy, leaving his mark through continued service to the Dominion.',
     ],
   },
 ];
@@ -118,6 +146,33 @@ export function HonorView() {
             </li>
           ))}
         </ol>
+      </section>
+
+      <section aria-label="Honored Servants">
+        <h2 className="page__heading">Honored Servants</h2>
+        <div className="pair">
+          {/* One portrait, two records. It is close to square, so it keeps its
+              own aspect instead of being cropped to the 3:4 plates above. */}
+          <figure className="pair__portrait">
+            <img
+              src={celerielElvander}
+              alt="Portrait of Lady Celeriel and Justiciar Elvander"
+              loading="lazy"
+            />
+          </figure>
+          <ol className="pair__records">
+            {HONORED_PAIR.map((honoree) => (
+              <li key={honoree.name}>
+                <h3 className="honoree__name">{honoree.name}</h3>
+                <ul className="honoree__deeds">
+                  {honoree.deeds.map((deed) => (
+                    <li key={deed}>{deed}</li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ol>
+        </div>
       </section>
 
       <footer className="page__credits">
