@@ -4,6 +4,62 @@ import { useVolume } from '../api';
 import { Consulting, Notice } from '../components/Notice';
 import { Page, Registers, figure } from '../components/Page';
 import type { CalendarDay } from '../../../shared/types';
+import indumoril from '../assets/indumoril.jpg';
+import ganaril from '../assets/ganaril.jpg';
+import malen from '../assets/malen.jpg';
+
+/* The First Emissaries are the hall's own record, kept here rather than in the
+   sheet: their deeds are settled history, and one of them is deliberately
+   expunged — a state the citation rows cannot express. */
+interface Emissary {
+  name: string;
+  epithet: string;
+  deeds: string[];
+  /** Absent when the record is expunged. */
+  portrait?: string;
+  /** Where the frame crops the portrait; faces sit differently in each. */
+  focus?: string;
+}
+
+const FIRST_EMISSARIES: Emissary[] = [
+  {
+    name: 'Indumoril Lourinien',
+    epithet: 'The Purifier',
+    portrait: indumoril,
+    focus: '36% 22%',
+    deeds: [
+      'Led the Thalmor to glorious victory in the war against the heretic alliance of Windhelm and Voshu-Agra.',
+      'Rooted out and destroyed the heretic cult leaders of the Sons of Skyrim, leaving them splintered and leaderless to this day.',
+    ],
+  },
+  {
+    name: 'Ganaril Athiath',
+    epithet: 'The Reformer',
+    portrait: ganaril,
+    focus: 'top',
+    deeds: [
+      'Restructured the ranks and procedures of the Thalmor, establishing a more orderly rule of law, and saving the Thalmor from financial ruin.',
+      "Oversaw and spearheaded the redrafting of the White-Gold Concordat, to the increase of the Dominion's legal authority and power over the Empire.",
+      'Freed the people of Riften from the tyranny of the heretic Jarl, Einar Blackwater.',
+    ],
+  },
+  {
+    name: 'Verux Valen',
+    epithet: 'The Shadow',
+    deeds: [],
+  },
+  {
+    name: 'Malen Velrith',
+    epithet: 'The Patriarch',
+    portrait: malen,
+    focus: 'center 18%',
+    deeds: [
+      'Successfully re-established the Thalmor Embassy in Skyrim after 25 years of diminished Thalmor presence in the province.',
+      'Bestowed the rights of full Thalmor membership to our honored allies, the Bosmer and the Khajiit.',
+      'He died with honor, protecting his beloved wife from a rampaging Dremora.',
+    ],
+  },
+];
 
 export function HonorView() {
   const volume = useVolume('honor');
@@ -22,14 +78,71 @@ export function HonorView() {
       tab={volume.value.tab}
       fetchedAtUtc={volume.value.fetchedAtUtc}
     >
-      <ul className="citations">
-        {entries.map((entry) => (
-          <li className="citation" key={entry.row}>
-            <p className="citation__name">{entry.name}</p>
-            {entry.citation && <p className="citation__text">{entry.citation}</p>}
-          </li>
-        ))}
-      </ul>
+      <section aria-label="The First Emissaries">
+        <h2 className="hall__heading">The First Emissaries</h2>
+        <ol className="hall">
+          {FIRST_EMISSARIES.map((emissary) => (
+            <li className="hall__row" key={emissary.name}>
+              <figure className="hall__portrait">
+                {emissary.portrait ? (
+                  <img
+                    src={emissary.portrait}
+                    alt={`Portrait of Emissary ${emissary.name}`}
+                    loading="lazy"
+                    style={{ objectPosition: emissary.focus }}
+                  />
+                ) : (
+                  <div className="hall__expunged" role="img" aria-label="Portrait expunged">
+                    <span className="hall__stamp">Redacted</span>
+                  </div>
+                )}
+              </figure>
+              <div className="hall__record">
+                <h3 className="hall__name">Emissary {emissary.name}</h3>
+                <p className="hall__epithet">&ldquo;{emissary.epithet}&rdquo;</p>
+                {emissary.deeds.length > 0 ? (
+                  <ul className="hall__deeds">
+                    {emissary.deeds.map((deed) => (
+                      <li key={deed}>{deed}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  /* Verux. The record exists; its contents do not. */
+                  <div className="hall__redaction" aria-label="Deeds redacted">
+                    <span className="hall__bar" style={{ width: '84%' }} />
+                    <span className="hall__bar" style={{ width: '61%' }} />
+                    <span className="hall__bar" style={{ width: '72%' }} />
+                  </div>
+                )}
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      {entries.length > 0 && (
+        <section aria-label="Citations of Honor">
+          <h2 className="hall__heading">Citations of Honor</h2>
+          <ul className="citations">
+            {entries.map((entry) => (
+              <li className="citation" key={entry.row}>
+                <p className="citation__name">{entry.name}</p>
+                {entry.citation && <p className="citation__text">{entry.citation}</p>}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <footer className="hall__credits">
+        <p>
+          Portraits by <strong>Akira Frey</strong>.
+        </p>
+        <p>
+          The Hall of Honor is kept by{' '}
+          <strong>First Emissary Ganaril &ldquo;the Reformer&rdquo;</strong>.
+        </p>
+      </footer>
     </Page>
   );
 }

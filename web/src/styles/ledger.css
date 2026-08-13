@@ -63,15 +63,18 @@
   border: 1px solid color-mix(in srgb, var(--cover) 24%, rgba(90, 70, 30, 0.16));
 }
 
+/* The Dominion seal, stamped slightly askew at the foot of every volume.
+   The image lives at public/seal.png; until that file exists the corner is
+   simply bare, like an unstamped page. */
 .page::after {
   right: clamp(1.3rem, 3vw, 2.4rem);
   bottom: clamp(1.2rem, 3vw, 2rem);
-  width: 4.8rem;
-  height: 4.8rem;
-  border: 2px solid color-mix(in srgb, var(--cover) 38%, rgba(124, 31, 36, 0.28));
-  border-radius: 50%;
+  width: 5.4rem;
+  height: 5.4rem;
+  background: url('/seal.png') center / contain no-repeat;
   transform: rotate(-9deg);
-  opacity: 0.6;
+  opacity: 0.85;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.3));
 }
 
 @keyframes open-cover {
@@ -293,12 +296,17 @@ td.wrap {
 }
 
 /* Notes reach 188 characters. Held to two lines with the full text in a
-   tooltip, so one long note cannot inflate the height of its row. */
+   tooltip, so one long note cannot inflate the height of its row. The clamp
+   sits on an inner span: -webkit-box applied to the td itself stops it being
+   a table-cell, which skewed the whole column out of its rows. */
 .roster-notes {
   color: #8a4b12;
   font-size: 0.82rem;
   line-height: 1.35;
   white-space: normal;
+}
+
+.roster-notes__clamp {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -422,6 +430,147 @@ td.wrap {
   border-color: #8f0f13;
   background: #b81c22;
   color: var(--parchment);
+}
+
+/* ── Hall of Honor ───────────────────────────────────────────────────────── */
+
+.hall__heading {
+  margin: 2.4rem 0 0;
+  font-family: var(--display);
+  font-size: 0.78rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  text-align: center;
+  color: color-mix(in srgb, var(--cover) 46%, var(--ink));
+}
+
+.hall {
+  margin: 1.6rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 2.2rem;
+}
+
+.hall__row {
+  display: grid;
+  grid-template-columns: minmax(9rem, 12rem) 1fr;
+  gap: 1.6rem;
+  padding-bottom: 2.2rem;
+  border-bottom: 1px solid rgba(90, 70, 30, 0.16);
+}
+
+/* A framed plate, whatever shape the painting arrived in. */
+.hall__portrait {
+  margin: 0;
+  aspect-ratio: 3 / 4;
+  border: 1px solid color-mix(in srgb, var(--cover) 40%, rgba(90, 70, 30, 0.35));
+  outline: 4px solid color-mix(in srgb, var(--foil) 26%, transparent);
+  outline-offset: -7px;
+  background: #45474b;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
+}
+
+.hall__portrait img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Verux. The plate hangs; the painting has been removed. */
+.hall__expunged {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  background:
+    repeating-linear-gradient(-45deg, rgba(0, 0, 0, 0.28) 0 8px, transparent 8px 20px),
+    #33342f;
+}
+
+.hall__stamp {
+  padding: 0.3rem 0.8rem;
+  font-family: var(--display);
+  font-size: 0.68rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #c96a5a;
+  border: 2px solid currentColor;
+  transform: rotate(-8deg);
+  opacity: 0.85;
+}
+
+.hall__name {
+  font-size: 1.15rem;
+  letter-spacing: 0.1em;
+  color: color-mix(in srgb, var(--cover) 40%, var(--ink));
+}
+
+.hall__epithet {
+  margin: 0.35rem 0 0;
+  font-style: italic;
+  font-size: 1rem;
+  color: #8a4b12;
+}
+
+.hall__deeds {
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hall__deeds li {
+  position: relative;
+  padding: 0.35rem 0 0.35rem 1.4rem;
+  color: var(--ink-soft);
+}
+
+.hall__deeds li::before {
+  content: '\2726'; /* ✦ */
+  position: absolute;
+  left: 0;
+  top: 0.35rem;
+  color: var(--gold);
+  font-size: 0.8rem;
+}
+
+/* Censor bars where deeds would stand. */
+.hall__redaction {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 1.2rem;
+}
+
+.hall__bar {
+  height: 0.85rem;
+  background: #211d16;
+  opacity: 0.85;
+}
+
+.hall__credits {
+  margin-top: 2.4rem;
+  padding-top: 1.4rem;
+  border-top: 1px solid rgba(90, 70, 30, 0.22);
+  text-align: center;
+  font-style: italic;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.hall__credits p {
+  margin: 0.25rem 0;
+}
+
+@media (max-width: 640px) {
+  .hall__row {
+    grid-template-columns: 1fr;
+  }
+
+  .hall__portrait {
+    width: min(13rem, 70%);
+    margin-inline: auto;
+  }
 }
 
 /* ── Notes and citations ─────────────────────────────────────────────────── */
@@ -691,6 +840,9 @@ td.wrap {
   .roster-table .roster-notes {
     order: 5;
     flex: 1 1 100%;
+  }
+
+  .roster-table .roster-notes__clamp {
     -webkit-line-clamp: 3;
     line-clamp: 3;
   }

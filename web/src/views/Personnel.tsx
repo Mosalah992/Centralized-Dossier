@@ -116,7 +116,9 @@ export function RosterView() {
                     three times taller than their neighbours, so they are held
                     to two lines with the whole note on hover. */}
                 <td className="roster-notes" data-label="Notes" title={member.notes || undefined}>
-                  {member.notes || '-'}
+                  {/* The clamp lives on a span: -webkit-box on the td itself
+                      stops it being a table-cell and skews the whole column. */}
+                  <span className="roster-notes__clamp">{member.notes || '-'}</span>
                 </td>
               </tr>
             ))}
