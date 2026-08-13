@@ -434,7 +434,10 @@ td.wrap {
 
 /* ── Hall of Honor ───────────────────────────────────────────────────────── */
 
-.hall__heading {
+/* Named "emissaries", not "hall": the shelf owns .hall, and its viewport-wide
+   candle-light pseudo-elements followed that class onto the parchment. */
+
+.page__heading {
   margin: 2.4rem 0 0;
   font-family: var(--display);
   font-size: 0.78rem;
@@ -444,7 +447,7 @@ td.wrap {
   color: color-mix(in srgb, var(--cover) 46%, var(--ink));
 }
 
-.hall {
+.emissaries {
   margin: 1.6rem 0 0;
   padding: 0;
   list-style: none;
@@ -452,7 +455,7 @@ td.wrap {
   gap: 2.2rem;
 }
 
-.hall__row {
+.emissary {
   display: grid;
   grid-template-columns: minmax(9rem, 12rem) 1fr;
   gap: 1.6rem;
@@ -461,7 +464,7 @@ td.wrap {
 }
 
 /* A framed plate, whatever shape the painting arrived in. */
-.hall__portrait {
+.emissary__portrait {
   margin: 0;
   aspect-ratio: 3 / 4;
   border: 1px solid color-mix(in srgb, var(--cover) 40%, rgba(90, 70, 30, 0.35));
@@ -471,7 +474,7 @@ td.wrap {
   box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
 }
 
-.hall__portrait img {
+.emissary__portrait img {
   display: block;
   width: 100%;
   height: 100%;
@@ -479,7 +482,7 @@ td.wrap {
 }
 
 /* Verux. The plate hangs; the painting has been removed. */
-.hall__expunged {
+.emissary__expunged {
   width: 100%;
   height: 100%;
   display: grid;
@@ -489,7 +492,7 @@ td.wrap {
     #33342f;
 }
 
-.hall__stamp {
+.emissary__stamp {
   padding: 0.3rem 0.8rem;
   font-family: var(--display);
   font-size: 0.68rem;
@@ -501,32 +504,32 @@ td.wrap {
   opacity: 0.85;
 }
 
-.hall__name {
+.emissary__name {
   font-size: 1.15rem;
   letter-spacing: 0.1em;
   color: color-mix(in srgb, var(--cover) 40%, var(--ink));
 }
 
-.hall__epithet {
+.emissary__epithet {
   margin: 0.35rem 0 0;
   font-style: italic;
   font-size: 1rem;
   color: #8a4b12;
 }
 
-.hall__deeds {
+.emissary__deeds {
   margin: 1rem 0 0;
   padding: 0;
   list-style: none;
 }
 
-.hall__deeds li {
+.emissary__deeds li {
   position: relative;
   padding: 0.35rem 0 0.35rem 1.4rem;
   color: var(--ink-soft);
 }
 
-.hall__deeds li::before {
+.emissary__deeds li::before {
   content: '\2726'; /* ✦ */
   position: absolute;
   left: 0;
@@ -536,19 +539,19 @@ td.wrap {
 }
 
 /* Censor bars where deeds would stand. */
-.hall__redaction {
+.emissary__redaction {
   display: grid;
   gap: 0.55rem;
   margin-top: 1.2rem;
 }
 
-.hall__bar {
+.emissary__bar {
   height: 0.85rem;
   background: #211d16;
   opacity: 0.85;
 }
 
-.hall__credits {
+.page__credits {
   margin-top: 2.4rem;
   padding-top: 1.4rem;
   border-top: 1px solid rgba(90, 70, 30, 0.22);
@@ -558,46 +561,22 @@ td.wrap {
   color: var(--ink-soft);
 }
 
-.hall__credits p {
+.page__credits p {
   margin: 0.25rem 0;
 }
 
 @media (max-width: 640px) {
-  .hall__row {
+  .emissary {
     grid-template-columns: 1fr;
   }
 
-  .hall__portrait {
+  .emissary__portrait {
     width: min(13rem, 70%);
     margin-inline: auto;
   }
 }
 
-/* ── Notes and citations ─────────────────────────────────────────────────── */
-
-.citations {
-  margin: 2rem 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.citation {
-  padding: 1.15rem 0;
-  border-bottom: 1px solid rgba(90, 70, 30, 0.16);
-}
-
-.citation__name {
-  font-family: var(--display);
-  font-size: 1rem;
-  letter-spacing: 0.08em;
-  color: var(--ink);
-}
-
-.citation__text {
-  margin-top: 0.3rem;
-  font-style: italic;
-  color: var(--ink-soft);
-}
+/* ── Notes ───────────────────────────────────────────────────────────────── */
 
 .commentary {
   margin-top: 2rem;

@@ -69,8 +69,6 @@ export function HonorView() {
     return <Notice kind="error" title="The hall could not be read" body={volume.message} />;
   }
 
-  const entries = volume.value.data;
-
   return (
     <Page
       title="Hall of Honor"
@@ -78,12 +76,14 @@ export function HonorView() {
       tab={volume.value.tab}
       fetchedAtUtc={volume.value.fetchedAtUtc}
     >
+      {/* "emissaries", not "hall": the shelf owns .hall, and its viewport-wide
+          candle-light pseudo-elements followed the class onto this page. */}
       <section aria-label="The First Emissaries">
-        <h2 className="hall__heading">The First Emissaries</h2>
-        <ol className="hall">
+        <h2 className="page__heading">The First Emissaries</h2>
+        <ol className="emissaries">
           {FIRST_EMISSARIES.map((emissary) => (
-            <li className="hall__row" key={emissary.name}>
-              <figure className="hall__portrait">
+            <li className="emissary" key={emissary.name}>
+              <figure className="emissary__portrait">
                 {emissary.portrait ? (
                   <img
                     src={emissary.portrait}
@@ -92,26 +92,26 @@ export function HonorView() {
                     style={{ objectPosition: emissary.focus }}
                   />
                 ) : (
-                  <div className="hall__expunged" role="img" aria-label="Portrait expunged">
-                    <span className="hall__stamp">Redacted</span>
+                  <div className="emissary__expunged" role="img" aria-label="Portrait expunged">
+                    <span className="emissary__stamp">Redacted</span>
                   </div>
                 )}
               </figure>
-              <div className="hall__record">
-                <h3 className="hall__name">Emissary {emissary.name}</h3>
-                <p className="hall__epithet">&ldquo;{emissary.epithet}&rdquo;</p>
+              <div className="emissary__record">
+                <h3 className="emissary__name">Emissary {emissary.name}</h3>
+                <p className="emissary__epithet">&ldquo;{emissary.epithet}&rdquo;</p>
                 {emissary.deeds.length > 0 ? (
-                  <ul className="hall__deeds">
+                  <ul className="emissary__deeds">
                     {emissary.deeds.map((deed) => (
                       <li key={deed}>{deed}</li>
                     ))}
                   </ul>
                 ) : (
                   /* Verux. The record exists; its contents do not. */
-                  <div className="hall__redaction" aria-label="Deeds redacted">
-                    <span className="hall__bar" style={{ width: '84%' }} />
-                    <span className="hall__bar" style={{ width: '61%' }} />
-                    <span className="hall__bar" style={{ width: '72%' }} />
+                  <div className="emissary__redaction" aria-label="Deeds redacted">
+                    <span className="emissary__bar" style={{ width: '84%' }} />
+                    <span className="emissary__bar" style={{ width: '61%' }} />
+                    <span className="emissary__bar" style={{ width: '72%' }} />
                   </div>
                 )}
               </div>
@@ -120,21 +120,7 @@ export function HonorView() {
         </ol>
       </section>
 
-      {entries.length > 0 && (
-        <section aria-label="Citations of Honor">
-          <h2 className="hall__heading">Citations of Honor</h2>
-          <ul className="citations">
-            {entries.map((entry) => (
-              <li className="citation" key={entry.row}>
-                <p className="citation__name">{entry.name}</p>
-                {entry.citation && <p className="citation__text">{entry.citation}</p>}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      <footer className="hall__credits">
+      <footer className="page__credits">
         <p>
           Portraits by <strong>Akira Frey</strong>.
         </p>
