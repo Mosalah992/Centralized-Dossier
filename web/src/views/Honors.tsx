@@ -8,6 +8,7 @@ import indumoril from '../assets/indumoril.jpg';
 import ganaril from '../assets/ganaril.jpg';
 import malen from '../assets/malen.jpg';
 import celerielElvander from '../assets/celeriel-elvander.webp';
+import akira from '../assets/akira.webp';
 
 /* The First Emissaries are the hall's own record, kept here rather than in the
    sheet: their deeds are settled history, and one of them is deliberately
@@ -62,13 +63,35 @@ const FIRST_EMISSARIES: Emissary[] = [
   },
 ];
 
-/* Neither of these holds the First Emissary's office, and they sat for one
-   portrait together, so they are honoured as a pair under their own heading
-   rather than squeezed into the emissaries' single-figure plates. */
+/* Honoured servants: those below the First Emissary's office. Some sat alone
+   and some sat together, so the section carries both a single-plate row and
+   the pair's shared portrait. */
 interface Honoree {
   name: string;
   deeds: string[];
 }
+
+interface Servant extends Honoree {
+  portrait: string;
+  /** Where the 3:4 plate crops a full-length painting. */
+  focus?: string;
+  /** A wry hand in the margin, kept out of the roll of deeds. */
+  aside?: string;
+}
+
+const HONORED_SERVANTS: Servant[] = [
+  {
+    name: 'Advisor Akira Frey',
+    portrait: akira,
+    focus: 'top',
+    deeds: [
+      'Veteran of the Thalmor, distinguished by years of loyal and dedicated service to the Dominion.',
+      "Advisor of unmatched diplomatic skill, renowned for building relationships and navigating the delicate politics of Skyrim's Holds.",
+      'Unwaveringly loyal to the Thalmor, serving the Dominion with consistency and distinction, even when his heart may occasionally favor Riften.',
+    ],
+    aside: 'Champion of Riften, apparently.',
+  },
+];
 
 const HONORED_PAIR: Honoree[] = [
   {
@@ -150,6 +173,29 @@ export function HonorView() {
 
       <section aria-label="Honored Servants">
         <h2 className="page__heading">Honored Servants</h2>
+
+        {HONORED_SERVANTS.map((servant) => (
+          <div className="honoree" key={servant.name}>
+            <figure className="honoree__portrait">
+              <img
+                src={servant.portrait}
+                alt={`Portrait of ${servant.name}`}
+                loading="lazy"
+                style={{ objectPosition: servant.focus }}
+              />
+            </figure>
+            <div>
+              <h3 className="honoree__name">{servant.name}</h3>
+              <ul className="honoree__deeds">
+                {servant.deeds.map((deed) => (
+                  <li key={deed}>{deed}</li>
+                ))}
+              </ul>
+              {servant.aside && <p className="honoree__aside">&mdash; {servant.aside}</p>}
+            </div>
+          </div>
+        ))}
+
         <div className="pair">
           {/* One portrait, two records. It is close to square, so it keeps its
               own aspect instead of being cropped to the 3:4 plates above. */}

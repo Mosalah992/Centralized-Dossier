@@ -452,7 +452,8 @@ td.wrap {
   gap: 2.2rem;
 }
 
-.emissary {
+.emissary,
+.honoree {
   display: grid;
   grid-template-columns: minmax(9rem, 12rem) 1fr;
   gap: 1.6rem;
@@ -460,9 +461,14 @@ td.wrap {
   border-bottom: 1px solid rgba(90, 70, 30, 0.16);
 }
 
+.honoree {
+  margin-top: 1.6rem;
+}
+
 /* A framed plate, whatever shape the painting arrived in. The aspect is set
    per plate below: the emissaries sat alone, the pair sat together. */
 .emissary__portrait,
+.honoree__portrait,
 .pair__portrait {
   margin: 0;
   border: 1px solid color-mix(in srgb, var(--cover) 40%, rgba(90, 70, 30, 0.35));
@@ -473,6 +479,7 @@ td.wrap {
 }
 
 .emissary__portrait img,
+.honoree__portrait img,
 .pair__portrait img {
   display: block;
   width: 100%;
@@ -480,7 +487,8 @@ td.wrap {
   object-fit: cover;
 }
 
-.emissary__portrait {
+.emissary__portrait,
+.honoree__portrait {
   aspect-ratio: 3 / 4;
 }
 
@@ -545,6 +553,14 @@ td.wrap {
   font-size: 0.8rem;
 }
 
+/* A drier hand in the margin, aligned to the deed text rather than its mark. */
+.honoree__aside {
+  margin: 0.9rem 0 0;
+  padding-left: 1.4rem;
+  font-style: italic;
+  color: color-mix(in srgb, var(--ink-soft) 74%, transparent);
+}
+
 /* One plate, two records. The portrait leads and the records run beside it,
    dropping under it when there is no room for two columns. */
 .pair {
@@ -600,11 +616,13 @@ td.wrap {
 
 @media (max-width: 640px) {
   .emissary,
+  .honoree,
   .pair {
     grid-template-columns: 1fr;
   }
 
-  .emissary__portrait {
+  .emissary__portrait,
+  .honoree__portrait {
     width: min(13rem, 70%);
     margin-inline: auto;
   }
