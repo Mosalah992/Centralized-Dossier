@@ -28,7 +28,3 @@ export const bindingVars = (slug: VolumeSlug) => {
     '--foil': binding.foil,
   } as React.CSSProperties;
 };
-
-/** The spreadsheet behind the archive — the master ledger, in-world. */
-export const MASTER_LEDGER_URL =
-  'https://docs.google.com/spreadsheets/d/1KS__WJoqI_o3esXxO3Ei3L6SlJwJnOXQrjEr-FCPEZ0/edit';

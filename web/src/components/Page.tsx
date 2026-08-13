@@ -1,8 +1,7 @@
 // The parchment frame every opened volume shares: heading, contents, and a
-// foot that names the register it was read from and offers the master ledger.
+// foot that names the register it was read from.
 
 import type { ReactNode } from 'react';
-import { MASTER_LEDGER_URL } from '../theme';
 
 interface Props {
   title: string;
@@ -35,14 +34,6 @@ export function Page({ title, subtitle, tab, fetchedAtUtc, children }: Props) {
         <p className="page__source">
           Transcribed from the <strong>{tab}</strong> register, consulted {consultedAt(fetchedAtUtc)}.
         </p>
-        <a
-          className="page__master"
-          href={MASTER_LEDGER_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Open Master Ledger
-        </a>
       </footer>
     </article>
   );

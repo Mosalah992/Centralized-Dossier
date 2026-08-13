@@ -684,38 +684,14 @@ td.wrap {
   margin-top: 2.5rem;
   padding-top: 1.5rem;
   border-top: 1px solid rgba(90, 70, 30, 0.22);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  align-items: center;
-  justify-content: space-between;
+  /* The seal is stamped to the right of the foot; keep the source line clear. */
+  padding-right: 6.5rem;
 }
 
 .page__source {
   font-size: 0.82rem;
   font-style: italic;
   color: var(--ink-soft);
-}
-
-.page__master {
-  font-family: var(--display);
-  font-size: 0.62rem;
-  letter-spacing: 0.26em;
-  color: var(--crimson);
-  border: 1px solid currentColor;
-  padding: 0.55rem 1.1rem;
-  background:
-    radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.13), transparent 38%),
-    rgba(124, 31, 36, 0.08);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-  transition: background 0.25s var(--ease), color 0.25s var(--ease), transform 0.25s var(--ease);
-}
-
-.page__master:hover,
-.page__master:focus-visible {
-  background: var(--crimson);
-  color: var(--parchment);
-  transform: translateY(-1px);
 }
 
 /* ── Small screens ───────────────────────────────────────────────────────── */
@@ -870,9 +846,5 @@ td.wrap {
 
   .table-frame {
     margin: 1.5rem 0;
-  }
-
-  .page__foot {
-    justify-content: flex-start;
   }
 }

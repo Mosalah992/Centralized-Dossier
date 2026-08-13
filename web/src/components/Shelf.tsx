@@ -3,7 +3,7 @@
 
 import { useShelf } from '../api';
 import { SHELF } from '../../../shared/volumes';
-import { BINDINGS, MASTER_LEDGER_URL } from '../theme';
+import { BINDINGS } from '../theme';
 import { Book } from './Book';
 import { Seal } from './Insignia';
 import { Notice } from './Notice';
@@ -82,19 +82,6 @@ export function Shelf({ onOpen }: Props) {
         <div className="archive-cabinet__base" aria-hidden />
       </section>
 
-      <a
-        className="seal"
-        href={MASTER_LEDGER_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="Open the master ledger, the source record behind this archive"
-      >
-        <span className="seal__wax">
-          <Seal size={40} />
-        </span>
-        <span className="seal__label">Master Archive</span>
-        <span className="seal__hint">The source record, maintained under archival authority.</span>
-      </a>
     </div>
   );
 }
