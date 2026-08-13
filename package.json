@@ -13,10 +13,10 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.functions.json",
     "dump": "node scripts/dump-tabs.mjs",
-    "worker:dev": "wrangler dev -c worker/wrangler.toml",
-    "worker:deploy": "wrangler deploy -c worker/wrangler.toml"
+    "pages:dev": "wrangler pages dev",
+    "pages:deploy": "wrangler pages deploy"
   },
   "dependencies": {
     "react": "^18.3.1",

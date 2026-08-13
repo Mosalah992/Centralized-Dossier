@@ -1,0 +1,19 @@
+name = "thalmor-archives"
+# Kept within wrangler@3's supported range — this project is pinned to Node 18
+# so the clock-in bot's toolchain is left alone. See .nvmrc.
+compatibility_date = "2024-09-23"
+
+# Cloudflare Pages: Vite builds the site to dist/, and functions/ is deployed
+# alongside it as the /api/* routes on the same origin.
+pages_build_output_dir = "dist"
+
+[vars]
+# The archive spreadsheet. The clock-in bot writes Roster G/H/J/K here; this
+# site only ever reads.
+SHEET_ID = "1KS__WJoqI_o3esXxO3Ei3L6SlJwJnOXQrjEr-FCPEZ0"
+
+# Secret (set with `npx wrangler pages secret put GOOGLE_SERVICE_ACCOUNT_JSON`):
+#   GOOGLE_SERVICE_ACCOUNT_JSON - contents of the service-account key shared
+#                                 with the spreadsheet. For local development
+#                                 put it in .dev.vars instead, which is
+#                                 git-ignored.

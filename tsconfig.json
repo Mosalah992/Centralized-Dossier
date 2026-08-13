@@ -19,5 +19,7 @@
     "noEmit": true,
     "allowImportingTsExtensions": false
   },
-  "include": ["shared", "web/src", "worker/src", "test"]
+  // functions/ and server/ are checked separately against the Workers runtime
+  // types — see tsconfig.functions.json.
+  "include": ["shared", "web/src", "test"]
 }

@@ -1,0 +1,11 @@
+{
+  // The Pages Functions half of the project. It runs on workerd, not in a
+  // browser, so it swaps the DOM lib for @cloudflare/workers-types — that is
+  // what provides PagesFunction and caches.default.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2022"],
+    "types": ["@cloudflare/workers-types"]
+  },
+  "include": ["functions", "server", "shared"]
+}
