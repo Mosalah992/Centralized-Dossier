@@ -1,0 +1,9 @@
+# Crawling is allowed so that the noindex directive in index.html is actually
+# seen — a blanket Disallow would hide the page from crawlers without ever
+# getting it removed from an index it had already entered.
+#
+# The archive lists real members' Discord handles, ranks and activity, so it is
+# link-shared rather than searchable. Drop the robots meta tag in index.html to
+# change that.
+User-agent: *
+Allow: /
