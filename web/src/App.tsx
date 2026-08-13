@@ -104,6 +104,11 @@ export default function App() {
             <p className="site-footer__warning">
               Unauthorised perusal is a matter for the Justiciars.
             </p>
+            {/* The ambience plays across the whole archive, so its credit sits
+                here rather than inside any one volume. */}
+            <p className="site-footer__credit">
+              <em>Summerset Glooms</em>, played by <strong>Vaerion Meanor</strong> the bard.
+            </p>
           </footer>
         </div>
       )}

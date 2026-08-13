@@ -119,6 +119,18 @@ a {
   font-style: italic;
 }
 
+/* Quieter than the warning above it — a hand in the margin, not a notice. */
+.site-footer__credit {
+  margin-top: 0.9rem;
+  font-size: 0.82rem;
+  color: color-mix(in srgb, var(--stone-dim) 82%, transparent);
+}
+
+.site-footer__credit strong {
+  font-weight: 600;
+  color: color-mix(in srgb, var(--gold) 78%, var(--stone-dim));
+}
+
 /* ── Loading and failure ─────────────────────────────────────────────────── */
 
 .notice {
