@@ -65,7 +65,5 @@ export function Registers({ items }: { items: { label: string; value: string | n
 }
 
 export const Mark = ({ on }: { on: boolean }) => (
-  <span className={`mark mark--${on ? 'yes' : 'no'}`} aria-label={on ? 'yes' : 'no'}>
-    {on ? 'yes' : '-'}
-  </span>
+  <span className={`mark mark--${on ? 'yes' : 'no'}`} aria-label={on ? 'yes' : 'no'} />
 );

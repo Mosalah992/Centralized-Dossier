@@ -3,6 +3,9 @@
 
 .volume {
   padding: 2.5rem 0 0;
+  --cover: #31402f;
+  --cover-2: #1b241a;
+  --foil: var(--gold);
 }
 
 .volume__back {
@@ -22,7 +25,7 @@
 
 .volume__back:hover,
 .volume__back:focus-visible {
-  color: var(--gold);
+  color: var(--foil);
 }
 
 /* The page itself. It opens from the fold rather than fading in, so the book
@@ -32,12 +35,14 @@
   padding: clamp(1.6rem, 4vw, 3.4rem);
   color: var(--ink);
   background:
+    linear-gradient(90deg, color-mix(in srgb, var(--cover) 18%, transparent), transparent 18% 82%, color-mix(in srgb, var(--cover) 12%, transparent)),
     repeating-linear-gradient(0deg, rgba(88, 62, 30, 0.035) 0 1px, transparent 1px 10px),
     repeating-linear-gradient(90deg, rgba(88, 62, 30, 0.025) 0 1px, transparent 1px 14px),
     radial-gradient(120% 80% at 15% 0%, rgba(255, 255, 255, 0.55), transparent 55%),
     linear-gradient(170deg, var(--parchment), var(--parchment-2));
-  border: 1px solid rgba(90, 70, 30, 0.28);
+  border: 1px solid color-mix(in srgb, var(--cover) 42%, rgba(90, 70, 30, 0.28));
   box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--foil) 20%, transparent),
     0 26px 50px rgba(0, 0, 0, 0.55),
     inset 0 0 0 1px rgba(255, 255, 255, 0.18),
     inset 0 0 48px rgba(90, 70, 30, 0.16);
@@ -55,7 +60,7 @@
 
 .page::before {
   inset: 0.8rem;
-  border: 1px solid rgba(90, 70, 30, 0.16);
+  border: 1px solid color-mix(in srgb, var(--cover) 24%, rgba(90, 70, 30, 0.16));
 }
 
 .page::after {
@@ -63,7 +68,7 @@
   bottom: clamp(1.2rem, 3vw, 2rem);
   width: 4.8rem;
   height: 4.8rem;
-  border: 2px solid rgba(124, 31, 36, 0.28);
+  border: 2px solid color-mix(in srgb, var(--cover) 38%, rgba(124, 31, 36, 0.28));
   border-radius: 50%;
   transform: rotate(-9deg);
   opacity: 0.6;
@@ -77,22 +82,41 @@
 .page__head {
   text-align: center;
   padding-bottom: 1.8rem;
-  border-bottom: 1px solid rgba(90, 70, 30, 0.22);
+  border-bottom: 1px solid color-mix(in srgb, var(--cover) 34%, rgba(90, 70, 30, 0.22));
   position: relative;
 }
 
+.page__head::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -1px;
+  width: min(21rem, 72%);
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--cover), var(--foil), var(--cover), transparent);
+  transform: translateX(-50%);
+}
+
 .page__classification {
-  margin: 0 0 0.55rem;
+  display: inline-block;
+  margin: 0 0 0.7rem;
+  padding: 0.28rem 0.72rem;
   font-family: var(--display);
   font-size: 0.58rem;
-  letter-spacing: 0.32em;
+  letter-spacing: 0.28em;
   text-transform: uppercase;
-  color: var(--crimson);
+  color: color-mix(in srgb, var(--foil) 72%, var(--parchment));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--cover) 92%, #000), var(--cover-2));
+  border: 1px solid color-mix(in srgb, var(--foil) 36%, transparent);
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.08),
+    0 4px 8px rgba(0, 0, 0, 0.12);
 }
 
 .page__title {
   font-size: clamp(1.3rem, 3vw, 1.9rem);
-  color: var(--ink);
+  color: color-mix(in srgb, var(--cover) 46%, var(--ink));
   letter-spacing: 0.16em;
 }
 
@@ -111,12 +135,13 @@
   grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
   gap: 1px;
   margin: 2rem 0;
-  background: rgba(90, 70, 30, 0.22);
-  border: 1px solid rgba(90, 70, 30, 0.22);
+  background: color-mix(in srgb, var(--cover) 22%, rgba(90, 70, 30, 0.22));
+  border: 1px solid color-mix(in srgb, var(--cover) 30%, rgba(90, 70, 30, 0.22));
 }
 
 .register {
-  background: rgba(239, 230, 210, 0.92);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--cover) 8%, rgba(239, 230, 210, 0.94)), rgba(239, 230, 210, 0.92));
   padding: 1.1rem 1rem;
   text-align: center;
 }
@@ -133,7 +158,7 @@
   font-family: var(--display);
   font-size: 1.65rem;
   font-weight: 600;
-  color: var(--ink);
+  color: color-mix(in srgb, var(--cover) 42%, var(--ink));
   font-variant-numeric: tabular-nums;
 }
 
@@ -201,32 +226,202 @@ td.wrap {
   min-width: 16rem;
 }
 
+/* Roster coding follows the live sheet's scan language: compact coloured
+   pills for administrative fields, without turning the parchment into a grid. */
+.roster-table {
+  min-width: 88rem;
+}
+
+.roster-name {
+  color: #8a4b12;
+  font-weight: 700;
+}
+
+.roster-discord {
+  color: #a85f16;
+  font-variant-numeric: tabular-nums;
+}
+
+.roster-notes {
+  color: #8a4b12;
+}
+
+.roster-token {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 7.8rem;
+  max-width: 13rem;
+  min-height: 1.35rem;
+  padding: 0.13rem 0.8rem 0.16rem;
+  border-radius: 999px;
+  color: var(--parchment);
+  background: linear-gradient(180deg, #6d6558, #4e463b);
+  font-size: 0.82rem;
+  line-height: 1.1;
+  text-align: center;
+  text-shadow: 0 1px rgba(0, 0, 0, 0.38);
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.18),
+    inset 0 -7px 12px rgba(0, 0, 0, 0.16);
+}
+
+.roster-token--unit-command {
+  background: linear-gradient(180deg, #7443a0, #4c2a78);
+}
+
+.roster-token--unit-diplomatic-wing {
+  background: linear-gradient(180deg, #1677cf, #0753a0);
+}
+
+.roster-token--unit-justiciar,
+.roster-token--unit-inquisition {
+  background: linear-gradient(180deg, #343a46, #1f2530);
+}
+
+.roster-token--unit-blank {
+  background: linear-gradient(180deg, #8a8170, #5f5546);
+}
+
+.roster-token--rank-first-emissary,
+.roster-token--rank-inquisitor {
+  color: #0c4054;
+  background: linear-gradient(180deg, #d7eef6, #a9cfdd);
+  text-shadow: none;
+}
+
+.roster-token--rank-high-justiciar {
+  background: linear-gradient(180deg, #d71919, #a40505);
+}
+
+.roster-token--rank-battlereeve {
+  color: #061826;
+  background: linear-gradient(180deg, #87c8ee, #54a5da);
+  text-shadow: none;
+}
+
+.roster-token--rank-justiciar {
+  color: #211704;
+  background: linear-gradient(180deg, #ffd33d, #e3ae00);
+  text-shadow: none;
+}
+
+.roster-token--rank-canonreeve {
+  background: linear-gradient(180deg, #2f7e95, #1d5b70);
+}
+
+.roster-token--rank-advisor {
+  background: linear-gradient(180deg, #a81cff, #7800c7);
+}
+
+.roster-token--rank-grand-ambassador,
+.roster-token--rank-ambassador {
+  background: linear-gradient(180deg, #1574d6, #0755aa);
+}
+
+.roster-token--rank-blank {
+  color: var(--ink-soft);
+  background: linear-gradient(180deg, #e5dcc7, #c9bda2);
+  text-shadow: none;
+}
+
+.roster-token--race-altmer {
+  color: #2c1700;
+  background: linear-gradient(180deg, #ffb02d, #ee8f00);
+  text-shadow: none;
+}
+
+.roster-token--race-khajiit {
+  color: #2b2d2d;
+  background: linear-gradient(180deg, #f3f1ec, #d3d2cc);
+  text-shadow: none;
+}
+
+.roster-token--race-nord {
+  color: #1d3141;
+  background: linear-gradient(180deg, #d9eef9, #b5d6e6);
+  text-shadow: none;
+}
+
+.roster-token--race-imperial,
+.roster-token--race-breton {
+  color: #35240d;
+  background: linear-gradient(180deg, #e8cf97, #c6a761);
+  text-shadow: none;
+}
+
+.roster-token--race-dark-elf,
+.roster-token--race-dunmer {
+  background: linear-gradient(180deg, #706179, #44384f);
+}
+
+.roster-token--race-blank {
+  color: var(--ink-soft);
+  background: linear-gradient(180deg, #e5dcc7, #c9bda2);
+  text-shadow: none;
+}
+
 /* ── Marks ───────────────────────────────────────────────────────────────── */
 
 .mark {
-  display: inline-block;
-  min-width: 1.5rem;
-  text-align: center;
-  font-weight: 600;
+  display: inline-grid;
+  place-items: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 2px;
+  border: 2px solid #bb7a38;
+  background: rgba(255, 247, 224, 0.26);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.18);
 }
 
-.mark--yes { color: #2f6b3a; }
-.mark--no { color: rgba(77, 66, 50, 0.4); }
+.mark--yes {
+  border-color: #1e8b5a;
+  background: linear-gradient(180deg, #1fa46a, #0d7549);
+}
+
+.mark--yes::before {
+  content: '';
+  width: 0.32rem;
+  height: 0.62rem;
+  border: solid var(--parchment);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) translateY(-1px);
+}
 
 .status {
   display: inline-block;
-  padding: 0.1rem 0.55rem;
+  min-width: 6.6rem;
+  padding: 0.16rem 0.7rem;
   font-family: var(--display);
   font-size: 0.58rem;
   letter-spacing: 0.16em;
+  text-align: center;
+  border-radius: 999px;
   border: 1px solid rgba(90, 70, 30, 0.32);
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.18),
+    inset 0 -7px 12px rgba(0, 0, 0, 0.12);
 }
 
-.status--active { border-color: #2f6b3a; color: #2f6b3a; }
+.status--active {
+  border-color: #1e8b5a;
+  background: linear-gradient(180deg, #219263, #0f6d47);
+  color: var(--parchment);
+}
+
 .status--loa,
-.status--absent { border-color: #8a6a1f; color: #8a6a1f; }
+.status--absent {
+  border-color: #79b4d8;
+  background: linear-gradient(180deg, #c9eaff, #9ed0ed);
+  color: #07509f;
+}
+
 .status--inactive,
-.status--arrested { border-color: var(--crimson); color: var(--crimson); }
+.status--arrested {
+  border-color: #ac161b;
+  background: linear-gradient(180deg, #cc252b, #8f0f13);
+  color: var(--parchment);
+}
 
 /* ── Notes and citations ─────────────────────────────────────────────────── */
 

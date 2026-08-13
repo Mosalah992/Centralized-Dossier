@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 
 import { useRoute } from './router';
 import { getVolume } from '../../shared/volumes';
+import { bindingVars } from './theme';
 import { Shelf } from './components/Shelf';
 import { Notice } from './components/Notice';
 import { RosterView, StatisticsView } from './views/Personnel';
@@ -35,7 +36,7 @@ export default function App() {
         {route.name === 'shelf' && <Shelf onOpen={navigate} />}
 
         {route.name === 'volume' && (
-          <div className="volume">
+          <div className={`volume volume--${route.slug}`} style={bindingVars(route.slug)}>
             <button className="volume__back" type="button" onClick={() => navigate('/')}>
               Return to the cabinet
             </button>

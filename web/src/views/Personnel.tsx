@@ -7,6 +7,12 @@ import { Mark, Page, Registers, figure } from '../components/Page';
 const statusClass = (status: string) =>
   `status status--${status.toLowerCase().replace(/\s+/g, '-')}`;
 
+const tokenKey = (value: string) =>
+  value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'blank';
+
+const tokenClass = (kind: 'unit' | 'rank' | 'race', value: string) =>
+  `roster-token roster-token--${kind} roster-token--${kind}-${tokenKey(value)}`;
+
 export function RosterView() {
   const volume = useVolume('roster');
 
@@ -32,28 +38,41 @@ export function RosterView() {
       />
 
       <div className="table-frame">
-        <table>
+        <table className="roster-table">
           <caption>Muster roll, by unit and rank</caption>
           <thead>
             <tr>
               <th scope="col">Name</th>
-              <th scope="col">Rank</th>
               <th scope="col">Unit</th>
+              <th scope="col">Rank</th>
               <th scope="col">Race</th>
+              <th scope="col">Discord</th>
               <th scope="col">Status</th>
               <th scope="col" className="num">Hours</th>
               <th scope="col">Owed</th>
               <th scope="col">Paid</th>
               <th scope="col">Last active</th>
+              <th scope="col">Notes</th>
             </tr>
           </thead>
           <tbody>
             {members.map((member) => (
               <tr key={`${member.row}-${member.name}`}>
-                <th scope="row">{member.name}</th>
-                <td>{member.rank}</td>
-                <td>{member.unit}</td>
-                <td>{member.race}</td>
+                <th scope="row" className="roster-name">{member.name}</th>
+                <td>
+                  <span className={tokenClass('unit', member.unit)}>{member.unit || '-'}</span>
+                </td>
+                <td>
+                  <span className={tokenClass('rank', member.rank)}>{member.rank || '-'}</span>
+                </td>
+                <td>
+                  <span className={tokenClass('race', member.race)}>{member.race || '-'}</span>
+                </td>
+                <td className="roster-discord">
+                  {member.discord.length
+                    ? member.discord.map((handle) => `@${handle}`).join(' / ')
+                    : '-'}
+                </td>
                 <td>
                   {member.status && (
                     <span className={statusClass(member.status)}>{member.status}</span>
@@ -62,7 +81,8 @@ export function RosterView() {
                 <td className="num">{member.hours.toFixed(2)}</td>
                 <td><Mark on={member.owed} /></td>
                 <td><Mark on={member.paid} /></td>
-                <td>{member.lastActive || '—'}</td>
+                <td>{member.lastActive || '-'}</td>
+                <td className="wrap roster-notes">{member.notes || '-'}</td>
               </tr>
             ))}
           </tbody>
@@ -117,7 +137,7 @@ export function StatisticsView() {
                   // A blank in the sheet means the grade does not apply to this
                   // corps, which is not the same as none serving in it.
                   <td className="num" key={tier}>
-                    {row.tiers[tier] === null ? '—' : figure(row.tiers[tier] ?? 0)}
+                    {row.tiers[tier] === null ? '-' : figure(row.tiers[tier] ?? 0)}
                   </td>
                 ))}
                 <td className="num"><strong>{figure(row.total)}</strong></td>
