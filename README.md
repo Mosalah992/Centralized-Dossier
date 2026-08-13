@@ -82,10 +82,41 @@ npm run typecheck  # both tsconfigs — browser half and Workers half
 npm run dump    # re-dump every tab to tmp/ after a sheet change
 ```
 
+## The gate
+
+A shared passphrase, an HMAC-signed cookie, and every `/api/*` route guarded
+server-side by [functions/api/_middleware.ts](functions/api/_middleware.ts).
+The gate page is scenery; the middleware is the boundary. It fails closed — a
+missing secret seals the archive rather than opening it — and forces
+`private, no-store` on gated responses so the edge cannot hand a cached roster
+to a reader with no cookie.
+
+| Secret | Value |
+| --- | --- |
+| `GATE_SECRET` | 32+ random bytes, `openssl rand -base64 32`. Never commit. |
+| `GATE_PASSPHRASE` | The word handed to members. |
+| `GATE_EPOCH` | Integer, default `1`. Bump to invalidate every issued cookie. |
+
+To rotate: change `GATE_PASSPHRASE`, bump `GATE_EPOCH`, redeploy. Optionally
+bind a KV namespace as `GATE_ATTEMPTS` for throttling (8 failures per IP per
+10 minutes); without it the endpoint works unthrottled.
+
+This stops drive-by access and anonymous scraping of `/api/volumes/roster`. It
+gives no per-person revocation, and a word shared with ~100 people will end up
+pasted somewhere eventually. It is a lock on the door, not consent to publish:
+not shipping `discord` and `notes` to every reader is still the fix that
+matters for the roster.
+
+The seal art is prepared by [scripts/prepare-seal.mjs](scripts/prepare-seal.mjs),
+which keys the baked-in black background and drop shadow out of `Assets/wax
+seal.png` and writes the WebP the gate imports.
+
 ## Deploying
 
 ```bash
 npx wrangler pages secret put GOOGLE_SERVICE_ACCOUNT_JSON
+npx wrangler pages secret put GATE_SECRET
+npx wrangler pages secret put GATE_PASSPHRASE
 npm run build && npm run pages:deploy
 ```
 

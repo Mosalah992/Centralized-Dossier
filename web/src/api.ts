@@ -40,9 +40,14 @@ export interface VolumeData {
 
 class ApiError extends Error {}
 
+/** Fired when any volume answers 401 — the writ has expired or been rotated
+ *  out, and the app should fall back to the gate. */
+export const GATE_SEALED_EVENT = 'gate:sealed';
+
 async function get<T>(path: string, signal: AbortSignal): Promise<T> {
   const res = await fetch(path, { signal, headers: { Accept: 'application/json' } });
   if (!res.ok) {
+    if (res.status === 401) window.dispatchEvent(new Event(GATE_SEALED_EVENT));
     const body = await res.json().catch(() => null) as { error?: string } | null;
     throw new ApiError(body?.error ?? `The archive returned ${res.status}`);
   }

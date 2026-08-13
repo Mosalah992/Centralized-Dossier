@@ -1,8 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useRoute } from './router';
 import { getVolume } from '../../shared/volumes';
 import { bindingVars } from './theme';
+import { GATE_SEALED_EVENT } from './api';
+import { Gate } from './components/Gate';
 import { Shelf } from './components/Shelf';
 import { Notice } from './components/Notice';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -23,6 +25,24 @@ const VIEWS: Record<VolumeSlug, () => JSX.Element> = {
 export default function App() {
   const [route, navigate] = useRoute();
 
+  // Whether this browser holds a valid writ. Null until /api/gate answers,
+  // so the gate does not flash for members who are already through.
+  const [open, setOpen] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    fetch('/api/gate')
+      .then((res) => res.json() as Promise<{ open?: boolean }>)
+      .then((body) => setOpen(Boolean(body.open)))
+      .catch(() => setOpen(false));
+  }, []);
+
+  // A 401 from any volume mid-session (expired or rotated writ) reseals.
+  useEffect(() => {
+    const reseal = () => setOpen(false);
+    window.addEventListener(GATE_SEALED_EVENT, reseal);
+    return () => window.removeEventListener(GATE_SEALED_EVENT, reseal);
+  }, []);
+
   // The tab title should say which volume is open.
   useEffect(() => {
     const name = route.name === 'volume' ? getVolume(route.slug)?.title : null;
@@ -30,6 +50,9 @@ export default function App() {
       ? `${name} - Thalmor Embassy Archives`
       : 'Thalmor Embassy Archives';
   }, [route]);
+
+  if (open === null) return null;
+  if (!open) return <Gate onOpen={() => setOpen(true)} />;
 
   return (
     <div className="shell">
