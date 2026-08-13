@@ -11,9 +11,30 @@
   display: grid;
   place-items: center;
   padding: 2rem 1.25rem 5rem;
-  background:
-    radial-gradient(120% 90% at 50% 8%, #221c17 0%, var(--gate-ground) 62%);
   color: var(--gate-ink);
+
+  /* The Embassy's own muster, behind a scrim. The gradients are listed first
+     because background layers paint front to back: the scrim sits over the
+     photograph, holding it far enough down that the parchment stays the
+     brightest thing on the page and its text keeps its contrast. */
+  background:
+    radial-gradient(88% 66% at 50% 46%, rgba(12, 10, 8, 0.62), rgba(10, 8, 6, 0.82) 58%, rgba(8, 6, 5, 0.93) 100%),
+    linear-gradient(180deg, rgba(6, 5, 4, 0.7) 0%, rgba(6, 5, 4, 0.25) 26%, rgba(6, 5, 4, 0.45) 62%, rgba(6, 5, 4, 0.88) 100%),
+    /* 55% keeps the muster in frame when a wide, short viewport crops the
+       photograph vertically; centring it would show mostly sky. */
+    url('../assets/gate-bg.webp') center 55% / cover no-repeat,
+    var(--gate-ground);
+}
+
+/* Phones get a quarter of the pixels for a third of the bytes; at that size
+   the detail is not readable through the scrim anyway. */
+@media (max-width: 900px) {
+  .gate {
+    background-image:
+      radial-gradient(88% 66% at 50% 46%, rgba(12, 10, 8, 0.62), rgba(10, 8, 6, 0.82) 58%, rgba(8, 6, 5, 0.93) 100%),
+      linear-gradient(180deg, rgba(6, 5, 4, 0.7) 0%, rgba(6, 5, 4, 0.25) 26%, rgba(6, 5, 4, 0.45) 62%, rgba(6, 5, 4, 0.88) 100%),
+      url('../assets/gate-bg-small.webp');
+  }
 }
 
 .gate__parchment {
@@ -24,9 +45,12 @@
   background: linear-gradient(180deg, #efe3c7 0%, var(--gate-parchment) 40%, #d3c39f 100%);
   border: 1px solid var(--gate-parchment-edge);
   border-radius: 2px;
+  /* Deeper than it was: the parchment now lies over a photograph rather than
+     a flat ground, and needs to sit clearly in front of it. */
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.35) inset,
-    0 30px 60px -20px rgba(0, 0, 0, 0.75);
+    0 2px 10px rgba(0, 0, 0, 0.45),
+    0 30px 60px -18px rgba(0, 0, 0, 0.85);
 }
 
 .gate__eyebrow {
