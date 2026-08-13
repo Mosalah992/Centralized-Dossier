@@ -1,0 +1,355 @@
+/* An opened volume: parchment laid on the dark hall, carrying live sheet data.
+   The Google Sheet is the database; this is the archive. */
+
+.volume {
+  padding: 2.5rem 0 0;
+}
+
+.volume__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--display);
+  font-size: 0.66rem;
+  letter-spacing: 0.28em;
+  color: var(--stone-dim);
+  padding: 0.5rem 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  transition: color 0.25s var(--ease);
+}
+
+.volume__back:hover,
+.volume__back:focus-visible {
+  color: var(--gold);
+}
+
+/* The page itself. It opens from the fold rather than fading in, so the book
+   metaphor survives the transition from shelf to contents. */
+.page {
+  margin-top: 1.5rem;
+  padding: clamp(1.6rem, 4vw, 3.4rem);
+  color: var(--ink);
+  background:
+    radial-gradient(120% 80% at 15% 0%, rgba(255, 255, 255, 0.55), transparent 55%),
+    linear-gradient(170deg, var(--parchment), var(--parchment-2));
+  box-shadow:
+    0 26px 50px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 1px rgba(90, 70, 30, 0.18);
+  transform-origin: left center;
+  animation: open-cover 0.6s var(--ease) both;
+}
+
+@keyframes open-cover {
+  from { opacity: 0; transform: perspective(1800px) rotateY(-14deg); }
+  to { opacity: 1; transform: perspective(1800px) rotateY(0deg); }
+}
+
+.page__head {
+  text-align: center;
+  padding-bottom: 1.8rem;
+  border-bottom: 1px solid rgba(90, 70, 30, 0.22);
+}
+
+.page__title {
+  font-size: clamp(1.3rem, 3vw, 1.9rem);
+  color: var(--ink);
+  letter-spacing: 0.16em;
+}
+
+.page__subtitle {
+  margin-top: 0.7rem;
+  font-family: var(--display);
+  font-size: 0.64rem;
+  letter-spacing: 0.32em;
+  color: var(--ink-soft);
+}
+
+/* ── Registers (stat tiles) ──────────────────────────────────────────────── */
+
+.registers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  gap: 1px;
+  margin: 2rem 0;
+  background: rgba(90, 70, 30, 0.22);
+  border: 1px solid rgba(90, 70, 30, 0.22);
+}
+
+.register {
+  background: rgba(239, 230, 210, 0.92);
+  padding: 1.1rem 1rem;
+  text-align: center;
+}
+
+.register__label {
+  font-family: var(--display);
+  font-size: 0.58rem;
+  letter-spacing: 0.22em;
+  color: var(--ink-soft);
+}
+
+.register__value {
+  margin-top: 0.45rem;
+  font-family: var(--display);
+  font-size: 1.65rem;
+  font-weight: 600;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Tables ──────────────────────────────────────────────────────────────── */
+
+/* Wide tables scroll inside their own frame; the page never scrolls sideways. */
+.table-frame {
+  margin: 2rem 0;
+  overflow-x: auto;
+  border: 1px solid rgba(90, 70, 30, 0.22);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+caption {
+  caption-side: top;
+  text-align: left;
+  padding: 0.9rem 1rem;
+  font-family: var(--display);
+  font-size: 0.66rem;
+  letter-spacing: 0.26em;
+  color: var(--ink-soft);
+  background: rgba(90, 70, 30, 0.07);
+  border-bottom: 1px solid rgba(90, 70, 30, 0.18);
+}
+
+th, td {
+  padding: 0.6rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(90, 70, 30, 0.13);
+  white-space: nowrap;
+}
+
+thead th {
+  position: sticky;
+  top: 0;
+  font-family: var(--display);
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  background: var(--parchment-2);
+  border-bottom: 1px solid rgba(90, 70, 30, 0.3);
+}
+
+tbody tr:nth-child(even) td {
+  background: rgba(90, 70, 30, 0.045);
+}
+
+tbody tr:hover td {
+  background: rgba(201, 162, 39, 0.14);
+}
+
+td.num, th.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+td.wrap {
+  white-space: normal;
+  min-width: 16rem;
+}
+
+/* ── Marks ───────────────────────────────────────────────────────────────── */
+
+.mark {
+  display: inline-block;
+  min-width: 1.5rem;
+  text-align: center;
+  font-weight: 600;
+}
+
+.mark--yes { color: #2f6b3a; }
+.mark--no { color: rgba(77, 66, 50, 0.4); }
+
+.status {
+  display: inline-block;
+  padding: 0.1rem 0.55rem;
+  font-family: var(--display);
+  font-size: 0.58rem;
+  letter-spacing: 0.16em;
+  border: 1px solid rgba(90, 70, 30, 0.32);
+}
+
+.status--active { border-color: #2f6b3a; color: #2f6b3a; }
+.status--loa,
+.status--absent { border-color: #8a6a1f; color: #8a6a1f; }
+.status--inactive,
+.status--arrested { border-color: var(--crimson); color: var(--crimson); }
+
+/* ── Notes and citations ─────────────────────────────────────────────────── */
+
+.citations {
+  margin: 2rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.citation {
+  padding: 1.15rem 0;
+  border-bottom: 1px solid rgba(90, 70, 30, 0.16);
+}
+
+.citation__name {
+  font-family: var(--display);
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+}
+
+.citation__text {
+  margin-top: 0.3rem;
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+.commentary {
+  margin-top: 2rem;
+  padding: 1.3rem 1.5rem;
+  border-left: 3px solid var(--gold);
+  background: rgba(201, 162, 39, 0.09);
+  font-style: italic;
+  white-space: pre-line;
+  color: var(--ink-soft);
+}
+
+/* ── Calendar ────────────────────────────────────────────────────────────── */
+
+.year {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  gap: 1.75rem;
+  margin: 2rem 0;
+}
+
+.month__name {
+  font-family: var(--display);
+  font-size: 0.78rem;
+  letter-spacing: 0.24em;
+  text-align: center;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid rgba(90, 70, 30, 0.24);
+  color: var(--ink);
+}
+
+.month__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-top: 0.6rem;
+}
+
+.month__weekday {
+  font-family: var(--display);
+  font-size: 0.5rem;
+  letter-spacing: 0.08em;
+  text-align: center;
+  color: var(--ink-soft);
+  padding-bottom: 0.3rem;
+}
+
+.day {
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  border: 1px solid transparent;
+  position: relative;
+}
+
+.day--empty {
+  background: none;
+}
+
+/* A day carrying an event is marked in the corner and is focusable, so its
+   note is reachable without a mouse. */
+.day--event {
+  cursor: help;
+  font-weight: 600;
+  border-color: rgba(90, 70, 30, 0.35);
+}
+
+.day--event::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 4px;
+  height: 4px;
+  background: var(--crimson);
+  border-radius: 50%;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem 1.75rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(90, 70, 30, 0.22);
+}
+
+.legend__item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.legend__swatch {
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 1px solid rgba(90, 70, 30, 0.35);
+  flex: none;
+}
+
+/* ── Master ledger link at the foot of a volume ──────────────────────────── */
+
+.page__foot {
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(90, 70, 30, 0.22);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.page__source {
+  font-size: 0.82rem;
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+.page__master {
+  font-family: var(--display);
+  font-size: 0.62rem;
+  letter-spacing: 0.26em;
+  color: var(--crimson);
+  border: 1px solid currentColor;
+  padding: 0.55rem 1.1rem;
+  transition: background 0.25s var(--ease), color 0.25s var(--ease);
+}
+
+.page__master:hover,
+.page__master:focus-visible {
+  background: var(--crimson);
+  color: var(--parchment);
+}

@@ -1,0 +1,167 @@
+/* Foundations. The palette leans Altmer rather than Nord: pale stone, thin
+   gold inlay and sharp vertical geometry instead of heavy timber. */
+
+:root {
+  --night: #14120f;
+  --night-2: #1c1915;
+  --stone: #cfc7b6;
+  --stone-dim: #8d8778;
+  --parchment: #efe6d2;
+  --parchment-2: #e4d8bf;
+  --ink: #241d14;
+  --ink-soft: #4d4232;
+  --gold: #c9a227;
+  --gold-bright: #e8cd7a;
+  --crimson: #7c1f24;
+
+  --rule: rgba(201, 162, 39, 0.34);
+  --rule-soft: rgba(201, 162, 39, 0.16);
+
+  --serif: 'EB Garamond', 'Iowan Old Style', Georgia, serif;
+  --display: 'Cinzel', 'Trajan Pro', var(--serif);
+
+  --shell: min(1180px, 92vw);
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  /* Anchors and in-page jumps clear the fixed heading. */
+  scroll-padding-top: 2rem;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--night);
+  background-image:
+    radial-gradient(ellipse 80% 55% at 50% -10%, rgba(201, 162, 39, 0.13), transparent 70%),
+    linear-gradient(180deg, var(--night-2), var(--night) 45%);
+  background-attachment: fixed;
+  color: var(--stone);
+  font-family: var(--serif);
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--display);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* One visible focus treatment everywhere. The archive is navigable by keyboard
+   as a matter of course, not as an afterthought. */
+:focus-visible {
+  outline: 2px solid var(--gold-bright);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+
+.shell {
+  width: var(--shell);
+  margin-inline: auto;
+}
+
+/* ── Ornaments ───────────────────────────────────────────────────────────── */
+
+.rule {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.rule::before,
+.rule::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rule), transparent);
+}
+
+.rule__mark {
+  color: var(--gold);
+  font-size: 0.7rem;
+  letter-spacing: 0.4em;
+}
+
+/* ── Page furniture ──────────────────────────────────────────────────────── */
+
+.site-footer {
+  margin: 5rem 0 3rem;
+  text-align: center;
+  color: var(--stone-dim);
+}
+
+.site-footer__creed {
+  font-family: var(--display);
+  font-size: 0.82rem;
+  letter-spacing: 0.28em;
+  color: var(--gold);
+}
+
+.site-footer__warning {
+  margin-top: 0.7rem;
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+/* ── Loading and failure ─────────────────────────────────────────────────── */
+
+.notice {
+  margin: 4rem auto;
+  max-width: 40rem;
+  text-align: center;
+}
+
+.notice__title {
+  font-family: var(--display);
+  letter-spacing: 0.18em;
+  font-size: 1.05rem;
+  color: var(--gold);
+}
+
+.notice__body {
+  margin-top: 0.6rem;
+  color: var(--stone-dim);
+}
+
+.notice--error .notice__title {
+  color: #d98b8b;
+}
+
+/* A slow, dim pulse — the archivist is fetching the volume, not a spinner. */
+.notice--loading .notice__title {
+  animation: breathe 2.4s var(--ease) infinite;
+}
+
+@keyframes breathe {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+
+/* ── Reduced motion ──────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

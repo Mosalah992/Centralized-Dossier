@@ -1,0 +1,3 @@
+# Every archive path is rendered by the client, so unmatched routes serve the
+# app rather than a 404. /api/* is handled by functions/ and never reaches here.
+/*    /index.html   200
