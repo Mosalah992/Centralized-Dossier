@@ -63,15 +63,13 @@
   border: 1px solid color-mix(in srgb, var(--cover) 24%, rgba(90, 70, 30, 0.16));
 }
 
-/* The Dominion seal, stamped slightly askew at the foot of every volume.
-   The image lives at public/seal.png; until that file exists the corner is
-   simply bare, like an unstamped page. */
+/* The Dominion seal, stamped slightly askew at the foot of every volume. */
 .page::after {
   right: clamp(1.3rem, 3vw, 2.4rem);
   bottom: clamp(1.2rem, 3vw, 2rem);
   width: 5.4rem;
   height: 5.4rem;
-  background: url('/seal.png') center / contain no-repeat;
+  background: url('/seal.webp') center / contain no-repeat;
   transform: rotate(-9deg);
   opacity: 0.85;
   filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.3));
