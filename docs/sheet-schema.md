@@ -101,6 +101,13 @@ Sundas, 19th of Sun's Height 4E 226
 Split on `\n` into `from`/`to`. Numbers are comma-formatted strings — strip
 separators before use, and keep the formatted string for display.
 
+**`Balance` is not a reliable computation.** Only the first row carries the
+`=C4-D4` formula; every later balance is typed by hand, and as of 2026-08-13 the
+most recent week reads `25,000 − 4,000 = 22,000` where the arithmetic gives
+21,000 — a 1,000 septim discrepancy. The archive renders what the treasury
+wrote and does not reconcile it, so no parser or test may assume
+`received − spent === balance`.
+
 ## Hall of Honor — `B4:C`
 
 `Name | Citation`. Six entries, honorifics included in the name

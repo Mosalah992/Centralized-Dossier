@@ -115,6 +115,33 @@ async function main() {
     const file = path.join(OUT_DIR, `${slugify(tab.title)}.json`);
     fs.writeFileSync(file, JSON.stringify(dump, null, 2));
 
+    // The calendar's meaning is in cell colour and notes, so it also needs a
+    // formatted grid — values alone are bare day numbers.
+    if (/^tamrielic calendar/i.test(tab.title)) {
+      const fields = 'sheets(data(rowData(values(formattedValue,note,effectiveFormat(backgroundColor)))))';
+      const grid = await api(
+        token, sheetId,
+        `?ranges=${encodeURIComponent(range)}&includeGridData=true&fields=${encodeURIComponent(fields)}`,
+      );
+      const rowData = grid.sheets?.[0]?.data?.[0]?.rowData || [];
+      const hex = (c) => {
+        if (!c) return undefined;
+        const v = (n) => Math.round((n || 0) * 255).toString(16).padStart(2, '0');
+        return `#${v(c.red)}${v(c.green)}${v(c.blue)}`;
+      };
+      const formatted = rowData.map((r) => (r.values || []).map((cell) => ({
+        value: cell.formattedValue ?? '',
+        ...(cell.note ? { note: cell.note } : {}),
+        ...(hex(cell.effectiveFormat?.backgroundColor)
+          ? { background: hex(cell.effectiveFormat.backgroundColor) }
+          : {}),
+      })));
+
+      const gridFile = path.join(OUT_DIR, `${slugify(tab.title)}.formatted.json`);
+      fs.writeFileSync(gridFile, JSON.stringify({ ...dump, values: undefined, formulas: undefined, grid: formatted }, null, 2));
+      console.log(`  ${''.padEnd(16)} + formatted grid            -> ${path.relative(ROOT, gridFile)}`);
+    }
+
     const widest = rows.reduce((max, r) => Math.max(max, r.length), 0);
     console.log(`  ${tab.title.padEnd(16)} gid=${String(tab.sheetId).padStart(10)}  ${String(rows.length).padStart(4)} rows, ${String(widest).padStart(2)} cols  -> ${path.relative(ROOT, file)}`);
     index.push({ tab: tab.title, sheetId: tab.sheetId, rows: rows.length, cols: widest });
