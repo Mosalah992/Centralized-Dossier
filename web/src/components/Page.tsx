@@ -7,13 +7,13 @@ import { MASTER_LEDGER_URL } from '../theme';
 interface Props {
   title: string;
   subtitle: string;
-  /** The spreadsheet tab this was read from. */
+  /** The source tab this was read from. */
   tab: string;
   fetchedAtUtc: string;
   children: ReactNode;
 }
 
-/** Time only — the archive shows freshness without printing an ISO timestamp. */
+/** Time only: the archive shows freshness without printing an ISO timestamp. */
 function consultedAt(iso: string): string {
   const when = new Date(iso);
   if (Number.isNaN(when.getTime())) return 'just now';
@@ -24,6 +24,7 @@ export function Page({ title, subtitle, tab, fetchedAtUtc, children }: Props) {
   return (
     <article className="page">
       <header className="page__head">
+        <p className="page__classification">Thalmor Embassy</p>
         <h1 className="page__title">{title}</h1>
         <p className="page__subtitle">{subtitle}</p>
       </header>
@@ -40,7 +41,7 @@ export function Page({ title, subtitle, tab, fetchedAtUtc, children }: Props) {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Master Ledger
+          Open Master Ledger
         </a>
       </footer>
     </article>
@@ -65,6 +66,6 @@ export function Registers({ items }: { items: { label: string; value: string | n
 
 export const Mark = ({ on }: { on: boolean }) => (
   <span className={`mark mark--${on ? 'yes' : 'no'}`} aria-label={on ? 'yes' : 'no'}>
-    {on ? '✓' : '—'}
+    {on ? 'yes' : '-'}
   </span>
 );

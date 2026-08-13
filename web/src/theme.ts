@@ -8,15 +8,16 @@ export interface Binding {
   cover: string;
   cover2: string;
   foil: string;
+  subtitle: string;
 }
 
 export const BINDINGS: Record<VolumeSlug, Binding> = {
-  roster:     { cover: '#31402f', cover2: '#1b241a', foil: '#cbb26a' },
-  statistics: { cover: '#27384a', cover2: '#151f2a', foil: '#b9c9d8' },
-  ledger:     { cover: '#5a4420', cover2: '#332512', foil: '#e0bd63' },
-  stipends:   { cover: '#5b2126', cover2: '#331013', foil: '#d9a86a' },
-  honor:      { cover: '#2f2f33', cover2: '#18181b', foil: '#cfc7b6' },
-  calendar:   { cover: '#3b2b46', cover2: '#211829', foil: '#c3a8d6' },
+  roster:     { cover: '#2d402f', cover2: '#172319', foil: '#c5ad68', subtitle: 'Military Personnel Register' },
+  statistics: { cover: '#24384a', cover2: '#111d29', foil: '#b7c8d2', subtitle: 'Strength Returns' },
+  ledger:     { cover: '#59401c', cover2: '#30210e', foil: '#d4b35d', subtitle: 'Treasury Account' },
+  stipends:   { cover: '#582025', cover2: '#2d0f12', foil: '#d2a164', subtitle: 'Receipts & Disbursement' },
+  honor:      { cover: '#303135', cover2: '#17181b', foil: '#c8c2b6', subtitle: 'Ceremonial Citations' },
+  calendar:   { cover: '#3a2a48', cover2: '#1d1428', foil: '#bea5d0', subtitle: 'Observances & Reckonings' },
 };
 
 export const bindingVars = (slug: VolumeSlug) => {

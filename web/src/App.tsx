@@ -25,7 +25,7 @@ export default function App() {
   useEffect(() => {
     const name = route.name === 'volume' ? getVolume(route.slug)?.title : null;
     document.title = name
-      ? `${name} · Thalmor Embassy Archives`
+      ? `${name} - Thalmor Embassy Archives`
       : 'Thalmor Embassy Archives';
   }, [route]);
 
@@ -37,7 +37,7 @@ export default function App() {
         {route.name === 'volume' && (
           <div className="volume">
             <button className="volume__back" type="button" onClick={() => navigate('/')}>
-              ❖ Return to the shelf
+              Return to the cabinet
             </button>
             {/* Remounting per slug restarts the page-opening animation and
                 discards the previous volume's state. */}
@@ -57,7 +57,7 @@ export default function App() {
             />
             <p style={{ textAlign: 'center' }}>
               <button className="volume__back" type="button" onClick={() => navigate('/')}>
-                ❖ Return to the shelf
+                Return to the cabinet
               </button>
             </p>
           </>
