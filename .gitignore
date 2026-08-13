@@ -1,0 +1,16 @@
+# Secrets — never commit
+credentials/
+.env
+.env.local
+.dev.vars
+*.json.key
+
+# Node
+node_modules/
+
+# Build output
+dist/
+.wrangler/
+
+# Tab dumps taken from the live sheet (contain member data)
+tmp/
