@@ -1,0 +1,57 @@
+/* A small brass roundel in the corner. Present on the gate and on every
+   volume, quiet enough to ignore and obvious enough to find. */
+
+.ambience {
+  position: fixed;
+  right: clamp(0.75rem, 2vw, 1.4rem);
+  bottom: clamp(0.75rem, 2vw, 1.4rem);
+  z-index: 50;
+
+  width: 2.6rem;
+  height: 2.6rem;
+  display: grid;
+  place-items: center;
+  padding: 0;
+
+  color: var(--stone-dim, #8d8778);
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.06), transparent 60%),
+    linear-gradient(180deg, #241f19, #16130f);
+  border: 1px solid rgba(201, 162, 39, 0.28);
+  border-radius: 50%;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  transition:
+    color 0.25s ease,
+    border-color 0.25s ease,
+    transform 0.25s ease;
+}
+
+.ambience:hover,
+.ambience:focus-visible {
+  color: var(--gold-bright, #e8cd7a);
+  border-color: rgba(201, 162, 39, 0.6);
+  transform: translateY(-1px);
+}
+
+/* Lit while the track is actually sounding — not merely while it is wanted,
+   so a reader can see when the browser has refused to play it yet. */
+.ambience--sounding {
+  color: var(--gold, #c9a227);
+  border-color: rgba(201, 162, 39, 0.5);
+}
+
+.ambience svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambience {
+    transition: none;
+  }
+}

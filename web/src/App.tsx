@@ -4,6 +4,7 @@ import { useRoute } from './router';
 import { getVolume } from '../../shared/volumes';
 import { bindingVars } from './theme';
 import { GATE_SEALED_EVENT } from './api';
+import { Ambience } from './components/Ambience';
 import { Gate } from './components/Gate';
 import { Shelf } from './components/Shelf';
 import { Notice } from './components/Notice';
@@ -51,53 +52,61 @@ export default function App() {
       : 'Thalmor Embassy Archives';
   }, [route]);
 
-  if (open === null) return null;
-  if (!open) return <Gate onOpen={() => setOpen(true)} />;
-
+  // Ambience holds the same slot in every state — waiting on the gate, sealed,
+  // and open. If it changed position React would remount it, and the track
+  // would be cut off the moment the seal breaks.
   return (
-    <div className="shell">
-      <main>
-        {route.name === 'shelf' && <Shelf onOpen={navigate} />}
+    <>
+      <Ambience />
 
-        {route.name === 'volume' && (
-          <div className={`volume volume--${route.slug}`} style={bindingVars(route.slug)}>
-            <button className="volume__back" type="button" onClick={() => navigate('/')}>
-              Return to the cabinet
-            </button>
-            {/* Remounting per slug restarts the page-opening animation and
-                discards the previous volume's state. The boundary keeps a
-                failure inside the volume instead of blanking the archive. */}
-            <ErrorBoundary resetKey={route.slug}>
-              {(() => {
-                const View = VIEWS[route.slug];
-                return <View key={route.slug} />;
-              })()}
-            </ErrorBoundary>
-          </div>
-        )}
+      {open === null ? null : !open ? (
+        <Gate onOpen={() => setOpen(true)} />
+      ) : (
+        <div className="shell">
+          <main>
+            {route.name === 'shelf' && <Shelf onOpen={navigate} />}
 
-        {route.name === 'missing' && (
-          <>
-            <Notice
-              kind="error"
-              title="No such volume"
-              body="The archive holds no register under that name."
-            />
-            <p style={{ textAlign: 'center' }}>
-              <button className="volume__back" type="button" onClick={() => navigate('/')}>
-                Return to the cabinet
-              </button>
+            {route.name === 'volume' && (
+              <div className={`volume volume--${route.slug}`} style={bindingVars(route.slug)}>
+                <button className="volume__back" type="button" onClick={() => navigate('/')}>
+                  Return to the cabinet
+                </button>
+                {/* Remounting per slug restarts the page-opening animation and
+                    discards the previous volume's state. The boundary keeps a
+                    failure inside the volume instead of blanking the archive. */}
+                <ErrorBoundary resetKey={route.slug}>
+                  {(() => {
+                    const View = VIEWS[route.slug];
+                    return <View key={route.slug} />;
+                  })()}
+                </ErrorBoundary>
+              </div>
+            )}
+
+            {route.name === 'missing' && (
+              <>
+                <Notice
+                  kind="error"
+                  title="No such volume"
+                  body="The archive holds no register under that name."
+                />
+                <p style={{ textAlign: 'center' }}>
+                  <button className="volume__back" type="button" onClick={() => navigate('/')}>
+                    Return to the cabinet
+                  </button>
+                </p>
+              </>
+            )}
+          </main>
+
+          <footer className="site-footer">
+            <p className="site-footer__creed">For the Glory of the Third Aldmeri Dominion</p>
+            <p className="site-footer__warning">
+              Unauthorised perusal is a matter for the Justiciars.
             </p>
-          </>
-        )}
-      </main>
-
-      <footer className="site-footer">
-        <p className="site-footer__creed">For the Glory of the Third Aldmeri Dominion</p>
-        <p className="site-footer__warning">
-          Unauthorised perusal is a matter for the Justiciars.
-        </p>
-      </footer>
-    </div>
+          </footer>
+        </div>
+      )}
+    </>
   );
 }
