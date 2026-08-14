@@ -34,5 +34,11 @@
     "vite": "^5.4.21",
     "vitest": "^2.1.9",
     "wrangler": "^3.114.17"
+  },
+  "allowScripts": {
+    "esbuild@0.21.5": true,
+    "esbuild@0.17.19": true,
+    "sharp@0.33.5": true,
+    "workerd@1.20250718.0": true
   }
 }
