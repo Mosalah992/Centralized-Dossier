@@ -1,4 +1,4 @@
-// The hall's ambience. One looping track, a visible control, and a remembered
+// The archive's ambience. A looping track, a visible control, and a remembered
 // preference.
 //
 // Browsers refuse to play sound before the reader has interacted with the
@@ -6,10 +6,25 @@
 // refused. So: the track waits for the first deliberate gesture — breaking
 // the seal, or any click or key press for a member who already holds a writ —
 // and the roundel in the corner stops it for good if it is unwelcome.
+//
+// Which track plays depends on where the reader is standing: the hall has its
+// own tone, and History of the Realm its own. The component is mounted once for
+// the whole archive and takes the track as a prop, rather than each volume
+// mounting its own player — two elements would talk over each other, and the
+// mute the reader chose in the hall would not be honoured in the volume.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import trackUrl from '../assets/summerset-glooms.mp3';
 import './Ambience.css';
+
+interface Props {
+  /**
+   * Bundled URL of the loop to play. Changing it swaps the source on the one
+   * element: the previous track stops where it stands and the new one fades in
+   * from silence. Not a true crossfade — that would need two elements — but
+   * walking into a different room is a cut, not a blend.
+   */
+  track: string;
+}
 
 const STORAGE_KEY = 'archive:ambience';
 /** Under a reading voice. This is a room tone, not a performance. */
@@ -33,7 +48,7 @@ const remember = (wanted: boolean): void => {
   }
 };
 
-export function Ambience() {
+export function Ambience({ track }: Props) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const fadeRef = useRef<number>();
   const [wanted, setWanted] = useState(remembered);
@@ -63,7 +78,9 @@ export function Ambience() {
     [fadeIn],
   );
 
-  // Try immediately; if the browser refuses, wait for the first gesture.
+  // Try immediately; if the browser refuses, wait for the first gesture. Also
+  // runs when `track` changes: React has already swapped the element's src by
+  // the time effects fire, so this starts the new loop rather than the old.
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !wanted) return;
@@ -80,7 +97,7 @@ export function Ambience() {
     return () => {
       for (const event of events) window.removeEventListener(event, onGesture);
     };
-  }, [wanted, start]);
+  }, [wanted, start, track]);
 
   useEffect(() => () => window.clearInterval(fadeRef.current), []);
 
@@ -105,7 +122,7 @@ export function Ambience() {
     <>
       <audio
         ref={audioRef}
-        src={trackUrl}
+        src={track}
         loop
         preload={wanted ? 'auto' : 'none'}
         aria-hidden="true"

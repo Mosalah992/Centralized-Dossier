@@ -22,9 +22,29 @@ export type VolumeSlug =
   | 'ledger'
   | 'stipends'
   | 'honor'
-  | 'calendar';
+  | 'calendar'
+  | 'history';
 
-export type VolumeCategory = 'Personnel' | 'Finance' | 'Honors & Calendar';
+export type VolumeCategory =
+  | 'Personnel'
+  | 'Finance'
+  | 'Honors & Calendar'
+  | 'Chronicles';
+
+/**
+ * A volume the Embassy writes itself rather than reading from the spreadsheet.
+ *
+ * It has no tab, no range and no API route: its text is settled history, held
+ * in the web app the same way the First Emissaries' deeds are. Keeping these
+ * out of `VOLUMES` is deliberate — the Worker iterates that list to resolve tab
+ * titles, so a chronicle listed there would be reported as withdrawn on every
+ * request for want of a tab that was never meant to exist.
+ */
+export interface KeptVolume {
+  slug: VolumeSlug;
+  title: string;
+  category: VolumeCategory;
+}
 
 export interface VolumeDefinition {
   slug: VolumeSlug;

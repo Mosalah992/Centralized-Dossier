@@ -2,7 +2,7 @@
 // heading stays ceremonial but compact so the six physical volumes dominate.
 
 import { useShelf } from '../api';
-import { SHELF } from '../../../shared/volumes';
+import { SHELF, isKept } from '../../../shared/volumes';
 import { BINDINGS } from '../theme';
 import { Book } from './Book';
 import { Notice } from './Notice';
@@ -60,7 +60,10 @@ export function Shelf({ onOpen }: Props) {
         </div>
         <div className="archive-cabinet__interior">
           {SHELF.map((section) => (
-            <section className="section" key={section.category}>
+            <section
+              className={`section section--${section.category.toLowerCase().replace(/\W+/g, '-')}`}
+              key={section.category}
+            >
               <h2 className="section__plate">
                 <span className="section__name">{section.category}</span>
               </h2>
@@ -71,9 +74,17 @@ export function Shelf({ onOpen }: Props) {
                     slug={volume.slug}
                     title={volume.title}
                     subtitle={BINDINGS[volume.slug].subtitle}
-                    // Treat an unanswered shelf as present; a volume is only shown
-                    // withdrawn once the archivist has actually said so.
-                    tab={shelf.state === 'ready' ? tabs.get(volume.slug) ?? null : volume.title}
+                    tab={
+                      // A kept volume is written here, not read from the sheet,
+                      // so nothing the archivist says can withdraw it.
+                      isKept(volume.slug)
+                        ? volume.title
+                        // Treat an unanswered shelf as present; a volume is only
+                        // shown withdrawn once the archivist has actually said so.
+                        : shelf.state === 'ready'
+                          ? tabs.get(volume.slug) ?? null
+                          : volume.title
+                    }
                     onOpen={onOpen}
                   />
                 ))}

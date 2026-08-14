@@ -12,6 +12,7 @@ import ledger from './assets/volumes/ledger.webp';
 import stipends from './assets/volumes/stipends.webp';
 import honor from './assets/volumes/honor.webp';
 import calendar from './assets/volumes/calendar.webp';
+import history from './assets/volumes/history.webp';
 
 export const COVERS: Record<VolumeSlug, string> = {
   roster,
@@ -20,6 +21,7 @@ export const COVERS: Record<VolumeSlug, string> = {
   stipends,
   honor,
   calendar,
+  history,
 };
 
 /** Intrinsic size of every cover, so the shelf reserves its space up front. */

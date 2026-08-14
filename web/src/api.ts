@@ -28,7 +28,14 @@ export interface RosterData {
   byStatus: { label: string; count: number }[];
 }
 
-/** Payload type per volume, so views are not handed `unknown`. */
+/**
+ * Payload type per volume, so views are not handed `unknown`.
+ *
+ * Deliberately keyed on its own entries rather than on VolumeSlug: volumes the
+ * Embassy keeps itself have no API route and no payload, and listing them here
+ * would promise a fetch that will never happen. `useVolume` is constrained to
+ * these keys, so asking the archivist for a chronicle is a type error.
+ */
 export interface VolumeData {
   roster: RosterData;
   statistics: Statistics;
@@ -37,6 +44,9 @@ export interface VolumeData {
   honor: HonorEntry[];
   calendar: CalendarYear;
 }
+
+/** Volumes with a register behind them, and therefore something to fetch. */
+export type FetchableSlug = keyof VolumeData;
 
 class ApiError extends Error {}
 
@@ -86,7 +96,7 @@ function useAsync<T>(path: string): Async<T> {
 
 export const useShelf = () => useAsync<Shelf>('/api/volumes');
 
-export function useVolume<S extends VolumeSlug>(
+export function useVolume<S extends FetchableSlug>(
   slug: S,
 ): Async<VolumeEnvelope<VolumeData[S]>> {
   return useAsync<VolumeEnvelope<VolumeData[S]>>(`/api/volumes/${slug}`);

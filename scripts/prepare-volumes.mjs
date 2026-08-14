@@ -31,6 +31,17 @@ const SLUGS = [
   ['stipends', 'honor', 'calendar'],
 ];
 
+// Covers that arrived on their own rather than on the sheet. They are measured
+// and placed by exactly the same rules, and share the others' baseline, so a
+// later addition still stands level with the original six. This one is drawn to
+// the same proportions by luck rather than design — its body is 0.842 wide for
+// every unit tall against the sheet's 0.844 — so normalising on width lands its
+// height within a few pixels of its neighbours. A cover drawn to some other
+// shape would need normalising on height instead, and a wider canvas.
+const STANDALONE = [
+  { slug: 'history', file: 'Volume History of the realm.png' },
+];
+
 // Books are normalised to this width. It is close to their native ~380px, so
 // the resample stays under 2% and the gold filigree keeps its edges.
 const BODY_W = 384;
@@ -54,15 +65,61 @@ function runs(counts) {
   return out;
 }
 
-const { data, info } = await sharp(SRC).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-const { width: W, height: H, channels: C } = info;
-const alphaAt = (x, y) => data[(y * W + x) * C + 3];
+/** Decode an image to raw RGBA once; every measurement reads from this. */
+async function loadRaw(file) {
+  const { data, info } = await sharp(file).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const src = { data, W: info.width, H: info.height, C: info.channels };
+  src.alphaAt = (x, y) => data[(y * src.W + x) * src.C + 3];
+  return src;
+}
 
-const colCounts = new Array(W).fill(0);
-const rowCounts = new Array(H).fill(0);
-for (let y = 0; y < H; y++) {
-  for (let x = 0; x < W; x++) {
-    if (alphaAt(x, y) > SOLID) { colCounts[x]++; rowCounts[y]++; }
+/**
+ * Measure one book inside `region` of `src`: its true bounds, the scale that
+ * normalises it to BODY_W, and where its body ends — the line it stands on,
+ * which is not where its art ends because the ribbon hangs below.
+ */
+function measureBook(src, region, slug) {
+  const { x: rx0, y: ry0, w: rw, h: rh } = region;
+  let x0 = Infinity, x1 = -1, y0 = Infinity, y1 = -1;
+  for (let y = ry0; y < ry0 + rh; y++) {
+    for (let x = rx0; x < rx0 + rw; x++) {
+      if (src.alphaAt(x, y) <= SOLID) continue;
+      if (x < x0) x0 = x;
+      if (x > x1) x1 = x;
+      if (y < y0) y0 = y;
+      if (y > y1) y1 = y;
+    }
+  }
+
+  const widths = [];
+  for (let y = y0; y <= y1; y++) {
+    let n = 0;
+    for (let x = x0; x <= x1; x++) if (src.alphaAt(x, y) > SOLID) n++;
+    widths.push(n);
+  }
+  const widest = Math.max(...widths);
+  const bodyRows = widths.map((n, i) => (n > widest * 0.5 ? i : -1)).filter((i) => i >= 0);
+
+  const scale = BODY_W / (x1 - x0 + 1);
+  return {
+    slug, src,
+    x0, y0,
+    w: x1 - x0 + 1,
+    h: y1 - y0 + 1,
+    scale,
+    // Both relative to the top of the crop, already in output pixels.
+    bodyBottom: Math.round((bodyRows[bodyRows.length - 1] + 1) * scale),
+    scaledH: Math.round((y1 - y0 + 1) * scale),
+  };
+}
+
+const sheet = await loadRaw(SRC);
+
+const colCounts = new Array(sheet.W).fill(0);
+const rowCounts = new Array(sheet.H).fill(0);
+for (let y = 0; y < sheet.H; y++) {
+  for (let x = 0; x < sheet.W; x++) {
+    if (sheet.alphaAt(x, y) > SOLID) { colCounts[x]++; rowCounts[y]++; }
   }
 }
 
@@ -79,45 +136,23 @@ for (let r = 0; r < rows.length; r++) {
   for (let c = 0; c < columns.length; c++) {
     const [cx0, cx1] = columns[c];
     const [ry0, ry1] = rows[r];
-
-    let x0 = Infinity, x1 = -1, y0 = Infinity, y1 = -1;
-    for (let y = ry0; y <= ry1; y++) {
-      for (let x = cx0; x <= cx1; x++) {
-        if (alphaAt(x, y) <= SOLID) continue;
-        if (x < x0) x0 = x;
-        if (x > x1) x1 = x;
-        if (y < y0) y0 = y;
-        if (y > y1) y1 = y;
-      }
-    }
-
-    // The body is every row wide enough to be cover-and-spine rather than
-    // ribbon; its last row is the line the book stands on.
-    const widths = [];
-    for (let y = y0; y <= y1; y++) {
-      let n = 0;
-      for (let x = x0; x <= x1; x++) if (alphaAt(x, y) > SOLID) n++;
-      widths.push(n);
-    }
-    const widest = Math.max(...widths);
-    const bodyRows = widths.map((n, i) => (n > widest * 0.5 ? i : -1)).filter((i) => i >= 0);
-
-    const scale = BODY_W / (x1 - x0 + 1);
-    books.push({
-      slug: SLUGS[r][c],
-      x0, y0,
-      w: x1 - x0 + 1,
-      h: y1 - y0 + 1,
-      scale,
-      // Both relative to the top of the crop, already in output pixels.
-      bodyBottom: Math.round((bodyRows[bodyRows.length - 1] + 1) * scale),
-      scaledH: Math.round((y1 - y0 + 1) * scale),
-    });
+    books.push(measureBook(
+      sheet,
+      { x: cx0, y: ry0, w: cx1 - cx0 + 1, h: ry1 - ry0 + 1 },
+      SLUGS[r][c],
+    ));
   }
 }
 
-// One baseline for all six: deep enough that the tallest body still clears the
-// top padding, and a canvas tall enough for the longest ribbon below it.
+for (const { slug, file } of STANDALONE) {
+  const src = await loadRaw(path.join(ROOT, 'Assets', file));
+  books.push(measureBook(src, { x: 0, y: 0, w: src.W, h: src.H }, slug));
+}
+
+// One baseline for all of them: deep enough that the tallest body still clears
+// the top padding, and a canvas tall enough for the longest ribbon below it.
+// Derived across every cover, so adding one can only ever grow the canvas —
+// never leave a newcomer floating above the shelf or clipped at the foot.
 const baseline = PAD_TOP + Math.max(...books.map((b) => b.bodyBottom));
 const canvasH = baseline + Math.max(...books.map((b) => b.scaledH - b.bodyBottom)) + PAD_TOP;
 
@@ -126,6 +161,7 @@ const canvasH = baseline + Math.max(...books.map((b) => b.scaledH - b.bodyBottom
 fs.mkdirSync(OUT_DIR, { recursive: true });
 
 for (const book of books) {
+  const { data, W, H, C } = book.src;
   const cover = await sharp(data, { raw: { width: W, height: H, channels: C } })
     .extract({ left: book.x0, top: book.y0, width: book.w, height: book.h })
     .resize(BODY_W, book.scaledH, { kernel: 'lanczos3' })
@@ -151,6 +187,6 @@ for (const book of books) {
 }
 
 console.log(
-  `\nwrote 6 covers to ${path.relative(ROOT, OUT_DIR)} `
+  `\nwrote ${books.length} covers to ${path.relative(ROOT, OUT_DIR)} `
   + `— ${CANVAS_W}x${canvasH}, standing on y=${baseline}`,
 );

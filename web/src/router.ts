@@ -1,10 +1,10 @@
 // A router small enough not to warrant a dependency: the archive has one index
-// and six volumes. History API so URLs are shareable, with a Pages _redirects
+// and seven volumes. History API so URLs are shareable, with a Pages _redirects
 // rule serving index.html for every path.
 
 import { useCallback, useEffect, useState } from 'react';
 import type { VolumeSlug } from '../../shared/types';
-import { VOLUME_SLUGS } from '../../shared/volumes';
+import { ALL_SLUGS } from '../../shared/volumes';
 
 export type Route =
   | { name: 'shelf' }
@@ -17,7 +17,7 @@ export function parse(pathname: string): Route {
 
   const match = /^\/archives\/([a-z]+)$/.exec(path);
   const slug = match?.[1];
-  if (slug && (VOLUME_SLUGS as readonly string[]).includes(slug)) {
+  if (slug && (ALL_SLUGS as readonly string[]).includes(slug)) {
     return { name: 'volume', slug: slug as VolumeSlug };
   }
 

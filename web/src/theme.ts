@@ -31,6 +31,9 @@ export const BINDINGS: Record<VolumeSlug, Binding> = {
   stipends:   { cover: '#2d1539', cover2: '#220d2f', foil: FOIL, subtitle: 'Receipts & Disbursement' },
   honor:      { cover: '#4c2d00', cover2: '#2b1800', foil: FOIL, subtitle: 'Ceremonial Citations' },
   calendar:   { cover: '#191617', cover2: '#0f0f0f', foil: FOIL, subtitle: 'Observances & Reckonings' },
+  // Ivory and gold like Hall of Honor, so it takes its dark from the same place
+  // the eye does: the black title plaque the cover's name is lettered on.
+  history:    { cover: '#22201a', cover2: '#12110c', foil: FOIL, subtitle: 'Chronicles of the Realm' },
 };
 
 export const bindingVars = (slug: VolumeSlug) => {

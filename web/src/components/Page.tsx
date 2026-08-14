@@ -3,14 +3,20 @@
 
 import type { ReactNode } from 'react';
 
-interface Props {
+/**
+ * Either the page was read from a register — in which case it must say which
+ * one and when — or the Embassy keeps it itself, and may give its own
+ * provenance or none. A union rather than three optional fields, so a
+ * sheet-backed volume cannot quietly ship without its source line.
+ */
+type Props = {
   title: string;
   subtitle: string;
-  /** The source tab this was read from. */
-  tab: string;
-  fetchedAtUtc: string;
   children: ReactNode;
-}
+} & (
+  | { tab: string; fetchedAtUtc: string; source?: never }
+  | { tab?: never; fetchedAtUtc?: never; source?: ReactNode }
+);
 
 /** Time only: the archive shows freshness without printing an ISO timestamp. */
 function consultedAt(iso: string): string {
@@ -19,7 +25,7 @@ function consultedAt(iso: string): string {
   return `${when.toISOString().slice(11, 16)} UTC`;
 }
 
-export function Page({ title, subtitle, tab, fetchedAtUtc, children }: Props) {
+export function Page({ title, subtitle, tab, fetchedAtUtc, source, children }: Props) {
   return (
     <article className="page">
       <header className="page__head">
@@ -30,11 +36,18 @@ export function Page({ title, subtitle, tab, fetchedAtUtc, children }: Props) {
 
       {children}
 
-      <footer className="page__foot">
-        <p className="page__source">
-          Transcribed from the <strong>{tab}</strong> register, consulted {consultedAt(fetchedAtUtc)}.
-        </p>
-      </footer>
+      {/* Omitted entirely when there is nothing to attribute — an empty foot
+          would still draw its rule across the bottom of the page. */}
+      {(source || tab) && (
+        <footer className="page__foot">
+          {source ?? (
+            <p className="page__source">
+              Transcribed from the <strong>{tab}</strong> register, consulted{' '}
+              {consultedAt(fetchedAtUtc as string)}.
+            </p>
+          )}
+        </footer>
+      )}
     </article>
   );
 }

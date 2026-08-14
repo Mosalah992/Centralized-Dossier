@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { useRoute } from './router';
-import { getVolume } from '../../shared/volumes';
+import { getTitle } from '../../shared/volumes';
 import { bindingVars } from './theme';
 import { GATE_SEALED_EVENT } from './api';
 import { Ambience } from './components/Ambience';
@@ -12,6 +12,9 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { RosterView, StatisticsView } from './views/Personnel';
 import { LedgerView, StipendsView } from './views/Finance';
 import { CalendarView, HonorView } from './views/Honors';
+import { HistoryView } from './views/History';
+import summersetGlooms from './assets/summerset-glooms.mp3';
+import goldenHerald from './assets/golden-herald.mp3';
 import type { VolumeSlug } from '../../shared/types';
 
 const VIEWS: Record<VolumeSlug, () => JSX.Element> = {
@@ -21,6 +24,20 @@ const VIEWS: Record<VolumeSlug, () => JSX.Element> = {
   stipends: StipendsView,
   honor: HonorView,
   calendar: CalendarView,
+  history: HistoryView,
+};
+
+interface Track {
+  url: string;
+  title: string;
+}
+
+/** The room tone of the archive itself, and of the gate before it opens. */
+const HALL_TRACK: Track = { url: summersetGlooms, title: 'Summerset Glooms' };
+
+/** Volumes that sound their own tone. Everywhere else keeps the hall's. */
+const VOLUME_TRACKS: Partial<Record<VolumeSlug, Track>> = {
+  history: { url: goldenHerald, title: 'Golden Herald' },
 };
 
 export default function App() {
@@ -46,18 +63,20 @@ export default function App() {
 
   // The tab title should say which volume is open.
   useEffect(() => {
-    const name = route.name === 'volume' ? getVolume(route.slug)?.title : null;
+    const name = route.name === 'volume' ? getTitle(route.slug) : null;
     document.title = name
       ? `${name} - Thalmor Embassy Archives`
       : 'Thalmor Embassy Archives';
   }, [route]);
+
+  const track = (route.name === 'volume' && VOLUME_TRACKS[route.slug]) || HALL_TRACK;
 
   // Ambience holds the same slot in every state — waiting on the gate, sealed,
   // and open. If it changed position React would remount it, and the track
   // would be cut off the moment the seal breaks.
   return (
     <>
-      <Ambience />
+      <Ambience track={track.url} />
 
       {open === null ? null : !open ? (
         <Gate onOpen={() => setOpen(true)} />
@@ -104,10 +123,11 @@ export default function App() {
             <p className="site-footer__warning">
               Unauthorised perusal is a matter for the Justiciars.
             </p>
-            {/* The ambience plays across the whole archive, so its credit sits
-                here rather than inside any one volume. */}
+            {/* The credit names whichever tone is actually sounding, so a
+                reader in a volume with its own track is told the right title
+                rather than the hall's. */}
             <p className="site-footer__credit">
-              <em>Summerset Glooms</em>, played by <strong>Vaerion Meanor</strong> the bard.
+              <em>{track.title}</em>, played by <strong>Vaerion Meanor</strong> the bard.
             </p>
           </footer>
         </div>

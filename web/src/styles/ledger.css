@@ -908,3 +908,190 @@ td.wrap {
     margin: 1.5rem 0;
   }
 }
+
+/* ── History of the Realm ────────────────────────────────────────────────── */
+
+/* The one volume with no register behind it, so it reads as prose rather than
+   as a grid. Set narrower than the tables above: a chronicle is meant to be
+   read line by line, and full-width measure defeats that. */
+
+.chronicle__preamble {
+  max-width: 44rem;
+  margin: 1.2rem auto 0;
+}
+
+.chronicle__preamble p {
+  margin: 0 0 0.9rem;
+  line-height: 1.72;
+}
+
+.chronicle__aside {
+  padding-left: 1rem;
+  border-left: 2px solid color-mix(in srgb, var(--foil) 42%, transparent);
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+.chronicle__month {
+  margin: 2rem 0 0.9rem;
+  font-family: var(--display);
+  font-size: 0.72rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  text-align: center;
+  color: color-mix(in srgb, var(--cover) 38%, var(--ink));
+}
+
+.chronicle__month::before,
+.chronicle__month::after {
+  content: '·';
+  margin: 0 0.7rem;
+  opacity: 0.55;
+}
+
+.chronicle {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+
+/* A ruled margin down the left, as a dated ledger of events would be kept. */
+.chronicle__entry {
+  display: grid;
+  grid-template-columns: 9.5rem minmax(0, 1fr);
+  gap: 0 1.2rem;
+  padding: 0.62rem 0;
+  border-bottom: 1px solid rgba(90, 70, 30, 0.14);
+}
+
+.chronicle__entry:last-child {
+  border-bottom: 0;
+}
+
+.chronicle__date {
+  font-family: var(--display);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-align: right;
+  padding-top: 0.24rem;
+  color: color-mix(in srgb, var(--cover) 44%, var(--ink));
+}
+
+.chronicle__text {
+  line-height: 1.68;
+}
+
+/* The few days the rest of the chronicle turns on. Marked with weight and a
+   gold rule rather than colour alone, so the emphasis survives on a printed
+   page and for a reader who cannot pick the gold out. */
+.chronicle__entry--grave {
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--cover) 6%, transparent),
+    transparent 70%);
+}
+
+.chronicle__entry--grave .chronicle__date {
+  color: color-mix(in srgb, var(--cover) 72%, var(--ink));
+}
+
+.chronicle__entry--grave .chronicle__text {
+  font-weight: 600;
+}
+
+.chronicle__steps {
+  max-width: 44rem;
+  margin: 1.2rem 0;
+  padding-left: 1.4rem;
+}
+
+.chronicle__steps li {
+  margin-bottom: 0.7rem;
+  line-height: 1.68;
+  padding-left: 0.3rem;
+}
+
+.chronicle__steps li::marker {
+  font-family: var(--display);
+  font-size: 0.8rem;
+  color: color-mix(in srgb, var(--cover) 58%, var(--ink));
+}
+
+.chronicle__reckoning {
+  margin: 1.2rem 0 0;
+}
+
+.chronicle__reckoning dt {
+  margin-top: 1rem;
+  font-family: var(--display);
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--cover) 62%, var(--ink));
+}
+
+.chronicle__reckoning dd {
+  margin: 0.35rem 0 0;
+  padding-left: 1rem;
+  border-left: 1px solid rgba(90, 70, 30, 0.2);
+  line-height: 1.68;
+}
+
+/* The four mastheads, given their own plates. */
+.presses {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1rem;
+  margin-top: 1.3rem;
+}
+
+.press {
+  padding: 1rem 1.1rem;
+  background: color-mix(in srgb, var(--cover) 4%, rgba(239, 230, 210, 0.5));
+  border: 1px solid color-mix(in srgb, var(--cover) 22%, rgba(90, 70, 30, 0.18));
+}
+
+.press__name {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 0.92rem;
+  letter-spacing: 0.06em;
+  color: color-mix(in srgb, var(--cover) 62%, var(--ink));
+}
+
+.press__span {
+  margin: 0.2rem 0 0.5rem;
+  font-family: var(--display);
+  font-size: 0.64rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.press__staff {
+  margin: 0 0 0.45rem;
+  font-size: 0.84rem;
+  font-style: italic;
+  color: color-mix(in srgb, var(--cover) 40%, var(--ink));
+}
+
+.press__note {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 640px) {
+  /* The date column stops earning its width; stack it over the entry. */
+  .chronicle__entry {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.3rem;
+  }
+
+  .chronicle__date {
+    text-align: left;
+    padding-top: 0;
+  }
+}

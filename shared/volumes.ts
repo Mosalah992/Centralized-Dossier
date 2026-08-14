@@ -8,7 +8,7 @@
 // stale, and the calendar's title carries the in-world year, so it will move
 // again at the turn of 4E 227.
 
-import type { VolumeDefinition, VolumeSlug } from './types';
+import type { KeptVolume, VolumeDefinition, VolumeSlug } from './types';
 
 export const VOLUMES: readonly VolumeDefinition[] = [
   {
@@ -62,10 +62,35 @@ export const VOLUMES: readonly VolumeDefinition[] = [
   },
 ] as const;
 
+/**
+ * Volumes the Embassy keeps itself. Not in `VOLUMES`, and deliberately so —
+ * see KeptVolume. The Worker never sees these, asks the sheet nothing about
+ * them, and they cannot be withdrawn by a tab being renamed.
+ */
+export const KEPT: readonly KeptVolume[] = [
+  {
+    slug: 'history',
+    title: 'History of the Realm',
+    category: 'Chronicles',
+  },
+] as const;
+
 export const VOLUME_SLUGS: readonly VolumeSlug[] = VOLUMES.map((v) => v.slug);
+export const KEPT_SLUGS: readonly VolumeSlug[] = KEPT.map((v) => v.slug);
+
+/** Every slug the archive will open, whether the sheet backs it or not. */
+export const ALL_SLUGS: readonly VolumeSlug[] = [...VOLUME_SLUGS, ...KEPT_SLUGS];
+
+export const isKept = (slug: string): boolean =>
+  (KEPT_SLUGS as readonly string[]).includes(slug);
 
 export function getVolume(slug: string): VolumeDefinition | undefined {
   return VOLUMES.find((v) => v.slug === slug);
+}
+
+/** Title for any volume on the shelf, sheet-backed or kept. */
+export function getTitle(slug: string): string | undefined {
+  return (VOLUMES.find((v) => v.slug === slug) ?? KEPT.find((v) => v.slug === slug))?.title;
 }
 
 /**
@@ -88,12 +113,23 @@ export function resolveTabTitle(
   return matches.length ? matches[matches.length - 1]! : null;
 }
 
-/** Volumes grouped for the shelf, in display order. */
-export const SHELF: readonly { category: string; volumes: VolumeDefinition[] }[] = [
+/**
+ * Volumes grouped for the shelf, in display order. Chronicles come last and
+ * carry both kinds, so a kept volume stands on the same shelf as the registers
+ * rather than in some separate annex.
+ */
+export const SHELF: readonly {
+  category: string;
+  volumes: (VolumeDefinition | KeptVolume)[];
+}[] = [
   'Personnel',
   'Finance',
   'Honors & Calendar',
+  'Chronicles',
 ].map((category) => ({
   category,
-  volumes: VOLUMES.filter((v) => v.category === category),
+  volumes: [
+    ...VOLUMES.filter((v) => v.category === category),
+    ...KEPT.filter((v) => v.category === category),
+  ],
 }));
