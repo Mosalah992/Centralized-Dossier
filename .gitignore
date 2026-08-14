@@ -19,3 +19,10 @@ tmp/
 gate web page/
 gate web page.zip
 Assets/torchlightgif.gif
+
+# The candle sprites are committed extracted, under Assets/; the archive they
+# arrived in is not, so there is only one copy to keep straight.
+Assets/Animated_skyrim_style_candles.zip
+
+# Local editor/agent tooling (launch config for the dev-server preview)
+.claude/

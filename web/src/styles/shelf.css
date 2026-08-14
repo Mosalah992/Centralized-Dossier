@@ -56,10 +56,16 @@
   padding-bottom: clamp(1.1rem, 2.2vw, 1.8rem);
 }
 
+/* The insignia is dark pewter and carries its own painted halo, so it needs
+   room to read — below about 4rem the eagle collapses into a smudge — and only
+   a light shadow on top of the glow it already has. */
 .hall__seal {
-  color: var(--gold);
-  opacity: 0.72;
-  filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.55));
+  display: block;
+  width: clamp(4.5rem, 7vw, 6.5rem);
+  height: auto;
+  margin-inline: auto;
+  opacity: 0.94;
+  filter: drop-shadow(0 4px 9px rgba(0, 0, 0, 0.5));
 }
 
 .hall__title {
@@ -79,33 +85,54 @@
   color: color-mix(in srgb, var(--stone) 72%, #1c1915);
 }
 
+/* Sconces flanking the cabinet. The sprites are pixel art pre-scaled 4x by
+   scripts/prepare-candles.mjs, so the page scales them down rather than up and
+   the blocks stay hard-edged at any viewport width. */
+
 .hall__candle {
   position: absolute;
   top: clamp(8rem, 16vw, 13rem);
-  width: 0.55rem;
-  height: 3.8rem;
-  border-radius: 0.18rem;
-  background: linear-gradient(90deg, #5b4328, #d2b077 45%, #49331e);
-  box-shadow: 0 0 18px rgba(218, 143, 58, 0.24);
-  opacity: 0.55;
+  width: clamp(3.75rem, 5.5vw, 6rem);
+  aspect-ratio: 1;
+  background-repeat: no-repeat;
+  background-position: center bottom;
+  background-size: contain;
+  opacity: 0.92;
   pointer-events: none;
 }
 
-.hall__candle::before {
+/* The flames are painted and cannot move, so the life comes from the light
+   they throw. Pulsing a glow costs one composited layer; animating the sprite
+   itself would just wobble a picture of a flame. */
+.hall__candle::after {
   content: '';
   position: absolute;
   left: 50%;
-  top: -1.05rem;
-  width: 0.7rem;
-  height: 1.25rem;
-  border-radius: 50% 50% 45% 45%;
-  background: radial-gradient(circle at 50% 62%, #f3d28b, #b95824 52%, transparent 70%);
-  transform: translateX(-50%);
-  animation: candle-shift 3.8s var(--ease) infinite;
+  top: 34%;
+  width: 190%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle,
+    rgba(240, 176, 84, 0.3),
+    rgba(240, 176, 84, 0.09) 38%,
+    transparent 68%);
+  animation: candle-flicker 3.8s ease-in-out infinite;
 }
 
-.hall__candle--left { left: max(1rem, calc(50% - 37rem)); }
-.hall__candle--right { right: max(1rem, calc(50% - 37rem)); }
+.hall__candle--left {
+  left: max(1rem, calc(50% - 37rem));
+  background-image: url('../assets/candle-left.webp');
+}
+
+.hall__candle--right {
+  right: max(1rem, calc(50% - 37rem));
+  background-image: url('../assets/candle-right.webp');
+}
+
+/* Offset so the two do not pulse in lockstep. */
+.hall__candle--right::after {
+  animation-delay: -1.6s;
+}
 
 .hall__dust {
   position: absolute;
@@ -121,9 +148,9 @@
   animation: dust-drift 14s linear infinite;
 }
 
-@keyframes candle-shift {
-  0%, 100% { transform: translateX(-50%) scaleY(1); opacity: 0.75; }
-  50% { transform: translateX(-46%) scaleY(1.12); opacity: 1; }
+@keyframes candle-flicker {
+  0%, 100% { opacity: 0.72; transform: translate(-50%, -50%) scale(0.94); }
+  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.06); }
 }
 
 @keyframes dust-drift {
@@ -248,229 +275,84 @@
     0 16px 24px rgba(0, 0, 0, 0.52);
 }
 
-/* Book */
+/* Book
+
+   The covers are painted art (web/src/assets/volumes/), cut from one sheet by
+   scripts/prepare-volumes.mjs. Each is 400x512 with the book standing on 92% of
+   the height and its ribbon hanging into the rest, so the six line up on the
+   shelf and their bookmarks overhang the edge.
+
+   The old CSS book rotated in 3D on hover. The art has its own perspective and
+   lighting baked in, so it is lifted straight off the shelf instead — rotating
+   it would skew highlights that are painted, not computed. */
 
 .book {
-  --cover: #2c3a2e;
-  --cover-2: #1d2720;
-  --foil: var(--gold);
-
   display: block;
-  perspective: 1600px;
   width: clamp(12.5rem, 15vw, 16.25rem);
   max-width: 100%;
   cursor: pointer;
   color: inherit;
-  text-align: left;
 }
 
 .book__body {
   display: block;
   position: relative;
-  height: clamp(19rem, 23vw, 24.25rem);
-  min-height: 18.5rem;
-  transform-style: preserve-3d;
-  transform: rotateY(-13deg) rotateX(1.5deg);
-  transition: transform 0.55s var(--ease), filter 0.55s var(--ease);
-  filter: drop-shadow(0 22px 23px rgba(0, 0, 0, 0.58));
+  /* Pivot near the base, so growing on hover reads as the volume being drawn
+     up off the shelf rather than floating toward the reader. */
+  transform-origin: 50% 88%;
+  transition: transform 0.5s var(--ease), filter 0.5s var(--ease);
+  filter: drop-shadow(0 16px 18px rgba(0, 0, 0, 0.55));
+}
+
+.book__cover {
+  display: block;
+  width: 100%;
+  height: auto;
+  -webkit-user-drag: none;
 }
 
 .book:hover .book__body,
 .book:focus-visible .book__body {
-  transform: rotateY(-6deg) rotateX(1deg) translateY(-13px) translateZ(18px);
-  filter: drop-shadow(0 33px 34px rgba(0, 0, 0, 0.68));
+  transform: translateY(-14px) scale(1.045);
+  filter: drop-shadow(0 30px 28px rgba(0, 0, 0, 0.66));
 }
 
 .book:active .book__body {
-  transform: rotateY(-9deg) rotateX(1deg) translateY(-5px);
+  transform: translateY(-5px) scale(1.02);
 }
 
-.book__shadow {
-  position: absolute;
-  left: 12%;
-  right: 2%;
-  bottom: -1.1rem;
-  height: 2.1rem;
-  border-radius: 50%;
-  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.58), transparent 68%);
-  transform: translateZ(-32px) rotateX(72deg);
-}
-
-.book__pages {
-  position: absolute;
-  inset: 0.5rem -0.62rem 0.55rem 0.72rem;
-  border-radius: 2px 5px 5px 2px;
-  background:
-    repeating-linear-gradient(90deg, #d5c8a8 0 2px, #b9aa88 2px 3px, #e9ddc1 3px 5px),
-    linear-gradient(90deg, #b8aa88, #efe6d2 46%, #cfc09c);
-  box-shadow: inset -5px 0 9px rgba(74, 54, 28, 0.22);
-  transform: translateZ(-12px);
-  transition: inset 0.55s var(--ease);
-}
-
-.book:hover .book__pages,
-.book:focus-visible .book__pages {
-  inset-right: -0.9rem;
-}
-
-.book__spine {
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 1.65rem;
-  border-radius: 3px 0 0 3px;
-  background:
-    linear-gradient(90deg, rgba(0, 0, 0, 0.28), transparent),
-    linear-gradient(90deg, var(--cover-2), var(--cover));
-  box-shadow:
-    inset -3px 0 8px rgba(0, 0, 0, 0.5),
-    inset 1px 0 rgba(255, 255, 255, 0.06);
-  transform: translateZ(2px);
-}
-
-.book__spine::before,
-.book__spine::after {
-  content: '';
-  position: absolute;
-  left: 0.34rem;
-  right: 0.34rem;
-  height: 18%;
-  border-block: 1px solid color-mix(in srgb, var(--foil) 46%, transparent);
-}
-
-.book__spine::before { top: 13%; }
-.book__spine::after { bottom: 13%; }
-
-.book__cover {
-  position: absolute;
-  inset: 0 0 0 1.55rem;
-  border-radius: 2px 5px 5px 2px;
-  background:
-    radial-gradient(circle at 28% 20%, rgba(255, 255, 255, 0.09), transparent 28%),
-    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px 9px),
-    linear-gradient(155deg, rgba(255, 255, 255, 0.07), transparent 42%),
-    linear-gradient(160deg, var(--cover), var(--cover-2));
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
-    inset 0 0 48px rgba(0, 0, 0, 0.45),
-    inset 9px 0 18px rgba(255, 255, 255, 0.035);
-  transform: translateZ(7px);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.88rem;
-  padding: 2.3rem 1.15rem 2.05rem;
-  overflow: hidden;
-}
-
-.book__cover::before,
-.book__cover::after {
-  content: '';
-  position: absolute;
-  pointer-events: none;
-}
-
-.book__cover::before {
-  inset: 0.82rem;
-  border: 1px solid color-mix(in srgb, var(--foil) 42%, transparent);
-  box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.22);
-}
-
-.book__cover::after {
-  inset: 1.14rem;
-  border: 1px solid color-mix(in srgb, var(--foil) 17%, transparent);
-}
-
-.book__corner {
-  position: absolute;
-  width: 1.55rem;
-  height: 1.55rem;
-  border-color: color-mix(in srgb, var(--foil) 58%, #342717);
-  opacity: 0.72;
-}
-
-.book__corner--tl { top: 0.58rem; left: 0.58rem; border-top: 2px solid; border-left: 2px solid; }
-.book__corner--tr { top: 0.58rem; right: 0.58rem; border-top: 2px solid; border-right: 2px solid; }
-.book__corner--bl { bottom: 0.58rem; left: 0.58rem; border-bottom: 2px solid; border-left: 2px solid; }
-.book__corner--br { bottom: 0.58rem; right: 0.58rem; border-bottom: 2px solid; border-right: 2px solid; }
-
-.book__strap {
-  position: absolute;
-  left: 2rem;
-  right: 2rem;
-  height: 1px;
-  background: color-mix(in srgb, var(--foil) 40%, transparent);
-  box-shadow: 0 1px rgba(0, 0, 0, 0.32);
-}
-
-.book__strap--top { top: 32%; }
-.book__strap--bottom { bottom: 30%; }
-
-.book__insignia {
-  color: var(--foil);
-  opacity: 0.92;
-  position: relative;
-  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.38));
-  transition: color 0.45s var(--ease), opacity 0.45s var(--ease);
-}
-
-.book:hover .book__insignia,
-.book:focus-visible .book__insignia {
-  color: color-mix(in srgb, var(--foil) 84%, #fff);
-  opacity: 1;
-}
-
-.book__title {
-  position: relative;
-  max-width: 100%;
-  font-family: var(--display);
-  font-size: clamp(0.88rem, 1.15vw, 1.06rem);
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  line-height: 1.35;
-  text-align: center;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--foil) 82%, #fff);
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
-}
-
-.book__subtitle,
-.book__stamp,
-.book__missing {
-  position: relative;
-  max-width: 100%;
-  text-align: center;
-  font-family: var(--display);
-  text-transform: uppercase;
-}
-
-.book__subtitle {
-  font-size: 0.56rem;
-  letter-spacing: 0.16em;
-  line-height: 1.45;
-  color: color-mix(in srgb, var(--foil) 56%, var(--stone));
-}
-
-.book__stamp {
-  margin-top: 0.1rem;
-  font-size: 0.52rem;
-  letter-spacing: 0.2em;
-  color: color-mix(in srgb, var(--foil) 48%, transparent);
-}
+/* Withdrawn: the volume is listed but its tab is gone from the sheet. The
+   greyscale sits on the image alone so the band stays legible over it. */
 
 .book[aria-disabled='true'] {
   cursor: not-allowed;
 }
 
-.book[aria-disabled='true'] .book__body {
-  filter: grayscale(0.75) brightness(0.6) drop-shadow(0 14px 18px rgba(0, 0, 0, 0.5));
-  transform: rotateY(-13deg) rotateX(1.5deg);
+.book[aria-disabled='true'] .book__cover {
+  filter: grayscale(0.88) brightness(0.5);
 }
 
-.book__missing {
-  font-size: 0.54rem;
-  letter-spacing: 0.18em;
-  color: #d98b8b;
+/* After the hover rules, which it has to beat at equal specificity. */
+.book[aria-disabled='true'] .book__body {
+  transform: none;
+  filter: drop-shadow(0 12px 14px rgba(0, 0, 0, 0.5));
+}
+
+.book__withdrawn {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 45%;
+  padding: 0.32rem 0;
+  text-align: center;
+  font-family: var(--display);
+  font-size: 0.56rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #f2dede;
+  background: linear-gradient(90deg, transparent, rgba(88, 18, 20, 0.94) 10% 90%, transparent);
+  border-block: 1px solid rgba(242, 222, 222, 0.32);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
 }
 
 @media (max-width: 1050px) {
@@ -513,11 +395,8 @@
     gap: 1.35rem;
   }
 
+  /* Height follows the cover's aspect ratio now, so only the width is set. */
   .book {
     width: min(16.25rem, 82vw);
-  }
-
-  .book__body {
-    height: clamp(20rem, 112vw, 24rem);
   }
 }

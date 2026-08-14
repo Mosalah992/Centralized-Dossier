@@ -5,7 +5,6 @@ import { useShelf } from '../api';
 import { SHELF } from '../../../shared/volumes';
 import { BINDINGS } from '../theme';
 import { Book } from './Book';
-import { Seal } from './Insignia';
 import { Notice } from './Notice';
 
 interface Props {
@@ -27,7 +26,10 @@ export function Shelf({ onOpen }: Props) {
       <span className="hall__dust" aria-hidden />
 
       <header className="hall__head">
-        <Seal className="hall__seal" />
+        {/* The Dominion insignia. Decorative — the heading beneath it already
+            names the archive, so it is not announced a second time. Served
+            from public/ as ledger.css serves the same file for its watermark. */}
+        <img className="hall__seal" src="/seal.webp" alt="" width={250} height={250} decoding="async" />
         <h1 className="hall__title">
           Thalmor Embassy
           <br />

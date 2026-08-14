@@ -1,0 +1,29 @@
+{
+  "group_id": "a746877a-d49e-4254-bdb5-3f4ef9a096f7",
+  "objects": [
+    {
+      "id": "8edbd559-8e86-4539-b07e-b459d28e6046",
+      "name": "base",
+      "prompt": "Animated skyrim style candles",
+      "size": {
+        "width": 48,
+        "height": 48
+      },
+      "directions": 8,
+      "view": "low top-down",
+      "rotations": {
+        "south": "rotations/south.png",
+        "south-east": "rotations/south-east.png",
+        "east": "rotations/east.png",
+        "north-east": "rotations/north-east.png",
+        "north": "rotations/north.png",
+        "north-west": "rotations/north-west.png",
+        "west": "rotations/west.png",
+        "south-west": "rotations/south-west.png"
+      },
+      "animations": {}
+    }
+  ],
+  "export_version": "1.1",
+  "export_date": "2026-08-14T13:42:30.995215"
+}

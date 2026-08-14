@@ -1,11 +1,15 @@
 // One volume on the shelf. An anchor, so it is a real link — middle-click,
 // open-in-new-tab and the keyboard all behave as expected — with navigation
 // intercepted for the in-app transition.
+//
+// The cover is painted art, title and all. Nothing is drawn over it: the
+// anchor's aria-label carries the name for anyone who cannot see the image, and
+// the img is alt="" so the two do not announce the volume twice.
 
 import type { VolumeSlug } from '../../../shared/types';
 import { hrefFor } from '../router';
 import { bindingVars } from '../theme';
-import { Insignia } from './Insignia';
+import { COVERS, COVER_H, COVER_W } from '../covers';
 
 interface Props {
   slug: VolumeSlug;
@@ -20,9 +24,11 @@ export function Book({ slug, title, subtitle, tab, onOpen }: Props) {
   const href = hrefFor(slug);
   const missing = tab === null;
 
+  // The subtitle is painted on the cover, so it is read out too rather than
+  // being something only sighted readers get.
   const label = missing
     ? `${title} — not currently in the archive`
-    : `Open the ${title}`;
+    : `Open the ${title} — ${subtitle}`;
 
   return (
     <a
@@ -39,23 +45,16 @@ export function Book({ slug, title, subtitle, tab, onOpen }: Props) {
       }}
     >
       <span className="book__body">
-        <span className="book__shadow" />
-        <span className="book__pages" />
-        <span className="book__spine" />
-        <span className="book__cover">
-          <span className="book__corner book__corner--tl" />
-          <span className="book__corner book__corner--tr" />
-          <span className="book__corner book__corner--bl" />
-          <span className="book__corner book__corner--br" />
-          <Insignia slug={slug} className="book__insignia" />
-          <span className="book__title">{title}</span>
-          <span className="book__subtitle">{subtitle}</span>
-          {missing
-            ? <span className="book__missing">Volume withdrawn</span>
-            : <span className="book__stamp">Embassy Register</span>}
-          <span className="book__strap book__strap--top" />
-          <span className="book__strap book__strap--bottom" />
-        </span>
+        <img
+          className="book__cover"
+          src={COVERS[slug]}
+          alt=""
+          width={COVER_W}
+          height={COVER_H}
+          decoding="async"
+          draggable={false}
+        />
+        {missing && <span className="book__withdrawn">Volume withdrawn</span>}
       </span>
     </a>
   );
