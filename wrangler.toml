@@ -7,6 +7,15 @@ compatibility_date = "2024-09-23"
 # alongside it as the /api/* routes on the same origin.
 pages_build_output_dir = "dist"
 
+# Gate throttling. functions/api/gate.ts counts failed passphrase attempts per
+# IP here — 8 per 10 minutes — and DISABLES ITSELF SILENTLY when the binding is
+# absent (`if (!env.GATE_ATTEMPTS) return false`). It was absent until now, so
+# the live gate accepted unlimited guesses at a word shared with ~100 people.
+# Deleting this binding does not break the site; it quietly unlocks the door.
+[[kv_namespaces]]
+binding = "GATE_ATTEMPTS"
+id = "0b84bdb3c52141a08506032df9c004d1"
+
 [vars]
 # The archive spreadsheet. The clock-in bot writes Roster G/H/J/K here; this
 # site only ever reads.
