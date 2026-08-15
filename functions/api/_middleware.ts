@@ -49,5 +49,13 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   response.headers.set("cache-control", "private, no-store");
   response.headers.set("vary", "Cookie");
 
+  // Bookkeeping for lib/swr.ts — when an entry was produced, and whether the
+  // sheet answered when it was built. Both have to survive into the Worker's
+  // own cache, so they are set upstream and stripped here rather than never
+  // written: the reader has no use for either, and the second merely repeats a
+  // field already in the body.
+  response.headers.delete("x-archive-fetched-at");
+  response.headers.delete("x-archive-reachable");
+
   return response;
 };

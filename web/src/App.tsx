@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 
 import { useRoute } from './router';
 import { getTitle } from '../../shared/volumes';
@@ -7,17 +7,29 @@ import { GATE_SEALED_EVENT } from './api';
 import { Ambience } from './components/Ambience';
 import { Gate } from './components/Gate';
 import { Shelf } from './components/Shelf';
-import { Notice } from './components/Notice';
+import { Consulting, Notice } from './components/Notice';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { RosterView, StatisticsView } from './views/Personnel';
-import { LedgerView, StipendsView } from './views/Finance';
-import { CalendarView, HonorView } from './views/Honors';
-import { HistoryView } from './views/History';
-import summersetGlooms from './assets/summerset-glooms.mp3';
-import goldenHerald from './assets/golden-herald.mp3';
 import type { VolumeSlug } from '../../shared/types';
 
-const VIEWS: Record<VolumeSlug, () => JSX.Element> = {
+/*
+ * Volumes load on demand. Everything below was previously in the first bundle,
+ * which meant a reader stopped at the gate downloaded all seven registers'
+ * code — including the chronicle, which is 24KB of prose before minification —
+ * to render a passphrase box they might not answer.
+ *
+ * Views are named exports, so each import is mapped to a default: React.lazy
+ * takes a module whose `default` is the component, and re-exporting here keeps
+ * the views themselves free of a default export they have no other use for.
+ */
+const RosterView = lazy(() => import('./views/Personnel').then((m) => ({ default: m.RosterView })));
+const StatisticsView = lazy(() => import('./views/Personnel').then((m) => ({ default: m.StatisticsView })));
+const LedgerView = lazy(() => import('./views/Finance').then((m) => ({ default: m.LedgerView })));
+const StipendsView = lazy(() => import('./views/Finance').then((m) => ({ default: m.StipendsView })));
+const HonorView = lazy(() => import('./views/Honors').then((m) => ({ default: m.HonorView })));
+const CalendarView = lazy(() => import('./views/Honors').then((m) => ({ default: m.CalendarView })));
+const HistoryView = lazy(() => import('./views/History').then((m) => ({ default: m.HistoryView })));
+
+const VIEWS: Record<VolumeSlug, React.ComponentType> = {
   roster: RosterView,
   statistics: StatisticsView,
   ledger: LedgerView,
@@ -32,12 +44,23 @@ interface Track {
   title: string;
 }
 
+/*
+ * Served from public/ by URL rather than imported, so the tracks stay out of
+ * the build graph: Vite was hashing and re-emitting 4.3MB of audio on every
+ * build, and a byte of it never changes. As plain files they are also
+ * independently cacheable and can be re-encoded without a rebuild.
+ *
+ * The cost of leaving the pipeline is the hash, so these are cache-busted by
+ * hand: bump the query when a track is replaced, or readers keep the old one.
+ */
+const MUSIC = '/music';
+
 /** The room tone of the archive itself, and of the gate before it opens. */
-const HALL_TRACK: Track = { url: summersetGlooms, title: 'Summerset Glooms' };
+const HALL_TRACK: Track = { url: `${MUSIC}/summerset-glooms.mp3?v=1`, title: 'Summerset Glooms' };
 
 /** Volumes that sound their own tone. Everywhere else keeps the hall's. */
 const VOLUME_TRACKS: Partial<Record<VolumeSlug, Track>> = {
-  history: { url: goldenHerald, title: 'Golden Herald' },
+  history: { url: `${MUSIC}/golden-herald.mp3?v=1`, title: 'Golden Herald' },
 };
 
 export default function App() {
@@ -93,11 +116,18 @@ export default function App() {
                 {/* Remounting per slug restarts the page-opening animation and
                     discards the previous volume's state. The boundary keeps a
                     failure inside the volume instead of blanking the archive. */}
+                {/* Suspense sits inside the boundary so a chunk that fails to
+                    arrive is caught as an error rather than hanging on the
+                    fallback forever. The fallback is the same notice a volume
+                    shows while the archivist is consulted, so a slow network
+                    and a slow sheet look alike to the reader. */}
                 <ErrorBoundary resetKey={route.slug}>
-                  {(() => {
-                    const View = VIEWS[route.slug];
-                    return <View key={route.slug} />;
-                  })()}
+                  <Suspense fallback={<Consulting />}>
+                    {(() => {
+                      const View = VIEWS[route.slug];
+                      return <View key={route.slug} />;
+                    })()}
+                  </Suspense>
                 </ErrorBoundary>
               </div>
             )}

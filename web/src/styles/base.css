@@ -18,6 +18,11 @@
   --rule-soft: rgba(201, 162, 39, 0.16);
 
   --serif: 'EB Garamond', 'Iowan Old Style', Georgia, serif;
+  /* A tracked Roman capital, not a script. The whole micro-typography here —
+     the section plates, the gate's eyebrow, every small uppercase label — is
+     set in wide letterspaced caps, which needs a face with separate, upright
+     letterforms. A calligraphic hand set that way comes apart into disconnected
+     strokes; this was tried with Hesperides and was unreadable at label size. */
   --display: 'Cinzel', 'Trajan Pro', var(--serif);
 
   --shell: min(1180px, 92vw);

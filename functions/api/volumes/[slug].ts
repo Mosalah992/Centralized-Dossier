@@ -7,6 +7,7 @@
 import type { Env } from '../../../server/gsheets';
 import { loadVolume, TabMissingError } from '../../../server/archive';
 import { getVolume } from '../../../shared/volumes';
+import { staleWhileRevalidate } from '../../lib/swr';
 
 /** Sheets allows 300 reads/min per project; the archive must not be the reason we hit it. */
 const CACHE_SECONDS = 60;
@@ -36,17 +37,14 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
   const cacheKey = new Request(
     `https://archive.cache.internal/${context.env.SHEET_ID}/${volume.slug}`,
   );
-  const cache = caches.default;
-
-  const hit = await cache.match(cacheKey);
-  if (hit) return hit;
 
   try {
-    const envelope = await loadVolume(context.env, volume);
-    const response = json(envelope, 200, CACHE_SECONDS);
-
-    context.waitUntil(cache.put(cacheKey, response.clone()));
-    return response;
+    return await staleWhileRevalidate({
+      cacheKey,
+      freshSeconds: CACHE_SECONDS,
+      waitUntil: (promise) => context.waitUntil(promise),
+      produce: async () => json(await loadVolume(context.env, volume), 200, CACHE_SECONDS),
+    });
   } catch (error) {
     if (error instanceof TabMissingError) {
       // The tab was renamed or deleted — a real, actionable state, not a crash.

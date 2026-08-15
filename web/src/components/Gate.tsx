@@ -145,6 +145,10 @@ export function Gate({ onOpen }: GateProps) {
               {/* Above the fold and in the first render, so a high fetch
                   priority does the work of a preload without costing members
                   who already hold a writ the download of a gate they skip. */}
+              {/* React 18's runtime warns about this prop while its own types
+                  require the camelCase spelling, so there is no form that
+                  satisfies both. Kept as the types want it; the warning is
+                  cosmetic and goes away on React 19. */}
               <img src={sealUrl} alt="" draggable={false} fetchPriority="high" />
             </motion.div>
           ))}

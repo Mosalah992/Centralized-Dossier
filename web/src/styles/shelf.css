@@ -99,6 +99,12 @@
   background-size: contain;
   opacity: 0.92;
   pointer-events: none;
+  /* The sprite sheet ships eight ROTATIONS, not animation frames — its own
+     metadata lists `animations` as empty. Stepping through them would swing
+     the candelabra round on the spot rather than gutter its flames. So the
+     flame is not redrawn; the light it throws is what moves, here and on the
+     glow below, on different periods so they never pulse in lockstep. */
+  animation: candle-gutter 5.3s ease-in-out infinite;
 }
 
 /* The flames are painted and cannot move, so the life comes from the light
@@ -151,6 +157,17 @@
 @keyframes candle-flicker {
   0%, 100% { opacity: 0.72; transform: translate(-50%, -50%) scale(0.94); }
   50% { opacity: 1; transform: translate(-50%, -50%) scale(1.06); }
+}
+
+/* Uneven on purpose: a flame that brightens and dims on a clean sine reads as
+   a pulsing lamp. The stops are deliberately not evenly spaced. */
+@keyframes candle-gutter {
+  0%, 100% { filter: brightness(1); }
+  18% { filter: brightness(1.09); }
+  31% { filter: brightness(0.96); }
+  54% { filter: brightness(1.12); }
+  67% { filter: brightness(1.02); }
+  83% { filter: brightness(0.94); }
 }
 
 @keyframes dust-drift {

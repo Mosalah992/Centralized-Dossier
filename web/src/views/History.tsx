@@ -1,7 +1,7 @@
 // History of the Realm — the one volume the Embassy writes rather than reads.
 //
 // Its account is assembled from the free presses of Skyrim: four papers whose
-// surviving issues cover Second Seed 3 to Midyear 15 of 4E 216. The text is
+// surviving issues cover Second Seed 1 to Midyear 15 of 4E 216. The text is
 // held here rather than in the roster sheet for the same reason the First
 // Emissaries' deeds are — it is settled history, and a grid of cells is the
 // wrong shape for it. There is no tab behind this volume and no API call for
@@ -25,8 +25,16 @@ const SECOND_SEED: Entry[] = [
     text: 'A naked Dunmer demands lordly clothing of Leowynn, royal tailor at Dragonsreach, claiming royalty. He vanishes when pressed for proof, vowing to return.',
   },
   {
+    date: 'Rain’s Hand 30, by night',
+    text: 'Elijah, a Dunmer misanthrope, sets upon the guards of Solitude to overturn his exile. Baron Dar’Mozahr drives his sellswords from the city, and Elijah leaps into the river in full battle regalia and is presumed drowned. His compatriot Grommash is taken and questioned, then released — his part in it circumstantial, their meeting in the crypt beneath the city amicable. The two agree to drink together once the dust has settled.',
+  },
+  {
+    date: 'Second Seed 1',
+    text: 'The Tamriel Tribune prints its first issue. It reports the Tight Union, an Orc warband near Whiterun that began as a labour union of Whiterun, Windhelm and Riverwood before its remnants turned on the very workers they formed to protect, and addresses them directly: the revolution must never turn on the common man.',
+  },
+  {
     date: 'Before the 3rd',
-    text: 'Grommash is executed by the Aedra’s judgement, his soul left unbanished. Elijah, aggressor in an earlier attack on Solitude, is found dead on the riverbank and his soul banished to Oblivion. Wolfgar Stormblade is executed by Jarl Thorgil Thundercaller for raiding Windhelm.',
+    text: 'Grommash is executed by the Aedra’s judgement, his soul left unbanished. Elijah is found dead on the riverbank and his soul banished to Oblivion. Neither issue explains what changed in two days. Wolfgar Stormblade is executed by Jarl Thorgil Thundercaller for raiding Windhelm.',
   },
   {
     date: 'Second Seed 3',
@@ -43,11 +51,41 @@ const SECOND_SEED: Entry[] = [
   },
   {
     date: 'Second Seed 5',
-    text: 'The Tribune prints its third issue. Faric is interrogated at Riften by the Thalmor and taken on to Markarth.',
+    text: 'The Tribune prints its third issue. Faric is interrogated at Riften by the Thalmor and taken on to Markarth. The Court of Eastmarch lays a levy on Bronze Water Cave — fifty septims the group and a third of all found — in the name of Lord Regent Thorgil, signed by Steward Saryn Telvanni.',
+  },
+  {
+    date: 'Second Seed 6',
+    text: 'The Lord Regent of Windhelm is carried off by a bandit clan. A warband of the Nordic Brotherhood, the Orcs of Vashu-Agra and Mor-Kazgh rides to find him; he has freed himself already. That same day above a hundred gather at the Tower Stone to see the sky alight and hear the voice of Magnus speak to the Vigilants of Stendarr.',
+  },
+  {
+    date: 'Second Seed 7',
+    text: 'Bjorg, Baron of Eastmarch and head of the Nordic Brotherhood, is accused by the Lord Regent of arranging his own abduction. Chieftain Joeburk Largbur takes him; he refuses Holmgang. His trial begins in the Palace of Kings before Imperial forces take it from the court and remove him to Castle Dour, where he is tried in private that night and executed in the name of the Empire. At Riften, Ares Ascer is executed for raising an assassins’ guild against the Thalmor, his soul sent to Oblivion.',
+  },
+  {
+    date: 'Second Seed 8',
+    text: 'Dawnstar is made a vassal of Windhelm and the occasion kept with a feast, Margrave Pin at its head.',
+  },
+  {
+    date: 'Second Seed 10',
+    weight: 'grave',
+    text: 'THE ATTACK ON THE EMBASSY. At first light the Sons of Skyrim fall upon the Thalmor Embassy in Haafingar. Kyne’s Host answers within the hour, sending above a dozen troops to defend Solitude and their diplomatic allies, and joins the Embassy’s own defenders in the battle at the top of the hill. Thalmor, Kyne’s Host and the Solitude guard together take the ringleader Snorri, son of Snorri, alive. He is granted Holmgang; the blacksmith Limbulous stands as champion and kills him, both men fighting bravely and with honour, and is named New Champion of Dragon Bridge for it.',
+  },
+  {
+    date: 'Second Seed 12',
+    text: 'Markarth is given leave to govern itself under Baron Dar’Mozahr as Administrator, Whiterun having withdrawn from the management of the city once word between them broke down. Elections are promised, and an open court.',
+  },
+  {
+    date: 'Second Seed 13',
+    text: 'Hundreds congregate at Winterhold. A voice upon the winds poses a riddle, the sky turns green, and atronachs set upon those gathered. A few who answer correctly are granted magic.',
   },
   {
     date: 'Second Seed 14',
-    text: 'The Riften Courier opens its run. Werewolf attacks drive a scramble for silver; the Vigilants of Stendarr arm themselves with it and the temple at Solitude gives rings away, which are already being scalped.',
+    text: 'The Tribune prints its fifth issue. The Riften Courier opens its run. Werewolf attacks drive a scramble for silver; the Vigilants of Stendarr arm themselves with it and the temple at Solitude gives rings away, which are already being scalped.',
+  },
+  {
+    date: 'Second Seed 15',
+    weight: 'grave',
+    text: 'THE MARCH ON VOSHU AGRA. Whiterun’s militia, nobility and Adventurers’ Guild march upon the Orc stronghold on a false report. The Bigtooth bandit clan had struck the Whiterun gate claiming the Voshu Agra name, while the clan itself was moving troops to Mor Khazgur. Whiterun summons above a hundred bannermen from every hold, Windhelm among them. A nameless Khajiit provokes the Orcs to a fist fight and insults their honour with Malacath’s own words; they chase his party off, not knowing two of the Jarl’s daughters rode with it. The daughters return to Whiterun saying the Voshu Agra attacked them.',
   },
   {
     date: 'Second Seed 15',
@@ -55,7 +93,11 @@ const SECOND_SEED: Entry[] = [
   },
   {
     date: 'Second Seed 16',
-    text: 'Travellers speak of the Wolf of the Rift, a werewolf that defends them rather than hunts them, and which the Vigilants are said to have met in peace.',
+    text: 'Jarl Zyrik Frostborn tells Whiterun’s open court that what passed at the fort was of improper form, and that he and Jarl Thundercaller of Windhelm went to resolve it. The Orcs, he allows, broke a few laws and will pay the price for it. Travellers speak of the Wolf of the Rift, a werewolf that defends them rather than hunts them, and which the Vigilants are said to have met in peace.',
+  },
+  {
+    date: 'Second Seed 17',
+    text: 'The Dunmer of Skyrim gather to honour the Three. Above fifty from every corner of Tamriel meet at Windhelm and walk together to the Shrine of Azura, where Jarl Thorgil Thundercaller beseeches the Twilight Queen to forgive the past transgressions of the Nords and entreats Shor to extend the same grace to the Dunmer, speaking of the brotherhood of Man and Mer. A second pilgrimage goes to the Shrine of Boet-hi-Ah. That night a council returns to Windhelm and founds the Dunmer Embassy upon the docks under Ambassadors Serven, Dral and Baron Xur — a house for all Dunmer, and a bastion for any who meet with prejudice.',
   },
   {
     date: 'Second Seed 18',
@@ -63,7 +105,7 @@ const SECOND_SEED: Entry[] = [
   },
   {
     date: 'Second Seed 19',
-    text: 'The Vashu’agra are barred from Whiterun on pain of death, after two exiles they had taken in attacked the adventurers’ guild and killed Whiterun nobles. The clan disavows them and asks openly for reconciliation.',
+    text: 'The Vashu’agra are barred from Whiterun on pain of death, after two exiles they had taken in attacked the adventurers’ guild and killed Whiterun nobles. The clan disavows them and asks openly for reconciliation. The Tribune, printing a day later, names those exiles as men Joeburk had trusted too quickly, dealt with within the clan and their access to the mine revoked — and sets the whole quarrel against Bigtooth, whom Joeburk is now charged by Windhelm to behead.',
   },
   {
     date: 'Second Seed 20',
@@ -144,9 +186,9 @@ interface Paper {
 const PAPERS: Paper[] = [
   {
     name: 'The Tamriel Tribune',
-    span: 'Second Seed 3 – 5',
-    staff: 'Editor-in-chief Trisiphine · Lead Reporter Niris Felstar',
-    note: 'Delivering the news wherever you are. Both surviving issues were printed before its entire masthead died in the purge at the Bards College.',
+    span: 'Second Seed 1 – 20',
+    staff: 'Editor-in-chief Trisiphine · Lead Reporter Niris Felstar · Financial Columnist Hafthor Harkonsen',
+    note: 'Delivering the news wherever you are. Its full run of six issues survives, every one printed before its entire masthead died in the purge at the Bards College. It never reports its own end.',
   },
   {
     name: 'The Riften Courier',
@@ -301,6 +343,18 @@ export function HistoryView() {
               At the Siege of Solitude the Tribune credits the Thalmor with
               reinforcing the city gates and holding the frontline, and with
               taking Faric of Highrock for questioning afterwards.
+            </dd>
+
+            <dt>As the attacked</dt>
+            <dd>
+              On the tenth of Second Seed the Sons of Skyrim fell upon the
+              Embassy itself at first light. Kyne’s Host rode within the hour to
+              defend the city and their diplomatic allies both, and stood with
+              the Embassy’s own on the hill; their ringleader was taken alive and
+              answered for it in Holmgang. Three days before, a farmer at Riften
+              had gone to the block for raising an assassins’ guild against the
+              Dominion. Whatever else the presses say of us, they record a month
+              in which we were hunted, and in which Nords died at our side.
             </dd>
 
             <dt>As suspects</dt>

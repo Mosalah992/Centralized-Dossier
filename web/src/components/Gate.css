@@ -13,28 +13,91 @@
   padding: 2rem 1.25rem 5rem;
   color: var(--gate-ink);
 
-  /* The Embassy's own muster, behind a scrim. The gradients are listed first
-     because background layers paint front to back: the scrim sits over the
-     photograph, holding it far enough down that the parchment stays the
-     brightest thing on the page and its text keeps its contrast. */
+  position: relative;
+  /* Keeps the grain's blend mode from reaching past the gate. */
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--gate-ground);
+}
+
+/* The photograph and the scrim used to be two layers of one background, which
+   is tidy but immovable: `background-size` animates every layer at once, so
+   drifting the muster would have drifted the gradients with it. They are two
+   elements now. Both are absolutely positioned, which also keeps them out of
+   the grid — a pseudo-element in a grid container is otherwise a grid item and
+   would be centred alongside the parchment.
+
+   Painting order is parent background, then negative z-index children, then
+   in-flow content: ground, photograph, scrim, parchment. */
+.gate::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  /* 55% keeps the muster in frame when a wide, short viewport crops the
+     photograph vertically; centring it would show mostly sky. */
+  background: url('../assets/gate-bg.webp') center 55% / cover no-repeat;
+  /* A slow drift across a still. Scaled up first so the pan never exposes an
+     edge, and slow enough to read as breathing rather than movement. */
+  transform-origin: 50% 55%;
+  animation: gate-drift 54s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+.gate::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  /* The scrim holds the photograph far enough down that the parchment stays
+     the brightest thing on the page and its text keeps its contrast. */
   background:
     radial-gradient(88% 66% at 50% 46%, rgba(12, 10, 8, 0.62), rgba(10, 8, 6, 0.82) 58%, rgba(8, 6, 5, 0.93) 100%),
-    linear-gradient(180deg, rgba(6, 5, 4, 0.7) 0%, rgba(6, 5, 4, 0.25) 26%, rgba(6, 5, 4, 0.45) 62%, rgba(6, 5, 4, 0.88) 100%),
-    /* 55% keeps the muster in frame when a wide, short viewport crops the
-       photograph vertically; centring it would show mostly sky. */
-    url('../assets/gate-bg.webp') center 55% / cover no-repeat,
-    var(--gate-ground);
+    linear-gradient(180deg, rgba(6, 5, 4, 0.7) 0%, rgba(6, 5, 4, 0.25) 26%, rgba(6, 5, 4, 0.45) 62%, rgba(6, 5, 4, 0.88) 100%);
+}
+
+@keyframes gate-drift {
+  from { transform: scale(1.06) translate3d(-0.8%, -0.6%, 0); }
+  to   { transform: scale(1.14) translate3d(0.8%, 0.7%, 0); }
+}
+
+/* base.css stops every animation under reduced motion, but stopping this one
+   leaves it parked on its final frame — the most zoomed-in it ever gets. Give
+   it the opening frame to rest on instead. */
+@media (prefers-reduced-motion: reduce) {
+  .gate::before {
+    animation: none;
+    transform: scale(1.06);
+  }
 }
 
 /* Phones get a quarter of the pixels for a third of the bytes; at that size
-   the detail is not readable through the scrim anyway. */
+   the detail is not readable through the scrim anyway. The drift is dropped
+   with it: a continuous transform is the wrong thing to hand a battery. */
 @media (max-width: 900px) {
-  .gate {
-    background-image:
-      radial-gradient(88% 66% at 50% 46%, rgba(12, 10, 8, 0.62), rgba(10, 8, 6, 0.82) 58%, rgba(8, 6, 5, 0.93) 100%),
-      linear-gradient(180deg, rgba(6, 5, 4, 0.7) 0%, rgba(6, 5, 4, 0.25) 26%, rgba(6, 5, 4, 0.45) 62%, rgba(6, 5, 4, 0.88) 100%),
-      url('../assets/gate-bg-small.webp');
+  .gate::before {
+    background-image: url('../assets/gate-bg-small.webp');
+    animation: none;
+    transform: scale(1.04);
   }
+}
+
+/* A grain pass over the parchment, multiplied so it darkens into the sheet's
+   own tone rather than laying grey dust on top of it. The noise is generated
+   by the browser from an inline SVG filter — no asset, no request. Kept faint:
+   at higher opacity it stops reading as paper and starts reading as a bad
+   scan. */
+.gate__parchment::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  mix-blend-mode: multiply;
+  opacity: 0.32;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)'/%3E%3C/svg%3E");
+  background-size: 140px 140px;
 }
 
 .gate__parchment {
@@ -55,7 +118,7 @@
 
 .gate__eyebrow {
   margin: 0 0 0.35rem;
-  font-family: "Cinzel", serif;
+  font-family: var(--display);
   font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.18em;
@@ -65,7 +128,7 @@
 
 .gate__title {
   margin: 0 0 1rem;
-  font-family: "Cinzel", serif;
+  font-family: var(--display);
   font-size: 2rem;
   font-weight: 700;
   line-height: 1.1;
@@ -85,7 +148,7 @@
 }
 
 .gate__label {
-  font-family: "Cinzel", serif;
+  font-family: var(--display);
   font-size: 0.8125rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -111,7 +174,7 @@
 .gate__button {
   margin-top: 0.5rem;
   padding: 0.7rem 1rem;
-  font-family: "Cinzel", serif;
+  font-family: var(--display);
   font-size: 0.9375rem;
   font-weight: 600;
   letter-spacing: 0.08em;
