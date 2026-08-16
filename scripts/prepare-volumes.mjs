@@ -202,6 +202,141 @@ const canvasH = baseline + Math.max(...books.map((b) => b.scaledH - b.bodyBottom
 
 // ── Pass 2: cut, place, encode ────────────────────────────────────────────
 
+// ── The Embassy's binding ──────────────────────────────────────────────────
+//
+// The art arrived colour-coded: navy, forest, crimson and violet, one saturated
+// dye per category. That is a chart legend applied to leather, and it was the
+// main reason the shelf read as generated rather than bound. An embassy binds
+// its registers in its own stock and tells them apart by the label.
+//
+// Measured against the supplied art: the four coded covers ran 40–55% mean
+// saturation against 15–31% for the amber ones, and the Financial Ledger
+// reached 100% at the 95th percentile — a fully saturated red that no dye, no
+// hide and no photograph of a real object ever produces. The violet was worse
+// than loud: purple was the costliest dye in the pre-modern world, so the
+// petty-cash book carried the most expensive binding in the building.
+//
+// `hue` is the volume's place in one tanned range; the spread across the eight
+// is the variation of a single hide. `sat` caps the field. `light` re-tones a
+// cover that printed too bright — Hall of Honor and History sat at mean
+// lightness 52 and 42 against 11–20 for the rest, so two books glowed and six
+// receded. `wear` is how hard the Embassy works the volume, and drives edge
+// scuffing, grain, and how far the gilt has dulled.
+const STOCK = {
+  roster: { hue: 24, sat: 30, light: 1.0, wear: 1.0 },
+  statistics: { hue: 30, sat: 28, light: 1.0, wear: 0.95 },
+  ledger: { hue: 14, sat: 34, light: 1.0, wear: 1.0 },
+  stipends: { hue: 27, sat: 29, light: 1.0, wear: 0.9 },
+  calendar: { hue: 29, sat: 26, light: 1.05, wear: 0.45 },
+  history: { hue: 31, sat: 26, light: 0.82, wear: 0.4 },
+  // Vellum, and left so. A citations book in vellum is a real distinction
+  // rather than a colour-code, and --cover already takes its dark from the
+  // bronze of the clasps for exactly this reason.
+  honor: { hue: 36, sat: 22, light: 0.74, wear: 0.12 },
+  // Black leather. Barely worked, because it is sealed rather than consulted.
+  informants: { hue: 20, sat: 22, light: 1.0, wear: 0.15 },
+};
+
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+
+function rgbToHsl(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  const mx = Math.max(r, g, b);
+  const mn = Math.min(r, g, b);
+  const l = (mx + mn) / 2;
+  const d = mx - mn;
+  if (!d) return [0, 0, l];
+  const s = l > 0.5 ? d / (2 - mx - mn) : d / (mx + mn);
+  let h;
+  if (mx === r) h = (g - b) / d + (g < b ? 6 : 0);
+  else if (mx === g) h = (b - r) / d + 2;
+  else h = (r - g) / d + 4;
+  return [h * 60, s, l];
+}
+
+function hslToRgb(h, s, l) {
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const hp = (((h % 360) + 360) % 360) / 60;
+  const x = c * (1 - Math.abs((hp % 2) - 1));
+  let t;
+  if (hp < 1) t = [c, x, 0];
+  else if (hp < 2) t = [x, c, 0];
+  else if (hp < 3) t = [0, c, x];
+  else if (hp < 4) t = [0, x, c];
+  else if (hp < 5) t = [x, 0, c];
+  else t = [c, 0, x];
+  const m = l - c / 2;
+  return t.map((v) => clamp(Math.round((v + m) * 255), 0, 255));
+}
+
+/** Signed shortest way round the wheel, -180..180. */
+const deltaHue = (a, b) => (((a - b) % 360) + 540) % 360 - 180;
+
+/**
+ * Value noise from the pixel's own coordinates. Deterministic on purpose: the
+ * committed covers have to be reproducible, and a random grain would put a
+ * different hide in the diff on every run of this script.
+ */
+function noiseAt(x, y, seed) {
+  const n = Math.sin(x * 12.9898 + y * 78.233 + seed * 43.7) * 43758.5453;
+  return n - Math.floor(n);
+}
+
+/** Re-bind one cover in the Embassy's stock. Operates on RGBA in place. */
+function bind(data, width, height, cfg) {
+  const cx = width / 2;
+  const cy = height / 2;
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const i = (y * width + x) * 4;
+      if (data[i + 3] === 0) continue;
+
+      let [h, s, l] = rgbToHsl(data[i], data[i + 1], data[i + 2]);
+
+      // Near-neutrals are the silver medallion, the shadows and the page
+      // whites. Nothing there is dyed, and re-hueing it would only tint the
+      // relief that makes the cover read as an object rather than a rectangle.
+      if (s >= 0.1) {
+        // Gilt: bright, and already amber. It stays gold — the fault was never
+        // the gold but the dye beneath it — and dulls with how hard the book is
+        // worked, since handling takes the leaf off first.
+        const isGilt = h >= 33 && h <= 68 && l > 0.42 && s > 0.22;
+
+        if (isGilt) {
+          h = 46 + deltaHue(h, 46) * 0.55;
+          s = clamp(s * (1 - 0.3 * cfg.wear), 0.1, 0.62);
+        } else {
+          // The field, pulled almost the whole way onto the stock and then
+          // capped. The 100% red and the violet both die here.
+          h = cfg.hue + deltaHue(h, cfg.hue) * 0.12;
+          s = Math.min(s * 0.5, cfg.sat / 100);
+        }
+      }
+
+      l = clamp(l * cfg.light, 0, 1);
+
+      // Wear. Edges go first and corners hardest, which is where a shelved book
+      // is actually handled; the grain is the hide coming through the finish.
+      if (cfg.wear > 0) {
+        const ex = Math.abs(x - cx) / cx;
+        const ey = Math.abs(y - cy) / cy;
+        const edge = Math.pow(Math.max(ex, ey), 3.2) * 0.3 + Math.pow(ex * ey, 1.6) * 0.34;
+        l *= 1 - edge * cfg.wear;
+        l *= 1 + (noiseAt(x, y, 7) - 0.5) * 0.05 * cfg.wear;
+        l = clamp(l, 0, 1);
+      }
+
+      const [r, g, b] = hslToRgb(h, s, l);
+      data[i] = r;
+      data[i + 1] = g;
+      data[i + 2] = b;
+    }
+  }
+
+  return data;
+}
+
 fs.mkdirSync(OUT_DIR, { recursive: true });
 
 for (const book of books) {
@@ -214,14 +349,26 @@ for (const book of books) {
 
   const cover = await pipeline.png().toBuffer();
 
-  const out = path.join(OUT_DIR, `${book.slug}.webp`);
-  const result = await sharp({
+  // Bound after the book is placed on its canvas, so the wear at the edges is
+  // measured from the volume's own centre rather than from the sheet it was
+  // cut out of.
+  const placed = await sharp({
     create: {
       width: CANVAS_W, height: canvasH,
       channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 },
     },
   })
     .composite([{ input: cover, left: PAD_X, top: baseline - book.bodyBottom }])
+    .ensureAlpha()
+    .raw()
+    .toBuffer();
+
+  const bound = bind(placed, CANVAS_W, canvasH, STOCK[book.slug]);
+
+  const out = path.join(OUT_DIR, `${book.slug}.webp`);
+  const result = await sharp(bound, {
+    raw: { width: CANVAS_W, height: canvasH, channels: 4 },
+  })
     .webp({ quality: 90, alphaQuality: 100, effort: 6 })
     .toFile(out);
 
