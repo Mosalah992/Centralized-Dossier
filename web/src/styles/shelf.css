@@ -85,59 +85,56 @@
   color: color-mix(in srgb, var(--stone) 72%, #1c1915);
 }
 
-/* Sconces flanking the cabinet. The sprites are pixel art pre-scaled 4x by
-   scripts/prepare-candles.mjs, so the page scales them down rather than up and
-   the blocks stay hard-edged at any viewport width. */
+/* Torches flanking the cabinet: footage of a real flame, cut down to one
+   44-frame loop and stripped of its captions by scripts/prepare-torches.mjs,
+   which also keys it to an alpha channel so the plate's black ground does not
+   box the torch in. Nothing here animates the flame — it animates itself, and
+   it throws its own light, so the glow this rule used to paint underneath is
+   gone with it. The two sides are the same clip started half a loop apart, so
+   they never gutter in lockstep. */
 
-.hall__candle {
+.hall__torch {
+  --torch-width: clamp(4.5rem, 7vw, 7.5rem);
+  --torch-height: calc(var(--torch-width) * 270 / 240);
+
   position: absolute;
-  top: clamp(8rem, 16vw, 13rem);
-  width: clamp(3.75rem, 5.5vw, 6rem);
-  aspect-ratio: 1;
+  /* A torch is a taller object than the sconce that used to stand here, and a
+     box is anchored by its top: keeping the old `top` pushed the plinth down
+     behind the cabinet, which paints over it, leaving a pole cut off in
+     mid-air. So the two terms below are the old sconce's own top and height —
+     its base line — and the torch hangs from that up into the empty header
+     band. The pair keeps the place it has always had, at every width. */
+  top: calc(
+    clamp(8rem, 16vw, 13rem) + clamp(3.75rem, 5.5vw, 6rem) - var(--torch-height)
+  );
+  width: var(--torch-width);
+  height: var(--torch-height);
   background-repeat: no-repeat;
   background-position: center bottom;
   background-size: contain;
-  opacity: 0.92;
   pointer-events: none;
-  /* The sprite sheet ships eight ROTATIONS, not animation frames — its own
-     metadata lists `animations` as empty. Stepping through them would swing
-     the candelabra round on the spot rather than gutter its flames. So the
-     flame is not redrawn; the light it throws is what moves, here and on the
-     glow below, on different periods so they never pulse in lockstep. */
-  animation: candle-gutter 5.3s ease-in-out infinite;
 }
 
-/* The flames are painted and cannot move, so the life comes from the light
-   they throw. Pulsing a glow costs one composited layer; animating the sprite
-   itself would just wobble a picture of a flame. */
-.hall__candle::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 34%;
-  width: 190%;
-  aspect-ratio: 1;
-  transform: translate(-50%, -50%);
-  background: radial-gradient(circle,
-    rgba(240, 176, 84, 0.3),
-    rgba(240, 176, 84, 0.09) 38%,
-    transparent 68%);
-  animation: candle-flicker 3.8s ease-in-out infinite;
-}
-
-.hall__candle--left {
+.hall__torch--left {
   left: max(1rem, calc(50% - 37rem));
-  background-image: url('../assets/candle-left.webp');
+  background-image: url('../assets/torch-left.webp');
 }
 
-.hall__candle--right {
+.hall__torch--right {
   right: max(1rem, calc(50% - 37rem));
-  background-image: url('../assets/candle-right.webp');
+  background-image: url('../assets/torch-right.webp');
+  /* Mirrored so the pair leans outward from the cabinet rather than both
+     the same way. */
+  transform: scaleX(-1);
 }
 
-/* Offset so the two do not pulse in lockstep. */
-.hall__candle--right::after {
-  animation-delay: -1.6s;
+/* base.css stops every CSS animation for a reader who asks for less motion,
+   but no CSS stops an animated image. Hand both sides the still instead. */
+@media (prefers-reduced-motion: reduce) {
+  .hall__torch--left,
+  .hall__torch--right {
+    background-image: url('../assets/torch-still.webp');
+  }
 }
 
 .hall__dust {
@@ -152,22 +149,6 @@
   background-position: 12% 18%, 72% 44%;
   background-size: 8rem 9rem, 11rem 10rem;
   animation: dust-drift 14s linear infinite;
-}
-
-@keyframes candle-flicker {
-  0%, 100% { opacity: 0.72; transform: translate(-50%, -50%) scale(0.94); }
-  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.06); }
-}
-
-/* Uneven on purpose: a flame that brightens and dims on a clean sine reads as
-   a pulsing lamp. The stops are deliberately not evenly spaced. */
-@keyframes candle-gutter {
-  0%, 100% { filter: brightness(1); }
-  18% { filter: brightness(1.09); }
-  31% { filter: brightness(0.96); }
-  54% { filter: brightness(1.12); }
-  67% { filter: brightness(1.02); }
-  83% { filter: brightness(0.94); }
 }
 
 @keyframes dust-drift {
@@ -398,7 +379,9 @@
     padding-top: 1rem;
   }
 
-  .hall__candle {
+  /* Also spares a phone the two heaviest files on the page: a background is
+     not fetched for a box that is never displayed. */
+  .hall__torch {
     display: none;
   }
 

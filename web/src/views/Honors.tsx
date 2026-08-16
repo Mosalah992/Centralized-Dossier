@@ -128,8 +128,8 @@ export function HonorView() {
       tab={volume.value.tab}
       fetchedAtUtc={volume.value.fetchedAtUtc}
     >
-      {/* "emissaries", not "hall": the shelf owns .hall, and its viewport-wide
-          candle-light pseudo-elements followed the class onto this page. */}
+      {/* "emissaries", not "hall": the shelf owns .hall, and the torches it
+          hangs off that class followed it onto this page. */}
       <section aria-label="The First Emissaries">
         <h2 className="page__heading">The First Emissaries</h2>
         <ol className="emissaries">

@@ -431,8 +431,8 @@ td.wrap {
 
 /* ── Hall of Honor ───────────────────────────────────────────────────────── */
 
-/* Named "emissaries", not "hall": the shelf owns .hall, and its viewport-wide
-   candle-light pseudo-elements followed that class onto the parchment. */
+/* Named "emissaries", not "hall": the shelf owns .hall, and the torches it
+   hangs off that class followed it onto the parchment. */
 
 .page__heading {
   margin: 2.4rem 0 0;

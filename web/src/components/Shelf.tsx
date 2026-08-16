@@ -21,8 +21,8 @@ export function Shelf({ onOpen }: Props) {
 
   return (
     <div className="hall">
-      <span className="hall__candle hall__candle--left" aria-hidden />
-      <span className="hall__candle hall__candle--right" aria-hidden />
+      <span className="hall__torch hall__torch--left" aria-hidden />
+      <span className="hall__torch hall__torch--right" aria-hidden />
       <span className="hall__dust" aria-hidden />
 
       <header className="hall__head">

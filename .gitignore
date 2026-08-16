@@ -18,10 +18,12 @@ tmp/
 # Spec drops handed over for integration, not part of the build
 gate web page/
 gate web page.zip
-Assets/torchlightgif.gif
 
-# The candle sprites are committed extracted, under Assets/; the archive they
-# arrived in is not, so there is only one copy to keep straight.
+# Source art, kept out because what the build needs is committed already: the
+# 6.9MB torch reel reduces to the two torch-*.webp under web/src/assets, and
+# scripts/prepare-torches.mjs only has to be rerun if those are being changed.
+# Same bargain for the candle sprite archive, extracted under Assets/.
+Assets/torchlightgif.gif
 Assets/Animated_skyrim_style_candles.zip
 
 # Local editor/agent tooling (launch config for the dev-server preview)
