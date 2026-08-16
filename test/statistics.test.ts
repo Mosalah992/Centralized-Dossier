@@ -73,16 +73,17 @@ describe('counting the roster', () => {
 });
 
 describe('ranks the table does not place', () => {
-  it('names them, and only them', () => {
-    expect(unplacedRanks(liveRoster())).toEqual(['Admin Assistant', 'Steward']);
+  it('has none left on the live roster', () => {
+    expect(unplacedRanks(liveRoster())).toEqual([]);
   });
 
-  it('gives each a row of its own rather than dropping it', () => {
-    const stats = computeStatistics(liveRoster());
-    const steward = stats.corps.rows.find((r) => r.label === 'STEWARD');
-    expect(steward?.total).toBe(1);
+  it('gives an unknown rank a row of its own rather than dropping it', () => {
+    const stats = computeStatistics([member({ rank: 'Hortator' }), member()]);
+    const row = stats.corps.rows.find((r) => r.label === 'HORTATOR');
+    expect(row?.total).toBe(1);
     // Tiers left blank: it is counted, and where it belongs is not yet known.
-    expect(Object.values(steward!.tiers).every((v) => v === null)).toBe(true);
+    expect(Object.values(row!.tiers).every((v) => v === null)).toBe(true);
+    expect(stats.corps.rows.reduce((a, r) => a + r.total, 0)).toBe(2);
   });
 
   it('counts a member with no rank at all', () => {
@@ -118,10 +119,18 @@ describe('the corps grid', () => {
     expect(postingOf('Not A Rank')).toBeNull();
   });
 
-  it('places every rank the live roster uses, but two', () => {
-    const known = LIVE_RANKS.map(([r]) => r).filter((r) => r && postingOf(r));
-    expect(known).toHaveLength(LIVE_RANKS.length - 3); // less blank, Admin Assistant, Steward
-    expect(Object.keys(POSTINGS).length).toBeGreaterThanOrEqual(known.length);
+  it('places every rank the live roster uses', () => {
+    const named = LIVE_RANKS.map(([r]) => r).filter(Boolean);
+    expect(named.every((r) => postingOf(r))).toBe(true);
+    expect(Object.keys(POSTINGS).length).toBeGreaterThanOrEqual(named.length);
+  });
+
+  it('seats the Canonreeve’s two staff between the corps and its Quartermaster', () => {
+    const stats = computeStatistics(liveRoster());
+    const supply = stats.corps.rows.find((r) => r.label === 'SUPPLY CORPS')!;
+    expect(supply.tiers).toEqual({ JUNIOR: 6, SENIOR: 2, ELITE: 1, LEADER: null });
+    // The Stats tab had this corps at 7, missing both of them.
+    expect(supply.total).toBe(9);
   });
 });
 

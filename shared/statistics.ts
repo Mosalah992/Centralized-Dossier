@@ -58,6 +58,12 @@ export const POSTINGS: Readonly<Record<string, Posting>> = {
   'lead medical': { corps: 'MEDICAL', tier: 'ELITE' },
 
   'supply corps': { corps: 'SUPPLY CORPS', tier: 'JUNIOR' },
+  // Both answer to the Canonreeve directly, which puts them above the corps'
+  // rank and file and below its Quartermaster. They fill the SENIOR column the
+  // Stats tab left blank here — and neither appeared in that block at all,
+  // which is two of the four members it was losing.
+  'admin assistant': { corps: 'SUPPLY CORPS', tier: 'SENIOR' },
+  'steward': { corps: 'SUPPLY CORPS', tier: 'SENIOR' },
   'quartermaster': { corps: 'SUPPLY CORPS', tier: 'ELITE' },
 
   'black talon': { corps: 'BLACK TALON', tier: 'ELITE' },
