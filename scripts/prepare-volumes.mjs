@@ -40,7 +40,15 @@ const SLUGS = [
 // shape would need normalising on height instead, and a wider canvas.
 const STANDALONE = [
   { slug: 'history', file: 'Volume History of the realm.png' },
+  // Arrived flat on white rather than keyed, so it is cut from its background
+  // here. Everything downstream measures books by their alpha, and a cover with
+  // none would be read as a full-canvas rectangle and cropped to the paper.
+  { slug: 'informants', file: 'Top Secret Volume.png', keyWhite: true },
 ];
+
+// Background threshold for keyWhite. The book is black leather and gold; its
+// lightest leaf sits far below this, so nothing on the cover is at risk.
+const WHITE = 200;
 
 // Books are normalised to this width. It is close to their native ~380px, so
 // the resample stays under 2% and the gold filigree keeps its edges.
@@ -65,10 +73,46 @@ function runs(counts) {
   return out;
 }
 
+/**
+ * Cut a cover off its white paper.
+ *
+ * Threshold alone would eat the drop shadow's lighter half and leave its darker
+ * half as a grey skirt, so background is decided by REACHABILITY: near-white
+ * pixels connected to the border are paper, and near-white pixels enclosed by
+ * the art (a gold highlight, the pale of an engraved wing) are not. The mask is
+ * then blurred a little, which is what gives the rim its antialiasing back —
+ * a hard mask on a resized cover shows every stair-step.
+ */
+function keyWhiteBackground(src) {
+  const { data, W, H, C } = src;
+  const isPaper = (i) => data[i * C] > WHITE && data[i * C + 1] > WHITE && data[i * C + 2] > WHITE;
+
+  const background = new Uint8Array(W * H);
+  const queue = [];
+  for (let x = 0; x < W; x++) queue.push(x, (H - 1) * W + x);
+  for (let y = 0; y < H; y++) queue.push(y * W, y * W + W - 1);
+
+  while (queue.length) {
+    const i = queue.pop();
+    if (background[i] || !isPaper(i)) continue;
+    background[i] = 1;
+    const x = i % W;
+    const y = (i - x) / W;
+    if (x > 0) queue.push(i - 1);
+    if (x < W - 1) queue.push(i + 1);
+    if (y > 0) queue.push(i - W);
+    if (y < H - 1) queue.push(i + W);
+  }
+
+  for (let i = 0; i < W * H; i++) data[i * C + 3] = background[i] ? 0 : 255;
+  return src;
+}
+
 /** Decode an image to raw RGBA once; every measurement reads from this. */
-async function loadRaw(file) {
+async function loadRaw(file, { keyWhite = false } = {}) {
   const { data, info } = await sharp(file).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
   const src = { data, W: info.width, H: info.height, C: info.channels };
+  if (keyWhite) keyWhiteBackground(src);
   src.alphaAt = (x, y) => data[(y * src.W + x) * src.C + 3];
   return src;
 }
@@ -144,9 +188,9 @@ for (let r = 0; r < rows.length; r++) {
   }
 }
 
-for (const { slug, file } of STANDALONE) {
-  const src = await loadRaw(path.join(ROOT, 'Assets', file));
-  books.push(measureBook(src, { x: 0, y: 0, w: src.W, h: src.H }, slug));
+for (const { slug, file, keyWhite } of STANDALONE) {
+  const src = await loadRaw(path.join(ROOT, 'Assets', file), { keyWhite });
+  books.push({ ...measureBook(src, { x: 0, y: 0, w: src.W, h: src.H }, slug), keyed: Boolean(keyWhite) });
 }
 
 // One baseline for all of them: deep enough that the tallest body still clears
@@ -162,11 +206,13 @@ fs.mkdirSync(OUT_DIR, { recursive: true });
 
 for (const book of books) {
   const { data, W, H, C } = book.src;
-  const cover = await sharp(data, { raw: { width: W, height: H, channels: C } })
+  let pipeline = sharp(data, { raw: { width: W, height: H, channels: C } })
     .extract({ left: book.x0, top: book.y0, width: book.w, height: book.h })
-    .resize(BODY_W, book.scaledH, { kernel: 'lanczos3' })
-    .png()
-    .toBuffer();
+    .resize(BODY_W, book.scaledH, { kernel: 'lanczos3' });
+
+  if (book.modulate) pipeline = pipeline.modulate(book.modulate);
+
+  const cover = await pipeline.png().toBuffer();
 
   const out = path.join(OUT_DIR, `${book.slug}.webp`);
   const result = await sharp({
@@ -190,3 +236,61 @@ console.log(
   `\nwrote ${books.length} covers to ${path.relative(ROOT, OUT_DIR)} `
   + `— ${CANVAS_W}x${canvasH}, standing on y=${baseline}`,
 );
+
+// ── Volume seals ──────────────────────────────────────────────────────────
+
+/*
+ * A seal cut out of a cover, for volumes that need their own mark away from
+ * the shelf.
+ *
+ * The archive has one seal everywhere else: the Dominion insignia at
+ * public/seal.webp, on the hall's header and stamped at the foot of every
+ * register. That is the Embassy's mark, not any one book's. The Informants'
+ * Chronicle keeps its own door, and a door wants the mark of the thing behind
+ * it — so its medallion is lifted off its own cover and used on the inside
+ * board and on the lock.
+ *
+ * The bounds are measured by hand against the source art rather than found:
+ * the medallion sits on black leather with no alpha to trace, and one plate is
+ * not worth a detector.
+ */
+const SEALS = [
+  {
+    slug: 'informants',
+    file: 'Top Secret Volume.png',
+    // The disc, less the laurel that crowds it left and right.
+    region: { left: 443, top: 588, width: 372, height: 372 },
+  },
+];
+
+for (const { slug, file, region } of SEALS) {
+  const size = region.width;
+
+  // Cut to a circle: the medallion is round and its corners are leather, which
+  // would otherwise sit as a dark square on the board's gradient. The inner
+  // stop is just short of the rim so the edge is feathered rather than jagged.
+  const mask = Buffer.from(
+    `<svg width="${size}" height="${size}">
+       <defs>
+         <radialGradient id="d">
+           <stop offset="0.94" stop-color="#fff" stop-opacity="1"/>
+           <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+         </radialGradient>
+       </defs>
+       <circle cx="${size / 2}" cy="${size / 2}" r="${size / 2}" fill="url(#d)"/>
+     </svg>`,
+  );
+
+  const out = path.join(OUT_DIR, `${slug}-seal.webp`);
+  const result = await sharp(path.join(ROOT, 'Assets', file))
+    .extract(region)
+    .ensureAlpha()
+    .composite([{ input: mask, blend: 'dest-in' }])
+    .webp({ quality: 92, alphaQuality: 100, effort: 6 })
+    .toFile(out);
+
+  console.log(
+    `${slug}-seal`.padEnd(20)
+    + `${result.width}x${result.height}  ${String(Math.round(result.size / 1024)).padStart(3)} kB`,
+  );
+}
