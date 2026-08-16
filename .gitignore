@@ -26,6 +26,20 @@ gate web page.zip
 Assets/torchlightgif.gif
 Assets/Animated_skyrim_style_candles.zip
 
+# Thalmor Chronicles, and the reports it was read out of. This repository is
+# public; that volume is sealed under a word of its own. Committing its text
+# would publish to anyone browsing GitHub exactly what the second gate exists to
+# withhold, and the passphrase would still be asked for without being worth
+# asking. The machinery is committed and reviewable — the gate, the scoped writ,
+# the reader, the art. Only the words are held back.
+#
+# These files are not in git history and cannot be recovered from it. The
+# deployed Worker holds the volume; a local copy is the only backup.
+# `chronicle.example.ts` is committed in its place so a clone still typechecks.
+functions/lib/chronicle.ts
+docs/informant-reports.md
+docs/informant-events-ledger.md
+
 # Hesperides was tried for --display and reverted — it comes apart into
 # disconnected strokes at label size (see the note in base.css). Nothing embeds
 # it, and this repo is public, so committing the face would redistribute a
