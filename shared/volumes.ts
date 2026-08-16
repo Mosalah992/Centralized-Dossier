@@ -8,7 +8,7 @@
 // stale, and the calendar's title carries the in-world year, so it will move
 // again at the turn of 4E 227.
 
-import type { KeptVolume, VolumeDefinition, VolumeSlug } from './types';
+import type { KeptVolume, SealedVolume, VolumeDefinition, VolumeSlug } from './types';
 
 export const VOLUMES: readonly VolumeDefinition[] = [
   {
@@ -75,22 +75,56 @@ export const KEPT: readonly KeptVolume[] = [
   },
 ] as const;
 
+/**
+ * Volumes the Embassy writes and then seals. Not in `VOLUMES` — the archivist
+ * asks the sheet nothing about them — and not in `KEPT`, because their text is
+ * NOT shipped to the browser: it is served from `route`, behind the gate. See
+ * SealedVolume for why that distinction is load-bearing rather than tidy.
+ */
+export const SEALED: readonly SealedVolume[] = [
+  {
+    slug: 'informants',
+    title: 'Thalmor Chronicles',
+    category: 'Chronicles',
+    route: '/api/chronicle',
+  },
+] as const;
+
 export const VOLUME_SLUGS: readonly VolumeSlug[] = VOLUMES.map((v) => v.slug);
 export const KEPT_SLUGS: readonly VolumeSlug[] = KEPT.map((v) => v.slug);
+export const SEALED_SLUGS: readonly VolumeSlug[] = SEALED.map((v) => v.slug);
 
 /** Every slug the archive will open, whether the sheet backs it or not. */
-export const ALL_SLUGS: readonly VolumeSlug[] = [...VOLUME_SLUGS, ...KEPT_SLUGS];
+export const ALL_SLUGS: readonly VolumeSlug[] = [
+  ...VOLUME_SLUGS,
+  ...KEPT_SLUGS,
+  ...SEALED_SLUGS,
+];
 
 export const isKept = (slug: string): boolean =>
   (KEPT_SLUGS as readonly string[]).includes(slug);
+
+export const isSealed = (slug: string): boolean =>
+  (SEALED_SLUGS as readonly string[]).includes(slug);
+
+/**
+ * True for any volume the Embassy writes itself. Both kinds are immune to a tab
+ * being renamed, so the shelf must not show either as withdrawn — which is the
+ * one question the shelf actually asks.
+ */
+export const isOwnWork = (slug: string): boolean => isKept(slug) || isSealed(slug);
 
 export function getVolume(slug: string): VolumeDefinition | undefined {
   return VOLUMES.find((v) => v.slug === slug);
 }
 
-/** Title for any volume on the shelf, sheet-backed or kept. */
+/** Title for any volume on the shelf, sheet-backed, kept or sealed. */
 export function getTitle(slug: string): string | undefined {
-  return (VOLUMES.find((v) => v.slug === slug) ?? KEPT.find((v) => v.slug === slug))?.title;
+  return (
+    VOLUMES.find((v) => v.slug === slug) ??
+    KEPT.find((v) => v.slug === slug) ??
+    SEALED.find((v) => v.slug === slug)
+  )?.title;
 }
 
 /**
@@ -120,7 +154,7 @@ export function resolveTabTitle(
  */
 export const SHELF: readonly {
   category: string;
-  volumes: (VolumeDefinition | KeptVolume)[];
+  volumes: (VolumeDefinition | KeptVolume | SealedVolume)[];
 }[] = [
   'Personnel',
   'Finance',
@@ -131,5 +165,6 @@ export const SHELF: readonly {
   volumes: [
     ...VOLUMES.filter((v) => v.category === category),
     ...KEPT.filter((v) => v.category === category),
+    ...SEALED.filter((v) => v.category === category),
   ],
 }));

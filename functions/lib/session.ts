@@ -4,13 +4,36 @@
 const enc = new TextEncoder();
 
 export const COOKIE_NAME = "thalmor_writ";
+
+/**
+ * Thalmor Chronicles carries a second lock of its own, so it gets a
+ * second cookie. Kept separate rather than adding a claim to the archive writ
+ * because clearing one must not clear the other: a reader whose volume writ
+ * expires should fall back to the volume's gate, not be thrown out of the
+ * archive entirely.
+ */
+export const CHRONICLE_COOKIE_NAME = "thalmor_writ_chronicle";
+
 export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7; // one week
+
+/**
+ * What a writ opens. Written into the signed body, so a writ minted for the
+ * archive cannot be moved into the chronicle's cookie and honoured there —
+ * the scope is covered by the MAC along with everything else.
+ */
+export type WritScope = "archive" | "chronicle";
 
 export interface Writ {
   /** Rotation epoch. Bump GATE_EPOCH to invalidate every issued cookie at once. */
   e: number;
   /** Expiry, seconds since epoch. */
   exp: number;
+  /**
+   * Scope. Absent on writs issued before the chronicle existed, which are
+   * archive writs by definition — so a missing value reads as "archive" and a
+   * week of already-issued cookies keeps working.
+   */
+  s?: WritScope;
 }
 
 function b64urlEncode(bytes: Uint8Array): string {
@@ -63,10 +86,15 @@ export async function secretsMatch(
   return constantTimeEqual(a, b);
 }
 
-export async function issueWrit(secret: string, epoch: number): Promise<string> {
+export async function issueWrit(
+  secret: string,
+  epoch: number,
+  scope: WritScope = "archive",
+): Promise<string> {
   const writ: Writ = {
     e: epoch,
     exp: Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS,
+    s: scope,
   };
   const body = b64urlEncode(enc.encode(JSON.stringify(writ)));
   const sig = b64urlEncode(await mac(secret, body));
@@ -77,6 +105,7 @@ export async function readWrit(
   secret: string,
   epoch: number,
   token: string | null,
+  scope: WritScope = "archive",
 ): Promise<Writ | null> {
   if (!token) return null;
 
@@ -105,6 +134,8 @@ export async function readWrit(
 
   if (writ.e !== epoch) return null; // rotated out
   if (writ.exp < Math.floor(Date.now() / 1000)) return null;
+  // A writ minted for one door does not open another.
+  if ((writ.s ?? "archive") !== scope) return null;
 
   return writ;
 }
@@ -119,9 +150,9 @@ export function readCookie(request: Request, name: string): string | null {
   return null;
 }
 
-export function writCookie(token: string): string {
+export function writCookie(token: string, name: string = COOKIE_NAME): string {
   return [
-    `${COOKIE_NAME}=${token}`,
+    `${name}=${token}`,
     "Path=/",
     "HttpOnly",
     "Secure",
@@ -130,6 +161,6 @@ export function writCookie(token: string): string {
   ].join("; ");
 }
 
-export function clearedCookie(): string {
-  return `${COOKIE_NAME}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`;
+export function clearedCookie(name: string = COOKIE_NAME): string {
+  return `${name}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`;
 }

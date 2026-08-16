@@ -23,7 +23,8 @@ export type VolumeSlug =
   | 'stipends'
   | 'honor'
   | 'calendar'
-  | 'history';
+  | 'history'
+  | 'informants';
 
 export type VolumeCategory =
   | 'Personnel'
@@ -44,6 +45,30 @@ export interface KeptVolume {
   slug: VolumeSlug;
   title: string;
   category: VolumeCategory;
+}
+
+/**
+ * A volume the Embassy writes itself and then puts BEHIND the gate.
+ *
+ * The distinction from KeptVolume is not bookkeeping. A kept volume's text is
+ * compiled into the browser bundle, and the bundle is a static asset: only
+ * /api/* passes through api/_middleware.ts, so anything shipped in the app is
+ * readable by anyone holding the link, passphrase or no. That is acceptable for
+ * a chronicle transcribed from newspapers the province could buy. It is not
+ * acceptable for one assembled from our own informants' reports.
+ *
+ * So a sealed volume keeps its text on the Worker's side and is fetched from
+ * `route` like a register — except that the archivist asks the spreadsheet
+ * nothing about it, which is why it stays out of `VOLUMES` with the kept ones.
+ * The cost is that it alone among the Embassy's own volumes cannot be read while
+ * the Worker is down.
+ */
+export interface SealedVolume {
+  slug: VolumeSlug;
+  title: string;
+  category: VolumeCategory;
+  /** Gated path its text is served from. */
+  route: string;
 }
 
 export interface VolumeDefinition {

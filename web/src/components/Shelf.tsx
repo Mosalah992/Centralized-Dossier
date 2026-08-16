@@ -2,7 +2,7 @@
 // heading stays ceremonial but compact so the six physical volumes dominate.
 
 import { useShelf } from '../api';
-import { SHELF, isKept } from '../../../shared/volumes';
+import { SHELF, isOwnWork } from '../../../shared/volumes';
 import { BINDINGS } from '../theme';
 import { Book } from './Book';
 import { Notice } from './Notice';
@@ -77,7 +77,7 @@ export function Shelf({ onOpen }: Props) {
                     tab={
                       // A kept volume is written here, not read from the sheet,
                       // so nothing the archivist says can withdraw it.
-                      isKept(volume.slug)
+                      isOwnWork(volume.slug)
                         ? volume.title
                         // Treat an unanswered shelf as present; a volume is only
                         // shown withdrawn once the archivist has actually said so.

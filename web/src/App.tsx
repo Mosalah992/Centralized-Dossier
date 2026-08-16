@@ -28,6 +28,7 @@ const StipendsView = lazy(() => import('./views/Finance').then((m) => ({ default
 const HonorView = lazy(() => import('./views/Honors').then((m) => ({ default: m.HonorView })));
 const CalendarView = lazy(() => import('./views/Honors').then((m) => ({ default: m.CalendarView })));
 const HistoryView = lazy(() => import('./views/History').then((m) => ({ default: m.HistoryView })));
+const InformantsView = lazy(() => import('./views/Informants').then((m) => ({ default: m.InformantsView })));
 
 const VIEWS: Record<VolumeSlug, React.ComponentType> = {
   roster: RosterView,
@@ -37,11 +38,18 @@ const VIEWS: Record<VolumeSlug, React.ComponentType> = {
   honor: HonorView,
   calendar: CalendarView,
   history: HistoryView,
+  informants: InformantsView,
 };
 
 interface Track {
   url: string;
   title: string;
+  /**
+   * Performer credited in the footer. A track with no `by` is simply announced
+   * — the sealed volume's tone is Embassy property rather than a bard's turn,
+   * and crediting a performer under it would be a small lie in the furniture.
+   */
+  by?: string;
 }
 
 /*
@@ -56,11 +64,20 @@ interface Track {
 const MUSIC = '/music';
 
 /** The room tone of the archive itself, and of the gate before it opens. */
-const HALL_TRACK: Track = { url: `${MUSIC}/summerset-glooms.mp3?v=1`, title: 'Summerset Glooms' };
+const HALL_TRACK: Track = {
+  url: `${MUSIC}/summerset-glooms.mp3?v=1`,
+  title: 'Summerset Glooms',
+  by: 'Vaerion Meanor',
+};
 
 /** Volumes that sound their own tone. Everywhere else keeps the hall's. */
 const VOLUME_TRACKS: Partial<Record<VolumeSlug, Track>> = {
-  history: { url: `${MUSIC}/golden-herald.mp3?v=1`, title: 'Golden Herald' },
+  history: { url: `${MUSIC}/golden-herald.mp3?v=1`, title: 'Golden Herald', by: 'Vaerion Meanor' },
+  // Titled as the Embassy names it; the file keeps the name it arrived under.
+  informants: {
+    url: `${MUSIC}/whispering-of-the-elder.mp3?v=1`,
+    title: 'Whispers of the Elder',
+  },
 };
 
 export default function App() {
@@ -155,9 +172,18 @@ export default function App() {
             </p>
             {/* The credit names whichever tone is actually sounding, so a
                 reader in a volume with its own track is told the right title
-                rather than the hall's. */}
+                rather than the hall's. A track with no named performer is
+                announced and nothing more. */}
             <p className="site-footer__credit">
-              <em>{track.title}</em>, played by <strong>Vaerion Meanor</strong> the bard.
+              {track.by ? (
+                <>
+                  <em>{track.title}</em>, played by <strong>{track.by}</strong> the bard.
+                </>
+              ) : (
+                <>
+                  Playing: <em>{track.title}</em>
+                </>
+              )}
             </p>
           </footer>
         </div>

@@ -69,10 +69,16 @@ export type Async<T> =
   | { state: 'ready'; value: T }
   | { state: 'error'; message: string };
 
-function useAsync<T>(path: string): Async<T> {
+/**
+ * `path` may be null to hold the request back — used by volumes that are shut
+ * behind a second lock, so the archive is not asked for a body the reader is
+ * not yet entitled to and handed a 403 to render as a failure.
+ */
+function useAsync<T>(path: string | null): Async<T> {
   const [result, setResult] = useState<Async<T>>({ state: 'loading' });
 
   useEffect(() => {
+    if (path === null) return;
     const controller = new AbortController();
     setResult({ state: 'loading' });
 
@@ -95,6 +101,66 @@ function useAsync<T>(path: string): Async<T> {
 }
 
 export const useShelf = () => useAsync<Shelf>('/api/volumes');
+
+// ── Sealed volumes ────────────────────────────────────────────────────────
+
+export interface ChronicleEntry {
+  date: string;
+  text: string;
+  weight?: 'grave';
+}
+
+export interface ChronicleMonth {
+  name: string;
+  standfirst: string;
+  entries: ChronicleEntry[];
+}
+
+export interface Chronicle {
+  fetchedAtUtc: string;
+  months: ChronicleMonth[];
+  powers: { name: string; note: string }[];
+  unresolved: { name: string; note: string }[];
+}
+
+/**
+ * Thalmor Chronicles. Unlike History of the Realm this one is fetched
+ * rather than bundled, because its text is the Embassy's own intelligence and
+ * a static asset is readable without a writ. See SealedVolume in shared/types.
+ *
+ * Held back until the volume's own lock is open — see useChronicle's caller.
+ */
+export const useChronicle = (unlocked: boolean) =>
+  useAsync<Chronicle>(unlocked ? '/api/chronicle' : null);
+
+/** Whether this browser already holds a writ for the volume itself. */
+export async function chronicleIsOpen(): Promise<boolean> {
+  try {
+    const res = await fetch('/api/chronicle/gate', { headers: { Accept: 'application/json' } });
+    if (res.status === 401) {
+      // The archive itself has resealed; that is the outer gate's business.
+      window.dispatchEvent(new Event(GATE_SEALED_EVENT));
+      return false;
+    }
+    const body = (await res.json()) as { open?: boolean };
+    return Boolean(body.open);
+  } catch {
+    return false;
+  }
+}
+
+/** Offer the volume's word. Resolves to null on success, or the refusal. */
+export async function openChronicle(passphrase: string): Promise<string | null> {
+  const res = await fetch('/api/chronicle/gate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ passphrase }),
+  });
+  if (res.ok) return null;
+  if (res.status === 401 && !passphrase) window.dispatchEvent(new Event(GATE_SEALED_EVENT));
+  const body = (await res.json().catch(() => null)) as { error?: string } | null;
+  return body?.error ?? `The volume returned ${res.status}`;
+}
 
 export function useVolume<S extends FetchableSlug>(
   slug: S,

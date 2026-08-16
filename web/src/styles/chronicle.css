@@ -1,0 +1,499 @@
+/*
+ * Thalmor Chronicles — a bound reader rather than a ruled page.
+ *
+ * Everything else in this archive is a register laid on parchment: a heading, a
+ * table, a source line. This volume is prose, and prose wants a book. The
+ * surface, the spine shading and the turning leaf are adapted from the
+ * Canonreeve Archives reader; the palette is this archive's own, so a reader
+ * moving between volumes does not feel handed to a different site.
+ *
+ * The three-dimensional turn is the only real trick here: a leaf held above the
+ * spread, rotated on the spine, with its two faces back to back and
+ * backface-visibility hiding whichever is turned away. Readers who ask for less
+ * motion never see it — App renders the destination spread directly — so
+ * nothing below is load-bearing for reading the volume.
+ */
+
+.chron {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 0 0 2rem;
+}
+
+/* ── The volume's own lock ────────────────────────────────────────────── */
+
+/*
+ * Shown in place of the book until the second word is given. Deliberately not
+ * dressed as the main gate: that one is a wax seal breaking across a door, and
+ * reusing it here would tell a reader who has already answered it that they are
+ * back outside. This is a shut book with its own mark on it.
+ */
+.chron-lock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  max-width: 30rem;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 3rem;
+  text-align: center;
+}
+
+.chron-lock__seal {
+  width: clamp(7rem, 18vw, 11.5rem);
+  height: auto;
+  margin-bottom: 0.6rem;
+  filter: drop-shadow(0 8px 18px rgb(0 0 0 / 0.7));
+}
+
+.chron-lock__class {
+  margin: 0;
+  padding: 0.28rem 0.7rem;
+  border: 1px solid #7a2e1e;
+  font-family: var(--display);
+  font-size: 0.66rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: #a8503a;
+  opacity: 0.9;
+  transform: rotate(-2deg);
+}
+
+.chron-lock__title {
+  margin: 0.7rem 0 0;
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: clamp(1.1rem, 3vw, 1.6rem);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #d9c69a;
+}
+
+.chron-lock__note {
+  margin: 0.5rem 0 1.4rem;
+  max-width: 26rem;
+  line-height: 1.55;
+  font-style: italic;
+  color: #9c8a68;
+}
+
+.chron-lock__label {
+  font-family: var(--display);
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #b89f6e;
+}
+
+.chron-lock__input {
+  width: min(20rem, 100%);
+  margin-top: 0.4rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid rgb(184 159 110 / 0.4);
+  border-radius: 3px;
+  background: rgb(0 0 0 / 0.35);
+  font-family: var(--body, inherit);
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+  text-align: center;
+  color: #e9dcba;
+}
+.chron-lock__input:focus-visible {
+  outline: 2px solid #c5a169;
+  outline-offset: 2px;
+}
+
+.chron-lock__refusal {
+  min-height: 1.4em;
+  margin: 0.7rem 0 0.2rem;
+  font-size: 0.9rem;
+  color: #c07a63;
+}
+
+.chron-lock__btn {
+  padding: 0.55rem 1.6rem;
+  border: 1px solid rgb(197 161 105 / 0.5);
+  border-radius: 3px;
+  background: none;
+  font-family: var(--display);
+  font-size: 0.85rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #c5a169;
+  cursor: pointer;
+}
+.chron-lock__btn:hover:not(:disabled) {
+  color: #f0e3c2;
+  border-color: #c5a169;
+}
+.chron-lock__btn:disabled { opacity: 0.4; cursor: default; }
+
+/* ── The book ─────────────────────────────────────────────────────────── */
+
+.chron-book {
+  position: relative;
+  display: flex;
+  perspective: 2400px;
+  filter: drop-shadow(0 26px 34px rgb(0 0 0 / 0.6));
+}
+
+.chron-page,
+.chron-board {
+  width: min(30rem, 44vw);
+  aspect-ratio: 23 / 32;
+}
+
+.chron-page {
+  position: relative;
+  background:
+    radial-gradient(ellipse at 18% 12%, rgb(255 250 230 / 0.5), transparent 55%),
+    radial-gradient(ellipse at 85% 90%, rgb(122 88 40 / 0.2), transparent 60%),
+    radial-gradient(ellipse at 50% 50%, #e9dcba 55%, #d9c69a 100%);
+  box-shadow:
+    inset 0 0 46px rgb(94 66 28 / 0.35),
+    inset 0 0 6px rgb(94 66 28 / 0.3);
+}
+
+/* Paper grain, generated rather than a texture file — nothing to download and
+   nothing of the game's own art to license. */
+.chron-page::after,
+.chron-leaf__face::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.72 0 0 0 0 0.62 0 0 0 0 0.44 0 0 0 0.16 0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.chron-page--left { border-radius: 8px 0 0 8px; }
+.chron-page--right { border-radius: 0 8px 8px 0; }
+
+/* Shading into the gutter, so the two leaves read as one opened book. */
+.chron-page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+.chron-page--left::before {
+  background: linear-gradient(270deg, rgb(74 52 22 / 0.38), transparent 22%);
+}
+.chron-page--right::before {
+  background: linear-gradient(90deg, rgb(74 52 22 / 0.38), transparent 22%);
+}
+
+.chron-spine {
+  width: 4px;
+  align-self: stretch;
+  z-index: 2;
+  background: linear-gradient(180deg, #3a2a16, #1e1509);
+}
+
+/* The inside of the front board, shown only opposite the title page. */
+.chron-board {
+  position: absolute;
+  inset: 0 auto 0 0;
+  z-index: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px 0 0 8px;
+  background: radial-gradient(ellipse at 30% 30%, #3a2f22, #17120c 75%);
+  box-shadow:
+    inset 0 0 0 3px rgb(197 161 105 / 0.3),
+    inset 0 0 60px rgb(0 0 0 / 0.6);
+}
+.chron-book--cover .chron-board { display: flex; }
+.chron-book--cover .chron-page--left { visibility: hidden; }
+
+.chron-board__seal {
+  width: 46%;
+  height: auto;
+  opacity: 0.75;
+  filter: drop-shadow(0 6px 10px rgb(0 0 0 / 0.65));
+}
+
+/* ── Type on the leaf ─────────────────────────────────────────────────── */
+
+.chron-page__inner {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(1.3rem, 3.2vw, 2.7rem);
+  color: #2a2016;
+}
+
+.chron-runhead {
+  margin: 0 0 0.9rem;
+  font-family: var(--display);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-align: center;
+  color: #6a563c;
+}
+
+.chron-text {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #b89f6e transparent;
+}
+
+.chron-folio {
+  margin: 0.8rem 0 0;
+  font-family: var(--display);
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  color: #6a563c;
+}
+.chron-folio--left { text-align: left; }
+.chron-folio--right { text-align: right; }
+
+.chron-h {
+  margin: 0 0 0.5rem;
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: clamp(1.05rem, 1.9vw, 1.4rem);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #2a2016;
+}
+
+.chron-standfirst {
+  margin: 0 0 1.1rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid rgb(122 88 40 / 0.35);
+  font-style: italic;
+  line-height: 1.5;
+  color: #4a3a28;
+}
+
+.chron-p {
+  margin: 0 0 0.85em;
+  line-height: 1.55;
+  font-size: clamp(0.86rem, 1.35vw, 1rem);
+}
+.chron-p--sig { margin-top: 1.4rem; text-align: center; color: #6a563c; }
+
+/* ── Entries ──────────────────────────────────────────────────────────── */
+
+.chron-entry { margin: 0 0 1.05rem; }
+
+.chron-entry__date {
+  margin: 0 0 0.15rem;
+  font-family: var(--display);
+  font-size: 0.74rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #7a2e1e;
+}
+
+.chron-entry__text {
+  margin: 0;
+  line-height: 1.52;
+  font-size: clamp(0.84rem, 1.3vw, 0.98rem);
+}
+
+/* The handful of days the rest of the chronicle turns on. Marked with a rule
+   in the margin rather than a colour change, so it survives being printed and
+   does not shout on a page that is already dense. */
+.chron-entry--grave {
+  padding-left: 0.8rem;
+  border-left: 2px solid rgb(122 46 30 / 0.55);
+}
+.chron-entry--grave .chron-entry__text { font-weight: 600; }
+
+/* ── Lists in the closing apparatus ───────────────────────────────────── */
+
+.chron-list { margin: 0; }
+.chron-list__row { margin: 0 0 0.9rem; }
+.chron-list dt {
+  font-family: var(--display);
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #7a2e1e;
+}
+.chron-list dd {
+  margin: 0.15rem 0 0;
+  line-height: 1.5;
+  font-size: clamp(0.84rem, 1.3vw, 0.98rem);
+}
+
+/* ── Title page ───────────────────────────────────────────────────────── */
+
+.chron-title {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.7rem;
+}
+
+.chron-title__class {
+  margin: 0;
+  padding: 0.3rem 0.75rem;
+  border: 1px solid #7a2e1e;
+  font-family: var(--display);
+  font-size: 0.7rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: #7a2e1e;
+  opacity: 0.85;
+  transform: rotate(-2deg);
+}
+
+.chron-title__name {
+  margin: 0.4rem 0 0;
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: clamp(1.3rem, 2.6vw, 1.9rem);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #2a2016;
+}
+
+.chron-title__rule {
+  width: 60%;
+  height: 1px;
+  margin: 0.2rem 0;
+  background: linear-gradient(90deg, transparent, #a8863c, transparent);
+}
+
+.chron-title__by {
+  margin: 0;
+  font-style: italic;
+  line-height: 1.5;
+  color: #4a3a28;
+}
+
+.chron-title__span {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 0.78rem;
+  letter-spacing: 0.16em;
+  color: #6a563c;
+}
+
+/* ── Edge zones ───────────────────────────────────────────────────────── */
+
+.chron-edge {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 22%;
+  z-index: 3;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.chron-edge--left { left: 0; }
+.chron-edge--right { right: 0; }
+.chron-edge:disabled { cursor: default; }
+
+/* ── The turning leaf ─────────────────────────────────────────────────── */
+
+.chron-leaf {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 50%;
+  height: 100%;
+  z-index: 5;
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  transition: transform 0.9s cubic-bezier(0.35, 0.1, 0.28, 1);
+}
+
+/* Turning forward starts flat and rotates away; turning back starts rotated
+   and comes to rest flat, which is the same animation run in reverse. */
+.chron-leaf { transform: rotateY(0deg); }
+.chron-leaf--back { transform: rotateY(-180deg); }
+.chron-leaf.chron-leaf--over { transform: rotateY(-180deg); }
+.chron-leaf--back.chron-leaf--over { transform: rotateY(0deg); }
+
+.chron-leaf__face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  background:
+    radial-gradient(ellipse at 18% 12%, rgb(255 250 230 / 0.5), transparent 55%),
+    radial-gradient(ellipse at 85% 90%, rgb(122 88 40 / 0.2), transparent 60%),
+    radial-gradient(ellipse at 50% 50%, #e9dcba 55%, #d9c69a 100%);
+  box-shadow:
+    inset 0 0 46px rgb(94 66 28 / 0.35),
+    inset 0 0 6px rgb(94 66 28 / 0.3);
+}
+.chron-leaf__face--front { border-radius: 0 8px 8px 0; }
+.chron-leaf__face--back {
+  border-radius: 8px 0 0 8px;
+  transform: rotateY(180deg);
+}
+
+/* ── Navigation ───────────────────────────────────────────────────────── */
+
+.chron-nav {
+  display: flex;
+  align-items: center;
+  gap: 1.4rem;
+}
+
+.chron-nav__btn {
+  padding: 0.45rem 1.1rem;
+  border: 1px solid rgb(184 159 110 / 0.35);
+  border-radius: 3px;
+  background: none;
+  font-family: var(--display);
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #b89f6e;
+  cursor: pointer;
+}
+.chron-nav__btn:hover:not(:disabled) {
+  color: #e9dcba;
+  border-color: #b89f6e;
+}
+.chron-nav__btn:disabled { opacity: 0.3; cursor: default; }
+
+.chron-nav__pos {
+  font-family: var(--display);
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  color: #b89f6e;
+}
+
+/* ── One leaf at a time ───────────────────────────────────────────────── */
+
+/*
+ * A two-page spread on a phone is two unreadable pages, so below this width the
+ * book shows a single leaf and the turn is dropped with it — there is no spine
+ * to rotate a page around when only one is on show.
+ */
+@media (max-width: 899px) {
+  .chron-page,
+  .chron-board { width: min(92vw, 30rem); }
+
+  .chron-page--left,
+  .chron-board,
+  .chron-spine,
+  .chron-leaf { display: none !important; }
+
+  .chron-page--right { border-radius: 8px; }
+  .chron-page--right::before { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chron-leaf { transition: none; }
+}

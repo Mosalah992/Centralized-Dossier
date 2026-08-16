@@ -34,6 +34,10 @@ export const BINDINGS: Record<VolumeSlug, Binding> = {
   // Ivory and gold like Hall of Honor, so it takes its dark from the same place
   // the eye does: the black title plaque the cover's name is lettered on.
   history:    { cover: '#22201a', cover2: '#12110c', foil: FOIL, subtitle: 'Chronicles of the Realm' },
+  // Black leather, and the only cover whose title is lettered in red rather
+  // than leaf. The foil follows the art: this book's rule and filigree are a
+  // colder, older gold than the other seven.
+  informants: { cover: '#171310', cover2: '#0a0806', foil: '#b08d4f', subtitle: 'Reports of the Field Agents' },
 };
 
 export const bindingVars = (slug: VolumeSlug) => {
