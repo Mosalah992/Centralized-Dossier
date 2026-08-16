@@ -10,8 +10,16 @@
 // row), so each is swept over a window and blank label rows are dropped rather
 // than treated as the end of the block.
 //
-// These counts are the sheet's own tally and drift from the Roster row count.
-// They are rendered as written — reconciling them is the archivists' business.
+// NO LONGER WHAT THE VOLUME RENDERS. The drift this comment used to shrug at
+// turned out to be real and one-sided: the tab read 96 TOTAL MEMBERS while its
+// own status rows summed to 95, and its corps block summed to 91 against a
+// roster of 95, losing four people and recording no Inquisitor where the roster
+// has one. Roster Statistics is now counted off the Roster itself — see
+// shared/statistics.ts, and server/archive.ts for the dispatch.
+//
+// This parser is kept, and kept under test, because the Stats tab is still in
+// the spreadsheet and still maintained by hand: reading it is how anyone would
+// compare the two. Nothing in the serving path calls it.
 
 import type { CorpsTally, Grid, Statistics, Tally } from '../types';
 import { at, isOrnament, num } from '../text';

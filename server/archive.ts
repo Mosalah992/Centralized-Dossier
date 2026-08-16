@@ -10,7 +10,7 @@ import { getAccessToken, listTabTitles, readFormattedGrid, readValues } from './
 import type { FormattedGrid, Grid, VolumeDefinition, VolumeEnvelope } from '../shared/types';
 import { resolveTabTitle } from '../shared/volumes';
 import { parseRoster, summarize } from '../shared/parsers/roster';
-import { parseStats } from '../shared/parsers/stats';
+import { computeStatistics } from '../shared/statistics';
 import { parseLedger } from '../shared/parsers/ledger';
 import { parseStipends } from '../shared/parsers/stipends';
 import { parseHonor } from '../shared/parsers/honor';
@@ -35,7 +35,9 @@ function parseFor(volume: VolumeDefinition, grid: Grid | FormattedGrid): unknown
       const members = parseRoster(grid as Grid);
       return { members, ...summarize(members) };
     }
-    case 'statistics': return parseStats(grid as Grid);
+    // Counted off the Roster, not read from the Stats tab — that tab keeps its
+    // tallies by hand and had drifted from the register. See shared/statistics.ts.
+    case 'statistics': return computeStatistics(parseRoster(grid as Grid));
     case 'ledger': return parseLedger(grid as Grid);
     case 'stipends': return parseStipends(grid as Grid);
     case 'honor': return parseHonor(grid as Grid);

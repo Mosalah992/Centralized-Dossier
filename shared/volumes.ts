@@ -23,8 +23,12 @@ export const VOLUMES: readonly VolumeDefinition[] = [
     slug: 'statistics',
     title: 'Roster Statistics',
     category: 'Personnel',
-    tab: { exact: 'Stats' },
-    range: 'A1:O30',
+    // The Roster, not the Stats tab. These figures are counted off the register
+    // itself rather than read from the sheet's hand-kept tallies, which had
+    // drifted from it — see shared/statistics.ts. The range must stay in step
+    // with the roster volume's, since it is the same grid.
+    tab: { exact: 'Roster' },
+    range: 'A1:K250',
     needsGridData: false,
   },
   {
