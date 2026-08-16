@@ -1,9 +1,13 @@
 // Hall of Honor and the Tamrielic Calendar.
 
+import { useEffect, useMemo, useState } from 'react';
 import { useVolume } from '../api';
 import { Consulting, Notice } from '../components/Notice';
 import { Page, Registers, figure } from '../components/Page';
 import type { CalendarDay } from '../../../shared/types';
+import { MONTHS } from '../../../shared/parsers/calendar';
+import { formatHour, reckon, type InWorldMoment } from '../../../shared/reckoning';
+import { withObservances } from '../../../shared/observances';
 import indumoril from '../assets/indumoril.jpg';
 import ganaril from '../assets/ganaril.jpg';
 import malen from '../assets/malen.jpg';
@@ -243,17 +247,168 @@ function dayTitle(day: CalendarDay): string {
     .join('\n');
 }
 
+/**
+ * The in-world moment, re-reckoned on an interval.
+ *
+ * The period is a parameter because two things want this at different rates and
+ * one of them is expensive: the hourglass wants a tick a second, while the grid
+ * only needs to know which of 365 cells is today. Re-rendering the whole year
+ * once a second to move a highlight that changes at midnight would be wasteful,
+ * so the plate keeps its own fast clock and the view runs slow.
+ */
+function useInWorldNow(periodMs: number): InWorldMoment {
+  const [now, setNow] = useState(() => reckon());
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(reckon()), periodMs);
+    return () => clearInterval(id);
+  }, [periodMs]);
+
+  return now;
+}
+
+/**
+ * A sand clock, drawn rather than drafted in: the sand stands for the day
+ * itself, the upper bulb draining from midnight to midnight and the lower one
+ * filling by the same measure, so a reader can see the hour at a glance before
+ * reading it. It turns over at midnight because the day does.
+ *
+ * The geometry is in one 60x100 space and the two bulbs are mirrored about the
+ * neck at y=50, so the sand levels are a single interpolation read in opposite
+ * directions rather than two sets of numbers to keep in agreement.
+ */
+function Hourglass({ fraction }: { fraction: number }) {
+  const NECK = 50;
+  const TOP = 12;
+  const FLOOR = 88;
+
+  // Upper sand drains toward the neck; lower sand climbs from the floor.
+  const upperSurface = TOP + (NECK - TOP) * fraction;
+  const lowerSurface = FLOOR - (FLOOR - NECK) * fraction;
+  const draining = fraction > 0.002 && fraction < 0.998;
+
+  return (
+    /* Hidden from the reading order: the hour is written out beside it, and a
+       description of the sand would only say the same thing twice. */
+    <svg className="sandglass" viewBox="0 0 60 100" aria-hidden focusable="false">
+      <defs>
+        {/* The sand is drawn as plain rectangles and cut to the bulbs, so the
+            cone the eye expects comes from the glass rather than from geometry
+            that would have to be recomputed at every level. */}
+        <clipPath id="sandglass-upper">
+          <path d="M 13 12 L 47 12 C 47 29 33 44 31 49 L 29 49 C 27 44 13 29 13 12 Z" />
+        </clipPath>
+        <clipPath id="sandglass-lower">
+          <path d="M 13 88 L 47 88 C 47 71 33 56 31 51 L 29 51 C 27 56 13 71 13 88 Z" />
+        </clipPath>
+      </defs>
+
+      {/* Frame: two turned posts between a capped top and foot. */}
+      <g className="sandglass__frame">
+        <rect x="3" y="2" width="54" height="7" rx="2.5" />
+        <rect x="3" y="91" width="54" height="7" rx="2.5" />
+        <rect x="7" y="7" width="5" height="86" rx="2.5" />
+        <rect x="48" y="7" width="5" height="86" rx="2.5" />
+      </g>
+
+      <g className="sandglass__glass">
+        <path d="M 13 12 L 47 12 C 47 29 33 44 31 49 L 29 49 C 27 44 13 29 13 12 Z" />
+        <path d="M 13 88 L 47 88 C 47 71 33 56 31 51 L 29 51 C 27 56 13 71 13 88 Z" />
+      </g>
+
+      <g className="sandglass__sand">
+        <rect
+          x="12" width="36"
+          y={upperSurface}
+          height={Math.max(0, NECK - upperSurface)}
+          clipPath="url(#sandglass-upper)"
+        />
+        <rect
+          x="12" width="36"
+          y={lowerSurface}
+          height={Math.max(0, FLOOR - lowerSurface)}
+          clipPath="url(#sandglass-lower)"
+        />
+      </g>
+
+      {/* Grains rather than a bar: a dashed stroke whose offset is animated
+          reads as falling, where a solid rectangle would just sit there. */}
+      {draining && (
+        <line className="sandglass__fall" x1="30" y1="49" x2="30" y2={Math.max(50, lowerSurface)} />
+      )}
+    </svg>
+  );
+}
+
+/** The plate above the year: what day it is in the realm, and what hour. */
+function InWorldPlate({ today }: { today: CalendarDay | null }) {
+  // A second is finer than the display needs, but the sand moves continuously
+  // and a coarser tick makes it visibly step.
+  const now = useInWorldNow(1000);
+  const month = MONTHS[now.monthIndex - 1] ?? '';
+
+  return (
+    <aside className="reckoning">
+      <Hourglass fraction={now.dayFraction} />
+
+      <div className="reckoning__reading">
+        <p className="reckoning__eyebrow">The hour in the realm</p>
+        <p className="reckoning__date">
+          {month} {now.day}, 4E {now.year}
+        </p>
+        <p className="reckoning__hour">
+          <time>{formatHour(now)}</time>
+          {today && <span className="reckoning__weekday">{today.weekday}</span>}
+        </p>
+        {today?.event && (
+          <p className="reckoning__observance">
+            <strong>{today.event.name}</strong>
+            {today.event.caution && <> — {today.event.caution}</>}
+          </p>
+        )}
+      </div>
+    </aside>
+  );
+}
+
 export function CalendarView() {
   const volume = useVolume('calendar');
+  // Slow: this only decides which cell wears the mark, and that changes at
+  // midnight. The plate below keeps the fast clock.
+  const now = useInWorldNow(30_000);
+
+  const source = volume.state === 'ready' ? volume.value.data : null;
+  // The overlay allocates a fresh year, so it is memoised against the volume
+  // rather than run on every tick of the clock above.
+  const year = useMemo(() => (source ? withObservances(source) : null), [source]);
 
   if (volume.state === 'loading') return <Consulting />;
   if (volume.state === 'error') {
     return <Notice kind="error" title="The calendar could not be read" body={volume.message} />;
   }
+  if (!year) return <Consulting />;
 
-  const year = volume.value.data;
   const days = year.months.flatMap((month) => month.weeks.flat());
   const noted = days.filter((day): day is CalendarDay => day?.event != null);
+
+  // The sheet keeps one year. Once the realm passes into the next, its grid is
+  // last year's and nothing in it is today — so the mark is withheld rather
+  // than put on the same day number of the wrong year.
+  const sheetYear = /\b\dE\s*(\d+)\b/.exec(year.title)?.[1];
+  const showsThisYear = !sheetYear || Number(sheetYear) === now.year;
+
+  const isCurrentMonth = (monthIndex: number) => showsThisYear && monthIndex === now.monthIndex;
+  const isToday = (monthIndex: number, day: number) =>
+    isCurrentMonth(monthIndex) && day === now.day;
+
+  // Only the sheet can say which weekday a date falls on, or what the Embassy
+  // has written against it, so today's cell is looked up rather than computed.
+  const today = showsThisYear
+    ? year.months
+        .find((m) => m.index === now.monthIndex)
+        ?.weeks.flat()
+        .find((d): d is CalendarDay => d?.day === now.day) ?? null
+    : null;
 
   return (
     <Page
@@ -270,9 +425,14 @@ export function CalendarView() {
         ]}
       />
 
+      <InWorldPlate today={today} />
+
       <div className="year">
         {year.months.map((month) => (
-          <section className="month" key={`${month.index}-${month.name}`}>
+          <section
+            className={`month${isCurrentMonth(month.index) ? ' month--current' : ''}`}
+            key={`${month.index}-${month.name}`}
+          >
             <h2 className="month__name">{month.name}</h2>
             <div className="month__grid">
               {year.weekdays.map((weekday) => (
@@ -286,18 +446,24 @@ export function CalendarView() {
                   return <div className="day day--empty" key={`empty-${index}`} aria-hidden />;
                 }
                 const legend = year.legend.find((entry) => entry.label === day.kind);
+                const current = isToday(month.index, day.day);
                 return (
                   <div
-                    className={`day${day.event ? ' day--event' : ''}`}
+                    className={`day${day.event ? ' day--event' : ''}${current ? ' day--today' : ''}`}
                     key={`${month.name}-${day.day}`}
                     style={{ background: legend?.color }}
-                    title={dayTitle(day)}
-                    // Only marked days are worth stopping on with a keyboard.
-                    tabIndex={day.event ? 0 : undefined}
+                    title={current ? `Today — ${dayTitle(day)}` : dayTitle(day)}
+                    // Only marked days are worth stopping on with a keyboard —
+                    // and today, which a reader arriving at the volume is most
+                    // likely to be looking for.
+                    tabIndex={day.event || current ? 0 : undefined}
+                    aria-current={current ? 'date' : undefined}
                     aria-label={
                       day.event
-                        ? `${month.name} ${day.day}: ${day.event.name}. ${day.event.caution}`
-                        : undefined
+                        ? `${current ? 'Today. ' : ''}${month.name} ${day.day}: ${day.event.name}. ${day.event.caution}`
+                        : current
+                          ? `Today, ${month.name} ${day.day}`
+                          : undefined
                     }
                   >
                     {day.day}
@@ -318,29 +484,6 @@ export function CalendarView() {
         ))}
       </div>
 
-      {noted.length > 0 && (
-        <div className="table-frame">
-          <table>
-            <caption>Marked days of the year</caption>
-            <thead>
-              <tr>
-                <th scope="col">Observance</th>
-                <th scope="col">Date</th>
-                <th scope="col">Note</th>
-              </tr>
-            </thead>
-            <tbody>
-              {noted.map((day) => (
-                <tr key={`${day.event!.name}-${day.event!.date}`}>
-                  <th scope="row">{day.event!.name}</th>
-                  <td>{day.event!.date}</td>
-                  <td className="wrap">{day.event!.caution || '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
     </Page>
   );
 }
