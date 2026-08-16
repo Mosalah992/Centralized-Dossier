@@ -128,15 +128,6 @@ function buildLeaves(chronicle: Chronicle): Leaf[] {
           stops — and it stops in several places, some of them grave — this
           chronicle says so rather than guess.
         </p>
-        <p className="chron-p">
-          <strong>Of the year.</strong> The reports do not agree on what year this
-          is, and the disagreement spans twenty-one years. Most agents who date
-          their work write 4E 205; some write 4E 216; several write 4E 226,
-          consistently and never otherwise. The split survives to the final week.
-          No agent ever corrects another, and no report acknowledges that a
-          disagreement exists. This chronicle is therefore dated by day and month
-          alone, and the year is left where the record left it.
-        </p>
       </>
     ),
   });

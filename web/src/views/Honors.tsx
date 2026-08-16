@@ -8,6 +8,7 @@ import type { CalendarDay } from '../../../shared/types';
 import { MONTHS } from '../../../shared/parsers/calendar';
 import { clockParts, machineHour, reckon, type InWorldMoment } from '../../../shared/reckoning';
 import { withObservances } from '../../../shared/observances';
+import { withParchmentPalette } from '../../../shared/parchment';
 import indumoril from '../assets/indumoril.jpg';
 import ganaril from '../assets/ganaril.jpg';
 import malen from '../assets/malen.jpg';
@@ -358,8 +359,10 @@ function InWorldPlate({ today }: { today: CalendarDay | null }) {
           {month} {now.day}, 4E {now.year}
         </p>
         <p className="reckoning__hour">
+          {/* A real space, not just the margin below: the gap has to survive
+              being read aloud and being copied, and CSS does neither. */}
           <time dateTime={machineHour(now)}>
-            {clock}
+            {clock}{' '}
             <span className="reckoning__meridiem">{meridiem}</span>
           </time>
           {today && <span className="reckoning__weekday">{today.weekday}</span>}
@@ -382,9 +385,14 @@ export function CalendarView() {
   const now = useInWorldNow(30_000);
 
   const source = volume.state === 'ready' ? volume.value.data : null;
-  // The overlay allocates a fresh year, so it is memoised against the volume
-  // rather than run on every tick of the clock above.
-  const year = useMemo(() => (source ? withObservances(source) : null), [source]);
+  // Both passes allocate a fresh year, so they are memoised against the volume
+  // rather than run on every tick of the clock above. The palette goes last
+  // because it only rewrites the legend, and the observance pass does not care
+  // what colour a day is.
+  const year = useMemo(
+    () => (source ? withParchmentPalette(withObservances(source)) : null),
+    [source],
+  );
 
   if (volume.state === 'loading') return <Consulting />;
   if (volume.state === 'error') {

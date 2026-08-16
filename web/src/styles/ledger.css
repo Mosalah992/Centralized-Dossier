@@ -652,6 +652,25 @@ td.wrap {
   grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
   gap: 1.75rem;
   margin: 2rem 0;
+  position: relative;
+}
+
+/* An uneven wash over the whole year, so the block reads as one sheet that has
+   aged rather than a grid of tinted boxes. Multiplied over the cells instead of
+   sitting behind them: laid underneath, it would only ever show in the 2px
+   gutters between days and the aging would stop at the edge of every cell.
+   Broad gradients only — no discrete spots, which would read as foxing. */
+.year::after {
+  content: '';
+  position: absolute;
+  inset: -1rem;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  background:
+    radial-gradient(58% 44% at 12% 8%, rgba(122, 94, 49, 0.1), transparent 70%),
+    radial-gradient(50% 40% at 88% 28%, rgba(110, 82, 41, 0.08), transparent 72%),
+    radial-gradient(68% 50% at 28% 92%, rgba(126, 96, 52, 0.09), transparent 70%),
+    radial-gradient(44% 34% at 72% 66%, rgba(100, 74, 36, 0.06), transparent 75%);
 }
 
 .month__name {
@@ -813,7 +832,8 @@ td.wrap {
 /* Lettering among figures. Set smaller and tracked, and lifted off the numerals
    by its own space, so the hour still reads as a number at a glance. */
 .reckoning__meridiem {
-  margin-left: 0.32em;
+  /* Small, because the markup already carries a real space between the two. */
+  margin-left: 0.08em;
   font-size: 0.52em;
   letter-spacing: 0.18em;
   color: var(--ink-soft);
