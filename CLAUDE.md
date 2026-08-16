@@ -21,8 +21,9 @@ the styling is hand-written and deliberately bespoke.
 ```
 web/src/          The SPA
   components/     Gate, Shelf, Book, Page, Ambience, Notice, ErrorBoundary
-  views/          Personnel, Finance, Honors, History  (lazy-loaded)
+  views/          Personnel, Finance, Honors, History, Informants  (lazy-loaded)
   styles/         base.css (tokens) · shelf.css (hall) · ledger.css (volume pages)
+                  chronicle.css (the sealed volume's parchment + turning leaf)
   assets/         Build-pipeline assets: covers, portraits, fonts, sprites
   theme.ts        Per-volume binding colours
   covers.ts       slug -> cover image
@@ -139,12 +140,18 @@ node node_modules/wrangler/bin/wrangler.js pages deploy dist --project-name thal
 | What | Where | Used by |
 |---|---|---|
 | `SHEET_ID`, `GOOGLE_APPLICATION_CREDENTIALS` | `.env` | `scripts/*.mjs` |
-| `GOOGLE_SERVICE_ACCOUNT_JSON`, `GATE_SECRET`, `GATE_PASSPHRASE` | `.dev.vars` | `wrangler pages dev` |
+| `GOOGLE_SERVICE_ACCOUNT_JSON`, `GATE_SECRET`, `GATE_PASSPHRASE`, `GATE_EPOCH` | `.dev.vars` | `wrangler pages dev` |
+| `CHRONICLE_PASSPHRASE` — the Thalmor Chronicles' own word | `.dev.vars` | the volume's second gate |
 | Service-account key | `credentials/` | generated into `.dev.vars` |
-| All three production secrets | Cloudflare Pages secrets | the live site |
+| All four production secrets | Cloudflare Pages secrets | the live site |
 
 `.env`, `.dev.vars` and `credentials/` are gitignored and **must never be staged**.
 Production secrets cannot be read back out of Cloudflare — only replaced.
+
+`GATE_PASSPHRASE` opens the archive; `CHRONICLE_PASSPHRASE` opens one volume inside
+it. They are separate secrets and the writs are separately scoped, so overwriting
+either is a lockout, not a reset — there is no way to read the old value back to
+check what you replaced.
 
 Before any commit, scan the staged diff for key material rather than trusting
 `.gitignore` alone:
@@ -152,6 +159,39 @@ Before any commit, scan the staged diff for key material rather than trusting
 ```bash
 git diff --cached | grep -Ei "BEGIN PRIVATE KEY|GATE_SECRET=|DISCORD_TOKEN"
 ```
+
+### Held back from git
+
+The GitHub repository is **public**. Three files are therefore gitignored even
+though they are not secrets in the credential sense — they are the substance of a
+volume sealed under its own passphrase, and committing them would publish to anyone
+browsing GitHub exactly what the second gate exists to withhold.
+
+| File | What it is |
+|---|---|
+| `functions/lib/chronicle.ts` | The Thalmor Chronicles: 85 entries, the powers, the unresolved |
+| `docs/informant-reports.md` | 650 redacted reports, in filing order |
+| `docs/informant-events-ledger.md` | The reading pass over them |
+
+**These are not in git history and cannot be recovered from it.** The deployed
+Worker holds the chronicle; a local copy is the only other one. Back them up
+somewhere outside the repo — a clone plus a `git log -S` will not find them.
+
+The two documents *are* reproducible: given a fresh export to `tmp/`,
+`scripts/build-informant-history.mjs` regenerates both byte for byte. The chronicle
+itself is not — it was written, not derived.
+
+`functions/lib/chronicle.example.ts` is committed in the real module's place, with
+the same exports and placeholder prose, because `api/chronicle/index.ts` imports
+from it and a clone missing that import fails `typecheck` and `build` — which reads
+as a broken repository rather than a deliberate omission. To make a clone build:
+
+```bash
+cp functions/lib/chronicle.example.ts functions/lib/chronicle.ts
+```
+
+Restoring the real volume means copying `chronicle.ts` back from wherever you kept
+it. Do not commit it.
 
 ---
 
