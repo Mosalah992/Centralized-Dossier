@@ -128,8 +128,31 @@ export function reckon(nowMs: number = Date.now()): InWorldMoment {
 }
 
 /**
- * The hour as the Embassy writes it: a 24-hour clock, zero-padded. The registers
- * are set in tracked capitals and a lowercase "pm" reads as a blot among them.
+ * The hour split into the face and the half of the day it falls in, so the
+ * meridiem can be set apart from the numerals — it is lettering among figures,
+ * and at the same size it reads as part of the number.
+ *
+ * Noon and midnight are the two the twelve-hour clock gets wrong if written
+ * naively: `hour % 12` makes both of them 0, and neither is the zeroth hour of
+ * anything. They are 12 PM and 12 AM.
  */
-export const formatHour = (moment: InWorldMoment): string =>
+export function clockParts(moment: InWorldMoment): { clock: string; meridiem: 'AM' | 'PM' } {
+  const onFace = moment.hour % 12 === 0 ? 12 : moment.hour % 12;
+  return {
+    clock: `${onFace}:${String(moment.minute).padStart(2, '0')}`,
+    meridiem: moment.hour < 12 ? 'AM' : 'PM',
+  };
+}
+
+/** The hour as the Embassy writes it, e.g. `6:04 PM`. */
+export function formatHour(moment: InWorldMoment): string {
+  const { clock, meridiem } = clockParts(moment);
+  return `${clock} ${meridiem}`;
+}
+
+/**
+ * The same hour on a 24-hour clock, for the `datetime` attribute — a machine
+ * reading the page should not have to parse a meridiem.
+ */
+export const machineHour = (moment: InWorldMoment): string =>
   `${String(moment.hour).padStart(2, '0')}:${String(moment.minute).padStart(2, '0')}`;

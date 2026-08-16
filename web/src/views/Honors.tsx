@@ -6,7 +6,7 @@ import { Consulting, Notice } from '../components/Notice';
 import { Page, Registers, figure } from '../components/Page';
 import type { CalendarDay } from '../../../shared/types';
 import { MONTHS } from '../../../shared/parsers/calendar';
-import { formatHour, reckon, type InWorldMoment } from '../../../shared/reckoning';
+import { clockParts, machineHour, reckon, type InWorldMoment } from '../../../shared/reckoning';
 import { withObservances } from '../../../shared/observances';
 import indumoril from '../assets/indumoril.jpg';
 import ganaril from '../assets/ganaril.jpg';
@@ -346,6 +346,7 @@ function InWorldPlate({ today }: { today: CalendarDay | null }) {
   // and a coarser tick makes it visibly step.
   const now = useInWorldNow(1000);
   const month = MONTHS[now.monthIndex - 1] ?? '';
+  const { clock, meridiem } = clockParts(now);
 
   return (
     <aside className="reckoning">
@@ -357,7 +358,10 @@ function InWorldPlate({ today }: { today: CalendarDay | null }) {
           {month} {now.day}, 4E {now.year}
         </p>
         <p className="reckoning__hour">
-          <time>{formatHour(now)}</time>
+          <time dateTime={machineHour(now)}>
+            {clock}
+            <span className="reckoning__meridiem">{meridiem}</span>
+          </time>
           {today && <span className="reckoning__weekday">{today.weekday}</span>}
         </p>
         {today?.event && (

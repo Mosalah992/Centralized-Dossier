@@ -810,6 +810,15 @@ td.wrap {
   color: color-mix(in srgb, var(--foil) 42%, var(--ink));
 }
 
+/* Lettering among figures. Set smaller and tracked, and lifted off the numerals
+   by its own space, so the hour still reads as a number at a glance. */
+.reckoning__meridiem {
+  margin-left: 0.32em;
+  font-size: 0.52em;
+  letter-spacing: 0.18em;
+  color: var(--ink-soft);
+}
+
 .reckoning__weekday {
   font-size: 0.8rem;
   letter-spacing: 0.1em;

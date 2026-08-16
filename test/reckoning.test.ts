@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  DAYS_PER_YEAR, MONTH_LENGTHS, formatHour, fromDayOfYear, reckon, toDayOfYear,
+  DAYS_PER_YEAR, MONTH_LENGTHS, clockParts, formatHour, fromDayOfYear, machineHour,
+  reckon, toDayOfYear,
 } from '../shared/reckoning';
 import { MONTHS } from '../shared/parsers/calendar';
 
@@ -38,7 +39,7 @@ describe('the anchor', () => {
     expect(MONTHS[now.monthIndex - 1]).toBe('Heartfire');
     expect(now.day).toBe(4);
     expect(now.year).toBe(226);
-    expect(formatHour(now)).toBe('18:04');
+    expect(formatHour(now)).toBe('6:04 PM');
   });
 
   it('sits exactly nineteen days ahead of the real date', () => {
@@ -54,24 +55,24 @@ describe('the clock flows on', () => {
       const expected = ((247 + days - 1) % DAYS_PER_YEAR) + 1;
       expect(then.dayOfYear).toBe(expected);
       // The hour is untouched by whole days passing.
-      expect(formatHour(then)).toBe('18:04');
+      expect(formatHour(then)).toBe('6:04 PM');
     }
   });
 
   it('keeps the hour in step with real minutes', () => {
-    expect(formatHour(reckon(ANCHOR_MS + 60_000))).toBe('18:05');
-    expect(formatHour(reckon(ANCHOR_MS + 60 * 60_000))).toBe('19:04');
+    expect(formatHour(reckon(ANCHOR_MS + 60_000))).toBe('6:05 PM');
+    expect(formatHour(reckon(ANCHOR_MS + 60 * 60_000))).toBe('7:04 PM');
   });
 
   it('rolls the date at midnight, not before', () => {
     // 18:04 to 24:00 is 5h56m.
     const toMidnight = (5 * 60 + 56) * 60_000;
     expect(reckon(ANCHOR_MS + toMidnight - 60_000).day).toBe(4);
-    expect(formatHour(reckon(ANCHOR_MS + toMidnight - 60_000))).toBe('23:59');
+    expect(formatHour(reckon(ANCHOR_MS + toMidnight - 60_000))).toBe('11:59 PM');
 
     const justAfter = reckon(ANCHOR_MS + toMidnight);
     expect(justAfter.day).toBe(5);
-    expect(formatHour(justAfter)).toBe('00:00');
+    expect(formatHour(justAfter)).toBe('12:00 AM');
   });
 
   it('turns the year at Evening Star 31 and counts the era on', () => {
@@ -102,12 +103,12 @@ describe('the clock flows on', () => {
   it('reckons backwards through the anchor without losing a day', () => {
     const yesterday = reckon(ANCHOR_MS - DAY_MS);
     expect(yesterday.day).toBe(3);
-    expect(formatHour(yesterday)).toBe('18:04');
+    expect(formatHour(yesterday)).toBe('6:04 PM');
 
     // 18h05m before the anchor is the previous day at 23:59.
     const before = reckon(ANCHOR_MS - (18 * 60 + 5) * 60_000);
     expect(before.day).toBe(3);
-    expect(formatHour(before)).toBe('23:59');
+    expect(formatHour(before)).toBe('11:59 PM');
   });
 
   it('turns the year backwards too', () => {
@@ -120,6 +121,48 @@ describe('the clock flows on', () => {
     const previous = reckon(ANCHOR_MS - 247 * DAY_MS);
     expect(previous.year).toBe(225);
     expect(previous.dayOfYear).toBe(DAYS_PER_YEAR);
+  });
+});
+
+describe('the twelve-hour face', () => {
+  /** Minutes past the anchor that land on a given 24-hour time. */
+  const at = (hour: number, minute: number) =>
+    ANCHOR_MS + ((hour * 60 + minute) - (18 * 60 + 4)) * 60_000;
+
+  it('writes noon and midnight as twelve, not zero', () => {
+    // `hour % 12` makes both of these 0, and neither is the zeroth hour.
+    expect(formatHour(reckon(at(0, 0)))).toBe('12:00 AM');
+    expect(formatHour(reckon(at(12, 0)))).toBe('12:00 PM');
+    expect(formatHour(reckon(at(0, 30)))).toBe('12:30 AM');
+    expect(formatHour(reckon(at(12, 30)))).toBe('12:30 PM');
+  });
+
+  it('turns over from AM to PM at noon and back at midnight', () => {
+    expect(clockParts(reckon(at(11, 59))).meridiem).toBe('AM');
+    expect(clockParts(reckon(at(12, 0))).meridiem).toBe('PM');
+    expect(clockParts(reckon(at(23, 59))).meridiem).toBe('PM');
+    expect(clockParts(reckon(at(0, 0))).meridiem).toBe('AM');
+  });
+
+  it('drops the leading zero from the hour but keeps it on the minute', () => {
+    expect(formatHour(reckon(at(9, 5)))).toBe('9:05 AM');
+    expect(formatHour(reckon(at(13, 7)))).toBe('1:07 PM');
+  });
+
+  it('covers all 1440 minutes without a malformed or duplicate face', () => {
+    const seen = new Set<string>();
+    for (let m = 0; m < 1440; m++) {
+      const face = formatHour(reckon(at(0, 0) + m * 60_000));
+      expect(face).toMatch(/^(1[0-2]|[1-9]):[0-5]\d (AM|PM)$/);
+      seen.add(face);
+    }
+    expect(seen.size).toBe(1440);
+  });
+
+  it('keeps a 24-hour reading for the datetime attribute', () => {
+    expect(machineHour(reckon(at(0, 0)))).toBe('00:00');
+    expect(machineHour(reckon(at(18, 4)))).toBe('18:04');
+    expect(machineHour(reckon(at(23, 59)))).toBe('23:59');
   });
 });
 
