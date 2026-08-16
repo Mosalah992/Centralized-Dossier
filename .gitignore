@@ -26,5 +26,15 @@ gate web page.zip
 Assets/torchlightgif.gif
 Assets/Animated_skyrim_style_candles.zip
 
-# Local editor/agent tooling (launch config for the dev-server preview)
-.claude/
+# Hesperides was tried for --display and reverted — it comes apart into
+# disconnected strokes at label size (see the note in base.css). Nothing embeds
+# it, and this repo is public, so committing the face would redistribute a
+# foundry font to no purpose. The reasoning is kept in the comment, not the file.
+Assets/HESPD___.TTF
+Assets/hesperides.zip
+
+# Agent tooling. `.claude/commands/` and `.claude/skills/` are shared project
+# tooling — OpenSpec writes its slash commands and skills there, and they should
+# travel with the repo like any other workflow. Only the launch config is local:
+# it points at a dev-server preview and means nothing on another machine.
+.claude/launch.json

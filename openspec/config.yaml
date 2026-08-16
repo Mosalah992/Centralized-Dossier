@@ -1,0 +1,63 @@
+schema: spec-driven
+
+# Shown to AI when creating artifacts. CLAUDE.md at the repo root carries the
+# full picture; what follows is the part that changes how a proposal should be
+# written, inlined because an artifact may be drafted without reading it.
+context: |
+  Thalmor Embassy Archives — a gated, read-only web archive that renders a
+  Google Sheet as in-world ceremonial registers for a Skyrim roleplay
+  community. Public URL, shared passphrase, deliberately noindex: it carries
+  about a hundred real people's Discord handles, ranks and activity.
+
+  Stack: Vite 5, React 18, TypeScript, Cloudflare Pages + Pages Functions.
+  No CSS framework — the styling is hand-written and deliberately bespoke.
+  web/src = SPA, functions/ = /api/* routes, server/ = Sheets client and
+  parsers, shared/ = registry and types used by both halves, scripts/ = asset
+  prep. Two tsconfigs: `npm run typecheck` covers both, `npm run build` only
+  the browser half.
+
+  Invariants a change must not break:
+  - Gated responses stay `private, no-store` + `Vary: Cookie`
+    (functions/api/_middleware.ts). Never put s-maxage or
+    stale-while-revalidate on a client response — behind a gate that lets a
+    shared edge cache serve the roster to a request with no cookie. Cache
+    server-side under the synthetic archive.cache.internal key instead;
+    functions/lib/swr.ts is the pattern.
+  - Sheets access is readonly-scoped. A separate clock-in bot owns Roster
+    columns G/H/J/K in the same spreadsheet. This site only ever reads, and
+    there must be no write helper.
+  - VOLUMES (shared/volumes.ts) is sheet-backed only; the Worker iterates it to
+    resolve tab titles, so a volume listed there without a real tab reports as
+    withdrawn forever. Volumes the Embassy writes itself live in KEPT.
+  - The gate fails CLOSED on missing secrets and OPEN on a missing
+    GATE_ATTEMPTS KV binding, where the brute-force limiter silently stops.
+    Both are deliberate; changing either is a security decision.
+  - --display must be a tracked Roman capital (labels are wide-tracked
+    uppercase), and --cover must stay dark (light foil text is laid over it).
+
+  Deploys are manual and verified against production — the Pages project is not
+  connected to GitHub, so pushing does not deploy.
+
+  Conventions: comments explain why, not what, and carry reasoning not
+  recoverable from the code. Commit subjects are short and in-world, bodies
+  explain the tradeoff.
+
+rules:
+  proposal:
+    - State explicitly whether the change touches the gate, the Sheets scope, or
+      anything that renders member data. If it does not, say so in a line.
+    - Name the invariant any change near functions/ or shared/volumes.ts could
+      break, and how the design avoids it.
+  tasks:
+    - Include a verification step that exercises the running site, not just the
+      build — a deploy that uploads is not a deploy that works.
+
+operations:
+  apply:
+    guidance:
+      - Run `npm run typecheck` (both tsconfigs) and `npm test` before claiming done.
+      - Scan the staged diff for key material before committing; .env, .dev.vars
+        and credentials/ are gitignored but that is not the only safeguard.
+  archive:
+    guidance:
+      - Record what was verified against production, not only what was built.
