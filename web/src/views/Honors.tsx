@@ -88,7 +88,7 @@ const HONORED_SERVANTS: Servant[] = [
       'Brought forth the intelligence that ended the war with Windhelm against the Sons of Skyrim and the Orcs of Voshu-Agra, bringing peace to the realm.',
       'Veteran of the Thalmor, distinguished by years of loyal and dedicated service to the Dominion.',
       "Advisor of unmatched diplomatic skill, renowned for building relationships and navigating the delicate politics of Skyrim's Holds.",
-      'Unwaveringly loyal to the Thalmor, serving the Dominion with consistency and distinction, even when his heart may occasionally favor Riften.',
+      'Unwaveringly loyal to the Thalmor, serving the Dominion with consistency and distinction, even when her heart may occasionally favor Riften.',
     ],
     aside: 'Champion of Riften, apparently.',
   },
