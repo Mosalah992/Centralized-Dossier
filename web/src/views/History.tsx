@@ -11,6 +11,7 @@
 // marked. An archive that quietly picks a winner is editing, not recording.
 
 import { Page } from '../components/Page';
+import { Guided, GuidedToggle, useGuidedReading } from '../reading';
 
 interface Entry {
   date: string;
@@ -211,11 +212,22 @@ const PAPERS: Paper[] = [
 ];
 
 export function HistoryView() {
+  const [guided, setGuided] = useGuidedReading();
+
   return (
     <Page
       title="History of the Realm"
       subtitle="As Recorded by the Free Presses of Skyrim"
     >
+      {/* This volume keeps its account as written prose rather than as data, so
+          the guide walks the rendered tree instead of being threaded through a
+          builder. Everything below is read; the dates and the running heads are
+          stepped over by class inside <Guided>. */}
+      <div className="reading-aid">
+        <GuidedToggle on={guided} onChange={() => setGuided((was) => !was)} />
+      </div>
+
+      <Guided on={guided}>
       <section aria-label="Before the chronicle">
         <h2 className="page__heading">Before the Chronicle</h2>
         <div className="chronicle__preamble">
@@ -396,6 +408,7 @@ export function HistoryView() {
           ))}
         </div>
       </section>
+      </Guided>
 
       <footer className="page__credits">
         <p>

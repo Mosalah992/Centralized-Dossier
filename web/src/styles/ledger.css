@@ -1350,3 +1350,31 @@ button.day::before {
     padding-top: 0;
   }
 }
+
+/* The reading-aid switch, where a volume offers one. Right-aligned above the
+   text so it reads as a control on the page rather than part of the record. */
+.reading-aid {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0 1.2rem;
+}
+
+/* The switch is styled with the chronicle's own dark furniture, which is wrong
+   on parchment — same control, opposite ground. */
+.reading-aid .guide-toggle {
+  color: var(--ink-soft);
+  border-color: color-mix(in srgb, var(--cover) 30%, rgba(90, 70, 30, 0.28));
+}
+
+.reading-aid .guide-toggle:hover,
+.reading-aid .guide-toggle:focus-visible {
+  color: var(--ink);
+  border-color: color-mix(in srgb, var(--foil) 55%, transparent);
+}
+
+.reading-aid .guide-toggle--on {
+  color: var(--ink);
+  border-color: color-mix(in srgb, var(--foil) 70%, transparent);
+  background: color-mix(in srgb, var(--foil) 10%, transparent);
+  box-shadow: none;
+}

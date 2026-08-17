@@ -16,12 +16,13 @@
 // Its text arrives from /api/chronicle rather than from this bundle. That is
 // the whole point of the volume: see SealedVolume in shared/types.
 
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 
 import { chronicleIsOpen, openChronicle, useChronicle } from '../api';
 import type { Chronicle, ChronicleEntry } from '../api';
 import { Consulting, Notice } from '../components/Notice';
+import { GuidedToggle, mark, prose, useGuidedReading } from '../reading';
 import sealUrl from '../assets/volumes/informants-seal.webp';
 
 /**
@@ -51,82 +52,6 @@ interface Leaf {
    */
   items?: { label: string; text: string }[];
 }
-
-/**
- * How many letters of a word the eye is given to fix on.
- *
- * Bionic reading bolds the opening of each word and lets the reader's eye fill
- * in the rest, which helps most on exactly the sort of text this volume is:
- * long, unbroken, and read in one sitting. The share is not constant — a fixed
- * two letters leaves a fourteen-letter word with almost no anchor and bolds
- * most of a three-letter one, so short words take a single letter and long ones
- * take about two fifths.
- */
-function fixation(word: string): number {
-  const n = word.length;
-  if (n <= 1) return n;
-  if (n <= 3) return 1;
-  if (n <= 6) return 2;
-  if (n <= 9) return 3;
-  return Math.ceil(n * 0.4);
-}
-
-/**
- * Bold the fixation of every word in a run of plain text.
- *
- * Split on non-letters while KEEPING them, so spacing, punctuation and the
- * volume's curly apostrophes survive intact — and apostrophes and hyphens are
- * treated as part of a word, because "Rain’s" and "Silver-Leaf" are each one
- * word to a reader and bolding after the mark would look like a stutter.
- *
- * Emits fragments rather than spans: at eighty-five entries this runs to some
- * thousands of words, and a wrapper element around every one of them is DOM
- * for nothing.
- */
-function guide(text: string): ReactNode {
-  const parts = text.split(/([^\p{L}\p{N}'’-]+)/u);
-  return parts.map((part, i) => {
-    if (!part || /^[^\p{L}\p{N}'’-]+$/u.test(part)) return part;
-    const cut = fixation(part);
-    return (
-      <Fragment key={i}>
-        <b className="chron-fix">{part.slice(0, cut)}</b>
-        {part.slice(cut)}
-      </Fragment>
-    );
-  });
-}
-
-/**
- * A run of the volume's prose, marked for the scrying and guided for the eye.
- *
- * Both transforms want the same string, so they are done in one pass rather
- * than one over the other's output. The search term is escaped before it
- * becomes a pattern: a reader searching for `O` — the letter left on the High
- * King's body — or for a full stop is searching for that character, not writing
- * a regular expression.
- *
- * Where a hit falls inside a word the two do interfere: the match splits the
- * word, and each half is then guided as though it were a word of its own. It is
- * left that way. Reuniting them would mean teaching the guide about the mark,
- * and the artefact is one bolded letter mid-word on a term the reader typed
- * themselves and is already looking straight at.
- */
-function prose(text: string, term: string, guided: boolean): ReactNode {
-  const escaped = term ? term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : '';
-  const parts = term ? text.split(new RegExp(`(${escaped})`, 'ig')) : [text];
-
-  return parts.map((part, i) => {
-    if (!part) return null;
-    const body = guided ? guide(part) : part;
-    return term && part.toLowerCase() === term.toLowerCase()
-      ? <mark className="chron-mark" key={i}>{body}</mark>
-      : <Fragment key={i}>{body}</Fragment>;
-  });
-}
-
-/** Marking alone, for the search results — those are the instrument, not the book. */
-const mark = (text: string, term: string): ReactNode => prose(text, term, false);
 
 /**
  * A short window of `text` around the first hit, marked.
@@ -466,26 +391,7 @@ export function InformantsView() {
   // bodies. That is cheap — eighty-five entries — and it buys the one thing a
   // search over a paginated book has to have: the pagination cannot move under
   // the reader, since packing counts raw characters and marking adds none.
-  /**
-   * Bionic reading, off unless the reader asks for it and remembered when they
-   * do. It is a real help on prose this long and a real distraction to people
-   * who do not want it, so it cannot be the default — and having to set it
-   * again on every visit would make it useless to the readers it is for.
-   */
-  const [guided, setGuided] = useState(() => {
-    try {
-      return localStorage.getItem('chronicle:guided') === '1';
-    } catch {
-      // Private browsing can refuse storage outright; the aid still works, it
-      // just will not be remembered.
-      return false;
-    }
-  });
-  useEffect(() => {
-    try {
-      localStorage.setItem('chronicle:guided', guided ? '1' : '0');
-    } catch { /* nothing to do, and nothing worth telling the reader */ }
-  }, [guided]);
+  const [guided, setGuided] = useGuidedReading();
 
   const leaves = useMemo(
     () => (chronicle.state === 'ready' ? buildLeaves(chronicle.value, term, guided) : []),
@@ -690,20 +596,7 @@ export function InformantsView() {
           </button>
         )}
 
-        {/* A switch, not a checkbox dressed as one: it turns something on now
-            rather than recording a choice to be submitted. */}
-        <button
-          type="button"
-          className={`guide-toggle${guided ? ' guide-toggle--on' : ''}`}
-          role="switch"
-          aria-checked={guided}
-          onClick={() => setGuided((on) => !on)}
-        >
-          <span className="guide-toggle__mark" aria-hidden>
-            <b>Th</b>al
-          </span>
-          <span className="guide-toggle__label">Guided reading</span>
-        </button>
+        <GuidedToggle on={guided} onChange={() => setGuided((was) => !was)} />
       </form>
 
       {term && (
