@@ -39,19 +39,75 @@ interface Leaf {
   /** Running head, printed small above the text. */
   head: string;
   body: ReactNode;
+  /**
+   * What this leaf holds, in plain text, so the scrying can say which leaf a
+   * passage landed on. Recorded as the leaf is packed: by the time a body
+   * exists it is React, and reading the text back out of a rendered tree to
+   * search it would be working against the grain.
+   *
+   * Absent on the leaves carrying no record — the title page, the foreword and
+   * the colophon. Those are the volume talking about itself, and turning them
+   * up in a search for a name would only be noise.
+   */
+  items?: { label: string; text: string }[];
 }
 
-function Entry({ entry }: { entry: ChronicleEntry }) {
+/**
+ * Wrap each occurrence of `term` so the eye lands on it.
+ *
+ * The term is escaped before it becomes a pattern: a reader searching for
+ * `O` — the letter left on the High King's body — or for a full stop is
+ * searching for that character, not writing a regular expression.
+ */
+function mark(text: string, term: string): ReactNode {
+  if (!term) return text;
+  const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const parts = text.split(new RegExp(`(${escaped})`, 'ig'));
+  if (parts.length === 1) return text;
+  return parts.map((part, i) =>
+    part.toLowerCase() === term.toLowerCase()
+      ? <mark className="chron-mark" key={i}>{part}</mark>
+      : part,
+  );
+}
+
+/**
+ * A short window of `text` around the first hit, marked.
+ *
+ * Cut on the term rather than from the start of the passage: an entry can run
+ * a dozen lines, and a result list that opened every one of them at its first
+ * sentence would say nothing about why it matched.
+ */
+function snippet(text: string, term: string): ReactNode {
+  const at = text.toLowerCase().indexOf(term.toLowerCase());
+  if (at < 0) return mark(text.slice(0, 140), term);
+  const from = Math.max(0, at - 60);
+  const to = Math.min(text.length, at + term.length + 90);
+  return (
+    <>
+      {from > 0 && '… '}
+      {mark(text.slice(from, to), term)}
+      {to < text.length && ' …'}
+    </>
+  );
+}
+
+function Entry({ entry, term }: { entry: ChronicleEntry; term: string }) {
   return (
     <div className={`chron-entry${entry.weight === 'grave' ? ' chron-entry--grave' : ''}`}>
-      <p className="chron-entry__date">{entry.date}</p>
-      <p className="chron-entry__text">{entry.text}</p>
+      <p className="chron-entry__date">{mark(entry.date, term)}</p>
+      <p className="chron-entry__text">{mark(entry.text, term)}</p>
     </div>
   );
 }
 
 /** Greedy pack: fill a leaf until the budget is spent, then start another. */
-function packEntries(entries: ChronicleEntry[], head: string, lead?: ReactNode): Leaf[] {
+function packEntries(
+  entries: ChronicleEntry[],
+  head: string,
+  term: string,
+  lead?: ReactNode,
+): Leaf[] {
   const leaves: Leaf[] = [];
   let batch: ChronicleEntry[] = [];
   let spent = 0;
@@ -66,10 +122,11 @@ function packEntries(entries: ChronicleEntry[], head: string, lead?: ReactNode):
         <>
           {first && lead}
           {mine.map((entry) => (
-            <Entry key={entry.date + entry.text.slice(0, 24)} entry={entry} />
+            <Entry key={entry.date + entry.text.slice(0, 24)} entry={entry} term={term} />
           ))}
         </>
       ),
+      items: mine.map((entry) => ({ label: entry.date, text: entry.text })),
     });
     batch = [];
     spent = 0;
@@ -88,7 +145,7 @@ function packEntries(entries: ChronicleEntry[], head: string, lead?: ReactNode):
   return leaves;
 }
 
-function buildLeaves(chronicle: Chronicle): Leaf[] {
+function buildLeaves(chronicle: Chronicle, term: string): Leaf[] {
   const leaves: Leaf[] = [];
 
   // Page 0 — the title page, which sits opposite the board.
@@ -139,7 +196,7 @@ function buildLeaves(chronicle: Chronicle): Leaf[] {
         <p className="chron-standfirst">{month.standfirst}</p>
       </>
     );
-    leaves.push(...packEntries(month.entries, month.name, lead));
+    leaves.push(...packEntries(month.entries, month.name, term, lead));
   }
 
   // Closing apparatus: who was arrayed against us, and what we never learned.
@@ -158,13 +215,14 @@ function buildLeaves(chronicle: Chronicle): Leaf[] {
           <dl className="chron-list">
             {mine.map((p) => (
               <div className="chron-list__row" key={p.name}>
-                <dt>{p.name}</dt>
-                <dd>{p.note}</dd>
+                <dt>{mark(p.name, term)}</dt>
+                <dd>{mark(p.note, term)}</dd>
               </div>
             ))}
           </dl>
         </>
       ),
+      items: mine.map((p) => ({ label: p.name, text: p.note })),
     });
     batch = [];
     spent = 0;
@@ -192,13 +250,14 @@ function buildLeaves(chronicle: Chronicle): Leaf[] {
           <dl className="chron-list">
             {mine.map((u) => (
               <div className="chron-list__row" key={u.name}>
-                <dt>{u.name}</dt>
-                <dd>{u.note}</dd>
+                <dt>{mark(u.name, term)}</dt>
+                <dd>{mark(u.note, term)}</dd>
               </div>
             ))}
           </dl>
         </>
       ),
+      items: mine.map((u) => ({ label: u.name, text: u.note })),
     });
     gaps = [];
     gapSpent = 0;
@@ -317,10 +376,36 @@ export function InformantsView() {
   }, []);
 
   const chronicle = useChronicle(unlocked === true);
+
+  const [query, setQuery] = useState('');
+  // Two characters is where a search stops being every page at once. The
+  // volume runs to eighty-five entries, so a single letter answers with the
+  // whole book and tells the reader nothing.
+  const term = query.trim().length >= 2 ? query.trim() : '';
+
+  // Rebuilt when the term changes, because the marking is baked into the leaf
+  // bodies. That is cheap — eighty-five entries — and it buys the one thing a
+  // search over a paginated book has to have: the pagination cannot move under
+  // the reader, since packing counts raw characters and marking adds none.
   const leaves = useMemo(
-    () => (chronicle.state === 'ready' ? buildLeaves(chronicle.value) : []),
-    [chronicle],
+    () => (chronicle.state === 'ready' ? buildLeaves(chronicle.value, term) : []),
+    [chronicle, term],
   );
+
+  /** Every passage that answers, with the leaf it sits on. */
+  const found = useMemo(() => {
+    if (!term) return [];
+    const needle = term.toLowerCase();
+    const hits: { leaf: number; head: string; label: string; text: string }[] = [];
+    leaves.forEach((leaf, index) => {
+      for (const item of leaf.items ?? []) {
+        if (item.text.toLowerCase().includes(needle) || item.label.toLowerCase().includes(needle)) {
+          hits.push({ leaf: index, head: leaf.head, label: item.label, text: item.text });
+        }
+      }
+    });
+    return hits;
+  }, [leaves, term]);
 
   const total = leaves.length;
   const maxSpread = Math.max(0, Math.ceil((total - 1) / 2));
@@ -370,6 +455,21 @@ export function InformantsView() {
       setTurning({ dir, to });
     },
     [turning, narrow, spread, maxSpread, total],
+  );
+
+  /**
+   * Open the volume at a given leaf. Used by the scrying, which knows a leaf
+   * index and nothing about how the book is bound — and the binding changes
+   * under it, since a narrow screen shows one leaf where a wide one shows two.
+   */
+  const openAt = useCallback(
+    (index: number) => {
+      if (narrow) setPage(index);
+      // Leaf 0 faces the inside board and has no partner; every later spread
+      // holds an odd leaf on the left and the even one after it on the right.
+      else setSpread(index === 0 ? 0 : Math.ceil(index / 2));
+    },
+    [narrow],
   );
 
   // Drive the rotation one frame after the leaf is mounted, so the browser has
@@ -457,6 +557,68 @@ export function InformantsView() {
 
   return (
     <div className="chron">
+      {/* The scrying. A search over a sealed volume, dressed as the Embassy
+          would dress it — but it is still a search box, so it is a real input
+          in a real label and answers to the keyboard like one. */}
+      <form className="scry" role="search" onSubmit={(event) => event.preventDefault()}>
+        <div className="scry__glass" aria-hidden>
+          <span className="scry__eye" />
+        </div>
+        <div className="scry__field">
+          <label className="scry__label" htmlFor="scry-input">
+            Scry the chronicle
+          </label>
+          <input
+            id="scry-input"
+            className="scry__input"
+            type="search"
+            value={query}
+            spellCheck={false}
+            autoComplete="off"
+            placeholder="a name, a hold, a day…"
+            onChange={(event) => setQuery(event.target.value)}
+          />
+        </div>
+        {query && (
+          <button
+            type="button"
+            className="scry__clear"
+            onClick={() => setQuery('')}
+            aria-label="Dismiss the scrying"
+          >
+            ×
+          </button>
+        )}
+      </form>
+
+      {term && (
+        <div className="scry__answer" aria-live="polite">
+          <p className="scry__count">
+            {found.length === 0
+              ? 'The glass stays dark. Nothing in this volume answers to that.'
+              : `${found.length} passage${found.length === 1 ? '' : 's'} answer${found.length === 1 ? 's' : ''}.`}
+          </p>
+          {found.length > 0 && (
+            <ul className="scry__hits">
+              {found.slice(0, 40).map((hit, i) => (
+                <li key={`${hit.leaf}-${hit.label}-${i}`}>
+                  <button type="button" className="scry__hit" onClick={() => openAt(hit.leaf)}>
+                    <span className="scry__hit-date">{hit.label}</span>
+                    <span className="scry__hit-head">{hit.head}</span>
+                    <span className="scry__hit-text">{snippet(hit.text, term)}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {found.length > 40 && (
+            <p className="scry__more">
+              Showing the first 40. Narrow the word to see the rest.
+            </p>
+          )}
+        </div>
+      )}
+
       <div className={`chron-book${atCover && !narrow ? ' chron-book--cover' : ''}`}>
         {/* The volume's own seal, not the Dominion insignia the rest of the
             archive stamps — this board belongs to this book. */}

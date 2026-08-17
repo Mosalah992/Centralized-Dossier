@@ -384,6 +384,17 @@ export function CalendarView() {
   // midnight. The plate below keeps the fast clock.
   const now = useInWorldNow(30_000);
 
+  /**
+   * The day the reader has asked about.
+   *
+   * A marked day used to carry its note in a `title`, which is a tooltip, which
+   * is a mouse. On a touchscreen there is no hover and no tooltip, so on a phone
+   * the observances were simply unreadable — and worse since the marked-days
+   * table came out, because that table had been the way round it. Tapping a day
+   * now opens it, and the `title` stays for the mouse that still wants it.
+   */
+  const [choice, setChoice] = useState<{ month: string; day: CalendarDay } | null>(null);
+
   const source = volume.state === 'ready' ? volume.value.data : null;
   // Both passes allocate a fresh year, so they are memoised against the volume
   // rather than run on every tick of the clock above. The palette goes last
@@ -459,33 +470,85 @@ export function CalendarView() {
                 }
                 const legend = year.legend.find((entry) => entry.label === day.kind);
                 const current = isToday(month.index, day.day);
+                const className =
+                  `day${day.event ? ' day--event' : ''}${current ? ' day--today' : ''}`;
+
+                // A plain day is not interactive, and a button would promise a
+                // keyboard user something to do with it.
+                if (!day.event && !current) {
+                  return (
+                    <div
+                      className={className}
+                      key={`${month.name}-${day.day}`}
+                      style={{ background: legend?.color }}
+                      title={dayTitle(day)}
+                    >
+                      {day.day}
+                    </div>
+                  );
+                }
+
+                const chosen = choice?.day === day && choice.month === month.name;
                 return (
-                  <div
-                    className={`day${day.event ? ' day--event' : ''}${current ? ' day--today' : ''}`}
+                  <button
+                    type="button"
+                    className={`${className}${chosen ? ' day--chosen' : ''}`}
                     key={`${month.name}-${day.day}`}
                     style={{ background: legend?.color }}
+                    // Kept for the mouse, which gets the note without a click.
+                    // It is not what carries the note — see below.
                     title={current ? `Today — ${dayTitle(day)}` : dayTitle(day)}
-                    // Only marked days are worth stopping on with a keyboard —
-                    // and today, which a reader arriving at the volume is most
-                    // likely to be looking for.
-                    tabIndex={day.event || current ? 0 : undefined}
                     aria-current={current ? 'date' : undefined}
+                    aria-expanded={day.event ? chosen : undefined}
                     aria-label={
                       day.event
                         ? `${current ? 'Today. ' : ''}${month.name} ${day.day}: ${day.event.name}. ${day.event.caution}`
-                        : current
-                          ? `Today, ${month.name} ${day.day}`
-                          : undefined
+                        : `Today, ${month.name} ${day.day}`
+                    }
+                    onClick={() =>
+                      setChoice(chosen ? null : { month: month.name, day })
                     }
                   >
                     {day.day}
-                  </div>
+                  </button>
                 );
               })}
             </div>
           </section>
         ))}
       </div>
+
+      {/* Sticky to the foot of the viewport rather than sitting under the grid:
+          a reader who taps a day in Evening Star should not have to go looking
+          for what they just opened. */}
+      {choice && (
+        <aside className="daynote" role="status">
+          <div className="daynote__body">
+            <p className="daynote__date">
+              {choice.month} {choice.day.day}
+              <span className="daynote__weekday">{choice.day.weekday}</span>
+            </p>
+            {choice.day.event ? (
+              <>
+                <p className="daynote__name">{choice.day.event.name}</p>
+                {choice.day.event.caution && (
+                  <p className="daynote__caution">{choice.day.event.caution}</p>
+                )}
+              </>
+            ) : (
+              <p className="daynote__name">{choice.day.kind || 'An ordinary day'}</p>
+            )}
+          </div>
+          <button
+            type="button"
+            className="daynote__close"
+            onClick={() => setChoice(null)}
+            aria-label="Close this day"
+          >
+            ×
+          </button>
+        </aside>
+      )}
 
       <div className="legend">
         {year.legend.map((entry) => (

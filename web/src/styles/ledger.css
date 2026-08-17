@@ -714,6 +714,104 @@ td.wrap {
   background: none;
 }
 
+/* A marked day is a real button now, so its note can be opened by tapping —
+   `title` is a tooltip, and a tooltip is a mouse. Everything the browser gives
+   a button for free has to be taken back off so it still reads as a cell. */
+button.day {
+  font: inherit;
+  font-size: 0.8rem;
+  border-radius: 0;
+  appearance: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+button.day:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--foil) 80%, var(--ink));
+  outline-offset: 1px;
+}
+
+/* Touch targets: a 1:1 cell in a seven-column month is well under the ~44px a
+   finger needs, and widening the cell would break the grid. The hit area is
+   grown outward instead, into the 2px gutters and the padding around them. */
+button.day::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+}
+
+.day--chosen {
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--crimson) 70%, transparent),
+    0 0 12px color-mix(in srgb, var(--crimson) 30%, transparent);
+}
+
+/* ── The opened day ──────────────────────────────────────────────────────── */
+
+.daynote {
+  position: sticky;
+  bottom: 0.9rem;
+  z-index: 3;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin: 1.5rem 0 0;
+  padding: 0.9rem 1.1rem;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--cover) 10%, rgba(243, 236, 220, 0.97)), rgba(238, 230, 212, 0.97));
+  border: 1px solid color-mix(in srgb, var(--cover) 34%, rgba(90, 70, 30, 0.3));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--foil) 18%, transparent),
+    0 10px 26px rgba(0, 0, 0, 0.3);
+}
+
+.daynote__body > * { margin: 0; }
+
+.daynote__date {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  font-family: var(--display);
+  font-size: 0.62rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.daynote__weekday { letter-spacing: 0.12em; }
+
+.daynote__name {
+  margin-top: 0.35rem;
+  font-family: var(--display);
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+}
+
+.daynote__caution {
+  margin-top: 0.3rem;
+  font-size: 0.86rem;
+  color: var(--ink-soft);
+  border-left: 2px solid var(--crimson);
+  padding-left: 0.6rem;
+}
+
+.daynote__close {
+  margin-left: auto;
+  flex: none;
+  width: 1.9rem;
+  height: 1.9rem;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--ink-soft);
+  background: none;
+  border: 1px solid color-mix(in srgb, var(--cover) 26%, rgba(90, 70, 30, 0.22));
+  cursor: pointer;
+}
+
+.daynote__close:hover,
+.daynote__close:focus-visible { color: var(--ink); }
+
 /* A day carrying an event is marked in the corner and is focusable, so its
    note is reachable without a mouse. */
 .day--event {
