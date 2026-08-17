@@ -18,6 +18,14 @@ export interface Binding {
   cover2: string;
   foil: string;
   subtitle: string;
+  /**
+   * The colour this volume's title is lettered in on the shelf. Almost always
+   * the foil, because that is what the covers were lettered in — but Hall of
+   * Honor is bound in vellum, and gold leaf on a pale ground is a rumour of a
+   * title rather than a title. Its own art lettered it in ink for exactly that
+   * reason, and the live type follows the art. Omitted means the foil.
+   */
+  lettering?: string;
 }
 
 // One gold leaf is used across all six covers, so this is shared rather than
@@ -29,7 +37,7 @@ export const BINDINGS: Record<VolumeSlug, Binding> = {
   statistics: { cover: '#122010', cover2: '#091a07', foil: FOIL, subtitle: 'Strength Returns' },
   ledger:     { cover: '#430e10', cover2: '#38070a', foil: FOIL, subtitle: 'Treasury Account' },
   stipends:   { cover: '#2d1539', cover2: '#220d2f', foil: FOIL, subtitle: 'Receipts & Disbursement' },
-  honor:      { cover: '#4c2d00', cover2: '#2b1800', foil: FOIL, subtitle: 'Ceremonial Citations' },
+  honor:      { cover: '#4c2d00', cover2: '#2b1800', foil: FOIL, subtitle: 'Ceremonial Citations', lettering: '#2c2114' },
   calendar:   { cover: '#191617', cover2: '#0f0f0f', foil: FOIL, subtitle: 'Observances & Reckonings' },
   // Ivory and gold like Hall of Honor, so it takes its dark from the same place
   // the eye does: the black title plaque the cover's name is lettered on.
@@ -46,5 +54,6 @@ export const bindingVars = (slug: VolumeSlug) => {
     '--cover': binding.cover,
     '--cover-2': binding.cover2,
     '--foil': binding.foil,
+    '--lettering': binding.lettering ?? binding.foil,
   } as React.CSSProperties;
 };

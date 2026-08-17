@@ -276,13 +276,18 @@
 /* Book
 
    The covers are painted art (web/src/assets/volumes/), cut from one sheet by
-   scripts/prepare-volumes.mjs. Each is 400x512 with the book standing on 92% of
-   the height and its ribbon hanging into the rest, so the six line up on the
+   scripts/prepare-volumes.mjs. Each is 400x532 with the book standing on 88% of
+   the height and its ribbon hanging into the rest, so the eight line up on the
    shelf and their bookmarks overhang the edge.
 
    The old CSS book rotated in 3D on hover. The art has its own perspective and
    lighting baked in, so it is lifted straight off the shelf instead — rotating
-   it would skew highlights that are painted, not computed. */
+   it would skew highlights that are painted, not computed.
+
+   The title is NOT painted: the same script clears a lettering panel in the
+   binding and .book__label sets the volume's name over it in the archive's own
+   Cinzel. That makes the book a container, because every measurement below is
+   a proportion of the cover and the cover is sized by the shelf. */
 
 .book {
   display: block;
@@ -290,6 +295,7 @@
   max-width: 100%;
   cursor: pointer;
   color: inherit;
+  container-type: inline-size;
 }
 
 .book__body {
@@ -309,6 +315,81 @@
   -webkit-user-drag: none;
 }
 
+/* The lettering panel. Positioned and sized from the geometry the asset script
+   measured off each cover (web/src/assets/volumes/labels.json), so the type
+   lands inside the panel the same script cleared rather than over the laurel
+   above it or the medallion below.
+
+   Nothing here is clickable: the anchor around it takes the whole book, and a
+   span catching pointer events inside it would only interrupt the hover. */
+.book__label {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5%;
+  /* Inside the blind fillet the asset script impressed at 4.5px of a 400px
+     cover, so the type sits within the tooling rather than across it. */
+  padding: 4% 4.2%;
+  text-align: center;
+  pointer-events: none;
+}
+
+.book__title {
+  font-family: var(--display);
+  font-weight: 700;
+  /* Held by whichever of the panel's two dimensions runs out first. Height
+     usually wins, since every title here takes two lines — but the sealed
+     volume's field is a quarter taller than the registers', and sizing on that
+     alone gave it a title half again the size of the book beside it on the
+     same shelf. */
+  font-size: min(
+    calc(var(--label-height) * 0.285),
+    calc(var(--label-width) * 0.115)
+  );
+  line-height: 1.02;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--lettering);
+  /* Struck into the cover rather than laid on it: a dark line under each
+     stroke, and a wider, softer one for the leaf's own glow. On the vellum
+     volume the same shadow reads as ink pressed into the ground, which is what
+     that cover was lettered with. */
+  text-shadow:
+    0 0.04em 0.03em rgba(0, 0, 0, 0.55),
+    0 0 0.5em rgba(0, 0, 0, 0.4);
+  text-wrap: balance;
+}
+
+.book__subtitle {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: calc(var(--label-width) * 0.044);
+  line-height: 1.15;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--lettering) 82%, transparent);
+  text-shadow: 0 0.05em 0.04em rgba(0, 0, 0, 0.5);
+  text-wrap: balance;
+  /* The hairline the painted covers ran between title and subtitle, kept
+     because it was doing real work — without it the two sizes read as one
+     block of type that happens to change size halfway down. */
+  position: relative;
+  padding-top: 6%;
+}
+
+.book__subtitle::before {
+  content: '';
+  position: absolute;
+  inset: 0 18% auto;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent,
+    color-mix(in srgb, var(--lettering) 55%, transparent) 22% 78%,
+    transparent);
+}
+
 .book:hover .book__body,
 .book:focus-visible .book__body {
   transform: translateY(-14px) scale(1.045);
@@ -320,13 +401,16 @@
 }
 
 /* Withdrawn: the volume is listed but its tab is gone from the sheet. The
-   greyscale sits on the image alone so the band stays legible over it. */
+   greyscale takes the cover and its lettering but not the band, which has to
+   stay legible over both — and the lettering has to be in it, or a withdrawn
+   volume keeps its gold while its binding loses its colour. */
 
 .book[aria-disabled='true'] {
   cursor: not-allowed;
 }
 
-.book[aria-disabled='true'] .book__cover {
+.book[aria-disabled='true'] .book__cover,
+.book[aria-disabled='true'] .book__label {
   filter: grayscale(0.88) brightness(0.5);
 }
 

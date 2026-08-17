@@ -205,8 +205,18 @@ it. Do not commit it.
   ending with the `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>` trailer.
   e.g. *"Bind the KV the gate's throttle has been quietly missing"*.
 - **Per-volume colour** flows `theme.ts` -> `bindingVars()` -> `--cover`/`--cover-2`/`--foil`
-  -> `ledger.css`. The books themselves are painted art; these tokens only theme the
-  interior pages.
+  -> `ledger.css`, which themes the interior pages. `--lettering` is the same flow's one
+  exception: it colours the title the shelf sets over the cover, and Hall of Honor
+  overrides it because gold leaf on vellum is a rumour of a title rather than a title.
+- **Titles are live type, not painted.** `scripts/prepare-volumes.mjs` clears a lettering
+  panel on each cover and writes its geometry to `web/src/assets/volumes/labels.json`;
+  `Book.tsx` sets the name from `VOLUMES`/`KEPT`/`SEALED` over it in Cinzel. The panel is
+  in a different place on almost every cover and the numbers were measured off the art —
+  the `LABEL` table in that script is the one place they are set, and labels.json is
+  generated. Renaming a volume is now free; it used to need the cover repainting.
+  `node scripts/contact-sheet.mjs` photographs all eight in a real browser
+  (`docs/volume-covers.png`) — it needs `npm install --no-save playwright`, which is
+  deliberately not a dependency.
 - **Assets**: a committed script plus committed output. Source art stays in `Assets/`.
 - **Verify against production**, not the build log. A deploy that uploads is not a deploy
   that works — check the served bundle hash, then exercise the gate.
