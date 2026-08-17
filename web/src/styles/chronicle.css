@@ -682,3 +682,68 @@
   .scry__glass { width: 1.7rem; height: 1.7rem; }
   .scry__hits { max-height: 13rem; }
 }
+
+/* ── Guided reading ──────────────────────────────────────────────────────────
+   The bolded opening of each word. Weight alone carries it: a colour would
+   make the volume look annotated, and the point is a shape for the eye to
+   land on, not a mark on the page. */
+
+/* Weight only, and the colour is inherited rather than set: the guide has to
+   read as the same ink laid heavier, not as a second colour the archivist
+   annotated in. */
+.chron-fix { font-weight: 700; }
+
+/* The grave entries are already set at 600, so a 700 fixation barely shows
+   against them. They take the heaviest weight the face has instead. */
+.chron-entry--grave .chron-fix { font-weight: 800; }
+
+.guide-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: none;
+  padding: 0.34rem 0.6rem;
+  font: inherit;
+  color: var(--stone-dim);
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: color 0.2s var(--ease), border-color 0.2s var(--ease);
+}
+
+.guide-toggle:hover,
+.guide-toggle:focus-visible {
+  color: #e5d9bd;
+  border-color: color-mix(in srgb, var(--foil) 45%, transparent);
+}
+
+.guide-toggle--on {
+  color: #f0e4c6;
+  border-color: color-mix(in srgb, var(--foil) 62%, transparent);
+  box-shadow: inset 0 0 14px color-mix(in srgb, var(--foil) 14%, transparent);
+}
+
+/* The switch says what it does by doing it: "Thal" with its fixation bolded. */
+.guide-toggle__mark {
+  font-family: var(--serif);
+  font-size: 0.92rem;
+  letter-spacing: 0.02em;
+  opacity: 0.75;
+}
+
+.guide-toggle--on .guide-toggle__mark { opacity: 1; }
+
+.guide-toggle__label {
+  font-family: var(--display);
+  font-size: 0.54rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+/* The scrying row carries three controls now, and on a phone they will not sit
+   on one line. The switch drops beneath the field rather than squeezing it. */
+@media (max-width: 560px) {
+  .scry { flex-wrap: wrap; }
+  .scry__field { flex: 1 1 100%; order: -1; }
+  .guide-toggle { margin-left: auto; }
+}
