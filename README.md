@@ -1,130 +1,133 @@
-# Centralized Dossier — Thalmor Embassy Archives
+# Thalmor Embassy Archives
 
-Public web archive for the Keizaal Public 2 Server Thalmor Embassy, reading the
-live [Corps roster sheet](https://docs.google.com/spreadsheets/d/1KS__WJoqI_o3esXxO3Ei3L6SlJwJnOXQrjEr-FCPEZ0/edit).
-Six volumes on a shelf; opening one renders that tab as an in-world ledger.
+A gated, read-only web archive that renders a roleplay community's records as
+in-world ceremonial registers — a shelf of bound volumes you open and read,
+rather than a spreadsheet with a theme on it.
 
-Deploys to **thalmor-archives.pages.dev**.
+Live at **[thalmor-archives.pages.dev](https://thalmor-archives.pages.dev)**.
+It is deliberately `noindex, nofollow`: the registers carry about a hundred real
+people's handles and activity, so the archive is for members, not for search
+engines.
+
+---
+
+## Reading the archive
+
+### Getting in
+
+The archive opens to a wax seal and asks for a word. That word is handed out by
+the Embassy — it is not in this repository and never will be. One word admits
+you to the whole shelf and is remembered for a week.
+
+### The shelf
+
+Eight volumes stand in the hall, grouped by what they hold. Each is painted art
+with its title lettered live, so a book is opened by clicking it. A volume whose
+source has gone missing stays on the shelf marked **withdrawn** rather than
+disappearing or breaking the page.
+
+### Inside a volume
+
+Registers — the roster, the statistics, the ledger, the stipends, the hall of
+honor — open as parchment pages: summary figures at the top, then the record
+itself. On a narrow screen the wide tables become cards rather than scrolling
+sideways.
+
+**The Tamrielic Calendar** keeps the realm's own time. A sand clock beside the
+date shows how far the day has run — the upper bulb drains from midnight to
+midnight — and the clock advances by itself. Today's date is ringed in the year
+grid. **Tap or click any marked day** to read what falls on it; the note opens
+in a panel pinned to the foot of the screen, which is how it works on a phone
+as well as under a mouse.
+
+**The Thalmor Chronicles** is sealed a second time and asks for a word of its
+own. Inside, it is bound as a book rather than laid out as a page: two leaves
+facing each other, a leaf that turns, and your place kept as you go. Arrow keys
+turn it, narrow screens show one leaf at a time, and readers who ask for less
+motion get the same pages without the turn.
+
+Two aids sit above that volume:
+
+- **Scrying** — search the whole chronicle. Every hit is lit where it sits, and
+  choosing one turns the book to the leaf that holds it.
+- **Guided reading** — bionic reading, which sets the opening of each word in
+  bold so the eye has somewhere to land. Off unless you ask for it, and
+  remembered once you do.
+
+---
 
 ## Architecture
 
-The **Google Sheet is authoritative.** The `thalmor-quartermaster` Worker
-([Thalmor-HR-](https://github.com/Mosalah992/Thalmor-HR-)) already writes to it
-on Discord commands and Monday crons. This project is a separate repository with
-its own deploy and is **read-only**, so it can never race those writes.
+The community's spreadsheet is the source of truth. A **separate** clock-in bot
+writes to it; this archive only ever reads, and holds a read-only scope so a bug
+here cannot reach the bot's columns.
 
-```
-Discord ──/clockin──▶ thalmor-quartermaster ──writes G,H,J,K──┐
-          (separate repo, untouched)                          ▼
-                                              ┌───────────────────────────┐
-                                              │   Google Sheet            │
-                                              │   AUTHORITATIVE           │
-                                              └───────────────────────────┘
-                                                              ▲
-Browser ──▶ Cloudflare Pages ──────────────────────────────── │
-            ├─ / …          React + TS + Vite (web/)          │
-            └─ /api/* …     Pages Functions (functions/) ──────┘
-                              ├─ Cache API: 60s per volume
-                              └─ readonly Sheets scope
+```mermaid
+flowchart TB
+    Discord([Discord]) -->|clock-in commands| Bot[Clock-in bot<br/>separate repo]
+    Bot -->|writes| Sheet[(The spreadsheet<br/>authoritative)]
+
+    Reader([Reader]) --> Gate{{Passphrase gate}}
+    Gate -->|writ, one week| Pages[Cloudflare Pages<br/>site and functions]
+    Pages -->|read only| Sheet
+
+    Pages --> Shelf[The shelf]
+    Shelf --> V1[Sheet-backed volumes<br/>read from the spreadsheet]
+    Shelf --> V2[Kept volume<br/>written here, ships with the site]
+    Shelf --> V3[Sealed volume<br/>second word, never bundled]
 ```
 
-The API is Pages Functions rather than a second Worker, so the site and its API
-share one origin: no CORS, one deploy, and phase-2 session cookies stay
-same-origin.
+Four things that shape everything else:
+
+- **The gate is the boundary, not the page.** Every data route is checked
+  server-side, and gated answers are marked so no shared cache can hand one
+  reader's roster to someone with no cookie.
+- **Three kinds of volume.** Most are read from the spreadsheet. One is written
+  here and travels with the site. One is *sealed* — its text is served only
+  after a second word and is never compiled into the browser bundle, because
+  anything in the bundle is readable by anyone with the link.
+- **One origin.** Site and data are deployed together, so there is no CORS and
+  no second service to keep in step.
+- **Assets are built, not hand-cropped.** The covers are cut, re-bound and
+  lettered by a committed script from the delivered art, so the result is
+  reproducible rather than a folder of one-off exports.
+
+---
+
+## Layout
 
 | Directory | What it is |
 |---|---|
-| [shared/](shared/) | Pure parsing and the volume registry. No I/O, used by both halves. |
-| [server/](server/) | Sheets client and volume loading. Cloudflare runtime. |
-| [functions/](functions/) | HTTP routes — `/api/volumes`, `/api/volumes/:slug`. |
-| [web/](web/) | The React archive. |
-| [scripts/](scripts/) | Local recon and dev-secret helpers. |
+| [`web/`](web/) | The archive itself — shelf, volumes, styling. |
+| [`shared/`](shared/) | The volume registry, parsers and reckoning. Pure, used by both halves. |
+| [`server/`](server/) | Reads the spreadsheet and parses it. |
+| [`functions/`](functions/) | The gate and the data routes. |
+| [`scripts/`](scripts/) | Asset preparation. Committed script, committed output. |
+| [`test/`](test/) | Vitest — parsers, the calendar's reckoning, the statistics, the palette. |
+| [`docs/`](docs/) | Research notes and the transcribed press history. |
 
-## Volumes
-
-| Volume | Tab |
-|---|---|
-| Troops Roster | `Roster` |
-| Roster Statistics | `Stats` |
-| Financial Ledger | `Ledger` |
-| Stipends Registry | `Stipends` |
-| Hall of Honor | `Hall of Honor` |
-| Tamrielic Calendar | `Tamrielic Calendar 4E 226` |
-
-Tabs are resolved **by title, not gid** — see
-[docs/sheet-schema.md](docs/sheet-schema.md) for why, and for the parser
-contract of every tab. A volume whose tab has been renamed or deleted stays on
-the shelf marked withdrawn rather than breaking the page.
+---
 
 ## Running it
 
-Pinned to **Node 18.20.7** (see [.nvmrc](.nvmrc)) so the clock-in bot's
-toolchain is untouched — hence Vite 5 and wrangler 3.
+Node is pinned in [`.nvmrc`](.nvmrc) so the toolchain the clock-in bot shares is
+left alone.
 
 ```bash
 npm install
-cp .env.example .env          # then point it at the service-account key
-node scripts/make-dev-vars.mjs # writes .dev.vars for wrangler
-
-npm run build && npm run pages:dev   # whole site + API on :8788
+npm run dev        # the archive, with data proxied from the local functions
+npm test           # unit tests
+npm run typecheck  # both TypeScript projects, browser and worker
 ```
 
-For UI work, run both and let Vite proxy the API:
+Configuration, deployment and the asset pipeline are documented in
+[CLAUDE.md](CLAUDE.md), along with the invariants a change here must not break.
+Nothing needed to run the archive against real data is in this repository, and
+nothing that would open it should ever be committed.
 
-```bash
-npm run pages:dev   # API on :8788
-npm run dev         # UI on :5173, proxies /api to :8788
-```
-
-```bash
-npm test        # 53 unit tests
-npm run typecheck  # both tsconfigs — browser half and Workers half
-npm run dump    # re-dump every tab to tmp/ after a sheet change
-```
-
-## The gate
-
-A shared passphrase, an HMAC-signed cookie, and every `/api/*` route guarded
-server-side by [functions/api/_middleware.ts](functions/api/_middleware.ts).
-The gate page is scenery; the middleware is the boundary. It fails closed — a
-missing secret seals the archive rather than opening it — and forces
-`private, no-store` on gated responses so the edge cannot hand a cached roster
-to a reader with no cookie.
-
-| Secret | Value |
-| --- | --- |
-| `GATE_SECRET` | 32+ random bytes, `openssl rand -base64 32`. Never commit. |
-| `GATE_PASSPHRASE` | The word handed to members. |
-| `GATE_EPOCH` | Integer, default `1`. Bump to invalidate every issued cookie. |
-
-To rotate: change `GATE_PASSPHRASE`, bump `GATE_EPOCH`, redeploy. Optionally
-bind a KV namespace as `GATE_ATTEMPTS` for throttling (8 failures per IP per
-10 minutes); without it the endpoint works unthrottled.
-
-This stops drive-by access and anonymous scraping of `/api/volumes/roster`. It
-gives no per-person revocation, and a word shared with ~100 people will end up
-pasted somewhere eventually. It is a lock on the door, not consent to publish:
-not shipping `discord` and `notes` to every reader is still the fix that
-matters for the roster.
-
-The seal art is prepared by [scripts/prepare-seal.mjs](scripts/prepare-seal.mjs),
-which keys the baked-in black background and drop shadow out of `Assets/wax
-seal.png` and writes the WebP the gate imports.
-
-## Deploying
-
-```bash
-npx wrangler pages secret put GOOGLE_SERVICE_ACCOUNT_JSON
-npx wrangler pages secret put GATE_SECRET
-npx wrangler pages secret put GATE_PASSPHRASE
-npm run build && npm run pages:deploy
-```
-
-`SHEET_ID` is a plain var in [wrangler.toml](wrangler.toml); the service-account
-key is the only secret. The key, `.env`, `.dev.vars` and `tmp/` are git-ignored —
-`tmp/` holds real member data.
+---
 
 ## Status
 
-Phase 1 (read-only archive) is built. Phase 2 — Discord OAuth, guild-role
-authorization, an audit log and write-back — is designed but not started.
+The archive is built and live. It is read-only by design; there is no write path
+back to the spreadsheet and there should not be one.
