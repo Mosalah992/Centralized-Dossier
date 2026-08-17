@@ -4,14 +4,38 @@
 // answers the other question — what day is it *now* — and it is the only place
 // in the archive that knows.
 //
-// THE RATE IS 1:1. One real day is one in-world day, and the clock runs at the
-// speed of the one on your wall. This is not an assumption: the informant
-// reports already reckoned that way. 131 of the 132 reports that state an
-// in-world date name the month they were filed in, so Rain's Hand answered to
-// April and Last Seed to August across four months of filings. A faster rate
-// would also exhaust the sheet — it holds a single year, 4E 226, and at
-// Skyrim's own timescale of 20 the archive would run out of calendar in
-// eighteen days.
+// THE RATE IS 2:1 — two in-world minutes for every real one, so a real day is
+// two days in the realm.
+//
+// This was first built at 1:1 and that was wrong. The argument for it was that
+// the informant reports already reckoned that way: 131 of the 132 reports that
+// state an in-world date name the month they were filed in, so Rain's Hand
+// answered to April and Last Seed to August. That is real, but it is a historical
+// MAPPING and not the current RATE, and it was over-read as the second.
+//
+// The rate is now measured rather than inferred, from two readings of the realm's
+// own clock 15.74 real hours apart:
+//
+//   Heartfire 4, 18:04   at 2026-08-16 20:05 UTC
+//   Heartfire 6, 01:26   at 2026-08-17 11:46 UTC
+//
+//   31.37 in-world hours / 15.74 real hours = 1.9931
+//
+// which is 2 to within 0.35%, and the whole of that residue is the first
+// reading's minute — it was taken from when the declaration arrived rather than
+// from a clock. Solving for exactly 2 puts the anchor at 20:05 rather than the
+// 20:04 first used, one minute away, and both readings then agree.
+//
+// A GUESS AT THE RATE COMPOUNDS, which is why this is worth measuring and worth
+// re-measuring. An error in the anchor is a fixed offset and stays the size it
+// started; an error in the rate grows, and 1:1 against a realm running at 2:1
+// had the archive a full 15.6 hours behind after only a day. If the realm is
+// ever re-set, take two readings a few hours apart and check RATE before
+// touching ANCHOR.
+//
+// The rate is also survivable for the sheet, which holds a single year: 4E 226
+// takes about six real months to run at 2:1. Skyrim's own timescale of 20 would
+// exhaust it in eighteen days.
 //
 // WHY THE YEAR IS COUNTED IN DAYS AND NOT READ OFF A Date. The twelve Tamrielic
 // months happen to carry the same lengths as the Gregorian ones — 31, 28, 31,
@@ -35,21 +59,29 @@ export const DAYS_PER_YEAR = 365;
 const MINUTES_PER_DAY = 24 * 60;
 
 /**
+ * How fast the realm runs against the world. Two in-world minutes per real one.
+ *
+ * Measured, not chosen — see the note at the top of this file. Nothing else here
+ * assumes a particular value, so re-measuring the realm means editing this line.
+ */
+export const RATE = 2;
+
+/**
  * The anchor: one real instant paired with the in-world moment it was declared
  * to be. Everything else is arithmetic from here, so correcting the archive's
- * clock means editing this and nothing else.
+ * clock means editing this and RATE and nothing else.
  *
- * Given as Heartfire 4, 4E 226 at 18:04 on 2026-08-16. That fixes the date
- * offset at exactly +19 days, which is worth stating because it is checkable:
- * 2026-08-16 is the 228th day of the year, and the 247th day of a Tamrielic
- * year is Heartfire 4.
+ * Set to 20:05 rather than the 20:04 first recorded, because that is the minute
+ * at which both readings of the realm's clock agree at a rate of exactly 2. The
+ * original was taken from when the declaration arrived and was never better
+ * than a few minutes; the second reading is what pins it down.
  *
- * The minute is the soft part. It was set from the moment the declaration
- * arrived, so it is accurate to a few minutes rather than to the second; the
- * only thing that turns on it is exactly when midnight falls.
+ * Note that at 2:1 there is no fixed offset in days to check this against. The
+ * realm gains a day on the world every real day, so the +19 that held on
+ * 2026-08-16 is only a fact about that afternoon.
  */
 const ANCHOR = {
-  realMs: Date.UTC(2026, 7, 16, 20, 4, 0),
+  realMs: Date.UTC(2026, 7, 16, 20, 5, 0),
   year: 226,
   /** Heartfire 4 — the 247th day of the year. */
   dayOfYear: 247,
@@ -95,7 +127,7 @@ export function toDayOfYear(monthIndex: number, day: number): number {
  * instant to reckon a different one.
  */
 export function reckon(nowMs: number = Date.now()): InWorldMoment {
-  const elapsedMinutes = (nowMs - ANCHOR.realMs) / 60_000;
+  const elapsedMinutes = ((nowMs - ANCHOR.realMs) / 60_000) * RATE;
   const totalMinutes = Math.floor(ANCHOR.minuteOfDay + elapsedMinutes);
 
   // Floor division, so instants before the anchor reckon backwards correctly

@@ -7,8 +7,10 @@ import {
 import { MONTHS } from '../shared/parsers/calendar';
 
 /** The instant the archive's clock was set by. */
-const ANCHOR_MS = Date.UTC(2026, 7, 16, 20, 4, 0);
+const ANCHOR_MS = Date.UTC(2026, 7, 16, 20, 5, 0);
 const DAY_MS = 86_400_000;
+/** One in-world day costs half a real one at 2:1. */
+const WORLD_DAY_MS = DAY_MS / 2;
 
 describe('the Tamrielic year', () => {
   it('is 365 days across twelve months', () => {
@@ -42,16 +44,34 @@ describe('the anchor', () => {
     expect(formatHour(now)).toBe('6:04 PM');
   });
 
-  it('sits exactly nineteen days ahead of the real date', () => {
-    // 2026-08-16 is the 228th day of the year; Heartfire 4 is the 247th.
-    expect(reckon(ANCHOR_MS).dayOfYear).toBe(228 + 19);
+  /**
+   * The observation the rate was measured from, and the one this file exists to
+   * defend. A wrong RATE compounds where a wrong anchor does not, and the first
+   * build of this module had the archive 15.6 hours behind the realm within a
+   * day by assuming 1:1. If the realm is re-set, this is the test to change.
+   */
+  it('reads Heartfire 6 at 01:26 fifteen and three quarter real hours later', () => {
+    const reading = Date.UTC(2026, 7, 17, 11, 46, 0);
+    const then = reckon(reading);
+    expect(MONTHS[then.monthIndex - 1]).toBe('Heartfire');
+    expect(then.day).toBe(6);
+    expect(formatHour(then)).toBe('1:26 AM');
+  });
+
+  it('runs at two in-world minutes per real minute', () => {
+    const hour = 3_600_000;
+    const a = reckon(ANCHOR_MS);
+    const b = reckon(ANCHOR_MS + hour);
+    const advanced = (b.dayOfYear - a.dayOfYear) * 1440
+      + (b.hour * 60 + b.minute) - (a.hour * 60 + a.minute);
+    expect(advanced).toBe(120);
   });
 });
 
 describe('the clock flows on', () => {
-  it('advances one in-world day per real day', () => {
+  it('advances two in-world days per real day', () => {
     for (const days of [1, 7, 30, 200]) {
-      const then = reckon(ANCHOR_MS + days * DAY_MS);
+      const then = reckon(ANCHOR_MS + days * WORLD_DAY_MS);
       const expected = ((247 + days - 1) % DAYS_PER_YEAR) + 1;
       expect(then.dayOfYear).toBe(expected);
       // The hour is untouched by whole days passing.
@@ -59,16 +79,16 @@ describe('the clock flows on', () => {
     }
   });
 
-  it('keeps the hour in step with real minutes', () => {
-    expect(formatHour(reckon(ANCHOR_MS + 60_000))).toBe('6:05 PM');
-    expect(formatHour(reckon(ANCHOR_MS + 60 * 60_000))).toBe('7:04 PM');
+  it('runs the hour at twice the pace of real minutes', () => {
+    expect(formatHour(reckon(ANCHOR_MS + 30_000))).toBe('6:05 PM');
+    expect(formatHour(reckon(ANCHOR_MS + 30 * 60_000))).toBe('7:04 PM');
   });
 
   it('rolls the date at midnight, not before', () => {
     // 18:04 to 24:00 is 5h56m.
-    const toMidnight = (5 * 60 + 56) * 60_000;
-    expect(reckon(ANCHOR_MS + toMidnight - 60_000).day).toBe(4);
-    expect(formatHour(reckon(ANCHOR_MS + toMidnight - 60_000))).toBe('11:59 PM');
+    const toMidnight = ((5 * 60 + 56) * 60_000) / 2;
+    expect(reckon(ANCHOR_MS + toMidnight - 30_000).day).toBe(4);
+    expect(formatHour(reckon(ANCHOR_MS + toMidnight - 30_000))).toBe('11:59 PM');
 
     const justAfter = reckon(ANCHOR_MS + toMidnight);
     expect(justAfter.day).toBe(5);
@@ -77,12 +97,12 @@ describe('the clock flows on', () => {
 
   it('turns the year at Evening Star 31 and counts the era on', () => {
     // Heartfire 4 to Evening Star 31 is 365 - 247 = 118 days.
-    const lastDay = reckon(ANCHOR_MS + 118 * DAY_MS);
+    const lastDay = reckon(ANCHOR_MS + 118 * WORLD_DAY_MS);
     expect(lastDay.year).toBe(226);
     expect(MONTHS[lastDay.monthIndex - 1]).toBe('Evening Star');
     expect(lastDay.day).toBe(31);
 
-    const newYear = reckon(ANCHOR_MS + 119 * DAY_MS);
+    const newYear = reckon(ANCHOR_MS + 119 * WORLD_DAY_MS);
     expect(newYear.year).toBe(227);
     expect(newYear.dayOfYear).toBe(1);
     expect(MONTHS[newYear.monthIndex - 1]).toBe('Morning Star');
@@ -93,7 +113,7 @@ describe('the clock flows on', () => {
     // 2028 is a leap year in the real world. The Tamrielic year is not, and a
     // date shifted through a Date object would report Sun's Dawn 29 here.
     for (let d = 0; d < 365 * 6; d++) {
-      const m = reckon(ANCHOR_MS + d * DAY_MS);
+      const m = reckon(ANCHOR_MS + d * WORLD_DAY_MS);
       expect(m.day).toBeLessThanOrEqual(MONTH_LENGTHS[m.monthIndex - 1]!);
       expect(m.dayOfYear).toBeGreaterThanOrEqual(1);
       expect(m.dayOfYear).toBeLessThanOrEqual(DAYS_PER_YEAR);
@@ -101,12 +121,12 @@ describe('the clock flows on', () => {
   });
 
   it('reckons backwards through the anchor without losing a day', () => {
-    const yesterday = reckon(ANCHOR_MS - DAY_MS);
+    const yesterday = reckon(ANCHOR_MS - WORLD_DAY_MS);
     expect(yesterday.day).toBe(3);
     expect(formatHour(yesterday)).toBe('6:04 PM');
 
     // 18h05m before the anchor is the previous day at 23:59.
-    const before = reckon(ANCHOR_MS - (18 * 60 + 5) * 60_000);
+    const before = reckon(ANCHOR_MS - ((18 * 60 + 5) * 60_000) / 2);
     expect(before.day).toBe(3);
     expect(formatHour(before)).toBe('11:59 PM');
   });
@@ -114,11 +134,11 @@ describe('the clock flows on', () => {
   it('turns the year backwards too', () => {
     // 247 days before Heartfire 4 is Morning Star 1 of the same year; one more
     // steps back into 4E 225.
-    const first = reckon(ANCHOR_MS - 246 * DAY_MS);
+    const first = reckon(ANCHOR_MS - 246 * WORLD_DAY_MS);
     expect(first.year).toBe(226);
     expect(first.dayOfYear).toBe(1);
 
-    const previous = reckon(ANCHOR_MS - 247 * DAY_MS);
+    const previous = reckon(ANCHOR_MS - 247 * WORLD_DAY_MS);
     expect(previous.year).toBe(225);
     expect(previous.dayOfYear).toBe(DAYS_PER_YEAR);
   });
@@ -127,7 +147,7 @@ describe('the clock flows on', () => {
 describe('the twelve-hour face', () => {
   /** Minutes past the anchor that land on a given 24-hour time. */
   const at = (hour: number, minute: number) =>
-    ANCHOR_MS + ((hour * 60 + minute) - (18 * 60 + 4)) * 60_000;
+    ANCHOR_MS + (((hour * 60 + minute) - (18 * 60 + 4)) * 60_000) / 2;
 
   it('writes noon and midnight as twelve, not zero', () => {
     // `hour % 12` makes both of these 0, and neither is the zeroth hour.
@@ -151,8 +171,10 @@ describe('the twelve-hour face', () => {
 
   it('covers all 1440 minutes without a malformed or duplicate face', () => {
     const seen = new Set<string>();
+    // Half a real minute per step, because a whole one is two in-world minutes
+    // and would walk the clock past every odd minute of the day.
     for (let m = 0; m < 1440; m++) {
-      const face = formatHour(reckon(at(0, 0) + m * 60_000));
+      const face = formatHour(reckon(at(0, 0) + m * 30_000));
       expect(face).toMatch(/^(1[0-2]|[1-9]):[0-5]\d (AM|PM)$/);
       seen.add(face);
     }
@@ -168,10 +190,10 @@ describe('the twelve-hour face', () => {
 
 describe('the day fraction the hourglass is drawn from', () => {
   it('runs 0 at midnight to just under 1 at the day\'s end', () => {
-    const midnight = ANCHOR_MS + (5 * 60 + 56) * 60_000;
+    const midnight = ANCHOR_MS + ((5 * 60 + 56) * 60_000) / 2;
     expect(reckon(midnight).dayFraction).toBe(0);
-    expect(reckon(midnight + 12 * 3_600_000).dayFraction).toBeCloseTo(0.5, 5);
-    expect(reckon(midnight + 24 * 3_600_000 - 60_000).dayFraction).toBeCloseTo(1439 / 1440, 5);
+    expect(reckon(midnight + 6 * 3_600_000).dayFraction).toBeCloseTo(0.5, 5);
+    expect(reckon(midnight + 12 * 3_600_000 - 30_000).dayFraction).toBeCloseTo(1439 / 1440, 5);
   });
 
   it('never leaves the range, sampled across a year', () => {
