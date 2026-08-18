@@ -53,7 +53,14 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
   // permissions that come with one — out of this project entirely.
   authorize.searchParams.set('scope', 'identify guilds.members.read');
   authorize.searchParams.set('state', nonce);
-  authorize.searchParams.set('prompt', 'none');
+
+  // `prompt` is deliberately left at Discord's default, which always shows the
+  // consent screen. `prompt=none` skips it for a reader who has authorised
+  // these scopes before and would be the nicer daily experience — identity
+  // writs last a day, so people re-login often — but it is only documented for
+  // the case where the authorisation already exists, and what it does on a
+  // FIRST login is not something to discover in production. Worth revisiting
+  // once a login is known to work end to end.
 
   return new Response(null, {
     status: 302,

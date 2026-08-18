@@ -36,8 +36,8 @@ SHEET_ID = "1KS__WJoqI_o3esXxO3Ei3L6SlJwJnOXQrjEr-FCPEZ0"
 #   https://thalmor-archives.pages.dev/api/auth/callback
 #   http://localhost:8788/api/auth/callback
 #
-# DISCORD_CLIENT_ID = ""
-# DISCORD_GUILD_ID  = ""
+DISCORD_CLIENT_ID = "1524083694598623553"
+DISCORD_GUILD_ID  = "1517187744840024204"
 
 # Secret (set with `npx wrangler pages secret put GOOGLE_SERVICE_ACCOUNT_JSON`):
 #   GOOGLE_SERVICE_ACCOUNT_JSON - contents of the service-account key shared
