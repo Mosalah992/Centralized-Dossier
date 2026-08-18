@@ -1,134 +1,123 @@
-// Order of Precedence — the Embassy drawn as a tree.
+// Order of Precedence — the Embassy woven as a tapestry.
 //
-// This volume used to be Roster Statistics: a corps-by-grade grid, a race table
-// and a wing table. Those were worth having while the sheet's own tallies were
-// suspect, and stopped being worth having the moment the figures started being
-// counted off the register itself. What the Embassy still had no way to see was
-// its own shape.
+// The first attempt at this was an indented list with elbow rules, which is an
+// outline and not a tree: it showed the same facts in the same order and drew
+// none of the structure. This is the Black tapestry instead — a root at the top,
+// houses hanging beneath it on curved gold thread, and a line descending where
+// it runs long.
 //
-// The tree is derived, never authored. Unit is the wing, Rank is the rung, Name
-// is the leaf — see shared/hierarchy.ts. A promotion in the sheet moves someone
-// here, and there is no second copy of the hierarchy to drift.
+// WHY IT IS SVG AND NOT NESTED ELEMENTS. A tree is a drawing: curved branches
+// between arbitrary points, threads that have to meet a node exactly, a ground
+// that is one continuous cloth. Nested divs can fake that with borders and
+// pseudo-elements right up until the branches need to curve, and then every
+// trick runs out at once.
 //
-// WHY RANKS COLLAPSE. Ninety-five people is a scroll, not a shape, and a tree
-// that has to be scrolled has stopped being a tree. Anything past a handful
-// shows as a closed branch carrying its count, which is exactly the "..." the
-// hierarchy was sketched with in the first place.
+// The layout is arithmetic and lives in precedence-layout.ts. This file is only
+// ink: it draws what it is handed and decides what happens when a branch is
+// pressed.
+//
+// PROGRESSIVE BY NECESSITY. Ninety-four people is not a picture. Wings start
+// shut — with every rank fanned out the cloth is twenty-four columns wide before
+// a single name appears — so the reader opens a house, then a rank, and the
+// thread grows to meet what they asked for.
 
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { useVolume } from '../api';
 import { Consulting, Notice } from '../components/Notice';
 import { Page, Registers, figure } from '../components/Page';
-import type { RankGroup, WingBranch } from '../../../shared/types';
+import { RADIUS, layout } from './precedence-layout';
+import type { TapestryNode } from './precedence-layout';
 import '../styles/precedence.css';
 
-/**
- * Ranks larger than this start closed.
- *
- * Six is the largest group that still reads as a list rather than a column —
- * above it the eye stops counting and starts scrolling, which is the thing this
- * volume exists to avoid.
- */
-const OPEN_AT_MOST = 6;
+function Medallion({
+  node, onToggle, reduced, index,
+}: {
+  node: TapestryNode;
+  onToggle: (id: string) => void;
+  reduced: boolean;
+  index: number;
+}) {
+  const r = RADIUS[node.kind];
+  const label = node.kind === 'person' ? node.label : node.label.toUpperCase();
 
-function Rank({ group, wing }: { group: RankGroup; wing: string }) {
-  const many = group.members.length > OPEN_AT_MOST;
-  const [open, setOpen] = useState(!many);
-  const reduced = useReducedMotion();
-
-  const names = (
-    <ul className="prec__names">
-      {group.members.map((m, i) => (
-        <motion.li
-          className="prec__name"
-          key={`${m.name}-${i}`}
-          initial={reduced ? false : { opacity: 0, x: -6 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.28, delay: reduced ? 0 : Math.min(i * 0.03, 0.4) }}
-        >
-          <span className="prec__rune" aria-hidden />
-          <span className="prec__person">{m.name}</span>
-          {m.race && <span className="prec__race">{m.race}</span>}
-        </motion.li>
-      ))}
-    </ul>
-  );
-
-  return (
-    <li className="prec__rank">
-      {many ? (
-        <button
-          type="button"
-          className={`prec__rank-head prec__rank-head--toggle${open ? ' is-open' : ''}`}
-          aria-expanded={open}
-          onClick={() => setOpen((was) => !was)}
-        >
-          <span className="prec__rank-name">{group.rank}</span>
-          <span className="prec__count">{group.members.length}</span>
-          <span className="prec__chevron" aria-hidden />
-          {/* The wing is only for a screen reader, which hears these buttons
-              out of the visual context that makes "Recruit" unambiguous. */}
-          <span className="prec__sr">in {wing}</span>
-        </button>
-      ) : (
-        <p className="prec__rank-head">
-          <span className="prec__rank-name">{group.rank}</span>
-          <span className="prec__count">{group.members.length}</span>
-        </p>
+  const body = (
+    <>
+      <circle className="tap__ring" r={r} />
+      {node.kind !== 'person' && <circle className="tap__pip" r={r * 0.34} />}
+      {/* Names hang below the medallion, as they do on the cloth. */}
+      <text className="tap__label" y={r + 15}>{label}</text>
+      {node.detail && (
+        <text className="tap__detail" y={r + 28}>{node.detail}</text>
       )}
-
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            key="names"
-            initial={reduced ? false : { height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={reduced ? { opacity: 0 } : { height: 0, opacity: 0 }}
-            transition={{ duration: 0.32, ease: [0.22, 0.61, 0.36, 1] }}
-            style={{ overflow: 'hidden' }}
-          >
-            {names}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </li>
+    </>
   );
-}
 
-function Wing({ branch, index }: { branch: WingBranch; index: number }) {
-  const reduced = useReducedMotion();
-  return (
-    <motion.section
-      className="prec__wing"
-      initial={reduced ? false : { opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, delay: reduced ? 0 : index * 0.12 }}
+  const common = {
+    className: `tap__node tap__node--${node.kind}${node.expanded ? ' is-open' : ''}`,
+    initial: reduced ? false : { opacity: 0, scale: 0.6 },
+    animate: { opacity: 1, scale: 1 },
+    exit: reduced ? { opacity: 0 } : { opacity: 0, scale: 0.6 },
+    transition: {
+      duration: 0.34,
+      delay: reduced ? 0 : Math.min(index * 0.018, 0.5),
+      ease: [0.22, 0.61, 0.36, 1] as const,
+    },
+  };
+
+  // A branch that opens is a control; a person is not. Rendering the difference
+  // rather than styling it is what makes the keyboard work for free.
+  return node.expandable ? (
+    <motion.g
+      {...common}
+      style={{ x: node.x, y: node.y, cursor: 'pointer' }}
+      role="button"
+      tabIndex={0}
+      aria-expanded={node.expanded}
+      aria-label={`${node.label}, ${node.detail} beneath`}
+      onClick={() => onToggle(node.id)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle(node.id); }
+      }}
     >
-      <h2 className="prec__wing-name">
-        <span className="prec__sigil" aria-hidden />
-        {branch.wing}
-        <span className="prec__wing-count">{branch.total}</span>
-      </h2>
-      <ul className="prec__ranks">
-        {branch.ranks.map((group) => (
-          <Rank key={group.rank} group={group} wing={branch.wing} />
-        ))}
-      </ul>
-    </motion.section>
+      {body}
+    </motion.g>
+  ) : (
+    <motion.g {...common} style={{ x: node.x, y: node.y }}>
+      {body}
+    </motion.g>
   );
 }
 
 export function PrecedenceView() {
   const volume = useVolume('statistics');
+  const reduced = useReducedMotion() ?? false;
+  const [open, setOpen] = useState<ReadonlySet<string>>(() => new Set());
+
+  const data = volume.state === 'ready' ? volume.value.data : null;
+  const cloth = useMemo(
+    () => (data ? layout(data.hierarchy, open) : null),
+    [data, open],
+  );
 
   if (volume.state === 'loading') return <Consulting />;
   if (volume.state === 'error') {
     return <Notice kind="error" title="The order could not be read" body={volume.message} />;
   }
+  if (!data || !cloth) return <Consulting />;
 
-  const { membership, hierarchy } = volume.value.data;
+  const toggle = (id: string) =>
+    setOpen((was) => {
+      const next = new Set(was);
+      if (next.has(id)) {
+        next.delete(id);
+        // Shutting a house shuts what hung beneath it, or its ranks would be
+        // remembered open and spring back the next time it is pressed.
+        for (const held of next) if (held.startsWith(`rank:${id.slice(5)}:`)) next.delete(held);
+      } else next.add(id);
+      return next;
+    });
 
   return (
     <Page
@@ -137,12 +126,65 @@ export function PrecedenceView() {
       tab={volume.value.tab}
       fetchedAtUtc={volume.value.fetchedAtUtc}
     >
-      <Registers items={membership.map((m) => ({ label: m.label, value: figure(m.count) }))} />
+      <Registers
+        items={data.membership.map((m) => ({ label: m.label, value: figure(m.count) }))}
+      />
 
-      <div className="prec">
-        {hierarchy.map((branch, i) => (
-          <Wing key={branch.wing} branch={branch} index={i} />
-        ))}
+      <p className="tap__hint">Press a house to unroll it, and a rank to bring down its names.</p>
+
+      {/* The cloth scrolls inside its own frame; the page never scrolls
+          sideways, which is the same rule the wide tables follow. */}
+      <div className="tap">
+        <svg
+          className="tap__cloth"
+          viewBox={`0 0 ${cloth.width} ${cloth.height}`}
+          width={cloth.width}
+          height={cloth.height}
+          role="tree"
+          aria-label="The Embassy by wing and rank"
+        >
+          <defs>
+            {/* Gold thread: a soft glow beneath the stroke, so a branch reads as
+                embroidered into the cloth rather than drawn on top of it. */}
+            <filter id="tap-glow" x="-40%" y="-40%" width="180%" height="180%">
+              <feGaussianBlur stdDeviation="2.4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          <g filter="url(#tap-glow)">
+            <AnimatePresence initial={false}>
+              {cloth.threads.map((t) => (
+                <motion.path
+                  key={t.id}
+                  className={`tap__thread tap__thread--${t.depth}`}
+                  d={t.d}
+                  // The thread embroiders itself: the stroke is drawn from the
+                  // parent outward rather than fading in whole.
+                  initial={reduced ? false : { pathLength: 0, opacity: 0 }}
+                  animate={{ pathLength: 1, opacity: 1 }}
+                  exit={reduced ? { opacity: 0 } : { pathLength: 0, opacity: 0 }}
+                  transition={{ duration: reduced ? 0 : 0.5, ease: [0.4, 0, 0.2, 1] }}
+                />
+              ))}
+            </AnimatePresence>
+          </g>
+
+          <AnimatePresence initial={false}>
+            {cloth.nodes.map((node, i) => (
+              <Medallion
+                key={node.id}
+                node={node}
+                index={i}
+                reduced={reduced}
+                onToggle={toggle}
+              />
+            ))}
+          </AnimatePresence>
+        </svg>
       </div>
     </Page>
   );
