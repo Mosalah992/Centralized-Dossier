@@ -7,7 +7,10 @@ import { Page, Registers, figure } from '../components/Page';
 import type { CalendarDay } from '../../../shared/types';
 import { MONTHS } from '../../../shared/parsers/calendar';
 import { clockParts, machineHour, reckon, type InWorldMoment } from '../../../shared/reckoning';
-import { withObservances } from '../../../shared/observances';
+import { EMBASSY_OBSERVANCES, withObservances } from '../../../shared/observances';
+import { TAMRIELIC_HOLIDAYS } from '../../../shared/holidays';
+import { constellationOf, standing } from '../../../shared/constellations';
+import type { Constellation } from '../../../shared/constellations';
 import { withParchmentPalette } from '../../../shared/parchment';
 import indumoril from '../assets/indumoril.jpg';
 import ganaril from '../assets/ganaril.jpg';
@@ -341,6 +344,34 @@ function Hourglass({ fraction }: { fraction: number }) {
   );
 }
 
+/**
+ * The sign whose season it is, drawn from its own stars.
+ *
+ * The asterism is data, not art: shared/constellations.ts gives each sign star
+ * positions in a 100x100 field and pairs of indices to join, so this draws
+ * whatever is in the table rather than carrying thirteen hand-made pictures
+ * that would drift from it.
+ */
+function Asterism({ sign }: { sign: Constellation }) {
+  return (
+    <svg className="sign__field" viewBox="-8 -8 116 116" aria-hidden focusable="false">
+      {sign.lines.map(([a, b], i) => {
+        const from = sign.stars[a];
+        const to = sign.stars[b];
+        if (!from || !to) return null;
+        return (
+          <line key={i} className="sign__line" x1={from[0]} y1={from[1]} x2={to[0]} y2={to[1]} />
+        );
+      })}
+      {sign.stars.map(([x, y], i) => (
+        // The first star of each sign is its brightest, by the table's own
+        // ordering, so it carries the larger disc.
+        <circle key={i} className="sign__star" cx={x} cy={y} r={i === 0 ? 3.4 : 2.2} />
+      ))}
+    </svg>
+  );
+}
+
 /** The plate above the year: what day it is in the realm, and what hour. */
 function InWorldPlate({ today }: { today: CalendarDay | null }) {
   // A second is finer than the display needs, but the sand moves continuously
@@ -348,6 +379,7 @@ function InWorldPlate({ today }: { today: CalendarDay | null }) {
   const now = useInWorldNow(1000);
   const month = MONTHS[now.monthIndex - 1] ?? '';
   const { clock, meridiem } = clockParts(now);
+  const sign = constellationOf(now.monthIndex);
 
   return (
     <aside className="reckoning">
@@ -374,6 +406,20 @@ function InWorldPlate({ today }: { today: CalendarDay | null }) {
           </p>
         )}
       </div>
+
+      {/* The sign in season. It belongs on this plate rather than in the grid
+          because it is a property of the month rather than of any day, and the
+          plate is already where the archive says what time it is. */}
+      {sign && (
+        <div className="sign">
+          <Asterism sign={sign} />
+          <div className="sign__reading">
+            <p className="sign__name">{sign.name}</p>
+            <p className="sign__standing">{standing(sign)}</p>
+            <p className="sign__born">{sign.born}</p>
+          </div>
+        </div>
+      )}
     </aside>
   );
 }
@@ -400,8 +446,20 @@ export function CalendarView() {
   // rather than run on every tick of the clock above. The palette goes last
   // because it only rewrites the legend, and the observance pass does not care
   // what colour a day is.
+  /**
+   * The sheet's year, then the days the archive knows that the sheet does not.
+   *
+   * Order matters and is not alphabetical: the sheet's own note always wins
+   * (withObservances never overwrites one), and between the two overlaid lists
+   * the Embassy's own days come first, so a day this office keeps is never
+   * displaced by a provincial feast that happens to fall on it.
+   */
   const year = useMemo(
-    () => (source ? withParchmentPalette(withObservances(source)) : null),
+    () => (source
+      ? withParchmentPalette(
+        withObservances(source, [...EMBASSY_OBSERVANCES, ...TAMRIELIC_HOLIDAYS]),
+      )
+      : null),
     [source],
   );
 
