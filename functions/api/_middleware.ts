@@ -29,7 +29,13 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   if (PUBLIC_PATHS.has(pathname)) return context.next();
 
   // Fail closed. A missing secret must never mean an open archive.
-  if (!context.env.GATE_SECRET || !context.env.GATE_PASSPHRASE) {
+  //
+  // GATE_SECRET alone, now that Discord is the way in: it signs and verifies
+  // every writ, so without it nothing can be trusted. GATE_PASSPHRASE is no
+  // longer required and is deliberately not checked here — it has become an
+  // optional break-glass door, and demanding it would mean an archive that
+  // seals itself the moment the shared word is retired.
+  if (!context.env.GATE_SECRET) {
     return sealed(503, "The archive is sealed pending the warden's key.");
   }
 

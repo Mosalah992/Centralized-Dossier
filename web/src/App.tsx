@@ -119,7 +119,7 @@ export default function App() {
       <Ambience track={track.url} />
 
       {open === null ? null : !open ? (
-        <Gate onOpen={() => setOpen(true)} />
+        <Gate />
       ) : (
         <div className="shell">
           <main>

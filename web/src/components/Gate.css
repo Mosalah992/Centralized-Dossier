@@ -142,59 +142,6 @@
   color: #4a3c2c;
 }
 
-.gate__form {
-  display: grid;
-  gap: 0.5rem;
-}
-
-.gate__label {
-  font-family: var(--display);
-  font-size: 0.8125rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #6c5636;
-}
-
-.gate__input {
-  font-family: "EB Garamond", serif;
-  font-size: 1.125rem;
-  padding: 0.6rem 0.7rem;
-  color: var(--gate-ink);
-  background: rgba(255, 253, 245, 0.55);
-  border: 1px solid var(--gate-parchment-edge);
-  border-radius: 2px;
-}
-
-.gate__input:focus-visible,
-.gate__button:focus-visible {
-  outline: 2px solid var(--gate-wax);
-  outline-offset: 2px;
-}
-
-.gate__button {
-  margin-top: 0.5rem;
-  padding: 0.7rem 1rem;
-  font-family: var(--display);
-  font-size: 0.9375rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  color: var(--gate-parchment);
-  background: var(--gate-wax);
-  border: 1px solid #2d0a12;
-  border-radius: 2px;
-  cursor: pointer;
-  transition: background 160ms ease;
-}
-
-.gate__button:hover:not(:disabled) {
-  background: var(--gate-wax-lit);
-}
-
-.gate__button:disabled {
-  opacity: 0.55;
-  cursor: default;
-}
-
 /* Reserved so an error never shifts the seal or the button. */
 .gate__error {
   min-height: 1.5rem;
@@ -209,18 +156,95 @@
   margin: 0;
 }
 
-/* Fixed square box so nothing shifts as the image decodes. The drop shadow
-   sits here, on the union of the two halves: one silhouette at rest, one
-   shadow per half once they fly apart. */
+/* The seal is the door now, so this is a wrapper: it holds the position and
+   the label, and carries the fact that it can be pressed. The art moved into
+   .gate__seal-art, which keeps the fixed square box — so nothing shifts as the
+   image decodes — and the drop shadow on the union of the two halves: one
+   silhouette at rest, one shadow per half once they fly apart. */
 .gate__seal {
   position: absolute;
   bottom: -2.75rem;
   left: 50%;
   translate: -50% 0;
   width: 7.5rem;
+  display: block;
+  text-decoration: none;
+  pointer-events: none;
+}
+
+.gate__seal-art {
+  position: relative;
+  width: 100%;
   aspect-ratio: 1;
   filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5));
+  transition: transform 0.35s var(--ease), filter 0.35s var(--ease);
+}
+
+/* Live: pressable, and it has to LOOK pressable. The old arrangement put a
+   quiet text link beside a decorative seal and readers did not find it — the
+   wax is the most prominent thing on the gate, so it should be the thing that
+   opens it. A slow halo at rest says "press me" without a button's chrome. */
+.gate__seal--live {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.gate__seal--live .gate__seal-art::after {
+  content: '';
+  position: absolute;
+  inset: -14%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201, 162, 39, 0.34), transparent 66%);
+  animation: seal-invite 3.4s ease-in-out infinite;
   pointer-events: none;
+  z-index: -1;
+}
+
+@keyframes seal-invite {
+  0%, 100% { opacity: 0.35; transform: scale(0.94); }
+  50%      { opacity: 0.85; transform: scale(1.06); }
+}
+
+.gate__seal--live:hover .gate__seal-art,
+.gate__seal--live:focus-visible .gate__seal-art {
+  transform: scale(1.06);
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.55))
+          drop-shadow(0 0 14px rgba(201, 162, 39, 0.5));
+}
+
+.gate__seal--live:active .gate__seal-art {
+  transform: scale(0.98);
+}
+
+.gate__seal--live:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 8px;
+  border-radius: 50%;
+}
+
+/* Names the action, because a wax seal is not self-evidently a login. */
+.gate__seal-label {
+  display: block;
+  margin-top: 0.55rem;
+  font-family: var(--display);
+  font-size: 0.56rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  text-align: center;
+  white-space: nowrap;
+  color: var(--gold);
+  transition: color 0.25s var(--ease);
+}
+
+.gate__seal--live:hover .gate__seal-label,
+.gate__seal--live:focus-visible .gate__seal-label {
+  color: var(--gold-bright);
+}
+
+/* The halo is an invitation, not information — the label already carries that. */
+@media (prefers-reduced-motion: reduce) {
+  .gate__seal--live .gate__seal-art::after { animation: none; opacity: 0.6; }
+  .gate__seal-art { transition: none; }
 }
 
 .gate__seal-half {
@@ -287,58 +311,4 @@
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .gate__button {
-    transition: none;
-  }
-}
 
-/* The second door, beneath the word. Deliberately quieter than the seal-break
-   button: the passphrase is still the way most readers get in, and this must
-   not read as the primary action while that remains true. */
-
-.gate__or {
-  margin: 1.1rem 0 0.7rem;
-  font-family: var(--display);
-  font-size: 0.54rem;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-  text-align: center;
-  position: relative;
-}
-
-.gate__or::before,
-.gate__or::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  width: 32%;
-  height: 1px;
-  background: rgba(90, 70, 30, 0.28);
-}
-
-.gate__or::before { left: 0; }
-.gate__or::after { right: 0; }
-
-.gate__discord {
-  display: block;
-  width: 100%;
-  padding: 0.62rem 1rem;
-  font-family: var(--display);
-  font-size: 0.6rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  text-align: center;
-  text-decoration: none;
-  color: var(--ink);
-  background: rgba(90, 70, 30, 0.06);
-  border: 1px solid rgba(90, 70, 30, 0.3);
-  transition: background 0.2s var(--ease), border-color 0.2s var(--ease);
-}
-
-.gate__discord:hover,
-.gate__discord:focus-visible {
-  background: rgba(201, 162, 39, 0.12);
-  border-color: color-mix(in srgb, var(--gold) 55%, transparent);
-}

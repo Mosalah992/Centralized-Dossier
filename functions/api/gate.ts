@@ -56,7 +56,10 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
   const epoch = Number(env.GATE_EPOCH ?? "1");
 
-  if (!env.GATE_SECRET || !env.GATE_PASSPHRASE) {
+  // Only the signing key is required. The passphrase is optional now that
+  // Discord is the door: unset it and the word simply stops working, while
+  // status, sign-out and every Discord login carry on.
+  if (!env.GATE_SECRET) {
     return json({ error: "The archive is sealed pending the warden's key." }, 503);
   }
 
@@ -81,6 +84,14 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
   if (request.method !== "POST") {
     return json({ error: "Method not permitted." }, 405);
+  }
+
+  // The word is break-glass, not the front door. With GATE_PASSPHRASE unset
+  // there is nothing to compare against and the route is simply gone — which
+  // is how the shared secret gets retired for good: remove the value, and no
+  // deploy of this file can accidentally bring it back.
+  if (!env.GATE_PASSPHRASE) {
+    return json({ error: "The Embassy no longer admits by word. Present yourself instead." }, 410);
   }
 
   const ip = request.headers.get("CF-Connecting-IP") ?? "unknown";

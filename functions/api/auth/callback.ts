@@ -116,6 +116,9 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
   const epoch = Number(env.GATE_EPOCH ?? '1');
   const writ = await issueWrit(env.GATE_SECRET, epoch, 'archive', identity);
 
+  // Straight to the archive. The seal was already broken on the way out — see
+  // the note in web/src/components/Gate.tsx — so there is no ceremony owed here
+  // and nothing for the gate to do but get out of the way.
   const home = new URL('/', request.url);
   const headers = new Headers({ location: home.toString(), 'cache-control': 'private, no-store' });
   headers.append('set-cookie', writCookie(writ, undefined, OAUTH_TTL_SECONDS));
