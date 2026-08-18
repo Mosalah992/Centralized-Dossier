@@ -104,13 +104,7 @@ export function PrecedenceView() {
     [data, open],
   );
 
-  if (volume.state === 'loading') return <Consulting />;
-  if (volume.state === 'error') {
-    return <Notice kind="error" title="The order could not be read" body={volume.message} />;
-  }
-  if (!data || !cloth) return <Consulting />;
-
-  const toggle = (id: string) => {
+  const toggle = useCallback((id: string) => {
     setAim(id);
     setOpen((was) => {
       const next = new Set(was);
@@ -122,7 +116,7 @@ export function PrecedenceView() {
       } else next.add(id);
       return next;
     });
-  };
+  }, []);
 
   /**
    * Bring a point of the cloth to the middle of its frame.
@@ -132,23 +126,33 @@ export function PrecedenceView() {
    * Instant on arrival — an animated scroll on first paint reads as the page
    * being unfinished — and eased once the reader is doing the opening.
    */
-  const centreOn = useCallback((x: number, smooth: boolean) => {
+  const centreOn = useCallback((x: number, width: number, smooth: boolean) => {
     const el = frame.current;
     if (!el) return;
     // The drawing may be rendered at a different size than its own coordinates,
     // so a node's x has to be carried through the same ratio the browser used.
     el.scrollTo({
-      left: x * (el.scrollWidth / cloth.width) - el.clientWidth / 2,
+      left: x * (el.scrollWidth / width) - el.clientWidth / 2,
       behavior: smooth && !reduced ? 'smooth' : 'auto',
     });
-  }, [cloth.width, reduced]);
+  }, [reduced]);
 
   // On arrival the trunk is the middle of the cloth; after that, whatever was
-  // last pressed.
+  // last pressed. Guarded rather than placed after the early returns below —
+  // a hook that only runs once there is data is a hook that did not run on the
+  // render before it, which is React error #310 and how this view first shipped.
   useLayoutEffect(() => {
+    if (!cloth) return;
     const node = aim ? cloth.nodes.find((n) => n.id === aim) : cloth.nodes[0];
-    if (node) centreOn(node.x, aim !== null);
+    if (node) centreOn(node.x, cloth.width, aim !== null);
   }, [aim, cloth, centreOn]);
+
+  // EVERY HOOK IS ABOVE THIS LINE. Nothing below it may call one.
+  if (volume.state === 'loading') return <Consulting />;
+  if (volume.state === 'error') {
+    return <Notice kind="error" title="The order could not be read" body={volume.message} />;
+  }
+  if (!data || !cloth) return <Consulting />;
 
   return (
     <Page
