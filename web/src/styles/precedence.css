@@ -78,6 +78,12 @@
   stroke: color-mix(in srgb, var(--gold) 50%, #000);
 }
 
+/* The browser draws its own focus ring on a focusable <g>, which lands as a
+   rectangle around the medallion AND its lettering — a box on a cloth that has
+   no straight lines anywhere else. It is replaced below by a ring on the
+   medallion itself, which is the thing being pressed. */
+.tap__node[role='button']:focus { outline: none; }
+
 /* A branch that can be opened invites it. */
 .tap__node[role='button'] .tap__ring {
   transition: stroke 0.2s var(--ease), fill 0.2s var(--ease);
@@ -89,13 +95,16 @@
   stroke: var(--gold-bright);
 }
 
-.tap__node[role='button']:focus-visible {
-  outline: none;
+/* Keyboard focus: a second ring struck round the medallion, so it reads as the
+   same object being singled out rather than as a box drawn over the weave. */
+.tap__node[role='button']:focus-visible .tap__ring {
+  stroke: var(--gold-bright);
+  stroke-width: 2.4;
+  filter: drop-shadow(0 0 6px rgba(232, 205, 122, 0.9));
 }
 
 .tap__node[role='button']:focus-visible .tap__label {
   fill: var(--gold-bright);
-  text-decoration: underline;
 }
 
 /* Open branches burn brighter than shut ones. */

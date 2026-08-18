@@ -22,7 +22,7 @@
 // thread grows to meet what they asked for.
 
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { useMemo, useState } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { useVolume } from '../api';
 import { Consulting, Notice } from '../components/Notice';
@@ -94,6 +94,9 @@ export function PrecedenceView() {
   const volume = useVolume('statistics');
   const reduced = useReducedMotion() ?? false;
   const [open, setOpen] = useState<ReadonlySet<string>>(() => new Set());
+  /** The branch last pressed, so the cloth can be drawn round to show it. */
+  const [aim, setAim] = useState<string | null>(null);
+  const frame = useRef<HTMLDivElement>(null);
 
   const data = volume.state === 'ready' ? volume.value.data : null;
   const cloth = useMemo(
@@ -107,7 +110,8 @@ export function PrecedenceView() {
   }
   if (!data || !cloth) return <Consulting />;
 
-  const toggle = (id: string) =>
+  const toggle = (id: string) => {
+    setAim(id);
     setOpen((was) => {
       const next = new Set(was);
       if (next.has(id)) {
@@ -118,6 +122,33 @@ export function PrecedenceView() {
       } else next.add(id);
       return next;
     });
+  };
+
+  /**
+   * Bring a point of the cloth to the middle of its frame.
+   *
+   * The tapestry is wider than any window it will be read in, and a reader who
+   * opens a house on the far right should not then have to go looking for it.
+   * Instant on arrival — an animated scroll on first paint reads as the page
+   * being unfinished — and eased once the reader is doing the opening.
+   */
+  const centreOn = useCallback((x: number, smooth: boolean) => {
+    const el = frame.current;
+    if (!el) return;
+    // The drawing may be rendered at a different size than its own coordinates,
+    // so a node's x has to be carried through the same ratio the browser used.
+    el.scrollTo({
+      left: x * (el.scrollWidth / cloth.width) - el.clientWidth / 2,
+      behavior: smooth && !reduced ? 'smooth' : 'auto',
+    });
+  }, [cloth.width, reduced]);
+
+  // On arrival the trunk is the middle of the cloth; after that, whatever was
+  // last pressed.
+  useLayoutEffect(() => {
+    const node = aim ? cloth.nodes.find((n) => n.id === aim) : cloth.nodes[0];
+    if (node) centreOn(node.x, aim !== null);
+  }, [aim, cloth, centreOn]);
 
   return (
     <Page
@@ -134,7 +165,7 @@ export function PrecedenceView() {
 
       {/* The cloth scrolls inside its own frame; the page never scrolls
           sideways, which is the same rule the wide tables follow. */}
-      <div className="tap">
+      <div className="tap" ref={frame}>
         <svg
           className="tap__cloth"
           viewBox={`0 0 ${cloth.width} ${cloth.height}`}
