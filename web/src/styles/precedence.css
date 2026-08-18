@@ -1,0 +1,216 @@
+/* Order of Precedence — the Embassy as a tree.
+ *
+ * Follows the register the scrying panel and the constellation already set:
+ * foil rules, lit nodes, small tracked capitals, glow rather than chrome. The
+ * connectors are drawn in the same ink as the asterism's lines, so a reader
+ * moving between the calendar and this page is looking at one hand.
+ *
+ * Imported by the view rather than by main.tsx: this volume is lazy-loaded, and
+ * a stylesheet in the global bundle would be downloaded by every reader who
+ * never opens it. */
+
+.prec {
+  margin: 2rem 0 0;
+  display: grid;
+  gap: 1.6rem;
+}
+
+/* ── A wing ──────────────────────────────────────────────────────────────── */
+
+.prec__wing {
+  position: relative;
+  padding: 1.1rem 1.25rem 1.2rem;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--cover) 9%, rgba(243, 236, 220, 0.96)), rgba(238, 230, 212, 0.94));
+  border: 1px solid color-mix(in srgb, var(--cover) 30%, rgba(90, 70, 30, 0.26));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--foil) 14%, transparent);
+}
+
+.prec__wing-name {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin: 0 0 0.9rem;
+  font-family: var(--display);
+  font-size: 0.74rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+/* A lit lozenge at the head of each wing — the same device as the scrying's
+   iris, at the size of a bullet. */
+.prec__sigil {
+  width: 0.6rem;
+  height: 0.6rem;
+  flex: none;
+  rotate: 45deg;
+  background: var(--foil);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--foil) 65%, transparent);
+}
+
+.prec__wing-count {
+  margin-left: auto;
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── The rungs ───────────────────────────────────────────────────────────── */
+
+.prec__ranks {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 0.4rem;
+}
+
+/* The trunk: one ruled line down the wing, which every rank hangs off. Drawn
+   with a gradient so it fades out at the foot rather than stopping dead. */
+.prec__rank {
+  position: relative;
+  padding: 0 0 0 1.5rem;
+}
+
+.prec__rank::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--foil) 42%, transparent),
+    color-mix(in srgb, var(--foil) 18%, transparent)
+  );
+}
+
+/* The last rank closes the trunk, so the line ends at its own elbow instead of
+   running past the final name into empty parchment. */
+.prec__rank:last-child::before { bottom: auto; height: 1.15rem; }
+
+/* The elbow into each rank's head. */
+.prec__rank::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 1.15rem;
+  width: 0.95rem;
+  height: 1px;
+  background: color-mix(in srgb, var(--foil) 42%, transparent);
+}
+
+.prec__rank-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  width: 100%;
+  margin: 0;
+  padding: 0.55rem 0 0.35rem;
+  font: inherit;
+  text-align: left;
+  background: none;
+  border: 0;
+}
+
+.prec__rank-head--toggle { cursor: pointer; }
+
+.prec__rank-head--toggle:hover .prec__rank-name,
+.prec__rank-head--toggle:focus-visible .prec__rank-name {
+  color: color-mix(in srgb, var(--foil) 46%, var(--ink));
+}
+
+.prec__rank-head--toggle:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--foil) 70%, var(--ink));
+  outline-offset: 2px;
+}
+
+.prec__rank-name {
+  font-family: var(--display);
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  transition: color 0.2s var(--ease);
+}
+
+.prec__count {
+  font-size: 0.6rem;
+  color: color-mix(in srgb, var(--foil) 40%, var(--ink-soft));
+  font-variant-numeric: tabular-nums;
+}
+
+/* Points down when the branch is open. */
+.prec__chevron {
+  width: 0.42rem;
+  height: 0.42rem;
+  margin-left: auto;
+  border-right: 1px solid color-mix(in srgb, var(--foil) 55%, var(--ink-soft));
+  border-bottom: 1px solid color-mix(in srgb, var(--foil) 55%, var(--ink-soft));
+  rotate: -45deg;
+  transition: rotate 0.28s var(--ease);
+}
+
+.prec__rank-head--toggle.is-open .prec__chevron { rotate: 45deg; }
+
+/* ── The people ──────────────────────────────────────────────────────────── */
+
+.prec__names {
+  list-style: none;
+  margin: 0;
+  padding: 0.1rem 0 0.45rem 0.9rem;
+}
+
+.prec__name {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  padding: 0.14rem 0;
+  font-size: 0.9rem;
+  color: var(--ink);
+}
+
+/* A small lit point per person: the leaf of the tree, and the only thing on the
+   page that says "this is one of us" rather than "this is a heading". */
+.prec__rune {
+  width: 0.3rem;
+  height: 0.3rem;
+  flex: none;
+  rotate: 45deg;
+  background: color-mix(in srgb, var(--foil) 62%, transparent);
+  translate: 0 -0.15rem;
+}
+
+.prec__race {
+  font-family: var(--display);
+  font-size: 0.5rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* For screen readers only — visible text would repeat what the heading says. */
+.prec__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (min-width: 780px) {
+  .prec { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* Command is the head of the Embassy and reads as one, across both columns. */
+  .prec__wing:first-child { grid-column: 1 / -1; }
+}
+
+/* The shape is the information; the movement is not. Under reduced motion the
+   tree arrives complete and still — the component also skips its stagger, so
+   this only has to stop what CSS owns. */
+@media (prefers-reduced-motion: reduce) {
+  .prec__chevron,
+  .prec__rank-name { transition: none; }
+  .prec__sigil { box-shadow: none; }
+}

@@ -11,6 +11,7 @@ import type { FormattedGrid, Grid, VolumeDefinition, VolumeEnvelope } from '../s
 import { resolveTabTitle } from '../shared/volumes';
 import { parseRoster, summarize } from '../shared/parsers/roster';
 import { computeStatistics } from '../shared/statistics';
+import { buildHierarchy } from '../shared/hierarchy';
 import { parseLedger } from '../shared/parsers/ledger';
 import { parseStipends } from '../shared/parsers/stipends';
 import { parseHonor } from '../shared/parsers/honor';
@@ -35,9 +36,21 @@ function parseFor(volume: VolumeDefinition, grid: Grid | FormattedGrid): unknown
       const members = parseRoster(grid as Grid);
       return { members, ...summarize(members) };
     }
-    // Counted off the Roster, not read from the Stats tab — that tab keeps its
-    // tallies by hand and had drifted from the register. See shared/statistics.ts.
-    case 'statistics': return computeStatistics(parseRoster(grid as Grid));
+    // Order of Precedence. Counted off the Roster, not the Stats tab — that tab
+    // keeps its tallies by hand and had drifted from the register.
+    //
+    // Only the summary figures and the tree cross the wire. The full statistics
+    // are still computed and the rest of them thrown away, which looks wasteful
+    // and is not: the corps grid and race table were the only reason this
+    // volume ever carried a member's handle or private note, and the cheapest
+    // way to stop shipping those is to stop putting them in the payload.
+    case 'statistics': {
+      const members = parseRoster(grid as Grid);
+      return {
+        membership: computeStatistics(members).membership,
+        hierarchy: buildHierarchy(members),
+      };
+    }
     case 'ledger': return parseLedger(grid as Grid);
     case 'stipends': return parseStipends(grid as Grid);
     case 'honor': return parseHonor(grid as Grid);

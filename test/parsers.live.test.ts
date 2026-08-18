@@ -16,6 +16,8 @@ import { parseStipends } from '../shared/parsers/stipends';
 import { parseHonor } from '../shared/parsers/honor';
 import { parseCalendar, eventsOf } from '../shared/parsers/calendar';
 import { VOLUMES, resolveTabTitle } from '../shared/volumes';
+import { buildHierarchy, unrankedRanks } from '../shared/hierarchy';
+import { UNRECORDED } from '../shared/statistics';
 
 const TABS_DIR = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)), '..', 'tmp', 'tabs',
@@ -115,5 +117,40 @@ describe.skipIf(!hasDump)('live sheet dump', () => {
 
     expect(eventsOf(year).length).toBeGreaterThan(10);
     expect(eventsOf(year).every((e) => e.event.name && e.event.date)).toBe(true);
+  });
+});
+
+/**
+ * The Order of Precedence against the real register.
+ *
+ * The tree is derived from Unit, Rank and Name, so the failure that matters is
+ * a member who lands nowhere — a wing or rank spelled differently in the sheet
+ * than the orderings expect. These assert against the live rows rather than a
+ * fixture precisely because that drift can only happen in the sheet.
+ */
+describe.skipIf(!hasDump)('the hierarchy, against the live roster', () => {
+  const roster = () => parseRoster(values('roster.json'));
+
+  it('places every member on the tree exactly once', () => {
+    const members = roster();
+    const leaves = buildHierarchy(members).flatMap((w) => w.ranks.flatMap((r) => r.members));
+    expect(leaves).toHaveLength(members.length);
+  });
+
+  it('states a wing total that matches the roster’s own count for it', () => {
+    const members = roster();
+    for (const wing of buildHierarchy(members)) {
+      const inSheet = members.filter(
+        (m) => (m.unit.trim() || UNRECORDED) === wing.wing,
+      ).length;
+      expect(wing.total).toBe(inSheet);
+    }
+  });
+
+  it('has a place in the order of standing for every rank the sheet uses', () => {
+    // A rank here is not an error — it still appears, at the end of its wing —
+    // but it means RANK_PRECEDENCE has fallen behind the Embassy and should be
+    // told about the new rung.
+    expect(unrankedRanks(roster())).toEqual([]);
   });
 });

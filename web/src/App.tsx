@@ -22,7 +22,7 @@ import type { VolumeSlug } from '../../shared/types';
  * the views themselves free of a default export they have no other use for.
  */
 const RosterView = lazy(() => import('./views/Personnel').then((m) => ({ default: m.RosterView })));
-const StatisticsView = lazy(() => import('./views/Personnel').then((m) => ({ default: m.StatisticsView })));
+const PrecedenceView = lazy(() => import('./views/Precedence').then((m) => ({ default: m.PrecedenceView })));
 const LedgerView = lazy(() => import('./views/Finance').then((m) => ({ default: m.LedgerView })));
 const StipendsView = lazy(() => import('./views/Finance').then((m) => ({ default: m.StipendsView })));
 const HonorView = lazy(() => import('./views/Honors').then((m) => ({ default: m.HonorView })));
@@ -32,7 +32,7 @@ const InformantsView = lazy(() => import('./views/Informants').then((m) => ({ de
 
 const VIEWS: Record<VolumeSlug, React.ComponentType> = {
   roster: RosterView,
-  statistics: StatisticsView,
+  statistics: PrecedenceView,
   ledger: LedgerView,
   stipends: StipendsView,
   honor: HonorView,

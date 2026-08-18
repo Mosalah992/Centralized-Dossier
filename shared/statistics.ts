@@ -91,7 +91,7 @@ const CORPS_ORDER = [
 const STATUS_ORDER = ['ACTIVE', 'INACTIVE', 'ABSENT', 'LOA', 'JUST JOINED', 'ARRESTED'];
 
 /** Wings in precedence order. */
-const WING_ORDER = ['Command', 'Militant Wing', 'Diplomatic Wing', 'Administrative Wing'];
+export const WING_ORDER = ['Command', 'Militant Wing', 'Diplomatic Wing', 'Administrative Wing'];
 
 /** Shown where a member's cell is empty, so they are still counted. */
 export const UNRECORDED = 'Unrecorded';

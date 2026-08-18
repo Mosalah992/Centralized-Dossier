@@ -21,7 +21,7 @@ export const VOLUMES: readonly VolumeDefinition[] = [
   },
   {
     slug: 'statistics',
-    title: 'Roster Statistics',
+    title: 'Order of Precedence',
     category: 'Personnel',
     // The Roster, not the Stats tab. These figures are counted off the register
     // itself rather than read from the sheet's hand-kept tallies, which had

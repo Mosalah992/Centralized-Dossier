@@ -1,4 +1,5 @@
-// Troops Roster and Roster Statistics.
+// Troops Roster. The statistics that used to share this file became the Order
+// of Precedence and moved to views/Precedence.tsx.
 
 import { useVolume } from '../api';
 import { Consulting, Notice } from '../components/Notice';
@@ -128,92 +129,6 @@ export function RosterView() {
 
       <p className="page__source">
         Hours, activity and the owed mark are entered by the Embassy clock, not by hand.
-      </p>
-    </Page>
-  );
-}
-
-export function StatisticsView() {
-  const volume = useVolume('statistics');
-
-  if (volume.state === 'loading') return <Consulting />;
-  if (volume.state === 'error') {
-    return <Notice kind="error" title="The register could not be read" body={volume.message} />;
-  }
-
-  const { membership, corps, races, wings } = volume.value.data;
-
-  return (
-    <Page
-      title="Roster Statistics"
-      subtitle="Strength Returns"
-      tab={volume.value.tab}
-      fetchedAtUtc={volume.value.fetchedAtUtc}
-    >
-      <Registers
-        items={membership.map((m) => ({ label: m.label, value: figure(m.count) }))}
-      />
-
-      <div className="table-frame">
-        <table>
-          <caption>Corps by grade</caption>
-          <thead>
-            <tr>
-              <th scope="col">Corps</th>
-              {corps.tiers.map((tier) => (
-                <th scope="col" className="num" key={tier}>{tier}</th>
-              ))}
-              <th scope="col" className="num">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {corps.rows.map((row) => (
-              <tr key={row.label}>
-                <th scope="row">{row.label}</th>
-                {corps.tiers.map((tier) => (
-                  // A blank in the sheet means the grade does not apply to this
-                  // corps, which is not the same as none serving in it.
-                  <td className="num" key={tier}>
-                    {row.tiers[tier] === null ? '-' : figure(row.tiers[tier] ?? 0)}
-                  </td>
-                ))}
-                <td className="num"><strong>{figure(row.total)}</strong></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="table-frame">
-        <table>
-          <caption>By wing</caption>
-          <tbody>
-            {wings.map((wing) => (
-              <tr key={wing.label}>
-                <th scope="row">{wing.label}</th>
-                <td className="num">{figure(wing.count)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="table-frame">
-        <table>
-          <caption>By race</caption>
-          <tbody>
-            {races.map((race) => (
-              <tr key={race.label}>
-                <th scope="row">{race.label}</th>
-                <td className="num">{figure(race.count)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <p className="page__source">
-        These returns are kept by hand and may lag the muster roll.
       </p>
     </Page>
   );

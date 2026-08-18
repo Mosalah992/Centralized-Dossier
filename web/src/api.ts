@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import type {
-  CalendarYear, HonorEntry, Ledger, Member, Statistics, Stipends,
+  CalendarYear, HonorEntry, Ledger, Member, Precedence, Stipends,
   VolumeCategory, VolumeEnvelope, VolumeSlug,
 } from '../../shared/types';
 
@@ -38,7 +38,7 @@ export interface RosterData {
  */
 export interface VolumeData {
   roster: RosterData;
-  statistics: Statistics;
+  statistics: Precedence;
   ledger: Ledger;
   stipends: Stipends;
   honor: HonorEntry[];

@@ -34,7 +34,7 @@ const FOIL = '#c5a169';
 
 export const BINDINGS: Record<VolumeSlug, Binding> = {
   roster:     { cover: '#121a2e', cover2: '#091626', foil: FOIL, subtitle: 'Military Personnel Register' },
-  statistics: { cover: '#122010', cover2: '#091a07', foil: FOIL, subtitle: 'Strength Returns' },
+  statistics: { cover: '#122010', cover2: '#091a07', foil: FOIL, subtitle: 'The Chain of Command' },
   ledger:     { cover: '#430e10', cover2: '#38070a', foil: FOIL, subtitle: 'Treasury Account' },
   stipends:   { cover: '#2d1539', cover2: '#220d2f', foil: FOIL, subtitle: 'Receipts & Disbursement' },
   honor:      { cover: '#4c2d00', cover2: '#2b1800', foil: FOIL, subtitle: 'Ceremonial Citations', lettering: '#2c2114' },

@@ -144,6 +144,40 @@ export interface Statistics {
   wings: Tally[];
 }
 
+/**
+ * What the Order of Precedence volume is sent: the summary figures, and the
+ * Embassy as a tree.
+ *
+ * Note what is NOT here. `Statistics` is still computed in full — the corps
+ * grid, the races, the wings — and only `membership` is carried across, because
+ * that is all the page shows. The hierarchy itself carries a name, a race, a
+ * rank and a wing per member and nothing else: no Discord handle, no private
+ * note, no hours, no last-active. A volume that draws a chain of command has no
+ * business shipping any of that, and leaving it in the Worker is the point.
+ */
+export interface Precedence {
+  membership: Tally[];
+  hierarchy: WingBranch[];
+}
+
+/** One person on the tree. Deliberately four fields short of a Member. */
+export interface Precedent {
+  name: string;
+  race: string;
+}
+
+export interface RankGroup {
+  rank: string;
+  members: Precedent[];
+}
+
+export interface WingBranch {
+  wing: string;
+  ranks: RankGroup[];
+  /** Everyone beneath this wing, so a closed branch can still state its strength. */
+  total: number;
+}
+
 // ── Ledger ────────────────────────────────────────────────────────────────
 
 export interface PayTier {
