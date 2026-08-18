@@ -292,3 +292,53 @@
     transition: none;
   }
 }
+
+/* The second door, beneath the word. Deliberately quieter than the seal-break
+   button: the passphrase is still the way most readers get in, and this must
+   not read as the primary action while that remains true. */
+
+.gate__or {
+  margin: 1.1rem 0 0.7rem;
+  font-family: var(--display);
+  font-size: 0.54rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-align: center;
+  position: relative;
+}
+
+.gate__or::before,
+.gate__or::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 32%;
+  height: 1px;
+  background: rgba(90, 70, 30, 0.28);
+}
+
+.gate__or::before { left: 0; }
+.gate__or::after { right: 0; }
+
+.gate__discord {
+  display: block;
+  width: 100%;
+  padding: 0.62rem 1rem;
+  font-family: var(--display);
+  font-size: 0.6rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  text-align: center;
+  text-decoration: none;
+  color: var(--ink);
+  background: rgba(90, 70, 30, 0.06);
+  border: 1px solid rgba(90, 70, 30, 0.3);
+  transition: background 0.2s var(--ease), border-color 0.2s var(--ease);
+}
+
+.gate__discord:hover,
+.gate__discord:focus-visible {
+  background: rgba(201, 162, 39, 0.12);
+  border-color: color-mix(in srgb, var(--gold) 55%, transparent);
+}

@@ -16,11 +16,49 @@ export function Gate({ onOpen }: GateProps) {
   const [word, setWord] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [discordOffered, setDiscordOffered] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const reduced = useReducedMotion();
 
   useEffect(() => {
     inputRef.current?.focus();
+  }, []);
+
+  // Ask whether the second door exists before offering it.
+  useEffect(() => {
+    let live = true;
+    fetch('/api/gate', { headers: { Accept: 'application/json' } })
+      .then((r) => r.json())
+      .then((body: { discord?: boolean }) => {
+        if (live) setDiscordOffered(Boolean(body.discord));
+      })
+      .catch(() => { /* the word still works; leave the door hidden */ });
+    return () => { live = false; };
+  }, []);
+
+  /**
+   * A login that failed comes back as `?login=<reason>` rather than as a JSON
+   * error page — the reader pressed a button and deserves a sentence. The
+   * parameter is stripped once read so a refresh does not re-accuse them.
+   */
+  useEffect(() => {
+    const reason = new URLSearchParams(window.location.search).get('login');
+    if (!reason) return;
+
+    const said: Record<string, string> = {
+      'not-a-member': 'That name is not on the Embassy’s rolls.',
+      declined: 'You turned back at the door.',
+      stale: 'That attempt had gone cold. Try once more.',
+      unreachable: 'Discord did not answer. The word below still opens the archive.',
+      unconfigured: 'The Embassy keeps no register of Discord names yet.',
+      exchange: 'Discord would not vouch for that name.',
+      incomplete: 'That attempt arrived unfinished.',
+    };
+    setError(said[reason] ?? 'That login was refused.');
+
+    const clean = new URL(window.location.href);
+    clean.searchParams.delete('login');
+    window.history.replaceState({}, '', clean.toString());
   }, []);
 
   async function submit(event: FormEvent) {
@@ -111,6 +149,19 @@ export function Gate({ onOpen }: GateProps) {
             {pending ? 'Testing the seal' : 'Break the seal'}
           </button>
         </form>
+
+        {/* The second door. A plain link and NOT a fetch: OAuth is a chain of
+            top-level redirects out to Discord and back, and an XHR cannot
+            follow it. Shown only when the archive says the door is configured,
+            so it is never a button that answers 503. */}
+        {discordOffered && (
+          <>
+            <p className="gate__or">or</p>
+            <a className="gate__discord" href="/api/auth/login">
+              Be known by your Discord name
+            </a>
+          </>
+        )}
 
         <div className="gate__error" role="status" aria-live="polite">
           <AnimatePresence>

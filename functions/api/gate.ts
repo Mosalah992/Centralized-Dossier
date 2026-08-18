@@ -18,6 +18,10 @@ interface Env {
   GATE_EPOCH?: string;
   /** Optional KV namespace. Bind one to get attempt throttling. */
   GATE_ATTEMPTS?: KVNamespace;
+  /** All three, or Discord login is not offered. See api/auth/login.ts. */
+  DISCORD_CLIENT_ID?: string;
+  DISCORD_CLIENT_SECRET?: string;
+  DISCORD_GUILD_ID?: string;
 }
 
 const MAX_ATTEMPTS = 8;
@@ -58,7 +62,17 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
   if (request.method === "GET") {
     const writ = await readWrit(env.GATE_SECRET, epoch, readCookie(request, COOKIE_NAME));
-    return json({ open: Boolean(writ) });
+    // The name only — never the id or the roles. The app greets the reader with
+    // it and has no business with the rest, and a claim that never reaches the
+    // browser cannot be read out of it.
+    return json({
+      open: Boolean(writ),
+      ...(writ?.n && { identity: { name: writ.n } }),
+      // Whether Discord login is even offered. The gate asks so the button can
+      // be hidden when the door is not configured, rather than dangling and
+      // answering 503 to whoever presses it.
+      discord: Boolean(env.DISCORD_CLIENT_ID && env.DISCORD_CLIENT_SECRET && env.DISCORD_GUILD_ID),
+    });
   }
 
   if (request.method === "DELETE") {

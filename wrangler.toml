@@ -21,6 +21,24 @@ id = "0b84bdb3c52141a08506032df9c004d1"
 # site only ever reads.
 SHEET_ID = "1KS__WJoqI_o3esXxO3Ei3L6SlJwJnOXQrjEr-FCPEZ0"
 
+# Discord login — the second door beside the passphrase. Neither of these is a
+# secret: the client id is handed to every visitor in the authorize URL, and the
+# guild id is public to anyone in the guild. The third value, the client SECRET,
+# is set with `wrangler pages secret put DISCORD_CLIENT_SECRET`.
+#
+# ALL THREE MISSING IS A SUPPORTED STATE, and it is what ships today: the gate
+# hides the Discord button, /api/auth/login answers 503 for itself alone, and
+# the passphrase carries on. That is deliberately unlike GATE_SECRET, whose
+# absence seals the archive — an optional door being unconfigured must not lock
+# a hundred people out. See functions/api/auth/login.ts.
+#
+# Redirect URIs to register on the Discord application:
+#   https://thalmor-archives.pages.dev/api/auth/callback
+#   http://localhost:8788/api/auth/callback
+#
+# DISCORD_CLIENT_ID = ""
+# DISCORD_GUILD_ID  = ""
+
 # Secret (set with `npx wrangler pages secret put GOOGLE_SERVICE_ACCOUNT_JSON`):
 #   GOOGLE_SERVICE_ACCOUNT_JSON - contents of the service-account key shared
 #                                 with the spreadsheet. For local development

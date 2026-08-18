@@ -2,14 +2,15 @@
 // itself is scenery. Anything not listed in PUBLIC_PATHS requires a valid writ.
 
 import { COOKIE_NAME, readCookie, readWrit } from "../lib/session";
+// The set of routes that need no writ. Kept in its own module so the test suite
+// can assert the boundary without importing this file's Workers types.
+import { PUBLIC_PATHS } from "../lib/public-paths";
 
 interface Env {
   GATE_SECRET: string;
   GATE_PASSPHRASE: string;
   GATE_EPOCH?: string;
 }
-
-const PUBLIC_PATHS = new Set(["/api/gate"]);
 
 function sealed(status: number, error: string): Response {
   return new Response(JSON.stringify({ error }), {

@@ -77,7 +77,20 @@ reported *withdrawn* on every request. Volumes the Embassy writes itself live in
   silently disables brute-force throttling. The namespace is bound in `wrangler.toml`;
   if you remove it, the limiter stops without any error.
 
-Changing either is a security decision, not a refactor.
+- Missing `DISCORD_*` config -> **fails open, and must**. Discord login is a
+  *second* door beside the passphrase. The gate hides its button, `/api/auth/login`
+  answers 503 for itself alone, and the word carries on working. Sealing the
+  archive because an optional door is unconfigured would turn a typo into an
+  outage for a hundred people.
+
+Changing any of these is a security decision, not a refactor.
+
+**The boundary lives in `functions/lib/public-paths.ts`**, not in the middleware
+that reads it — so `test/middleware.test.ts` can assert it without dragging the
+Workers types into the browser TypeScript project. A line added to that set
+publishes a route to the internet; the test fails when the set changes, on
+purpose. Never match it by prefix: `startsWith("/api/auth")` would open every
+route anyone later files under that folder.
 
 **5. `--display` must be a tracked Roman capital.** Nearly every label here is
 wide-tracked uppercase. A calligraphic face disintegrates into disconnected strokes at
@@ -143,7 +156,19 @@ node node_modules/wrangler/bin/wrangler.js pages deploy dist --project-name thal
 | `GOOGLE_SERVICE_ACCOUNT_JSON`, `GATE_SECRET`, `GATE_PASSPHRASE`, `GATE_EPOCH` | `.dev.vars` | `wrangler pages dev` |
 | `CHRONICLE_PASSPHRASE` — the Thalmor Chronicles' own word | `.dev.vars` | the volume's second gate |
 | Service-account key | `credentials/` | generated into `.dev.vars` |
-| All four production secrets | Cloudflare Pages secrets | the live site |
+| `DISCORD_CLIENT_SECRET` — the second door | Cloudflare secret + `.dev.vars` | `api/auth/callback` |
+| All production secrets | Cloudflare Pages secrets | the live site |
+
+`DISCORD_CLIENT_ID` and `DISCORD_GUILD_ID` are plain vars in `wrangler.toml`,
+not secrets — the client id is handed to every visitor in the authorize URL.
+All three unset is a supported state and is what ships until the Discord
+application exists; see invariant 4.
+
+A writ bought with Discord carries the reader's id, name and guild roles, signed
+into the same MAC as everything else. **The roles are a snapshot taken at login,
+not a live check** — which is why those writs last a day where the passphrase's
+last a week. Nothing is gated on them yet; they are carried so the data can be
+proven right in production before anything is moved behind it.
 
 `.env`, `.dev.vars` and `credentials/` are gitignored and **must never be staged**.
 Production secrets cannot be read back out of Cloudflare — only replaced.
