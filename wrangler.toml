@@ -39,6 +39,16 @@ SHEET_ID = "1KS__WJoqI_o3esXxO3Ei3L6SlJwJnOXQrjEr-FCPEZ0"
 DISCORD_CLIENT_ID = "1524083694598623553"
 DISCORD_GUILD_ID  = "1517187744840024204"
 
+# Writ rotation. Every writ carries the epoch it was signed under, and one
+# signed under a different number is refused — so raising this invalidates every
+# cookie the archive has ever issued, at once, for everyone.
+#
+# Raised to 2 when Discord became the door. Members admitted by the old shared
+# word were still holding week-long writs and would never have seen the new gate
+# until those expired; this puts all of them back at the seal to be identified
+# by name. Raise it again to force the same thing.
+GATE_EPOCH = "2"
+
 # Secret (set with `npx wrangler pages secret put GOOGLE_SERVICE_ACCOUNT_JSON`):
 #   GOOGLE_SERVICE_ACCOUNT_JSON - contents of the service-account key shared
 #                                 with the spreadsheet. For local development

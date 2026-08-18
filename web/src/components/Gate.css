@@ -104,7 +104,11 @@
   position: relative;
   width: min(30rem, 100%);
   transform-origin: top center;
-  padding: 3rem 2.25rem 5.5rem;
+  /* Centred now that the seal is the only thing to do here. The passphrase
+     field used to anchor a left-aligned column; with it gone, ranged-left text
+     above a centred seal read as two different layouts sharing a sheet. */
+  text-align: center;
+  padding: 3rem 2.25rem 5rem;
   background: linear-gradient(180deg, #efe3c7 0%, var(--gate-parchment) 40%, #d3c39f 100%);
   border: 1px solid var(--gate-parchment-edge);
   border-radius: 2px;
