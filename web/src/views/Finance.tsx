@@ -5,7 +5,26 @@
 
 import { useVolume } from '../api';
 import { Consulting, Notice } from '../components/Notice';
+import { Dispatch } from '../components/Dispatch';
 import { Mark, Page, Registers, figure } from '../components/Page';
+
+/*
+ * The treasury's two recordings, served from public/ by URL rather than
+ * imported, for the same reason the music is (see the note in App.tsx): audio
+ * does not change between builds, so there is nothing to gain from Vite hashing
+ * and re-emitting it. The cost of leaving the pipeline is the content hash, so
+ * these are cache-busted by hand — bump the query if a recording is replaced,
+ * or readers will keep the one they already have.
+ *
+ * A volume carries at most one, and they do not travel: the Ledger is where the
+ * Inspector is heard, the Registry is where Celeriel is, and neither plays over
+ * the other because App unmounts a volume before mounting the next.
+ */
+const INSPECTOR_MESSAGE = '/music/inspector-celeriel-message.ogg?v=1';
+const CELERIEL_MESSAGE = '/music/celeriel-message.ogg?v=1';
+
+/** How often an open volume repeats its message. */
+const MESSAGE_EVERY_MS = 3 * 60 * 1000;
 
 export function LedgerView() {
   const volume = useVolume('ledger');
@@ -25,6 +44,10 @@ export function LedgerView() {
       tab={volume.value.tab}
       fetchedAtUtc={volume.value.fetchedAtUtc}
     >
+      {/* Renders nothing. An audio element that repeats the Inspector's message
+          for as long as the ledger is open, and falls silent with the hall. */}
+      <Dispatch src={INSPECTOR_MESSAGE} every={MESSAGE_EVERY_MS} />
+
       <Registers
         items={[
           ...(totalActiveTroopsOwed !== null
@@ -113,6 +136,10 @@ export function StipendsView() {
       tab={volume.value.tab}
       fetchedAtUtc={volume.value.fetchedAtUtc}
     >
+      {/* Renders nothing. An audio element that repeats Celeriel's message for
+          as long as the registry is open, and falls silent with the hall. */}
+      <Dispatch src={CELERIEL_MESSAGE} every={MESSAGE_EVERY_MS} />
+
       <Registers
         items={[
           { label: 'Balance for the week', value: balanceForWeek || '—' },

@@ -27,11 +27,25 @@ interface Props {
 }
 
 const STORAGE_KEY = 'archive:ambience';
+
+/**
+ * Fired on the window whenever the reader silences or restores the archive.
+ * The preference is stored here, but it is not only this component's business:
+ * anything else that makes sound has to honour the same choice, and reading
+ * localStorage would not tell it the moment the roundel was clicked. Same shape
+ * as GATE_SEALED_EVENT in api.ts, and there for the same reason.
+ */
+export const AMBIENCE_CHANGED_EVENT = 'archive:ambience-changed';
+
 /** Under a reading voice. This is a room tone, not a performance. */
 const VOLUME = 0.32;
 const FADE_MS = 1600;
 
-const remembered = (): boolean => {
+/**
+ * Whether the reader wants the archive to sound. Exported because that roundel
+ * is the only sound control the archive offers, so every player answers to it.
+ */
+export const ambienceWanted = (): boolean => {
   try {
     return localStorage.getItem(STORAGE_KEY) !== 'off';
   } catch {
@@ -46,12 +60,15 @@ const remember = (wanted: boolean): void => {
   } catch {
     /* nothing to do; the preference simply will not survive the visit */
   }
+  // Announced even when storage refused us: the choice still governs this visit,
+  // and a player that never heard it would keep sounding after the silence.
+  window.dispatchEvent(new CustomEvent(AMBIENCE_CHANGED_EVENT, { detail: wanted }));
 };
 
 export function Ambience({ track }: Props) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const fadeRef = useRef<number>();
-  const [wanted, setWanted] = useState(remembered);
+  const [wanted, setWanted] = useState(ambienceWanted);
   const [sounding, setSounding] = useState(false);
 
   /** Ramp in rather than cut in, so the track arrives under the page. */
