@@ -32,12 +32,23 @@ SHEET_ID = "1KS__WJoqI_o3esXxO3Ei3L6SlJwJnOXQrjEr-FCPEZ0"
 # absence seals the archive — an optional door being unconfigured must not lock
 # a hundred people out. See functions/api/auth/login.ts.
 #
+# THE GUILD ID IS THE COMMUNITY'S SERVER, NOT THE APPLICATION'S. This was
+# 1517187744840024204 from the day the door was built until 2026-08-21, which is
+# a server created seven weeks after the community's own and is not one the
+# members are in. Membership resolved 404 for every one of them and the gate
+# answered "that name is not on the Embassy's rolls" — so the door was shut to
+# precisely the people it was built for, and it read as ~100 individual account
+# problems rather than one wrong number. The id below is the guild the export
+# scripts talk to (scripts/dump-informant-reports.mjs, scripts/informant-access.mjs)
+# and the one docs/skyrim-press-history.md was transcribed from; check any
+# replacement against those before trusting it.
+#
 # Redirect URIs to register on the Discord application:
 #   https://thalmor-archives.pages.dev/api/auth/callback
 #   http://localhost:8788/api/auth/callback
 #
 DISCORD_CLIENT_ID = "1524083694598623553"
-DISCORD_GUILD_ID  = "1517187744840024204"
+DISCORD_GUILD_ID  = "1498139135758831749"
 
 # Writ rotation. Every writ carries the epoch it was signed under, and one
 # signed under a different number is refused — so raising this invalidates every

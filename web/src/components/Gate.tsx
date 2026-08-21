@@ -62,6 +62,10 @@ export function Gate() {
       declined: 'You turned back at the door.',
       stale: 'That attempt had gone cold. Press the seal again.',
       unreachable: 'Discord did not answer. The seal holds.',
+      // Not the reader's fault and deliberately not phrased as though it were:
+      // this is the Embassy failing to ask the question, not Discord answering
+      // no. See the status handling in api/auth/callback.ts.
+      unverified: 'The Embassy could not put the question to Discord. Use the word below.',
       unconfigured: 'The Embassy keeps no register of Discord names yet.',
       exchange: 'Discord would not vouch for that name.',
       incomplete: 'That attempt arrived unfinished.',

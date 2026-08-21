@@ -94,8 +94,20 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         { headers: auth }),
     ]);
 
-    // 404 here is the ordinary answer for "not in that guild", not a fault.
-    if (!member.ok) return refuse(request, 'not-a-member');
+    // 404 is the ordinary answer for "not in that guild" and is the ONLY status
+    // here that is about the reader. Everything else is our fault and must not
+    // be reported as a missing name: a wrong DISCORD_GUILD_ID, a dropped
+    // `guilds.members.read` scope and a rate-limited Worker all arrive as a
+    // non-ok response, and answering all of them with 'not-a-member' is how one
+    // wrong id spent its life looking like a hundred separate account problems.
+    if (member.status !== 404 && !member.ok) {
+      // The reader gets a sentence; the Worker log gets the status, which is
+      // the difference between 'their scope' and 'our guild id'.
+      console.warn(`guild member lookup failed: ${member.status}`);
+      return refuse(request,
+        member.status === 401 || member.status === 403 ? 'unverified' : 'unreachable');
+    }
+    if (member.status === 404) return refuse(request, 'not-a-member');
     if (!me.ok) return refuse(request, 'exchange');
 
     const user = await me.json() as { id: string; username: string; global_name?: string };
