@@ -18,6 +18,14 @@ spreadsheet. That bot owns Roster columns G/H/J/K. This site only ever reads.
 Vite 5 · React 18 · TypeScript · Cloudflare Pages + Pages Functions. No CSS framework —
 the styling is hand-written and deliberately bespoke.
 
+**One carve-out, and only one.** Fluent UI React v9 (`@fluentui/react-components`) supplies
+the *interactive controls* — the search box, the dropdowns, the tooltips, the toast — and
+nothing else. It is not a skin and it is not a design system here: the shelf, the seal, the
+parchment pages, the tables and the turning leaf are hand-written CSS and stay that way.
+Fluent styles with Griffel, so Griffel is permitted **inside `web/src/fluent/` and nowhere
+else**; a view that needs styling gets a component from that folder, not a `makeStyles`
+call of its own. The `.css` files remain authoritative for all presentation.
+
 ```
 web/src/          The SPA
   components/     Gate, Shelf, Book, Page, Ambience, Notice, ErrorBoundary
@@ -98,6 +106,18 @@ label size — this was tried and reverted. See the note in `web/src/styles/base
 
 **6. `--cover` must stay dark.** `ledger.css` lays light foil text over it. Hall of
 Honor's cover art is ivory, so its token takes the bronze of its own clasps instead.
+
+**7. Fluent never loads at the gate.** `web/src/fluent/Shell.tsx` holds the only
+`FluentProvider` in the app, and `App.tsx` reaches it through `React.lazy` from *inside
+the volume branch* — never at the root, where a provider would normally go. A reader
+stopped at the seal must not download a UI library to render a passphrase box; that is
+the same cold-start path the lazy views exist to protect. A static import of anything
+under `web/src/fluent/` from `App.tsx`, `Gate.tsx`, `Shelf.tsx` or `main.tsx` silently
+undoes this — nothing fails, `index.js` just grows by ~90 KB gzip. Check it:
+
+```bash
+grep -c griffel dist/assets/index-*.js   # must be 0
+```
 
 ---
 
@@ -242,6 +262,13 @@ it. Do not commit it.
   `node scripts/contact-sheet.mjs` photographs all eight in a real browser
   (`docs/volume-covers.png`) — it needs `npm install --no-save playwright`, which is
   deliberately not a dependency.
+- **Fluent's own icons never ship.** `@fluentui/react-components` depends on
+  `@fluentui/react-icons` and reaches for it by default — a rounded magnifier in the
+  search box, a rounded chevron on the dropdown. Those are Microsoft 365's hand, and
+  beside Cinzel capitals on a ruled page they are the one thing in the room drawn by
+  someone else. Every icon slot is passed a mark from `web/src/fluent/marks.tsx`
+  instead. When adding a Fluent component, find its icon slots first (`contentBefore`,
+  `expandIcon`, `dismiss`, `media`) and fill them.
 - **Assets**: a committed script plus committed output. Source art stays in `Assets/`.
 - **Verify against production**, not the build log. A deploy that uploads is not a deploy
   that works — check the served bundle hash, then exercise the gate.
@@ -268,8 +295,15 @@ Things an agent cannot discover from the repo, and should not guess.
 - The **gate passphrase**, if you want me to verify a deploy end to end.
 - Tokens (Discord bot, API keys) via a **gitignored `.env` file, not pasted in chat** — a
   token in the transcript is a token to rotate.
-- **`wrangler login`** and **`/mcp` OAuth** are interactive browser flows. I cannot complete
-  them; deploys and the Cloudflare MCP servers stay blocked until you do.
+- **`/mcp` OAuth** is an interactive browser flow. I cannot complete it, so the Cloudflare
+  MCP servers stay blocked until you do.
+- **`wrangler` is already logged in** on this machine — an OAuth token for
+  mosalah.desouki@gmail.com with `pages (write)`, confirmed with
+  `wrangler whoami`. Deploys therefore work unattended, so treat
+  `pages deploy` as a live production action on a site a hundred people read,
+  not as a blocked step: build, check the invariants, and verify the served
+  bundle hash afterwards. Re-check `whoami` rather than assuming — the token can
+  be revoked.
 
 **Open items carried forward**
 - The Discord bot token used for the channel exports was exposed in a transcript and

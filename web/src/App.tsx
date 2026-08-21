@@ -3,7 +3,7 @@ import { Suspense, lazy, useEffect, useState } from 'react';
 import { useRoute } from './router';
 import { getTitle } from '../../shared/volumes';
 import { bindingVars } from './theme';
-import { GATE_SEALED_EVENT } from './api';
+import { GATE_SEALED_EVENT, RESEAL_GRACE_MS } from './api';
 import { Ambience } from './components/Ambience';
 import { Gate } from './components/Gate';
 import { Shelf } from './components/Shelf';
@@ -29,6 +29,21 @@ const HonorView = lazy(() => import('./views/Honors').then((m) => ({ default: m.
 const CalendarView = lazy(() => import('./views/Honors').then((m) => ({ default: m.CalendarView })));
 const HistoryView = lazy(() => import('./views/History').then((m) => ({ default: m.HistoryView })));
 const InformantsView = lazy(() => import('./views/Informants').then((m) => ({ default: m.InformantsView })));
+
+/*
+ * Fluent's provider, and it is lazy for the same reason the views are — only
+ * more so.
+ *
+ * THIS IMPORT MUST STAY LAZY. Fluent is the heaviest thing in the project, and
+ * a static import here would put it in the index chunk, which is the chunk a
+ * reader stopped at the gate downloads to render a seal they may never press.
+ * Rendered where it is below — inside the volume branch, inside the Suspense
+ * boundary the view was already waiting in — it costs the gate nothing and the
+ * shelf nothing, and arrives with the first volume anyone opens.
+ */
+const FluentShell = lazy(() =>
+  import('./fluent/Shell').then((m) => ({ default: m.FluentShell })),
+);
 
 const VIEWS: Record<VolumeSlug, React.ComponentType> = {
   roster: RosterView,
@@ -95,10 +110,24 @@ export default function App() {
   }, []);
 
   // A 401 from any volume mid-session (expired or rotated writ) reseals.
+  //
+  // Held for a beat rather than done on the spot. FluentShell raises a notice
+  // saying the writ has lapsed, and it is mounted inside the volume — so
+  // resealing immediately would unmount the sentence in the same tick it was
+  // written. The delay is what makes the message legible, not a race being
+  // papered over: nothing here depends on the two landing in a particular
+  // order, and if the shell never mounted the archive still reseals on time.
   useEffect(() => {
-    const reseal = () => setOpen(false);
+    let held: ReturnType<typeof setTimeout> | undefined;
+    const reseal = () => {
+      if (held) return;
+      held = setTimeout(() => setOpen(false), RESEAL_GRACE_MS);
+    };
     window.addEventListener(GATE_SEALED_EVENT, reseal);
-    return () => window.removeEventListener(GATE_SEALED_EVENT, reseal);
+    return () => {
+      window.removeEventListener(GATE_SEALED_EVENT, reseal);
+      if (held) clearTimeout(held);
+    };
   }, []);
 
   // The tab title should say which volume is open.
@@ -140,10 +169,16 @@ export default function App() {
                     and a slow sheet look alike to the reader. */}
                 <ErrorBoundary resetKey={route.slug}>
                   <Suspense fallback={<Consulting />}>
-                    {(() => {
-                      const View = VIEWS[route.slug];
-                      return <View key={route.slug} />;
-                    })()}
+                    {/* The shell shares this boundary rather than bringing its
+                        own, so Fluent and the view arrive together under the
+                        one notice instead of the reader watching two
+                        consecutive loads. */}
+                    <FluentShell slug={route.slug}>
+                      {(() => {
+                        const View = VIEWS[route.slug];
+                        return <View key={route.slug} />;
+                      })()}
+                    </FluentShell>
                   </Suspense>
                 </ErrorBoundary>
               </div>

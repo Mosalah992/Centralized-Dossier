@@ -54,6 +54,22 @@ class ApiError extends Error {}
  *  out, and the app should fall back to the gate. */
 export const GATE_SEALED_EVENT = 'gate:sealed';
 
+/**
+ * How long the volume stays on screen after the event above, before the gate
+ * replaces it.
+ *
+ * The archive used to reseal on the same tick, which meant the page a reader
+ * was in became the seal with no explanation — indistinguishable from being
+ * turned out for cause. Fluent's shell now raises a notice saying the writ has
+ * lapsed, and this is the pause that lets it be read.
+ *
+ * It lives here rather than with the shell because App.tsx needs it too, and
+ * App must not import from web/src/fluent — a static import there would pull
+ * the whole library into the chunk the gate is served from. Both sides read the
+ * same number from the module that already owns the event.
+ */
+export const RESEAL_GRACE_MS = 2400;
+
 async function get<T>(path: string, signal: AbortSignal): Promise<T> {
   const res = await fetch(path, { signal, headers: { Accept: 'application/json' } });
   if (!res.ok) {
