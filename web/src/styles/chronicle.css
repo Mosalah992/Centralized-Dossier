@@ -413,15 +413,12 @@
   z-index: 5;
   transform-origin: left center;
   transform-style: preserve-3d;
-  transition: transform 0.9s cubic-bezier(0.35, 0.1, 0.28, 1);
+  /* NO `transition` HERE, AND IT MUST STAY THAT WAY. GSAP writes `transform`
+     inline, once per frame. A CSS transition on the same property would try to
+     interpolate each of those writes — a transition chasing a tween — and the
+     leaf would swim rather than turn. The four rotation states this file used
+     to carry went with it; Informants.tsx sets the angles. */
 }
-
-/* Turning forward starts flat and rotates away; turning back starts rotated
-   and comes to rest flat, which is the same animation run in reverse. */
-.chron-leaf { transform: rotateY(0deg); }
-.chron-leaf--back { transform: rotateY(-180deg); }
-.chron-leaf.chron-leaf--over { transform: rotateY(-180deg); }
-.chron-leaf--back.chron-leaf--over { transform: rotateY(0deg); }
 
 .chron-leaf__face {
   position: absolute;
@@ -439,6 +436,25 @@
 .chron-leaf__face--back {
   border-radius: 8px 0 0 8px;
   transform: rotateY(180deg);
+}
+
+/* The shadow a turning leaf throws across the page it is uncovering.
+   A page that merely rotates reads as a rectangle on a hinge; the travelling
+   shadow is most of what makes it read as paper with something behind it.
+   Driven from Informants.tsx — it has to be timed against the leaf, which a
+   keyframe of its own could not be. */
+.chron-leaf__shade {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    100deg,
+    rgb(24 16 6 / 0) 0%,
+    rgb(24 16 6 / 0.45) 42%,
+    rgb(24 16 6 / 0.16) 72%,
+    rgb(24 16 6 / 0) 100%);
 }
 
 /* ── Navigation ───────────────────────────────────────────────────────── */
@@ -492,10 +508,6 @@
 
   .chron-page--right { border-radius: 8px; }
   .chron-page--right::before { display: none; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .chron-leaf { transition: none; }
 }
 
 /* ── The scrying ─────────────────────────────────────────────────────────────

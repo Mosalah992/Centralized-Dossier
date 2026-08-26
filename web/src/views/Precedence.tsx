@@ -25,7 +25,7 @@ import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useGSAP } from '@gsap/react';
 
 import { useVolume } from '../api';
-import { D, STAGGER, gsap, staged } from '../motion';
+import { D, STAGGER, failsafe, gsap, staged } from '../motion';
 import { Consulting, Notice } from '../components/Notice';
 import { Page, Registers, figure } from '../components/Page';
 import { RADIUS, layout } from './precedence-layout';
@@ -240,7 +240,12 @@ export function PrecedenceView() {
           }, 0.12);
       }
 
+      // Threads and medallions both start invisible; without this a cloth that
+      // never got a frame stays an empty sheet.
+      const rescue = failsafe(tl);
+
       return () => {
+        rescue();
         tl.kill();
         gsap.set([...nodes, ...threads], { clearProps: 'all' });
       };

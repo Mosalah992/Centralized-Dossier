@@ -5,7 +5,7 @@ import { useRef } from 'react';
 import type { ReactNode } from 'react';
 import { useGSAP } from '@gsap/react';
 
-import { D, STAGGER, gsap, staged } from '../motion';
+import { D, STAGGER, failsafe, gsap, staged } from '../motion';
 
 /**
  * Either the page was read from a register — in which case it must say which
@@ -84,7 +84,12 @@ export function Page({ title, subtitle, tab, fetchedAtUtc, source, children }: P
         0.45);
     }
 
+    // The page starts at opacity 0. If the ticker never runs, this is the only
+    // thing standing between the reader and a blank volume.
+    const rescue = failsafe(tl);
+
     return () => {
+      rescue();
       tl.kill();
       gsap.set(article, { clearProps: 'opacity,transform' });
     };

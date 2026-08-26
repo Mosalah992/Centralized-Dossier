@@ -21,7 +21,7 @@ import type { ReactNode } from 'react';
 import { useGSAP } from '@gsap/react';
 
 import { chronicleIsOpen, openChronicle, useChronicle } from '../api';
-import { gsap, staged } from '../motion';
+import { D, failsafe, gsap, staged } from '../motion';
 import type { Chronicle, ChronicleEntry } from '../api';
 import { Consulting, Notice } from '../components/Notice';
 import { GuidedToggle, mark, prose, useGuidedReading } from '../reading';
@@ -497,35 +497,81 @@ export function InformantsView() {
     [narrow],
   );
 
-  // Drive the rotation one frame after the leaf is mounted, so the browser has
-  // a start state to animate from rather than jumping straight to the end.
+  /*
+   * Turn the leaf.
+   *
+   * WHAT THIS REPLACES is worth setting out, because the machinery it replaces
+   * was three workarounds stacked on one another and every one of them was for
+   * something a CSS transition cannot do:
+   *
+   *   - a DOUBLE requestAnimationFrame, so the browser had a start state
+   *     committed before the class flipped it. `fromTo` writes the start state
+   *     synchronously; there is nothing to wait for.
+   *   - a `transitionend` listener FILTERED on propertyName, because that event
+   *     fires for every property that transitions. `onComplete` fires once, for
+   *     this timeline, and cannot be confused with anything else.
+   *   - a blind 1400ms setTimeout, because a transition that never fires would
+   *     strand the reader mid-turn with the controls locked.
+   *
+   * THE FAILSAFE STAYS, but it changes shape. GSAP guarantees onComplete while
+   * the ticker runs, so the remaining hole is a tab that stops producing
+   * frames. Rather than race the animation with a timer, ask the browser: on
+   * `visibilitychange` to hidden, run the timeline to its end. Same protection,
+   * and it commits the CORRECT state rather than whichever state a timer
+   * happened to interrupt.
+   *
+   * `land()` is idempotent for the same reason the gate's `leave()` is — three
+   * things can call it and the first one wins.
+   */
   useEffect(() => {
     if (!turning) return;
     const node = leafRef.current;
     if (!node) return;
 
-    const raf = requestAnimationFrame(() =>
-      requestAnimationFrame(() => node.classList.add('chron-leaf--over')),
-    );
-
-    const done = (event: TransitionEvent) => {
-      if (event.propertyName !== 'transform') return;
+    let landed = false;
+    const land = () => {
+      if (landed) return;
+      landed = true;
       setSpread(turning.to);
       setTurning(null);
     };
-    node.addEventListener('transitionend', done);
 
-    // A leaf that never fires transitionend (interrupted, or a browser that
-    // skips it) would strand the reader mid-turn with the controls locked.
-    const failsafe = window.setTimeout(() => {
-      setSpread(turning.to);
-      setTurning(null);
-    }, 1400);
+    // Forward starts flat and swings away; back starts rotated and comes to
+    // rest flat — the same motion run in reverse.
+    const from = turning.dir === 1 ? 0 : -180;
+    const to = turning.dir === 1 ? -180 : 0;
+
+    const shade = node.parentElement?.querySelector('.chron-leaf__shade') ?? null;
+    const tl = gsap.timeline({ onComplete: land });
+
+    // `rotationY`, NOT `rotateY`. GSAP silently ignores unknown properties, so
+    // the misspelling produces no error, no warning, and no movement.
+    tl.fromTo(node,
+      { rotationY: from },
+      { rotationY: to, duration: D.board, ease: 'swing' }, 0);
+
+    if (shade) {
+      // The shadow sweeps across as the leaf passes over — brightest at the
+      // half-turn, gone by the time the page is down.
+      tl.fromTo(shade,
+        { opacity: 0, xPercent: turning.dir === 1 ? -30 : 30 },
+        { opacity: 1, xPercent: 0, duration: D.board * 0.5, ease: 'none' }, 0);
+      tl.to(shade,
+        { opacity: 0, xPercent: turning.dir === 1 ? 30 : -30,
+          duration: D.board * 0.5, ease: 'none' }, D.board * 0.5);
+    }
+
+    // Two nets, because a leaf that never lands locks the controls: one for a
+    // tab going away mid-turn, one for a tab that was never producing frames to
+    // begin with.
+    const onHidden = () => { if (document.hidden) tl.progress(1); };
+    document.addEventListener('visibilitychange', onHidden);
+    const rescue = failsafe(tl);
 
     return () => {
-      cancelAnimationFrame(raf);
-      node.removeEventListener('transitionend', done);
-      window.clearTimeout(failsafe);
+      rescue();
+      document.removeEventListener('visibilitychange', onHidden);
+      tl.kill();
     };
   }, [turning]);
 
@@ -686,11 +732,11 @@ export function InformantsView() {
         </div>
 
         {turning && (
-          <div
-            ref={leafRef}
-            className={`chron-leaf${turning.dir === -1 ? ' chron-leaf--back' : ''}`}
-            aria-hidden
-          >
+          <span className="chron-leaf__shade" aria-hidden />
+        )}
+
+        {turning && (
+          <div ref={leafRef} className="chron-leaf" aria-hidden>
             <div className="chron-leaf__face chron-leaf__face--front">
               <Face leaf={leafFront} side="right" />
             </div>

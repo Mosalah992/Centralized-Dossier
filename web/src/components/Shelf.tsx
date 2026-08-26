@@ -5,7 +5,7 @@ import { useRef } from 'react';
 import { useGSAP } from '@gsap/react';
 
 import { useShelf } from '../api';
-import { D, STAGGER, gsap, staged, suspendOffScreen } from '../motion';
+import { D, STAGGER, failsafe, gsap, staged, suspendOffScreen } from '../motion';
 import { SHELF, isOwnWork } from '../../../shared/volumes';
 import { BINDINGS } from '../theme';
 import { Book } from './Book';
@@ -42,8 +42,11 @@ export function Shelf({ onOpen }: Props) {
       { opacity: 0, y: 18 },
       { opacity: 1, y: 0, duration: D.board, ease: 'draw',
         stagger: STAGGER.muster, clearProps: 'opacity,transform' });
+    // Nine volumes blanked and never un-blanked is a shelf nobody can read.
+    const rescue = failsafe(arrive);
 
     return () => {
+      rescue();
       arrive.kill();
       gsap.set(books, { clearProps: 'opacity,transform' });
     };

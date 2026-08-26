@@ -21,7 +21,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { MouseEvent } from 'react';
 import { useGSAP } from '@gsap/react';
-import { D, gsap, staged } from '../motion';
+import { D, failsafe, gsap, staged } from '../motion';
 import sealUrl from '../assets/gate-seal.webp';
 import './Gate.css';
 
@@ -203,9 +203,14 @@ export function Gate() {
         ease: 'shut',
       }, '<0.55');
 
-      const rescue = gsap.delayedCall(D.ceremony + 1, leave);
+      // NOT a gsap.delayedCall, which was the first attempt and was wrong: a
+      // delayedCall is scheduled on the same ticker as the timeline, so the one
+      // mechanism meant to survive a tab that stops producing frames could not.
+      // `failsafe` uses setTimeout, which fires regardless, and completes the
+      // timeline — which runs `leave` through the ordinary onComplete path.
+      const rescue = failsafe(tl);
 
-      return () => { tl.kill(); rescue.kill(); };
+      return () => { rescue(); tl.kill(); };
     });
   }, { dependencies: [phase] });
 

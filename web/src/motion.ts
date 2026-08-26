@@ -401,4 +401,33 @@ export function suspendOffScreen(
   return () => observer.disconnect();
 }
 
+
+/**
+ * Guarantee an animation reaches its end, ticker or no ticker.
+ *
+ * EVERY ENTRANCE IN THIS ARCHIVE BLANKS ITS TARGET FIRST. That is what makes an
+ * arrival an arrival — but it means the element is invisible until something
+ * finishes, and GSAP finishes on requestAnimationFrame. A document the browser
+ * has decided not to render produces no frames, so the tween never advances and
+ * the blanking is permanent: nine volumes at opacity 0 on a shelf nobody can
+ * read. That is not hypothetical, it is what the shelf did the first time it
+ * was measured.
+ *
+ * `setTimeout` is not on the ticker and fires anyway — throttled in a hidden
+ * tab, but it fires. `progress(1)` then jumps to the end state and runs any
+ * onComplete with it, so the failsafe commits the CORRECT result rather than
+ * merely undoing the damage.
+ *
+ * Use it on anything whose start state is invisible. The cost of being wrong in
+ * one direction is an element that appears without its arrival; in the other it
+ * is an element that never appears at all.
+ */
+export function failsafe(animation: gsap.core.Animation, slack = 1): () => void {
+  const id = window.setTimeout(
+    () => { if (animation.progress() < 1) animation.progress(1); },
+    (animation.duration() + slack) * 1000,
+  );
+  return () => window.clearTimeout(id);
+}
+
 export { gsap };
