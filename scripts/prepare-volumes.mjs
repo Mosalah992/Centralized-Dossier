@@ -44,6 +44,15 @@ const STANDALONE = [
   // here. Everything downstream measures books by their alpha, and a cover with
   // none would be read as a full-canvas rectangle and cropped to the paper.
   { slug: 'informants', file: 'Top Secret Volume.png', keyWhite: true },
+  // THE SAME SOURCE ART AS THE VOLUME ABOVE, RE-GRADED — a placeholder, and
+  // knowingly so. The Embassy has eight painted covers and nine volumes, and
+  // shipping the ninth with no cover at all is worse than shipping it with a
+  // sibling's silhouette. The two are pulled as far apart as the grade can pull
+  // them (see STOCK): this one is oxblood, dark and hard-worked, where the
+  // sealed volume is black and barely touched. They still stand next to each
+  // other on the Chronicles shelf, and they still share a filigree. Replace it
+  // when there is art.
+  { slug: 'enforcement', file: 'Top Secret Volume.png', keyWhite: true },
 ];
 
 // Background threshold for keyWhite. The book is black leather and gold; its
@@ -235,6 +244,13 @@ const STOCK = {
   honor: { hue: 36, sat: 22, light: 0.74, wear: 0.12 },
   // Black leather. Barely worked, because it is sealed rather than consulted.
   informants: { hue: 20, sat: 22, light: 1.0, wear: 0.15 },
+  // The opposite of the volume it is cut from, on every axis the grade has.
+  // This is a working register — an agent opens it to enter an arrest and the
+  // next one opens it an hour later — so it is the hardest-worked book on the
+  // shelf, and the gilt has gone accordingly. Oxblood sits at the bottom of the
+  // tanned range the other eight occupy; it is not a colour code, it is the
+  // darkest end of the same hide.
+  enforcement: { hue: 9, sat: 34, light: 1.38, wear: 1.0, tint: 0.24 },
 };
 
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -297,13 +313,29 @@ function bind(data, width, height, cfg) {
       // Near-neutrals are the silver medallion, the shadows and the page
       // whites. Nothing there is dyed, and re-hueing it would only tint the
       // relief that makes the cover read as an object rather than a rectangle.
-      if (s >= 0.1) {
+      // Gilt is decided before anything else, because the re-dye below has to
+      // leave it alone and the test depends on the ORIGINAL hue.
+      const gilded = h >= 33 && h <= 68 && l > 0.42 && s > 0.22;
+
+      // Re-dye. Only a cover cut from another volume's art asks for this: the
+      // grade above can only push a hue that is already there, and the sealed
+      // volume's leather is so near neutral that the `s >= 0.1` guard skips
+      // almost all of it. Darkening it further just makes a second black book.
+      // So the field is dyed outright, at a saturation floor, and lifted until
+      // the dye is actually visible in it.
+      //
+      // This tints the medallion as well as the leather, and that is intended:
+      // a book bound in a different stock had its furniture struck in a
+      // different metal, and a silver eagle on an oxblood board would read as
+      // the same book photographed twice.
+      if (cfg.tint && !gilded) {
+        h = cfg.hue;
+        s = Math.max(s, cfg.tint * (0.35 + l));
+      } else if (s >= 0.1) {
         // Gilt: bright, and already amber. It stays gold — the fault was never
         // the gold but the dye beneath it — and dulls with how hard the book is
         // worked, since handling takes the leaf off first.
-        const isGilt = h >= 33 && h <= 68 && l > 0.42 && s > 0.22;
-
-        if (isGilt) {
+        if (gilded) {
           h = 46 + deltaHue(h, 46) * 0.55;
           s = clamp(s * (1 - 0.3 * cfg.wear), 0.1, 0.62);
         } else {
@@ -390,6 +422,9 @@ const LABEL = {
   // Between the two painted rules that already frame the title. They are the
   // volume's own cartouche and are left exactly where they are.
   informants: { x: 118, y: 115, w: 214, h: 104, tooled: false },
+  // Same art, so the same measured panel. If the source is ever replaced these
+  // two part company and this number must be re-read off the new cover.
+  enforcement: { x: 118, y: 115, w: 214, h: 104, tooled: false },
 };
 
 /** Rows sampled on each side of the panel to carry the leather across it. */

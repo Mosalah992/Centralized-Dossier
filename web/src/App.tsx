@@ -29,6 +29,7 @@ const HonorView = lazy(() => import('./views/Honors').then((m) => ({ default: m.
 const CalendarView = lazy(() => import('./views/Honors').then((m) => ({ default: m.CalendarView })));
 const HistoryView = lazy(() => import('./views/History').then((m) => ({ default: m.HistoryView })));
 const InformantsView = lazy(() => import('./views/Informants').then((m) => ({ default: m.InformantsView })));
+const EnforcementView = lazy(() => import('./views/Enforcement').then((m) => ({ default: m.EnforcementView })));
 
 /*
  * Fluent's provider, and it is lazy for the same reason the views are — only
@@ -54,6 +55,7 @@ const VIEWS: Record<VolumeSlug, React.ComponentType> = {
   calendar: CalendarView,
   history: HistoryView,
   informants: InformantsView,
+  enforcement: EnforcementView,
 };
 
 interface Track {

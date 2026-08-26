@@ -18,6 +18,7 @@ export type FormattedGrid = FormattedCell[][];
 
 export type VolumeSlug =
   | 'roster'
+  | 'enforcement'
   | 'statistics'
   | 'ledger'
   | 'stipends'
@@ -159,6 +160,13 @@ export interface Precedence {
   membership: Tally[];
   hierarchy: WingBranch[];
 }
+
+// The Ledger of Enforcement's own shapes are NOT here. A sealed volume's
+// payload is not shared between the two halves the way a register's is: the
+// Worker's copy lives beside its text in functions/lib/enforcement.ts and the
+// browser's beside its fetch in web/src/api.ts, exactly as the Chronicles' do.
+// Putting them in this file would only invite something in the web project to
+// import the shape and, one careless edit later, the text with it.
 
 /** One person on the tree. Deliberately four fields short of a Member. */
 export interface Precedent {

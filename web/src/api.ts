@@ -149,6 +149,29 @@ export interface Chronicle {
 export const useChronicle = (unlocked: boolean) =>
   useAsync<Chronicle>(unlocked ? '/api/chronicle' : null);
 
+export interface EnforcementEntry {
+  date: string;
+  agent: string;
+  act: string;
+  subject: string;
+  title: string;
+  method: string;
+  outcome: string;
+  kind: string;
+}
+
+export interface LedgerOfEnforcement {
+  fetchedAtUtc: string;
+  entries: EnforcementEntry[];
+}
+
+/**
+ * Ledger of Enforcement. Sealed in the same sense as the Chronicles — served
+ * rather than bundled — but behind ONE lock, not two: the archive writ is the
+ * whole of the check, so there is no `unlocked` argument to wait on.
+ */
+export const useEnforcement = () => useAsync<LedgerOfEnforcement>('/api/enforcement');
+
 /** Whether this browser already holds a writ for the volume itself. */
 export async function chronicleIsOpen(): Promise<boolean> {
   try {

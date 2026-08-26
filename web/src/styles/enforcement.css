@@ -1,0 +1,194 @@
+/* Ledger of Enforcement.
+ *
+ * A roll of records, not a table. Every other register here rules a grid,
+ * because every other register holds cells — a name, a rank, a sum. This one
+ * holds four sentences per act, and four sentences in a table cell is a table
+ * with one enormous column and the reader scrolling sideways to find it.
+ *
+ * So each act is set the way the report it came from was: a marginal rail
+ * carrying the outcome and the date, and the substance beside it. That is the
+ * shape of a docket, and it survives a phone, which a grid does not.
+ *
+ * The page frame, the registers strip and the sieve are all ledger.css's — this
+ * file only sets the records themselves. */
+
+.enforcement {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ruled between rather than boxed each. Nine bordered cards down a page reads
+   as nine separate documents; one rule between entries reads as one register
+   with entries in it, which is what this is. */
+.enforcement__record {
+  display: grid;
+  grid-template-columns: 10.5rem 1fr;
+  gap: 0 1.75rem;
+  padding: 1.5rem 0;
+  border-top: 1px solid color-mix(in srgb, var(--ink-soft) 22%, transparent);
+}
+
+.enforcement__record:first-child {
+  border-top: 0;
+}
+
+/* ── The rail ───────────────────────────────────────────────────────────── */
+
+.enforcement__rail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  /* Aligned to the act's cap-height rather than its box, so the rung sits on
+     the same line as the sentence it qualifies. */
+  padding-top: 0.15rem;
+}
+
+.enforcement__rung {
+  font-family: var(--display);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--rung);
+  /* An impressed line under the word, the way the covers are tooled — the rung
+     is a stamp on the record, not a badge. A filled pill here would be the one
+     piece of software chrome on the page. */
+  border-bottom: 1px solid var(--rung-rule);
+  padding-bottom: 0.3rem;
+}
+
+/* Three tiers, and only three. See the note on RUNGS in Enforcement.tsx: a
+   colour per outcome would turn the ledger into a chart legend.
+ *
+ * INK, NOT STONE. The page inside a volume is parchment — `.page` sets
+ * `color: var(--ink)` — while --stone and --gold-bright are the dark hall's
+ * palette, meant to be read off near-black. Set on parchment they are almost
+ * the paper: the first draft of this file used them and the whole record came
+ * out as pale grey on cream. Everything here is a darkening of the ink. */
+.enforcement__record[data-grave='death'] {
+  --rung: #6e1a1f;
+  --rung-rule: rgba(110, 26, 31, 0.42);
+}
+
+.enforcement__record[data-grave='penalty'] {
+  /* The volume's own binding, mixed into the ink — the same move
+     `.register__value` makes, so the rung is lettered in the colour the book
+     is bound in rather than in a signal colour. */
+  --rung: color-mix(in srgb, var(--cover) 46%, var(--ink));
+  --rung-rule: var(--rule);
+}
+
+.enforcement__record[data-grave='none'] {
+  --rung: var(--ink-soft);
+  --rung-rule: rgba(77, 66, 50, 0.3);
+}
+
+.enforcement__date {
+  font-family: var(--display);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+}
+
+/* ── The record ─────────────────────────────────────────────────────────── */
+
+.enforcement__act {
+  margin: 0 0 0.85rem;
+  font-family: var(--serif);
+  font-size: 1.12rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: color-mix(in srgb, var(--cover) 30%, var(--ink));
+}
+
+/* Label and value on one line each, the labels ruled to a common column so the
+   eye can run down "Outcome" without reading the three fields above it. */
+.enforcement__fields {
+  display: grid;
+  grid-template-columns: 5.5rem 1fr;
+  gap: 0.4rem 1.1rem;
+  margin: 0;
+}
+
+.enforcement__fields dt {
+  font-family: var(--display);
+  font-size: 0.66rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  padding-top: 0.22em;
+}
+
+.enforcement__fields dd {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 0.97rem;
+  line-height: 1.55;
+  color: var(--ink);
+}
+
+/* The accused's standing, set under their name rather than beside it — a rank
+   run on with a comma reads as part of the name, and several of these are
+   sentences. */
+.enforcement__title {
+  display: block;
+  font-size: 0.86rem;
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+/* How it ended carries the record's weight, so it takes the rail's colour.
+   On a release or a failed arrest that is the soft ink, which is correct:
+   nothing happened, and nothing should be lit to say so. */
+.enforcement__outcome {
+  color: var(--rung) !important;
+}
+
+.enforcement__record[data-grave='penalty'] .enforcement__outcome {
+  /* Except here — the binding colour is a label colour and muddy over two lines
+     of prose. The penalty rung takes the ordinary ink for its outcome and is
+     distinguished by its rail alone. */
+  color: var(--ink) !important;
+}
+
+.enforcement__empty {
+  font-family: var(--serif);
+  font-size: 1rem;
+  font-style: italic;
+  color: var(--ink-soft);
+  padding: 2.5rem 0;
+  text-align: center;
+}
+
+/* ── Narrow ─────────────────────────────────────────────────────────────── */
+
+/* The rail folds up onto one line above the record. It cannot stay a margin:
+   at this width 10.5rem of it leaves the outcome sentence four words wide. */
+@media (max-width: 46rem) {
+  .enforcement__record {
+    grid-template-columns: 1fr;
+    gap: 0.7rem;
+  }
+
+  .enforcement__rail {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 0.9rem;
+  }
+
+  .enforcement__rung {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .enforcement__fields {
+    grid-template-columns: 1fr;
+    gap: 0.1rem;
+  }
+
+  .enforcement__fields dt {
+    padding-top: 0.55rem;
+  }
+}

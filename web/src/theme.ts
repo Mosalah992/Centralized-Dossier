@@ -46,6 +46,10 @@ export const BINDINGS: Record<VolumeSlug, Binding> = {
   // than leaf. The foil follows the art: this book's rule and filigree are a
   // colder, older gold than the other seven.
   informants: { cover: '#171310', cover2: '#0a0806', foil: '#b08d4f', subtitle: 'Reports of the Field Agents' },
+  // Oxblood, and darker than the Financial Ledger's red because this cover is
+  // graded down rather than merely dyed. Same colder gold as the volume it is
+  // cut from, dulled another step by the wear.
+  enforcement: { cover: '#1c100c', cover2: '#0d0605', foil: '#a8834a', subtitle: 'Acts of the White-Gold Concordat' },
 };
 
 export const bindingVars = (slug: VolumeSlug) => {

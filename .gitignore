@@ -37,6 +37,12 @@ Assets/Animated_skyrim_style_candles.zip
 # deployed Worker holds the volume; a local copy is the only backup.
 # `chronicle.example.ts` is committed in its place so a clone still typechecks.
 functions/lib/chronicle.ts
+
+# The Ledger of Enforcement, for the same reason and then some: it names ~200
+# real people and what the Embassy did to each of them, distilled out of the
+# informant reports below into a form far easier to read than the source.
+# `enforcement.example.ts` is committed in its place.
+functions/lib/enforcement.ts
 docs/informant-reports.md
 docs/informant-events-ledger.md
 

@@ -87,6 +87,16 @@ export const KEPT: readonly KeptVolume[] = [
  */
 export const SEALED: readonly SealedVolume[] = [
   {
+    // Served rather than bundled, for the same reason the Chronicles are: this
+    // is a list of people the Embassy arrested and executed, and anything in
+    // the browser bundle is readable without ever answering the gate. It is
+    // NOT behind a second word — every admitted member may read it.
+    slug: 'enforcement',
+    title: 'Ledger of Enforcement',
+    category: 'Chronicles',
+    route: '/api/enforcement',
+  },
+  {
     slug: 'informants',
     title: 'Thalmor Chronicles',
     category: 'Chronicles',
