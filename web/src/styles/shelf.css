@@ -437,15 +437,37 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
 }
 
-/* Chronicles holds one volume against the registers' two, so it takes a shelf
-   of its own across the full cabinet rather than sitting lopsided at the end of
-   a three-column row. */
+/* Chronicles takes a shelf of its own across the full cabinet rather than
+   sitting lopsided at the end of a three-column row. It began as one volume,
+   and is three. */
 .section--chronicles {
   grid-column: 1 / -1;
 }
 
+/* AND IT TURNS ITS SHELF ON ITS SIDE. Every other section is one column of the
+   cabinet, so `.shelf` stacks its volumes downward — correct there, and wrong
+   the moment a section spans the whole cabinet: the three Chronicles ran in a
+   single file down the middle with the width of two empty columns either side
+   of them. Flowing by column instead stands them in a row, which is what a
+   shelf is.
+
+   `align-items: end` is what puts them on the shelf. The books differ in height
+   by a percent or two — six volumes bound by hand are not the same height, see
+   scripts/prepare-volumes.mjs — so aligning them any other way floats the
+   shorter ones above the board.
+
+   AND THE COLUMNS ARE THE CABINET'S OWN. `1fr` rather than `auto`, and the
+   cabinet's gap rather than the shelf's, so this row divides the cabinet on
+   exactly the lines the three sections above it do and the volumes stand in
+   the same three places. Centring content-width columns instead puts the
+   middle book right and both outer ones a few dozen pixels in from the
+   registers above them, which reads as a shelf that missed. */
 .section--chronicles .shelf {
-  justify-content: center;
+  grid-template-rows: auto;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  column-gap: clamp(1.05rem, 1.8vw, 1.6rem);
+  align-items: end;
 }
 
 @media (max-width: 1050px) {
@@ -493,5 +515,11 @@
   /* Height follows the cover's aspect ratio now, so only the width is set. */
   .book {
     width: min(16.25rem, 82vw);
+  }
+
+  /* Back to a single file. The cabinet is one column wide here and a book is
+     82vw, so a row of three would be a row of three slivers. */
+  .section--chronicles .shelf {
+    grid-auto-flow: row;
   }
 }
