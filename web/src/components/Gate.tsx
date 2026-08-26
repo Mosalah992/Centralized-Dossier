@@ -18,9 +18,10 @@
 // offered, because a word held by a hundred people cannot be taken back from
 // any one of them.
 
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { MouseEvent } from 'react';
+import { useGSAP } from '@gsap/react';
+import { D, gsap, staged } from '../motion';
 import sealUrl from '../assets/gate-seal.webp';
 import './Gate.css';
 
@@ -33,7 +34,10 @@ export function Gate() {
   const [phase, setPhase] = useState<Phase>('sealed');
   const [error, setError] = useState<string | null>(null);
   const [discordOffered, setDiscordOffered] = useState<boolean | null>(null);
-  const reduced = useReducedMotion();
+
+  const parchment = useRef<HTMLDivElement>(null);
+  /** Set the instant the reader is sent onward, so it can only happen once. */
+  const left = useRef(false);
 
   // Ask whether the door is configured. Null until it answers, so the seal does
   // not spend a frame looking pressable when nothing is behind it.
@@ -96,35 +100,96 @@ export function Gate() {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
     event.preventDefault();
     if (phase !== 'sealed') return;
-
-    if (reduced) {
-      window.location.assign(LOGIN);
-      return;
-    }
     setPhase('breaking');
   }
 
-  const half = (side: 'left' | 'right') => ({
-    initial: { x: 0, y: 0, rotate: 0, opacity: 1 },
-    breaking: {
-      x: side === 'left' ? -46 : 46,
-      y: 120,
-      rotate: side === 'left' ? -34 : 29,
-      opacity: 0,
-      transition: { duration: 0.85, ease: [0.32, 0, 0.24, 1] as const },
-    },
-  });
+  /**
+   * Send the reader on, once, whatever route got us here.
+   *
+   * IDEMPOTENT ON PURPOSE. Three things can call this — the ceremony finishing,
+   * the failsafe firing, or a reader who asked for stillness pressing the seal —
+   * and the first to arrive wins. A ref rather than state because it has to be
+   * true the instant it is set, not on the next render.
+   */
+  function leave() {
+    if (left.current) return;
+    left.current = true;
+    // A full page navigation, and it has to be: OAuth is a chain of top-level
+    // redirects out to Discord and back, which no fetch can follow.
+    window.location.assign(LOGIN);
+  }
+
+  /*
+   * The ceremony: the wax gives, then it breaks, then the door shuts behind it.
+   *
+   * ONE TIMELINE, AND THE NAVIGATION HANGS OFF ITS END — which is the fix for a
+   * real lockout, not a reshuffle. Before, two independent animations ran and
+   * the navigation was bolted to `onAnimationComplete` on one of them. That
+   * callback fires on EVERY completion of that element, so it needed an
+   * early-return guard; and it fires only while frames are being produced.
+   * Press the seal, switch tabs, rAF stops: the callback never came, and the
+   * render had already swapped the live <a> for an inert <div>. The reader was
+   * left at a gate with nothing to press until they reloaded.
+   *
+   * Three things make that impossible now. `leave()` is idempotent, so it does
+   * not matter how many times or from where it is called. A `gsap.delayedCall`
+   * runs it whether or not the timeline reaches its end. And the seal stays a
+   * live link throughout, so the reader always has a door even if every piece
+   * of this fails at once.
+   *
+   * The numbers are the ones that were already here — measured against the art
+   * and not up for redesign: 46px apart, 120 down, -34 and 29 of rotation over
+   * 0.85s, the parchment closing over 0.7s at +0.55.
+   */
+  useGSAP(() => {
+    if (phase !== 'breaking') return;
+
+    return staged(({ moving }) => {
+      // A reader who asked for stillness is not made to watch anything. They
+      // pressed a door; the door opens.
+      if (!moving) { leave(); return; }
+
+      const halves = gsap.utils.toArray<HTMLElement>('.gate__seal-half');
+      const tl = gsap.timeline({ onComplete: leave });
+
+      // The wax gives before it goes. A degree and a half of counter-rotation
+      // is the pressure of a seal being broken rather than merely removed; it
+      // costs 80ms and it is the difference between a stamp coming apart and
+      // two halves sliding off a page.
+      tl.to(halves, {
+        rotation: (i: number) => (i === 0 ? 1.5 : -1.5),
+        duration: 0.08,
+        ease: 'shut',
+      });
+
+      tl.to(halves, {
+        x: (i: number) => (i === 0 ? -46 : 46),
+        y: 120,
+        rotation: (i: number) => (i === 0 ? -34 : 29),
+        opacity: 0,
+        duration: 0.85,
+        ease: 'break',
+      });
+
+      // The door shuts over the broken wax rather than after it — the overlap
+      // is what makes it one gesture instead of two.
+      tl.to(parchment.current, {
+        scaleY: 0.04,
+        opacity: 0,
+        duration: 0.7,
+        ease: 'shut',
+      }, '<0.55');
+
+      const rescue = gsap.delayedCall(D.ceremony + 1, leave);
+
+      return () => { tl.kill(); rescue.kill(); };
+    });
+  }, { dependencies: [phase] });
 
   const seal = (
     <div className="gate__seal-art" aria-hidden="true">
       {(['left', 'right'] as const).map((side) => (
-        <motion.div
-          key={side}
-          className={`gate__seal-half gate__seal-half--${side}`}
-          variants={half(side)}
-          initial="initial"
-          animate={phase === 'breaking' ? 'breaking' : 'initial'}
-        >
+        <div key={side} className={`gate__seal-half gate__seal-half--${side}`}>
           {/* Above the fold and in the first render, so a high fetch priority
               does the work of a preload without costing members who already
               hold a writ the download of a gate they skip. */}
@@ -133,27 +198,14 @@ export function Gate() {
               both. Kept as the types want it; the warning is cosmetic and goes
               away on React 19. */}
           <img src={sealUrl} alt="" draggable={false} fetchPriority="high" />
-        </motion.div>
+        </div>
       ))}
     </div>
   );
 
   return (
     <div className="gate">
-      <motion.div
-        className="gate__parchment"
-        initial={false}
-        animate={phase === 'breaking' ? { scaleY: 0.04, opacity: 0 } : { scaleY: 1, opacity: 1 }}
-        transition={{ duration: 0.7, delay: phase === 'breaking' ? 0.55 : 0, ease: [0.7, 0, 0.3, 1] }}
-        onAnimationComplete={() => {
-          if (phase !== 'breaking') return;
-          setPhase('open');
-          // The gate only exists for a reader with no writ, so there is nothing
-          // to open in place — the wax is broken and they go to be identified.
-          // They return to a mounted archive, not to this component.
-          window.location.assign(LOGIN);
-        }}
-      >
+      <div className="gate__parchment" ref={parchment}>
         <p className="gate__eyebrow">Third Aldmeri Dominion</p>
         <h1 className="gate__title">Embassy Archives</h1>
         <p className="gate__note">
@@ -162,27 +214,22 @@ export function Gate() {
             : 'These registers are sealed. Enter by Decree.'}
         </p>
 
+        {/* The refusal is set out plainly rather than animated in. It is the
+            one thing on this screen a reader needs to read immediately, and
+            role="status" has already announced it before any tween could
+            finish. */}
         <div className="gate__error" role="status" aria-live="polite">
-          <AnimatePresence>
-            {error && (
-              <motion.p
-                key={error}
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-              >
-                {error}
-              </motion.p>
-            )}
-          </AnimatePresence>
+          {error && <p>{error}</p>}
         </div>
 
-        {/* A full page navigation, and it has to be: OAuth is a chain of
-            top-level redirects out to Discord and back, which no fetch can
-            follow. Once the seal is breaking the link is inert — the reader is
-            already through, and a second press would start a login they do not
-            need. */}
-        {discordOffered && phase === 'sealed' ? (
+        {/* THE LINK STAYS LIVE WHILE THE WAX BREAKS. It used to go inert the
+            moment `phase` left 'sealed', on the reasoning that the reader was
+            already through — but that reasoning assumed the ceremony always
+            finishes, and when it did not, the reader was left looking at a gate
+            with nothing to press. `leave()` is idempotent, so a second press
+            during the ceremony costs nothing, and it is a great deal better
+            than no press at all. */}
+        {discordOffered && phase !== 'open' ? (
           <a className="gate__seal gate__seal--live" href={LOGIN} onClick={press}>
             {seal}
             <span className="gate__seal-label">Enter by Decree</span>
@@ -190,7 +237,7 @@ export function Gate() {
         ) : (
           <div className="gate__seal">{seal}</div>
         )}
-      </motion.div>
+      </div>
     </div>
   );
 }

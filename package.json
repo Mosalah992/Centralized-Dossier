@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Thalmor Embassy Archives — public web archive over the Corps roster sheet",
+  "description": "Thalmor Embassy Archives \u2014 public web archive over the Corps roster sheet",
   "engines": {
     "node": ">=18.18.0"
   },
@@ -12,6 +12,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",
+    "verify": "npm run build && npm test",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.functions.json",
     "dump": "node scripts/dump-tabs.mjs",
@@ -24,7 +25,6 @@
     "@fontsource/eb-garamond": "^5.3.0",
     "@gsap/react": "^2.1.2",
     "gsap": "^3.15.0",
-    "motion": "^13.1.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

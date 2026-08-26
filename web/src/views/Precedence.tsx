@@ -21,23 +21,29 @@
 // a single name appears — so the reader opens a house, then a rank, and the
 // thread grows to meet what they asked for.
 
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useGSAP } from '@gsap/react';
 
 import { useVolume } from '../api';
+import { D, STAGGER, gsap, staged } from '../motion';
 import { Consulting, Notice } from '../components/Notice';
 import { Page, Registers, figure } from '../components/Page';
 import { RADIUS, layout } from './precedence-layout';
-import type { TapestryNode } from './precedence-layout';
+import type { NodeKind, TapestryNode } from './precedence-layout';
+
+/**
+ * How far from the trunk a node hangs, which is the order it is embroidered in.
+ *
+ * Threads carry their own `depth`; nodes carry `kind`, and the two say the same
+ * thing — a rank is always one further out than the wing it hangs from. Reading
+ * it off the kind keeps precedence-layout.ts untouched.
+ */
+const DEPTH: Record<NodeKind, number> = { root: 0, wing: 1, rank: 2, person: 3 };
 import '../styles/precedence.css';
 
-function Medallion({
-  node, onToggle, reduced, index,
-}: {
+function Medallion({ node, onToggle }: {
   node: TapestryNode;
   onToggle: (id: string) => void;
-  reduced: boolean;
-  index: number;
 }) {
   const r = RADIUS[node.kind];
   const label = node.kind === 'person' ? node.label : node.label.toUpperCase();
@@ -54,24 +60,28 @@ function Medallion({
     </>
   );
 
+  /*
+   * `data-depth` is what the entrance staggers on.
+   *
+   * The old order was the node's index in a flat array, capped with a Math.min
+   * — which staggered the cloth in whatever order the layout happened to emit.
+   * Depth is the order the thing being drawn actually has: the trunk, then the
+   * houses hanging off it, then the ranks, then the names. A tapestry is
+   * embroidered outward from where it is anchored, and now it looks it.
+   */
   const common = {
     className: `tap__node tap__node--${node.kind}${node.expanded ? ' is-open' : ''}`,
-    initial: reduced ? false : { opacity: 0, scale: 0.6 },
-    animate: { opacity: 1, scale: 1 },
-    exit: reduced ? { opacity: 0 } : { opacity: 0, scale: 0.6 },
-    transition: {
-      duration: 0.34,
-      delay: reduced ? 0 : Math.min(index * 0.018, 0.5),
-      ease: [0.22, 0.61, 0.36, 1] as const,
-    },
+    'data-tap-id': node.id,
+    'data-depth': DEPTH[node.kind],
+    transform: `translate(${node.x}, ${node.y})`,
   };
 
   // A branch that opens is a control; a person is not. Rendering the difference
   // rather than styling it is what makes the keyboard work for free.
   return node.expandable ? (
-    <motion.g
+    <g
       {...common}
-      style={{ x: node.x, y: node.y, cursor: 'pointer' }}
+      style={{ cursor: 'pointer' }}
       role="button"
       tabIndex={0}
       aria-expanded={node.expanded}
@@ -82,21 +92,24 @@ function Medallion({
       }}
     >
       {body}
-    </motion.g>
+    </g>
   ) : (
-    <motion.g {...common} style={{ x: node.x, y: node.y }}>
-      {body}
-    </motion.g>
+    <g {...common}>{body}</g>
   );
 }
 
 export function PrecedenceView() {
   const volume = useVolume('statistics');
-  const reduced = useReducedMotion() ?? false;
+  /** Read once for the scroll behaviour; the cloth's own motion is staged. */
+  const reduced = typeof window !== 'undefined'
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const [open, setOpen] = useState<ReadonlySet<string>>(() => new Set());
   /** The branch last pressed, so the cloth can be drawn round to show it. */
   const [aim, setAim] = useState<string | null>(null);
   const frame = useRef<HTMLDivElement>(null);
+  const sheet = useRef<SVGSVGElement>(null);
+  /** Every id already on the cloth, so only additions are embroidered. */
+  const woven = useRef<Set<string>>(new Set());
 
   const data = volume.state === 'ready' ? volume.value.data : null;
   const cloth = useMemo(
@@ -147,6 +160,93 @@ export function PrecedenceView() {
     if (node) centreOn(node.x, cloth.width, aim !== null);
   }, [aim, cloth, centreOn]);
 
+  /*
+   * The cloth embroiders itself outward from the trunk.
+   *
+   * Only what is NEW since the last render is animated, which is what makes
+   * opening one house draw that house rather than restaging the whole tapestry.
+   * The set of ids already seen is the memory; anything not in it is arriving.
+   *
+   * Threads draw with stroke-dashoffset — the same technique framer's
+   * `pathLength` used underneath, and the reason no DrawSVGPlugin is needed
+   * here. `getTotalLength()` is read once per new thread and never again.
+   *
+   * NOTHING IS ANIMATED OUT. Closing a house removes its nodes on the spot,
+   * because an exit animation would mean holding React's state until a tween
+   * finished, and a tween that never finishes — a backgrounded tab, a throttled
+   * rAF — would leave a branch that will not shut. That is the same class of
+   * bug as the gate's lockout, traded for a collapse that is merely instant.
+   */
+  useGSAP(() => {
+    const svg = sheet.current;
+    if (!svg || !cloth) return;
+
+    return staged(({ moving }) => {
+      const arriving = <T extends SVGElement>(nodes: T[]) =>
+        nodes.filter((el) => !woven.current.has(el.dataset.tapId ?? ''));
+
+      const nodes = arriving(gsap.utils.toArray<SVGGElement>('.tap__node', svg));
+      const threads = arriving(gsap.utils.toArray<SVGPathElement>('.tap__thread', svg));
+
+      // Remember everything on the cloth, arriving or not, so the next open
+      // only animates its own additions.
+      for (const el of svg.querySelectorAll<SVGElement>('[data-tap-id]')) {
+        woven.current.add(el.dataset.tapId ?? '');
+      }
+
+      if (!moving) {
+        gsap.set([...nodes, ...threads], { clearProps: 'all' });
+        return;
+      }
+
+      // Nearest the trunk first, so the cloth grows outward rather than in
+      // whatever order the layout happened to emit its arrays.
+      const outward = (a: SVGElement, b: SVGElement) =>
+        Number(a.dataset.depth ?? 0) - Number(b.dataset.depth ?? 0);
+      nodes.sort(outward);
+      threads.sort(outward);
+
+      const tl = gsap.timeline();
+
+      if (threads.length) {
+        for (const path of threads) {
+          const length = path.getTotalLength();
+          gsap.set(path, { strokeDasharray: length, strokeDashoffset: length });
+        }
+        tl.to(threads, {
+          strokeDashoffset: 0,
+          opacity: 1,
+          duration: D.page,
+          ease: 'draw',
+          stagger: { ...STAGGER.weave, from: 'start' },
+          // Hand the stroke back to the stylesheet, or a later reflow would
+          // find a dash pattern measured against the old geometry.
+          clearProps: 'strokeDasharray,strokeDashoffset',
+        } as gsap.TweenVars, 0);
+      }
+
+      if (nodes.length) {
+        // A medallion lands just after the thread that reaches it, so the cloth
+        // reads as thread-then-knot rather than as two separate events.
+        tl.fromTo(nodes,
+          { opacity: 0, scale: 0.6, transformOrigin: '50% 50%' },
+          {
+            opacity: 1,
+            scale: 1,
+            duration: D.hand,
+            ease: 'draw',
+            stagger: STAGGER.weave,
+            clearProps: 'opacity,scale,transformOrigin',
+          }, 0.12);
+      }
+
+      return () => {
+        tl.kill();
+        gsap.set([...nodes, ...threads], { clearProps: 'all' });
+      };
+    });
+  }, { dependencies: [cloth], scope: sheet });
+
   // EVERY HOOK IS ABOVE THIS LINE. Nothing below it may call one.
   if (volume.state === 'loading') return <Consulting />;
   if (volume.state === 'error') {
@@ -171,6 +271,7 @@ export function PrecedenceView() {
           sideways, which is the same rule the wide tables follow. */}
       <div className="tap" ref={frame}>
         <svg
+          ref={sheet}
           className="tap__cloth"
           viewBox={`0 0 ${cloth.width} ${cloth.height}`}
           width={cloth.width}
@@ -191,34 +292,20 @@ export function PrecedenceView() {
           </defs>
 
           <g filter="url(#tap-glow)">
-            <AnimatePresence initial={false}>
-              {cloth.threads.map((t) => (
-                <motion.path
-                  key={t.id}
-                  className={`tap__thread tap__thread--${t.depth}`}
-                  d={t.d}
-                  // The thread embroiders itself: the stroke is drawn from the
-                  // parent outward rather than fading in whole.
-                  initial={reduced ? false : { pathLength: 0, opacity: 0 }}
-                  animate={{ pathLength: 1, opacity: 1 }}
-                  exit={reduced ? { opacity: 0 } : { pathLength: 0, opacity: 0 }}
-                  transition={{ duration: reduced ? 0 : 0.5, ease: [0.4, 0, 0.2, 1] }}
-                />
-              ))}
-            </AnimatePresence>
-          </g>
-
-          <AnimatePresence initial={false}>
-            {cloth.nodes.map((node, i) => (
-              <Medallion
-                key={node.id}
-                node={node}
-                index={i}
-                reduced={reduced}
-                onToggle={toggle}
+            {cloth.threads.map((t) => (
+              <path
+                key={t.id}
+                className={`tap__thread tap__thread--${t.depth}`}
+                data-tap-id={t.id}
+                data-depth={t.depth}
+                d={t.d}
               />
             ))}
-          </AnimatePresence>
+          </g>
+
+          {cloth.nodes.map((node) => (
+            <Medallion key={node.id} node={node} onToggle={toggle} />
+          ))}
         </svg>
       </div>
     </Page>

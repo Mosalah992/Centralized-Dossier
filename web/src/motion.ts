@@ -394,5 +394,37 @@ export function revealOnEnter(
   };
 }
 
-export { gsap };
 
+/**
+ * Keep an ambient loop from running while nobody can see it.
+ *
+ * CSS animates a decorative loop for as long as the tab is visible, whether the
+ * element is on screen or three thousand pixels above it, and there is no CSS
+ * way to say otherwise — `animation-play-state` cannot be driven from
+ * intersection. This is the one thing moving the ambient loops to GSAP genuinely
+ * buys, and it is worth being honest about the size of it: for a handful of
+ * tweens the CPU difference is small, and `content-visibility: auto` would get
+ * most of it for nothing. The reason the loops moved is that reduced motion is
+ * now decided in one place for every moving thing in the archive.
+ *
+ * ScrollTrigger would also do this, and was tried. It answers a different
+ * question — how far through a scroll am I — by caching measurements, and a
+ * lazy view mounts long after `load` so nothing re-measures it. What that
+ * produced was a register whose 128 triggers all sat live and unreachable. The
+ * browser answers "is this on screen" from layout it already has, after every
+ * reflow, for free.
+ */
+export function suspendOffScreen(
+  element: Element,
+  animation: gsap.core.Animation,
+): () => void {
+  const observer = new IntersectionObserver(([entry]) => {
+    if (!entry) return;
+    if (entry.isIntersecting) animation.resume();
+    else animation.pause();
+  });
+  observer.observe(element);
+  return () => observer.disconnect();
+}
+
+export { gsap };
