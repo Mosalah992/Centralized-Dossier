@@ -207,24 +207,33 @@ git diff --cached | grep -Ei "BEGIN PRIVATE KEY|GATE_SECRET=|DISCORD_TOKEN"
 
 ### Held back from git
 
-The GitHub repository is **public**. Three files are therefore gitignored even
-though they are not secrets in the credential sense — they are the substance of a
-volume sealed under its own passphrase, and committing them would publish to anyone
-browsing GitHub exactly what the second gate exists to withhold.
+The GitHub repository is **public**. Four files are therefore gitignored even
+though they are not secrets in the credential sense — they are the substance of the
+volumes the gate exists to hold back, and committing them would publish to anyone
+browsing GitHub exactly what it withholds.
 
 | File | What it is |
 |---|---|
 | `functions/lib/chronicle.ts` | The Thalmor Chronicles: 85 entries, the powers, the unresolved |
+| `functions/lib/enforcement.ts` | The Ledger of Enforcement: 116 acts, ~200 people named |
 | `docs/informant-reports.md` | 650 redacted reports, in filing order |
 | `docs/informant-events-ledger.md` | The reading pass over them |
 
 **These are not in git history and cannot be recovered from it.** The deployed
-Worker holds the chronicle; a local copy is the only other one. Back them up
-somewhere outside the repo — a clone plus a `git log -S` will not find them.
+Worker holds the chronicle and the ledger; a local copy is the only other one. Back
+them up somewhere outside the repo — a clone plus a `git log -S` will not find them.
 
 The two documents *are* reproducible: given a fresh export to `tmp/`,
 `scripts/build-informant-history.mjs` regenerates both byte for byte. The chronicle
 itself is not — it was written, not derived.
+
+The ledger sits between the two. It was DERIVED — every act read out of the reports
+above — but the reading was a judgement call per report, not a parse, so re-deriving
+it means doing that reading again rather than running a script. Its working copy is
+`tmp/enforce/records.jsonl` and `tmp/enforce/emit.py` turns that into the module;
+`tmp/` is gitignored too, so **that pair is the thing actually worth backing up** —
+losing it means the volume can only be rebuilt from the deployed Worker's copy or by
+re-reading 195 reports.
 
 `functions/lib/chronicle.example.ts` is committed in the real module's place, with
 the same exports and placeholder prose, because `api/chronicle/index.ts` imports
