@@ -26,7 +26,20 @@
   --display: 'Cinzel', 'Trajan Pro', var(--serif);
 
   --shell: min(1180px, 92vw);
-  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  /* The four curves the archive moves on. Everything here is heavy and hinged —
+     wax, leather boards, vellum — and heavy hinged things never overshoot, so
+     there is no curve here that returns above 1. See web/src/motion.ts, which
+     holds the same four numbers for GSAP and is checked against this block by
+     test/motion-language.test.ts.
+
+     `--ease` keeps its bare name rather than becoming `--ease-draw`: nine rules
+     across five stylesheets reference it, and renaming them would be churn for
+     no reader's benefit. */
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);        /* draw  — set down */
+  --ease-swing: cubic-bezier(0.35, 0.1, 0.28, 1);   /* swing — a hinge */
+  --ease-break: cubic-bezier(0.32, 0, 0.24, 1);     /* break — snap, then fall */
+  --ease-shut: cubic-bezier(0.7, 0, 0.3, 1);        /* shut  — a lid closing */
 }
 
 *,
@@ -172,6 +185,20 @@ a {
 
 /* ── Reduced motion ──────────────────────────────────────────────────────── */
 
+/* The global switch, and it STAYS even though GSAP now owns most of the motion
+   in the archive. It is not redundant with web/src/motion.ts's matchMedia:
+
+   - It covers CSS this app will never own. Fluent injects its own transitions
+     through Griffel at runtime, and no GSAP context can see them.
+   - It applies at first paint, before a single script has parsed. A reader who
+     asked for stillness must not be shown one frame of ceremony while index.js
+     is still compiling.
+   - `scroll-behavior` is not an animation at all and nothing else covers it.
+
+   It also does not fight GSAP, which surprises people: GSAP writes inline
+   transform and opacity, creating neither a CSS animation nor a CSS transition,
+   so these !important durations are invisible to it. The two mechanisms are
+   complementary by construction rather than by luck. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

@@ -11,11 +11,12 @@
 // reason set out in functions/lib/enforcement.ts: a list of people the Embassy
 // put to death has no business sitting in a static asset that needs no writ.
 
-import { useMemo, useState } from 'react';
-import { motion, useReducedMotion } from 'motion/react';
+import { useMemo, useRef, useState } from 'react';
+import { useGSAP } from '@gsap/react';
 
 import { useEnforcement } from '../api';
 import type { EnforcementEntry } from '../api';
+import { D, STAGGER, gsap, revealOnEnter, staged } from '../motion';
 import { Consulting, Notice } from '../components/Notice';
 import { Page, Registers } from '../components/Page';
 import { Sieve } from '../fluent/Sieve';
@@ -51,24 +52,9 @@ const RUNG_ORDER = Object.keys(RUNGS);
 const rungLabel = (kind: string) => RUNGS[kind]?.label ?? kind;
 const rungGrave = (kind: string) => RUNGS[kind]?.grave ?? 'penalty';
 
-function Record(
-  { entry, index, still }: { entry: EnforcementEntry; index: number; still: boolean },
-) {
+function Record({ entry }: { entry: EnforcementEntry }) {
   return (
-    <motion.li
-      className="enforcement__record"
-      data-grave={rungGrave(entry.kind)}
-      initial={still ? false : { opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{
-        duration: 0.4,
-        // Only the first screenful is staggered. Past that the delay would be
-        // measured in seconds and the reader would be watching a list load
-        // rather than reading a register.
-        delay: still ? 0 : Math.min(index, 8) * 0.05,
-        ease: [0.22, 0.61, 0.36, 1],
-      }}
-    >
+    <li className="enforcement__record" data-grave={rungGrave(entry.kind)}>
       <div className="enforcement__rail">
         <span className="enforcement__rung">{rungLabel(entry.kind)}</span>
         <span className="enforcement__date">{entry.date}</span>
@@ -94,13 +80,13 @@ function Record(
           <dd className="enforcement__outcome">{entry.outcome}</dd>
         </dl>
       </div>
-    </motion.li>
+    </li>
   );
 }
 
 export function EnforcementView() {
   const ledger = useEnforcement();
-  const still = useReducedMotion() ?? false;
+  const roll = useRef<HTMLOListElement>(null);
 
   const [query, setQuery] = useState('');
   const [rung, setRung] = useState('');
@@ -148,7 +134,64 @@ export function EnforcementView() {
     });
   }, [entries, query, rung, agent]);
 
-  // EVERY HOOK IS ABOVE THIS LINE. The three returns below are the reason:
+  /*
+   * Records arrive as the reader reaches them.
+   *
+   * The old entrance staggered on mount and capped the delay at the eighth
+   * record, because a fixed stagger over 128 of them would have taken six
+   * seconds and the reader only ever sees the first screenful anyway. That cap
+   * was an admission that a mount-time stagger is the wrong instrument: it
+   * animated records nobody was looking at, and then stopped animating the ones
+   * they actually scrolled to.
+   *
+   * The dependency is `shown`, so narrowing the sieve runs it again — a reader
+   * who filters to one agent should watch that agent's acts arrive rather than
+   * find them already on the page.
+   */
+  useGSAP(() => {
+    const list = roll.current;
+    if (!list) return;
+
+    // `return staged(...)` hands the revert to useGSAP, so unmounting the view
+    // or changing the filter tears down the observer AND every inline style it
+    // set. A matchMedia whose contexts nobody owns is what left the register
+    // blank the first time this was written.
+    return staged(({ moving }) => {
+      const records = gsap.utils.toArray<HTMLElement>('.enforcement__record', list);
+      if (records.length === 0) return;
+
+      if (!moving) {
+        // Not "animate instantly" — never touched at all, so the records sit
+        // where the stylesheet puts them with no inline transform to clear.
+        gsap.set(records, { clearProps: 'opacity,transform' });
+        return;
+      }
+
+      // ONLY WHAT THE READER HAS YET TO REACH IS EVER BLANKED.
+      //
+      // Whatever is on screen when the volume opens is left exactly where the
+      // stylesheet puts it. That is not only tidier, it is the safe failure:
+      // the worst case here is a record that appears without animating, never
+      // one that never appears. An earlier draft blanked all 128 and revealed
+      // them from scroll position, and a blank register is what it produced.
+      const fold = window.innerHeight;
+      const waiting = records.filter((el) => el.getBoundingClientRect().top >= fold);
+
+      return revealOnEnter(waiting, (batch) =>
+        gsap.to(batch, {
+          opacity: 1,
+          y: 0,
+          duration: D.page,
+          ease: 'draw',
+          stagger: STAGGER.roll,
+          // Hand the record back to its stylesheet once it has arrived.
+          clearProps: 'opacity,transform',
+          overwrite: true,
+        }));
+    });
+  }, { dependencies: [shown], scope: roll, revertOnUpdate: true });
+
+  // EVERY HOOK IS ABOVE THIS LINE. The two returns below are the reason:
   // a hook placed after them runs on some renders and not others, which is
   // React error #310, and it is caught by nothing here — no linter and no
   // render test. It shipped that way once, on the volume next door.
@@ -205,15 +248,13 @@ export function EnforcementView() {
           No act in this ledger answers to that.
         </p>
       ) : (
-        <ol className="enforcement">
+        <ol className="enforcement" ref={roll}>
           {shown.map((entry, i) => (
             <Record
               // Date and subject repeat across the ledger — one raid took four
               // people on one day — so the key carries the position too.
               key={`${entry.date}-${entry.subject}-${i}`}
               entry={entry}
-              index={i}
-              still={still}
             />
           ))}
         </ol>
