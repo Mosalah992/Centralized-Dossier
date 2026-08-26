@@ -46,8 +46,11 @@
     0 26px 50px rgba(0, 0, 0, 0.55),
     inset 0 0 0 1px rgba(255, 255, 255, 0.18),
     inset 0 0 48px rgba(90, 70, 30, 0.16);
+  /* The hinge the board swings on. The swing itself is a timeline in
+     Page.tsx — opening the cover is only the first beat of three, and a single
+     keyframe cannot express a sequence. */
   transform-origin: left center;
-  animation: open-cover 0.6s var(--ease) both;
+  perspective: 1800px;
   position: relative;
 }
 
@@ -74,11 +77,6 @@
   filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.3));
 }
 
-@keyframes open-cover {
-  from { opacity: 0; transform: perspective(1800px) rotateY(-14deg); }
-  to { opacity: 1; transform: perspective(1800px) rotateY(0deg); }
-}
-
 .page__head {
   text-align: center;
   padding-bottom: 1.8rem;
@@ -86,8 +84,11 @@
   position: relative;
 }
 
-.page__head::after {
-  content: '';
+/* A real element rather than a ::after because it is drawn rather than merely
+   present — see the opening timeline in Page.tsx — and GSAP cannot address a
+   pseudo-element. `scaleX` is set from the centre so the rule is ruled outward
+   from the middle in both directions, the way a straightedge is drawn. */
+.page__foil {
   position: absolute;
   left: 50%;
   bottom: -1px;
@@ -95,6 +96,8 @@
   height: 3px;
   background: linear-gradient(90deg, transparent, var(--cover), var(--foil), var(--cover), transparent);
   transform: translateX(-50%);
+  transform-origin: center;
+  pointer-events: none;
 }
 
 .page__classification {
@@ -889,11 +892,7 @@ button.day::before {
   stroke-width: 1.4;
   stroke-linecap: round;
   stroke-dasharray: 2 4;
-  animation: sandfall 0.7s linear infinite;
-}
-
-@keyframes sandfall {
-  to { stroke-dashoffset: -6; }
+  /* The grains are driven from Honors.tsx, with the rest of the glass. */
 }
 
 .reckoning__reading > * { margin: 0; }
@@ -966,11 +965,9 @@ button.day::before {
   .reckoning__hour time { font-size: 1.25rem; }
 }
 
-/* The sand is the one thing here that moves. A reader who has asked for
-   stillness still gets the level, which is what actually carries the hour. */
-@media (prefers-reduced-motion: reduce) {
-  .sandglass__fall { animation: none; }
-}
+/* The sand is the one thing on this plate that moves, and a reader who asked
+   for stillness still gets the level — which is what actually carries the hour.
+   That decision lives in Honors.tsx now, with the rest of the glass. */
 
 .legend {
   display: flex;

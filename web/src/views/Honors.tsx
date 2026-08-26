@@ -1,12 +1,15 @@
 // Hall of Honor and the Tamrielic Calendar.
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useGSAP } from '@gsap/react';
+
+import { gsap, staged } from '../motion';
 import { useVolume } from '../api';
 import { Consulting, Notice } from '../components/Notice';
 import { Page, Registers, figure } from '../components/Page';
 import type { CalendarDay } from '../../../shared/types';
 import { MONTHS } from '../../../shared/parsers/calendar';
-import { clockParts, machineHour, reckon, type InWorldMoment } from '../../../shared/reckoning';
+import { RATE, clockParts, machineHour, reckon, type InWorldMoment } from '../../../shared/reckoning';
 import { EMBASSY_OBSERVANCES, withObservances } from '../../../shared/observances';
 import { TAMRIELIC_HOLIDAYS } from '../../../shared/holidays';
 import { constellationOf, standing } from '../../../shared/constellations';
@@ -254,11 +257,12 @@ function dayTitle(day: CalendarDay): string {
 /**
  * The in-world moment, re-reckoned on an interval.
  *
- * The period is a parameter because two things want this at different rates and
- * one of them is expensive: the hourglass wants a tick a second, while the grid
- * only needs to know which of 365 cells is today. Re-rendering the whole year
- * once a second to move a highlight that changes at midnight would be wasteful,
- * so the plate keeps its own fast clock and the view runs slow.
+ * The period is a parameter, but nothing asks for a fast one any more. It used
+ * to: the hourglass wanted a tick a second so its sand could step, and the
+ * comment here explained why the calendar grid was not made to pay for that.
+ * The sand is written by a GSAP ticker now and needs no render at all, so both
+ * callers run slow and this only has to answer which of 365 cells is today —
+ * a question whose answer changes at midnight.
  */
 function useInWorldNow(periodMs: number): InWorldMoment {
   const [now, setNow] = useState(() => reckon());
@@ -286,7 +290,69 @@ function Hourglass({ fraction }: { fraction: number }) {
   const TOP = 12;
   const FLOOR = 88;
 
+  const upper = useRef<SVGRectElement>(null);
+  const lower = useRef<SVGRectElement>(null);
+  const fall = useRef<SVGLineElement>(null);
+
+  /*
+   * The sand moves; React does not.
+   *
+   * This plate used to re-render once a second so the two rects could step to
+   * a new height — one full React render, for a surface that moves one part in
+   * 86,400 of a bulb. It looked like what it was: a clock ticking, not sand
+   * falling.
+   *
+   * Now the component renders once and a ticker callback writes the four
+   * attributes directly. `quickSetter` resolves the property lookup a single
+   * time and hands back a function that just assigns, which is what makes
+   * doing this every frame cheaper than doing it once a second through React.
+   *
+   * Net: continuous sand AND zero re-renders per second where there was one.
+   * Better on both axes, which is rare enough to be worth stating.
+   */
+  useGSAP(() => staged(({ moving }) => {
+    if (!upper.current || !lower.current) return;
+
+    const setUpperY = gsap.quickSetter(upper.current, 'attr') as (v: object) => void;
+    const setLowerY = gsap.quickSetter(lower.current, 'attr') as (v: object) => void;
+    const setFall = fall.current
+      ? gsap.quickSetter(fall.current, 'attr') as (v: object) => void
+      : null;
+
+    const draw = () => {
+      const at = reckon().dayFraction;
+      const top = TOP + (NECK - TOP) * at;
+      const bottom = FLOOR - (FLOOR - NECK) * at;
+      setUpperY({ y: top, height: Math.max(0, NECK - top) });
+      setLowerY({ y: bottom, height: Math.max(0, FLOOR - bottom) });
+      if (setFall) setFall({ y2: Math.max(50, bottom) });
+    };
+
+    draw();
+
+    // A reader who asked for stillness gets the hour, drawn once. It is a
+    // clock face, not an animation: the level still says what time it is.
+    if (!moving) return;
+
+    // The grains: a dashed stroke whose offset travels, which reads as falling
+    // where a solid bar would just sit there. Its own tween rather than part of
+    // `draw`, because the sand level tracks the clock and the grains do not.
+    const grains = fall.current
+      ? gsap.to(fall.current, {
+        strokeDashoffset: -6, duration: 0.7, ease: 'none', repeat: -1,
+      })
+      : null;
+
+    gsap.ticker.add(draw);
+    return () => {
+      gsap.ticker.remove(draw);
+      grains?.kill();
+    };
+  }), []);
+
   // Upper sand drains toward the neck; lower sand climbs from the floor.
+  // These are the FIRST FRAME only — the ticker owns them after that, and the
+  // attributes below exist so the plate is correct before it is ever ticked.
   const upperSurface = TOP + (NECK - TOP) * fraction;
   const lowerSurface = FLOOR - (FLOOR - NECK) * fraction;
   const draining = fraction > 0.002 && fraction < 0.998;
@@ -322,12 +388,14 @@ function Hourglass({ fraction }: { fraction: number }) {
 
       <g className="sandglass__sand">
         <rect
+          ref={upper}
           x="12" width="36"
           y={upperSurface}
           height={Math.max(0, NECK - upperSurface)}
           clipPath="url(#sandglass-upper)"
         />
         <rect
+          ref={lower}
           x="12" width="36"
           y={lowerSurface}
           height={Math.max(0, FLOOR - lowerSurface)}
@@ -338,7 +406,11 @@ function Hourglass({ fraction }: { fraction: number }) {
       {/* Grains rather than a bar: a dashed stroke whose offset is animated
           reads as falling, where a solid rectangle would just sit there. */}
       {draining && (
-        <line className="sandglass__fall" x1="30" y1="49" x2="30" y2={Math.max(50, lowerSurface)} />
+        <line
+          ref={fall}
+          className="sandglass__fall"
+          x1="30" y1="49" x2="30" y2={Math.max(50, lowerSurface)}
+        />
       )}
     </svg>
   );
@@ -374,9 +446,17 @@ function Asterism({ sign }: { sign: Constellation }) {
 
 /** The plate above the year: what day it is in the realm, and what hour. */
 function InWorldPlate({ today }: { today: CalendarDay | null }) {
-  // A second is finer than the display needs, but the sand moves continuously
-  // and a coarser tick makes it visibly step.
-  const now = useInWorldNow(1000);
+  /*
+   * Half an in-world minute, which is the finest this plate can ever need.
+   *
+   * It used to tick once a second, and the comment said why: the sand moved in
+   * steps and a coarser tick made the stepping visible. The sand is written by
+   * a GSAP ticker now, so the only thing left on this clock is the time TEXT —
+   * and that changes once an in-world minute, which at RATE 2:1 is every thirty
+   * real seconds. Polling at half of it keeps the reading at most fifteen
+   * seconds stale and derives from the rate rather than assuming it.
+   */
+  const now = useInWorldNow(30_000 / RATE);
   const month = MONTHS[now.monthIndex - 1] ?? '';
   const { clock, meridiem } = clockParts(now);
   const sign = constellationOf(now.monthIndex);

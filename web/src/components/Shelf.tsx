@@ -5,7 +5,7 @@ import { useRef } from 'react';
 import { useGSAP } from '@gsap/react';
 
 import { useShelf } from '../api';
-import { gsap, staged, suspendOffScreen } from '../motion';
+import { D, STAGGER, gsap, staged, suspendOffScreen } from '../motion';
 import { SHELF, isOwnWork } from '../../../shared/volumes';
 import { BINDINGS } from '../theme';
 import { Book } from './Book';
@@ -18,6 +18,36 @@ interface Props {
 export function Shelf({ onOpen }: Props) {
   const shelf = useShelf();
   const dust = useRef<HTMLSpanElement>(null);
+  const cabinet = useRef<HTMLDivElement>(null);
+
+  /*
+   * The volumes muster.
+   *
+   * Outward from the centre of the cabinet rather than left to right, so the
+   * shelf fills the way ranks fall in rather than the way a list renders.
+   *
+   * ON `.book`, NOT `.book__body`. The body owns the hover lift — a CSS
+   * transition on `transform` — and a tween writing inline transform to that
+   * element would be chased by its own transition, which is the surest way to
+   * get motion that looks broken rather than wrong.
+   */
+  useGSAP(() => staged(({ moving }) => {
+    const shelfEl = cabinet.current;
+    if (!moving || !shelfEl) return;
+
+    const books = gsap.utils.toArray<HTMLElement>('.book', shelfEl);
+    if (!books.length) return;
+
+    const arrive = gsap.fromTo(books,
+      { opacity: 0, y: 18 },
+      { opacity: 1, y: 0, duration: D.board, ease: 'draw',
+        stagger: STAGGER.muster, clearProps: 'opacity,transform' });
+
+    return () => {
+      arrive.kill();
+      gsap.set(books, { clearProps: 'opacity,transform' });
+    };
+  }), [shelf.state]);
 
   /*
    * Motes drifting through the torchlight.
@@ -45,7 +75,7 @@ export function Shelf({ onOpen }: Props) {
   );
 
   return (
-    <div className="hall">
+    <div className="hall" ref={cabinet}>
       <span className="hall__torch hall__torch--left" aria-hidden />
       <span className="hall__torch hall__torch--right" aria-hidden />
       <span className="hall__dust" ref={dust} aria-hidden />

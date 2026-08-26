@@ -266,33 +266,6 @@ gsap.registerEffect({
     ),
 });
 
-/**
- * Gold leaf catching the light: a highlight travelling the length of a rule.
- *
- * The one motif here that is new rather than named. It is also the most
- * thematic thing in the language — every rule, clasp and foil edge in the
- * archive is gilt, and gilt is defined by what it does when light moves across
- * it. Driven as a background-position sweep so the element keeps whatever
- * gradient its stylesheet gave it.
- */
-gsap.registerEffect({
-  name: 'gild',
-  extendTimeline: true,
-  defaults: { duration: D.page, ease: 'draw' },
-  effect: (targets: gsap.TweenTarget, config: EffectConfig) =>
-    gsap.fromTo(
-      targets,
-      { backgroundPosition: '-120% 0' },
-      {
-        backgroundPosition: '220% 0',
-        duration: config.duration,
-        ease: config.ease,
-        clearProps: 'backgroundPosition',
-      },
-    ),
-});
-
-
 // ── Arriving on scroll ─────────────────────────────────────────────────────
 
 /**
@@ -324,13 +297,14 @@ gsap.registerEffect({
 export function revealOnEnter(
   elements: readonly HTMLElement[],
   animate: (batch: HTMLElement[]) => void,
+  from: gsap.TweenVars = { opacity: 0, y: 10 },
 ): () => void {
   if (elements.length === 0) return () => {};
 
   // Everything is blanked FIRST and in one synchronous step, so there is never
   // a frame where a record is visible and about to be hidden. The caller is
   // expected to have excluded anything already on screen — see the Ledger.
-  gsap.set(elements as HTMLElement[], { opacity: 0, y: 10 });
+  gsap.set(elements as HTMLElement[], from);
 
   // Elements that cross in the same frame arrive together, which is what makes
   // a fast scroll read as a run of entries settling rather than as N events.

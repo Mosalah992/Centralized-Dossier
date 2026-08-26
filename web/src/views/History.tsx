@@ -10,6 +10,9 @@
 // Where the presses contradict each other, the contradiction is kept and
 // marked. An archive that quietly picks a winner is editing, not recording.
 
+import { useGSAP } from '@gsap/react';
+
+import { D, STAGGER, gsap, revealOnEnter, staged } from '../motion';
 import { Page } from '../components/Page';
 import { Guided, GuidedToggle, useGuidedReading } from '../reading';
 
@@ -213,6 +216,45 @@ const PAPERS: Paper[] = [
 
 export function HistoryView() {
   const [guided, setGuided] = useGuidedReading();
+
+  /*
+   * Entries arrive as the reader comes down the page.
+   *
+   * VERY RESTRAINED, and deliberately more so than the Ledger's. This is a
+   * hundred-odd dated entries transcribed from the province's own newspapers,
+   * and it is the volume the archive is proudest of being a record rather than
+   * a presentation. A large entrance would make a chronicle read like a
+   * marketing page: a sixth of a second and six pixels is enough to say the
+   * page is alive, and not enough to editorialise.
+   *
+   * Only what is below the fold when the volume opens is ever touched — see
+   * revealOnEnter, which also carries the failsafe that un-blanks everything
+   * if the browser turns out not to be computing intersections at all.
+   */
+  useGSAP(() => staged(({ moving }) => {
+    if (!moving) return;
+
+    const fold = window.innerHeight;
+    const entries = gsap.utils
+      .toArray<HTMLElement>('.chronicle__entry')
+      .filter((el) => el.getBoundingClientRect().top >= fold);
+
+    return revealOnEnter(entries, (batch) =>
+      gsap.to(batch, {
+        opacity: 1,
+        y: 0,
+        // A grave entry takes its time. The chronicle marks the ones that
+        // carry a death, and the record should not hurry past them.
+        duration: (i, el: HTMLElement) =>
+          (el.classList.contains('chronicle__entry--grave') ? D.page : D.leaf),
+        ease: 'draw',
+        stagger: STAGGER.roll,
+        clearProps: 'opacity,transform',
+        overwrite: true,
+      }),
+      // Six pixels, not ten. A line of prose is lighter than a docket entry.
+      { opacity: 0, y: 6 });
+  }), []);
 
   return (
     <Page
