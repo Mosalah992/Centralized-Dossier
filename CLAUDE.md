@@ -233,7 +233,14 @@ it means doing that reading again rather than running a script. Its working copy
 `tmp/enforce/records.jsonl` and `tmp/enforce/emit.py` turns that into the module;
 `tmp/` is gitignored too, so **that pair is the thing actually worth backing up** —
 losing it means the volume can only be rebuilt from the deployed Worker's copy or by
-re-reading 195 reports.
+re-reading the reports.
+
+`scripts/audit-enforcement-sieve.py` **is** committed, and should be re-run after any
+fresh export. It answers the one question the reading pass cannot answer about
+itself — whether the filter that chose which reports to read dropped any that
+carried an act. The first sieve was written inline, thrown away, and missed 81
+reports; twelve of them held acts. Over-matching there costs a read, under-matching
+costs a record, so the net is deliberately far wider than it needs to be.
 
 `functions/lib/chronicle.example.ts` is committed in the real module's place, with
 the same exports and placeholder prose, because `api/chronicle/index.ts` imports
