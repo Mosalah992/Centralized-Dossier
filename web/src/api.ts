@@ -152,6 +152,8 @@ export const useChronicle = (unlocked: boolean) =>
 export interface EnforcementEntry {
   date: string;
   agent: string;
+  /** The one name the act is filed under; see functions/lib/enforcement.ts. */
+  hand: string;
   act: string;
   subject: string;
   title: string;

@@ -51,19 +51,6 @@ const RUNG_ORDER = Object.keys(RUNGS);
 const rungLabel = (kind: string) => RUNGS[kind]?.label ?? kind;
 const rungGrave = (kind: string) => RUNGS[kind]?.grave ?? 'penalty';
 
-/**
- * The agent's own name, for the dropdown.
- *
- * The `agent` field is a sentence as often as it is a name — "Ganaril,
- * witnessed by Helgrid, Ariniel and Veylianne" — because a report names
- * everyone who stood there. Filtering wants the hand that acted, which is the
- * part before the first comma or the first "with"; the full line is still
- * printed on the record and still searched.
- */
-function principal(agent: string): string {
-  return agent.split(/,| with | alongside | and /i)[0]!.trim();
-}
-
 function Record(
   { entry, index, still }: { entry: EnforcementEntry; index: number; still: boolean },
 ) {
@@ -124,12 +111,17 @@ export function EnforcementView() {
     [ledger],
   );
 
-  // Only the agents that actually appear, in the order they first do — which is
+  // Only the hands that actually appear, in the order they first do — which is
   // date order, so the list reads as the Embassy's own succession of hands
   // rather than as an alphabet.
+  //
+  // `hand` is resolved when the volume is generated, NOT here. Splitting the
+  // agent sentence in the browser was tried and produced "Ganaril" beside
+  // "Justiciar Ganaril" beside "Falcril's patrol" — three dozen options for a
+  // dozen people. See the field's note in functions/lib/enforcement.ts.
   const agents = useMemo(() => {
     const seen = new Set<string>();
-    for (const entry of entries) seen.add(principal(entry.agent));
+    for (const entry of entries) seen.add(entry.hand);
     return [...seen].map((name) => ({ value: name, label: name }));
   }, [entries]);
 
@@ -146,7 +138,7 @@ export function EnforcementView() {
     const term = query.trim().toLowerCase();
     return entries.filter((entry) => {
       if (rung && entry.kind !== rung) return false;
-      if (agent && principal(entry.agent) !== agent) return false;
+      if (agent && entry.hand !== agent) return false;
       if (!term) return true;
       // Every field, including the ones the record prints small. A reader
       // searching "Talos" wants the charge wherever it was written down.
@@ -190,7 +182,7 @@ export function EnforcementView() {
           { label: 'Acts recorded', value: entries.length },
           { label: 'Put to death', value: deaths },
           { label: 'Penalty exacted', value: taken },
-          { label: 'Agents named', value: agents.length },
+          { label: 'Hands named', value: agents.length },
         ]}
       />
 
