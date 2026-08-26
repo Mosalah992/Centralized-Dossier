@@ -11,6 +11,7 @@
 // unset variable would turn a config mistake into an outage for a hundred
 // people. So this route answers 503 for itself and leaves the rest alone.
 
+import { parseGuildIds } from '../../lib/guilds';
 import { sign, stateCookie } from '../../lib/session';
 
 interface Env {
@@ -27,7 +28,11 @@ export const callbackUrl = (request: Request): string =>
 export const onRequestGet: PagesFunction<Env> = async (context) => {
   const { env, request } = context;
 
-  if (!env.DISCORD_CLIENT_ID || !env.DISCORD_CLIENT_SECRET || !env.DISCORD_GUILD_ID) {
+  // A list that parses to nothing is as unconfigured as an unset variable, and
+  // has to be caught here: left to the callback it would send every reader out
+  // to Discord, through the consent screen, and back to a refusal.
+  if (!env.DISCORD_CLIENT_ID || !env.DISCORD_CLIENT_SECRET
+      || parseGuildIds(env.DISCORD_GUILD_ID).length === 0) {
     return new Response(
       JSON.stringify({ error: 'The Embassy keeps no register of Discord names yet.' }),
       { status: 503, headers: { 'content-type': 'application/json; charset=utf-8' } },

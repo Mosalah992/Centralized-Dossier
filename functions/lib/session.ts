@@ -69,6 +69,16 @@ export interface Writ {
    * before anything is gated on it.
    */
   r?: string[];
+  /**
+   * The server that admitted them, and therefore the server `r` is scoped to.
+   *
+   * REQUIRED FOR THE ROLES TO MEAN ANYTHING. The Embassy admits from more than
+   * one Discord server, and a role id is only unique within its own — so a writ
+   * carrying roles without this carries a list of numbers that cannot safely be
+   * compared to anything. Absent on writs issued when there was only one server
+   * to be in, which is why it is optional and not why it is unimportant.
+   */
+  g?: string;
 }
 
 /** What a login knows about the reader, before it becomes a writ. */
@@ -76,6 +86,8 @@ export interface Identity {
   id: string;
   name: string;
   roles: string[];
+  /** The admitting server, which is the scope `roles` are read against. */
+  guild: string;
 }
 
 function b64urlEncode(bytes: Uint8Array): string {
@@ -143,7 +155,9 @@ export async function issueWrit(
     e: epoch,
     exp: Math.floor(Date.now() / 1000) + ttl,
     s: scope,
-    ...(identity && { u: identity.id, n: identity.name, r: identity.roles }),
+    ...(identity && {
+      u: identity.id, n: identity.name, r: identity.roles, g: identity.guild,
+    }),
   };
   const body = b64urlEncode(enc.encode(JSON.stringify(writ)));
   const sig = b64urlEncode(await mac(secret, body));

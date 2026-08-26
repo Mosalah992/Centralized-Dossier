@@ -1,8 +1,12 @@
 // GET /api/auth/callback — Discord returns the reader here with a code.
 //
-// Exchange it, ask who they are and whether they are in the Embassy's guild,
-// and if so issue a writ carrying their identity. A reader who is not in the
-// guild is refused: holding a Discord account is not membership.
+// Exchange it, ask who they are and whether they are in ANY of the servers the
+// Embassy admits from, and if so issue a writ carrying their identity. A reader
+// in none of them is refused: holding a Discord account is not membership.
+//
+// Which servers those are, and how a mixture of answers is read, is in
+// lib/guilds.ts — deliberately out of this file, because the decision is the
+// boundary and this file cannot be tested without a live OAuth round trip.
 //
 // NOTHING IS GATED ON THE ROLES THIS COLLECTS. They are written into the writ
 // so the data can be proven right against real accounts in production before
@@ -20,6 +24,7 @@ import {
   type Identity,
 } from '../../lib/session';
 import { callbackUrl } from './login';
+import { decideAdmission, parseGuildIds, type GuildLookup } from '../../lib/guilds';
 
 interface Env {
   GATE_SECRET: string;
@@ -52,8 +57,9 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
   const { env, request } = context;
   const url = new URL(request.url);
 
+  const guildIds = parseGuildIds(env.DISCORD_GUILD_ID);
   if (!env.GATE_SECRET || !env.DISCORD_CLIENT_ID || !env.DISCORD_CLIENT_SECRET
-      || !env.DISCORD_GUILD_ID) {
+      || guildIds.length === 0) {
     return refuse(request, 'unconfigured');
   }
 
@@ -88,37 +94,52 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     if (!accessToken) return refuse(request, 'exchange');
 
     const auth = { authorization: `Bearer ${accessToken}` };
-    const [me, member] = await Promise.all([
+
+    // Every admitting server is asked, in parallel and in precedence order.
+    // The reader's own token answers for all of them, so adding a server costs
+    // one more request and no new permission — and still no bot token anywhere
+    // in this project.
+    const [me, ...lookups] = await Promise.all([
       fetch('https://discord.com/api/users/@me', { headers: auth }),
-      fetch(`https://discord.com/api/users/@me/guilds/${env.DISCORD_GUILD_ID}/member`,
-        { headers: auth }),
+      ...guildIds.map(async (guildId): Promise<GuildLookup> => {
+        const res = await fetch(
+          `https://discord.com/api/users/@me/guilds/${guildId}/member`, { headers: auth });
+        return {
+          guildId,
+          status: res.status,
+          member: res.ok
+            ? await res.json() as { roles?: string[]; nick?: string }
+            : undefined,
+        };
+      }),
     ]);
 
-    // 404 is the ordinary answer for "not in that guild" and is the ONLY status
-    // here that is about the reader. Everything else is our fault and must not
-    // be reported as a missing name: a wrong DISCORD_GUILD_ID, a dropped
-    // `guilds.members.read` scope and a rate-limited Worker all arrive as a
-    // non-ok response, and answering all of them with 'not-a-member' is how one
-    // wrong id spent its life looking like a hundred separate account problems.
-    if (member.status !== 404 && !member.ok) {
-      // The reader gets a sentence; the Worker log gets the status, which is
-      // the difference between 'their scope' and 'our guild id'.
-      console.warn(`guild member lookup failed: ${member.status}`);
-      return refuse(request,
-        member.status === 401 || member.status === 403 ? 'unverified' : 'unreachable');
+    const admission = decideAdmission(lookups);
+    if (!admission.admitted) {
+      // The reader gets a sentence; the Worker log gets every status, which is
+      // the difference between 'their scope', 'our guild id' and 'they are in
+      // neither server'. With more than one guild in play, the interesting
+      // failure is a MIXTURE — and only the log can show that.
+      if (admission.reason !== 'not-a-member') {
+        console.warn(`guild lookups failed: ${lookups.map((l) => `${l.guildId}=${l.status}`).join(' ')}`);
+      }
+      return refuse(request, admission.reason);
     }
-    if (member.status === 404) return refuse(request, 'not-a-member');
     if (!me.ok) return refuse(request, 'exchange');
 
     const user = await me.json() as { id: string; username: string; global_name?: string };
-    const membership = await member.json() as { roles?: string[]; nick?: string };
 
     identity = {
       id: user.id,
-      // What the Embassy calls them, preferring the name they chose for the
-      // guild over the one they chose for Discord.
-      name: membership.nick || user.global_name || user.username,
-      roles: membership.roles ?? [],
+      // What the Embassy calls them, preferring the name they chose in the
+      // server that admitted them over the one they chose for Discord.
+      name: admission.nick || user.global_name || user.username,
+      roles: admission.roles,
+      // Which server let them in. Role ids mean nothing without it — the same
+      // snowflake is a different role in a different server — so a writ that
+      // carried roles and not this would be carrying numbers nobody could
+      // safely read. See the note on `g` in lib/session.ts.
+      guild: admission.guildId,
     };
   } catch {
     // Discord being unreachable must not look like a refusal of the reader.

@@ -13,6 +13,7 @@ const ME: Identity = {
   id: '201009402',
   name: 'Ganaril the Reformer',
   roles: ['1111111111111111111', '2222222222222222222'],
+  guild: '1498139135758831749',
 };
 
 /** Re-sign a tampered body so only the CONTENT differs, not the shape. */
