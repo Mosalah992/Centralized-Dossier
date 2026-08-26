@@ -18,8 +18,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import { useGSAP } from '@gsap/react';
 
 import { chronicleIsOpen, openChronicle, useChronicle } from '../api';
+import { gsap, staged } from '../motion';
 import type { Chronicle, ChronicleEntry } from '../api';
 import { Consulting, Notice } from '../components/Notice';
 import { GuidedToggle, mark, prose, useGuidedReading } from '../reading';
@@ -423,6 +425,23 @@ export function InformantsView() {
   );
   const [turning, setTurning] = useState<null | { dir: 1 | -1; to: number }>(null);
   const leafRef = useRef<HTMLDivElement>(null);
+  const eye = useRef<HTMLSpanElement>(null);
+
+  /*
+   * The scrying glass breathes while it is listening.
+   *
+   * It says the instrument is live, which a static dot does not — and it is the
+   * only thing on this volume that moves besides the leaf. A reader who asked
+   * for stillness gets neither: the iris is left lit at the opacity its
+   * stylesheet gives it rather than parked halfway through a fade.
+   */
+  useGSAP(() => staged(({ moving }) => {
+    if (!moving || !eye.current) return;
+    const breath = gsap.fromTo(eye.current,
+      { opacity: 0.45, scale: 0.82 },
+      { opacity: 1, scale: 1.08, duration: 1.8, ease: 'sine.inOut', yoyo: true, repeat: -1 });
+    return () => { breath.kill(); };
+  }), []);
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 899px)');
@@ -568,7 +587,7 @@ export function InformantsView() {
           in a real label and answers to the keyboard like one. */}
       <form className="scry" role="search" onSubmit={(event) => event.preventDefault()}>
         <div className="scry__glass" aria-hidden>
-          <span className="scry__eye" />
+          <span className="scry__eye" ref={eye} />
         </div>
         <div className="scry__field">
           <label className="scry__label" htmlFor="scry-input">

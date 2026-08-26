@@ -539,12 +539,10 @@
   border-radius: 50%;
   background: var(--foil);
   box-shadow: 0 0 10px color-mix(in srgb, var(--foil) 70%, transparent);
-  animation: scry-breathe 3.6s ease-in-out infinite;
-}
-
-@keyframes scry-breathe {
-  0%, 100% { opacity: 0.45; transform: scale(0.82); }
-  50%      { opacity: 1;    transform: scale(1.08); }
+  /* The rest state, and what a reader who asked for stillness is left looking
+     at: an iris that is lit rather than one caught mid-fade. The breathing is
+     driven from Informants.tsx. */
+  opacity: 0.85;
 }
 
 .scry__field { flex: 1; min-width: 0; }
@@ -673,10 +671,6 @@
 /* The scrying list is the one thing here that scrolls under a finger, and the
    iris is the one thing that moves. Neither should on a reader who asked for
    stillness. */
-@media (prefers-reduced-motion: reduce) {
-  .scry__eye { animation: none; opacity: 0.85; }
-}
-
 @media (max-width: 560px) {
   .scry { gap: 0.7rem; padding: 0.6rem 0.7rem; }
   .scry__glass { width: 1.7rem; height: 1.7rem; }

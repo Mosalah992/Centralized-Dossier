@@ -24,23 +24,27 @@
    is tidy but immovable: `background-size` animates every layer at once, so
    drifting the muster would have drifted the gradients with it. They are two
    elements now. Both are absolutely positioned, which also keeps them out of
-   the grid — a pseudo-element in a grid container is otherwise a grid item and
-   would be centred alongside the parchment.
+   the grid — a positioned child of a grid container is out of flow and is not
+   a grid item, so it is not centred alongside the parchment.
+
+   The photograph is a real element rather than a ::before because GSAP drives
+   its drift now and cannot address a pseudo-element. Nothing else about it
+   changed; being out of flow was always what kept it in place.
 
    Painting order is parent background, then negative z-index children, then
    in-flow content: ground, photograph, scrim, parchment. */
-.gate::before {
-  content: '';
+.gate__field {
   position: absolute;
   inset: 0;
   z-index: -2;
   /* 55% keeps the muster in frame when a wide, short viewport crops the
      photograph vertically; centring it would show mostly sky. */
   background: url('../assets/gate-bg.webp') center 55% / cover no-repeat;
-  /* A slow drift across a still. Scaled up first so the pan never exposes an
-     edge, and slow enough to read as breathing rather than movement. */
+  /* Scaled up so the pan never exposes an edge. This is also the REST STATE:
+     the drift animates away from it and reverts back to it, so there is no
+     frame for a stopped animation to be stranded on. */
   transform-origin: 50% 55%;
-  animation: gate-drift 54s ease-in-out infinite alternate;
+  transform: scale(1.06);
   will-change: transform;
 }
 
@@ -57,28 +61,20 @@
     linear-gradient(180deg, rgba(6, 5, 4, 0.7) 0%, rgba(6, 5, 4, 0.25) 26%, rgba(6, 5, 4, 0.45) 62%, rgba(6, 5, 4, 0.88) 100%);
 }
 
-@keyframes gate-drift {
-  from { transform: scale(1.06) translate3d(-0.8%, -0.6%, 0); }
-  to   { transform: scale(1.14) translate3d(0.8%, 0.7%, 0); }
-}
+/* The reduced-motion carve-out that used to live here is GONE, and not because
+   it stopped mattering. It existed because the global switch in base.css halts
+   a CSS animation wherever it stands, which for this one meant parking it on
+   its final frame — the most zoomed-in it ever gets. There is no keyframe to be
+   stranded on now: scale(1.06) above is the element's ordinary state, and the
+   drift is a tween that either runs or was never built. See web/src/motion.ts.
 
-/* base.css stops every animation under reduced motion, but stopping this one
-   leaves it parked on its final frame — the most zoomed-in it ever gets. Give
-   it the opening frame to rest on instead. */
-@media (prefers-reduced-motion: reduce) {
-  .gate::before {
-    animation: none;
-    transform: scale(1.06);
-  }
-}
-
-/* Phones get a quarter of the pixels for a third of the bytes; at that size
-   the detail is not readable through the scrim anyway. The drift is dropped
-   with it: a continuous transform is the wrong thing to hand a battery. */
+   Phones get a quarter of the pixels for a third of the bytes; at that size the
+   detail is not readable through the scrim anyway. The drift is dropped with it
+   — a continuous transform is the wrong thing to hand a battery — which is why
+   the tween is staged behind `wide` rather than merely being told not to. */
 @media (max-width: 900px) {
-  .gate::before {
+  .gate__field {
     background-image: url('../assets/gate-bg-small.webp');
-    animation: none;
     transform: scale(1.04);
   }
 }

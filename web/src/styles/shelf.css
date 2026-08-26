@@ -148,12 +148,9 @@
     radial-gradient(circle, rgba(239, 230, 210, 0.4) 0 1px, transparent 1.5px);
   background-position: 12% 18%, 72% 44%;
   background-size: 8rem 9rem, 11rem 10rem;
-  animation: dust-drift 14s linear infinite;
-}
-
-@keyframes dust-drift {
-  from { transform: translateY(0); }
-  to { transform: translateY(-1.5rem); }
+  /* Driven from Shelf.tsx so it can stop when the shelf is scrolled away, and
+     so reduced motion is decided in the one place the rest of the archive
+     decides it. The keyframes are gone; this is only the rest state. */
 }
 
 /* Cabinet */

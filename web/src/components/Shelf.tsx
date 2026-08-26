@@ -1,7 +1,11 @@
 // The archive index. The cabinet is the primary object on this page; the
 // heading stays ceremonial but compact so the six physical volumes dominate.
 
+import { useRef } from 'react';
+import { useGSAP } from '@gsap/react';
+
 import { useShelf } from '../api';
+import { gsap, staged, suspendOffScreen } from '../motion';
 import { SHELF, isOwnWork } from '../../../shared/volumes';
 import { BINDINGS } from '../theme';
 import { Book } from './Book';
@@ -13,6 +17,27 @@ interface Props {
 
 export function Shelf({ onOpen }: Props) {
   const shelf = useShelf();
+  const dust = useRef<HTMLSpanElement>(null);
+
+  /*
+   * Motes drifting through the torchlight.
+   *
+   * Suspended when the shelf is scrolled out of view, which is the one thing
+   * the CSS keyframes could not do: `animation-play-state` cannot be driven
+   * from intersection, so the old loop ran for as long as the tab was visible
+   * whether or not anybody could see it.
+   */
+  useGSAP(() => staged(({ moving }) => {
+    const motes = dust.current;
+    if (!moving || !motes) return;
+
+    const drift = gsap.fromTo(motes,
+      { y: 0 },
+      { y: '-1.5rem', duration: 14, ease: 'none', repeat: -1 });
+    const watch = suspendOffScreen(motes, drift);
+
+    return () => { watch(); drift.kill(); };
+  }), []);
 
   // Which tab each volume is bound to, once the archivist has answered.
   const tabs = new Map<string, string | null>(
@@ -23,7 +48,7 @@ export function Shelf({ onOpen }: Props) {
     <div className="hall">
       <span className="hall__torch hall__torch--left" aria-hidden />
       <span className="hall__torch hall__torch--right" aria-hidden />
-      <span className="hall__dust" aria-hidden />
+      <span className="hall__dust" ref={dust} aria-hidden />
 
       <header className="hall__head">
         {/* The Dominion insignia. Decorative — the heading beneath it already

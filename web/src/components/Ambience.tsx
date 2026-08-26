@@ -14,6 +14,8 @@
 // mute the reader chose in the hall would not be honoured in the volume.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+
+import { gsap } from '../motion';
 import './Ambience.css';
 
 interface Props {
@@ -67,20 +69,20 @@ const remember = (wanted: boolean): void => {
 
 export function Ambience({ track }: Props) {
   const audioRef = useRef<HTMLAudioElement>(null);
-  const fadeRef = useRef<number>();
   const [wanted, setWanted] = useState(ambienceWanted);
   const [sounding, setSounding] = useState(false);
 
-  /** Ramp in rather than cut in, so the track arrives under the page. */
+  /**
+   * Ramp in rather than cut in, so the track arrives under the page.
+   *
+   * NOT gated on reduced motion. A volume fade is not motion — cutting a track
+   * in at full level would be worse for everyone, and worse still for a reader
+   * who asked for less, not louder.
+   */
   const fadeIn = useCallback((audio: HTMLAudioElement) => {
-    window.clearInterval(fadeRef.current);
+    gsap.killTweensOf(audio);
     audio.volume = 0;
-    const started = performance.now();
-    fadeRef.current = window.setInterval(() => {
-      const progress = Math.min(1, (performance.now() - started) / FADE_MS);
-      audio.volume = VOLUME * progress;
-      if (progress === 1) window.clearInterval(fadeRef.current);
-    }, 40);
+    gsap.to(audio, { volume: VOLUME, duration: FADE_MS / 1000, ease: 'none' });
   }, []);
 
   const start = useCallback(
@@ -116,14 +118,18 @@ export function Ambience({ track }: Props) {
     };
   }, [wanted, start, track]);
 
-  useEffect(() => () => window.clearInterval(fadeRef.current), []);
+  // Stop the ramp if the component goes away mid-fade.
+  useEffect(() => () => {
+    const audio = audioRef.current;
+    if (audio) gsap.killTweensOf(audio);
+  }, []);
 
   function toggle() {
     const audio = audioRef.current;
     if (!audio) return;
 
     if (wanted) {
-      window.clearInterval(fadeRef.current);
+      gsap.killTweensOf(audio);
       audio.pause();
       setSounding(false);
       setWanted(false);

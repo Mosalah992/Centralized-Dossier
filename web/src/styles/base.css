@@ -173,14 +173,12 @@ a {
   color: #d98b8b;
 }
 
-/* A slow, dim pulse — the archivist is fetching the volume, not a spinner. */
+/* A slow, dim pulse — the archivist is fetching the volume, not a spinner.
+   Driven from Notice.tsx. Safe to hand to JavaScript because GSAP core is in
+   the entry chunk for the seal ceremony, so it is loaded and warm long before
+   any Suspense fallback can render. */
 .notice--loading .notice__title {
-  animation: breathe 2.4s var(--ease) infinite;
-}
-
-@keyframes breathe {
-  0%, 100% { opacity: 0.45; }
-  50% { opacity: 1; }
+  opacity: 0.45;
 }
 
 /* ── Reduced motion ──────────────────────────────────────────────────────── */

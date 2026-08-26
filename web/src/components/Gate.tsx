@@ -36,6 +36,7 @@ export function Gate() {
   const [discordOffered, setDiscordOffered] = useState<boolean | null>(null);
 
   const parchment = useRef<HTMLDivElement>(null);
+  const field = useRef<HTMLDivElement>(null);
   /** Set the instant the reader is sent onward, so it can only happen once. */
   const left = useRef(false);
 
@@ -141,6 +142,28 @@ export function Gate() {
    * and not up for redesign: 46px apart, 120 down, -34 and 29 of rotation over
    * 0.85s, the parchment closing over 0.7s at +0.55.
    */
+  /*
+   * The photograph breathes.
+   *
+   * Fifty-four seconds from one framing to the other and back, which is slow
+   * enough to read as the room being alive rather than as something moving.
+   * `yoyo` with an infinite repeat is the same alternate the keyframes had.
+   *
+   * Staged behind `wide` as well as `moving`: below 900px the small image is
+   * served and the drift is dropped entirely, because a continuous transform is
+   * the wrong thing to hand a battery.
+   */
+  useGSAP(() => staged(({ moving, wide }) => {
+    if (!moving || !wide || !field.current) return;
+    const drift = gsap.fromTo(field.current,
+      { scale: 1.06, x: '-0.8%', y: '-0.6%' },
+      {
+        scale: 1.14, x: '0.8%', y: '0.7%',
+        duration: 54, ease: 'sine.inOut', yoyo: true, repeat: -1,
+      });
+    return () => { drift.kill(); };
+  }), []);
+
   useGSAP(() => {
     if (phase !== 'breaking') return;
 
@@ -205,6 +228,9 @@ export function Gate() {
 
   return (
     <div className="gate">
+      {/* The photograph. A real element rather than a ::before so its drift can
+          be driven; see the note in Gate.css. */}
+      <div className="gate__field" ref={field} aria-hidden />
       <div className="gate__parchment" ref={parchment}>
         <p className="gate__eyebrow">Third Aldmeri Dominion</p>
         <h1 className="gate__title">Embassy Archives</h1>
