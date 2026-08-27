@@ -466,22 +466,31 @@ function bind(data, width, height, cfg) {
 // inlaid black plaque with an ogee frame; the sealed volume's title stands
 // between two painted rules. In both cases the frame is kept and only the
 // field inside it is cleared.
+// NO COVER IS TOOLED, and that is a decision taken after looking at all nine.
+//
+// The blind stamp was written to make the cleared panel read as an intentional
+// lettering panel rather than a patch — a fillet impressed into the leather, no
+// gilt, the way a binder marks one out. On the vellum volume it plainly failed:
+// a pale ground shows every bit of the line and it read as a border drawn
+// around a rectangle, which its own comment names as the one thing to avoid.
+//
+// Dropping it there and leaving it on the other five turned out to be the wrong
+// half of the lesson. The rectangle was visible on the dark covers too, just
+// less: a sharp-edged box a shade off the board it sits in, on every register.
+// What actually makes the repair disappear is not a frame around it, it is the
+// erase reaching full strength across the lettering with the ramp landing on
+// clean board outside — which is what the grown erase and a four-pixel fade
+// now do. The stamp was compensating for a join that no longer needs it.
+//
+// The machinery stays in relabel(), because `tooled` is a per-cover choice and
+// a future cover on a heavier hide may well want it back.
 const LABEL = {
-  roster:     { x: 0.27604, y: 0.28066, w: 0.56771, h: 0.18729, tooled: true },
-  statistics: { x: 0.27604, y: 0.26457, w: 0.56771, h: 0.19411, tooled: true },
-  ledger:     { x: 0.27604, y: 0.26950, w: 0.56771, h: 0.18472, tooled: true },
-  stipends:   { x: 0.27604, y: 0.24835, w: 0.56771, h: 0.20440, tooled: true },
-  // NO FILLET, AND A WIDE FADE. The other five sheet covers are dark enough
-  // that a blind stamp reads as tooling; this one is vellum, and on a pale
-  // ground the same faint line reads as a border drawn around a rectangle —
-  // which is the one thing this panel must not look like, as the note on the
-  // stamp itself says. The colours were never the problem: the erased field
-  // measures 167,150,114 against 167,149,110 for the board beside it. What
-  // gave it away was the OUTLINE, and a texture that changed at a hard edge.
-  // So: no stamp, and a fade four times the usual, which lets the synthesised
-  // grain hand back to the real one gradually instead of at a corner.
+  roster:     { x: 0.27604, y: 0.28066, w: 0.56771, h: 0.18729, tooled: false, feather: 4 },
+  statistics: { x: 0.27604, y: 0.26457, w: 0.56771, h: 0.19411, tooled: false, feather: 4 },
+  ledger:     { x: 0.27604, y: 0.26950, w: 0.56771, h: 0.18472, tooled: false, feather: 4 },
+  stipends:   { x: 0.27604, y: 0.24835, w: 0.56771, h: 0.20440, tooled: false, feather: 4 },
   honor:      { x: 0.27604, y: 0.26856, w: 0.56771, h: 0.18559, tooled: false, feather: 4 },
-  calendar:   { x: 0.27604, y: 0.27940, w: 0.56771, h: 0.18835, tooled: true },
+  calendar:   { x: 0.27604, y: 0.27940, w: 0.56771, h: 0.18835, tooled: false, feather: 4 },
   // The plaque's field, inside its gold ogee. The lettering runs to within two
   // pixels of the frame at both ends — "OF THE REALM" is set wider than the
   // plaque's straight runs are long — so this one is cut close and given a

@@ -20,6 +20,7 @@ import ganaril from '../assets/ganaril.jpg';
 import malen from '../assets/malen.jpg';
 import celerielElvander from '../assets/celeriel-elvander.webp';
 import akira from '../assets/akira.webp';
+import canonreeve from '../assets/canonreeve.webp';
 
 /* The First Emissaries are the hall's own record, kept here rather than in the
    sheet: their deeds are settled history, and one of them is deliberately
@@ -102,6 +103,19 @@ const HONORED_SERVANTS: Servant[] = [
       'Unwaveringly loyal to the Thalmor, serving the Dominion with consistency and distinction, even when her heart may occasionally favor Riften.',
     ],
     aside: 'Champion of Riften, apparently.',
+  },
+  {
+    name: 'Canonreeve Ancarion Saelthar',
+    portrait: canonreeve,
+    // The plate is 3:4 and this painting is square, so it is the SIDES that
+    // are cut rather than the head. Centred is right: the figure stands in the
+    // middle of it, and the staff can lose an inch at the edge.
+    focus: 'center',
+    deeds: [
+      "Established the backbone of the Embassy's Archives, creating the ledgers, records, and reporting systems that preserved the history of the Skyrim mission.",
+      'Rose from soldier to Canonreeve, distinguished through years of military service, administration, and unwavering dedication to the Dominion.',
+      "Restored discipline and accountability to the Embassy's administration, ensuring its treasury, personnel, and duties could function beyond the mer who held command.",
+    ],
   },
 ];
 
