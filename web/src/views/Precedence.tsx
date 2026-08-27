@@ -76,6 +76,22 @@ function Medallion({ node, onToggle }: {
     transform: `translate(${node.x}, ${node.y})`,
   };
 
+  /*
+   * The knot is wrapped in a second group, and that wrapper is the whole point.
+   *
+   * Position lives on the OUTER group as an SVG `transform` attribute; the
+   * entrance scales the INNER one. They must not be the same element. GSAP owns
+   * whatever transform it animates, and `clearProps` at the end of the tween
+   * does not restore the attribute it started from — it removes it. Every
+   * medallion lost its translate and collapsed onto 0,0: the labels stacked on
+   * top of each other in the corner and the threads ran out to nodes that were
+   * no longer there.
+   *
+   * Splitting them means the tween can clear itself completely without ever
+   * touching the coordinate that says where the knot belongs.
+   */
+  const knot = <g className="tap__pop">{body}</g>;
+
   // A branch that opens is a control; a person is not. Rendering the difference
   // rather than styling it is what makes the keyboard work for free.
   return node.expandable ? (
@@ -91,10 +107,10 @@ function Medallion({ node, onToggle }: {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle(node.id); }
       }}
     >
-      {body}
+      {knot}
     </g>
   ) : (
-    <g {...common}>{body}</g>
+    <g {...common}>{knot}</g>
   );
 }
 
@@ -195,7 +211,13 @@ export function PrecedenceView() {
       }
 
       if (!moving) {
-        gsap.set([...nodes, ...threads], { clearProps: 'all' });
+        // Never `clearProps: 'all'` on a positioned node: 'all' includes the
+        // SVG transform attribute that says where the knot is. Only the two
+        // things the entrance ever sets are cleared, and only on the elements
+        // the entrance ever touches.
+        gsap.set(nodes.map((n) => n.querySelector('.tap__pop')).filter(Boolean) as Element[],
+          { clearProps: 'opacity,transform' });
+        gsap.set(threads, { clearProps: 'opacity,strokeDasharray,strokeDashoffset' });
         return;
       }
 
@@ -226,9 +248,14 @@ export function PrecedenceView() {
       }
 
       if (nodes.length) {
+        // The inner group, never the positioned one — see the note in Medallion.
+        const knots = nodes
+          .map((n) => n.querySelector<SVGGElement>('.tap__pop'))
+          .filter((n): n is SVGGElement => n !== null);
+
         // A medallion lands just after the thread that reaches it, so the cloth
         // reads as thread-then-knot rather than as two separate events.
-        tl.fromTo(nodes,
+        tl.fromTo(knots,
           { opacity: 0, scale: 0.6, transformOrigin: '50% 50%' },
           {
             opacity: 1,
@@ -247,7 +274,9 @@ export function PrecedenceView() {
       return () => {
         rescue();
         tl.kill();
-        gsap.set([...nodes, ...threads], { clearProps: 'all' });
+        gsap.set(nodes.map((n) => n.querySelector('.tap__pop')).filter(Boolean) as Element[],
+          { clearProps: 'opacity,transform' });
+        gsap.set(threads, { clearProps: 'opacity,strokeDasharray,strokeDashoffset' });
       };
     });
   }, { dependencies: [cloth], scope: sheet });
