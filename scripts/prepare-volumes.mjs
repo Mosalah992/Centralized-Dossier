@@ -894,14 +894,24 @@ console.log(
 // covers it belongs to, and web/src/covers.ts reads it. LABEL above is the one
 // place they are set; this file is derived and should not be edited.
 //
-// Fractions of the canvas rather than pixels, because that is what CSS wants:
+// Fractions of the CANVAS rather than pixels, because that is what CSS wants:
 // the book is laid out at whatever width the shelf gives it, so a panel fixed
 // in pixels would drift off its cover at every breakpoint.
+//
+// NOTE THE TWO DIFFERENT FRACTIONS, because conflating them is a bug this file
+// has already had. LABEL holds fractions of a book's own BODY box, which is
+// what makes it survive a rescale. What the shelf needs is fractions of the
+// finished CANVAS, which is a different rectangle — the body is centred in it
+// and the ribbon hangs below. `panelFor` is the bridge: it resolves LABEL into
+// pixels on this canvas, exactly as the erase pass does, and those pixels are
+// what get divided here. Reading LABEL directly divides a fraction by 415 and
+// writes a panel a thousandth of its proper size — which renders every volume
+// on the shelf with no title at all.
 const labels = Object.fromEntries(
-  books.map(({ slug }) => {
-    const { x, y, w, h } = LABEL[slug];
+  books.map((book) => {
+    const { x, y, w, h } = panelFor(book, canvasW, baseline);
     const round = (v) => Number(v.toFixed(5));
-    return [slug, {
+    return [book.slug, {
       left: round(x / canvasW),
       top: round(y / canvasH),
       width: round(w / canvasW),
