@@ -888,10 +888,18 @@ button.day::before {
 }
 
 .sandglass__fall {
-  stroke: color-mix(in srgb, var(--foil) 78%, #7a5a1e);
-  stroke-width: 1.4;
+  /* BRIGHTER THAN THE SAND IT FALLS FROM, and that is the point. The glass is
+     3.4rem wide, so this stream is about seventeen pixels tall — at that size,
+     grains the same colour as the mound they land on do not read as falling.
+     They do not read at all. The gold is lifted toward --gold-bright so the
+     stream separates from both the sand and the glass behind it. */
+  stroke: color-mix(in srgb, var(--gold-bright) 62%, #8a6420);
+  stroke-width: 2;
   stroke-linecap: round;
-  stroke-dasharray: 2 4;
+  /* Tighter than the old 2/4: more grains in flight over the same seventeen
+     pixels, which is what makes the movement legible rather than a dot
+     twitching. The period is 4.2 and the tween travels exactly that. */
+  stroke-dasharray: 1.6 2.6;
   /* The grains are driven from Honors.tsx, with the rest of the glass. */
 }
 

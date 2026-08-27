@@ -337,9 +337,11 @@ function Hourglass({ fraction }: { fraction: number }) {
     // The grains: a dashed stroke whose offset travels, which reads as falling
     // where a solid bar would just sit there. Its own tween rather than part of
     // `draw`, because the sand level tracks the clock and the grains do not.
+    // Exactly one dash period (1.6 + 2.6) per half second, so the stream
+    // repeats seamlessly and reads as a continuous fall rather than a loop.
     const grains = fall.current
       ? gsap.to(fall.current, {
-        strokeDashoffset: -6, duration: 0.7, ease: 'none', repeat: -1,
+        strokeDashoffset: -4.2, duration: 0.5, ease: 'none', repeat: -1,
       })
       : null;
 
