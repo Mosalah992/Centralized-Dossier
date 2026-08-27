@@ -13,6 +13,10 @@
   --gold: #c9a227;
   --gold-bright: #e8cd7a;
   --crimson: #7c1f24;
+  /* The second ink. A rubricator worked in vermilion rather than the crimson
+     the archive uses for its warnings, and the difference is the point: one
+     colour says "danger", the other says "a new thing begins here". */
+  --rubric: #a33417;
 
   --rule: rgba(201, 162, 39, 0.34);
   --rule-soft: rgba(201, 162, 39, 0.16);

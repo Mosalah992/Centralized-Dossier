@@ -14,6 +14,28 @@
  * nothing below is load-bearing for reading the volume.
  */
 
+/* The rubricator's hand, and the only face in the archive that is not Cinzel or
+   EB Garamond. Public domain — Earl Allen and Doug Miles, over the older Black
+   Chancery bitmap; Assets/BLACKCHA.TXT carries the statement, and the file's own
+   name table repeats it. That is worth checking before shipping any face here,
+   because static assets are served from public URLs: putting a font in this
+   folder distributes it to anyone holding the link.
+
+   Subset to twenty-six capitals by scripts/prepare-initials.py — 5 kB rather
+   than 55 — and `swap` because a drop cap that has not arrived should be a
+   large serif letter, not a hole in the paragraph. Nothing outside this
+   stylesheet asks for the family, so a reader who never opens the Chronicles
+   never fetches it. */
+@font-face {
+  font-family: 'Black Chancery';
+  src: url('../assets/fonts/black-chancery-caps.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0041-005A;
+}
+
+
 .chron {
   display: flex;
   flex-direction: column;
@@ -301,6 +323,37 @@
   margin: 0;
   line-height: 1.52;
   font-size: clamp(0.84rem, 1.3vw, 0.98rem);
+}
+
+/* ── The rubricated initial ───────────────────────────────────────────────
+ *
+ * A scribe wrote the body in one ink and came back afterwards with another to
+ * put in the capitals — which is why the red letter in a mediaeval page is
+ * always the FIRST thing your eye lands on and never part of the sentence's
+ * colour. Every entry in this volume opens with one.
+ *
+ * `::first-letter` rather than a wrapper element, so nothing has to be added to
+ * the markup and the guided-reading pass that bolds word-stems does not have to
+ * know this exists. It also means an entry opening with a quotation mark takes
+ * the mark and the letter together, which is what a scribe would have done.
+ *
+ * The face is Black Chancery, and this is the ONLY place in the archive it is
+ * allowed — see invariant 5 and scripts/prepare-initials.py. What makes a
+ * calligraphic hand illegible at label size is exactly what makes it right at
+ * three ems and one letter. */
+.chron-entry__text::first-letter {
+  float: left;
+  font-family: 'Black Chancery', var(--serif);
+  /* Not bold, ever. The grave entries set their text at 600 and this face has
+     no bold cut, so it would be synthesised — a smeared outline where the whole
+     point is the stroke. */
+  font-weight: 400;
+  font-size: 3.1em;
+  /* Under 1 so the letter's own body sits down into the first three lines
+     rather than pushing them apart. */
+  line-height: 0.78;
+  padding: 0.06em 0.1em 0 0;
+  color: var(--rubric);
 }
 
 /* The handful of days the rest of the chronicle turns on. Marked with a rule
