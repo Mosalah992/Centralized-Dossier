@@ -26,10 +26,29 @@ Fluent styles with Griffel, so Griffel is permitted **inside `web/src/fluent/` a
 else**; a view that needs styling gets a component from that folder, not a `makeStyles`
 call of its own. The `.css` files remain authoritative for all presentation.
 
+**Motion is GSAP, and `web/src/motion.ts` is the only place it is configured.** Four
+named curves, five durations, three staggers — none invented; they were already the
+numbers on disk, as anonymous literals in three files. `test/motion-language.test.ts`
+fails if the TypeScript copy and the `base.css` tokens ever disagree, because GSAP
+cannot read a custom property and CSS may not be written from JS.
+
+Two rules there are worth knowing before touching any of it. **No `back`, `elastic`
+or `bounce`, anywhere** — everything in this archive is heavy and hinged, and heavy
+hinged things do not recoil. And **every entrance that blanks its target must carry a
+`failsafe()`**: GSAP finishes on rAF, a document the browser is not rendering produces
+no frames, and the blanking is otherwise permanent. That is not theoretical — it put
+nine volumes at `opacity: 0` on a shelf nobody could read.
+
+`seal-invite` in `Gate.css` is the last CSS animation in the archive and stays CSS.
+It is the login affordance — its own comment records that readers could not find the
+door until it was added — and a CSS keyframe cannot fail to parse.
+
 ```
 web/src/          The SPA
   components/     Gate, Shelf, Book, Page, Ambience, Notice, ErrorBoundary
   views/          Personnel, Finance, Honors, History, Informants  (lazy-loaded)
+  motion.ts       THE motion language: curves, durations, staggers, `staged()`
+                  (reduced motion), `revealOnEnter`, `failsafe`
   styles/         base.css (tokens) · shelf.css (hall) · ledger.css (volume pages)
                   chronicle.css (the sealed volume's parchment + turning leaf)
   assets/         Build-pipeline assets: covers, portraits, fonts, sprites
@@ -113,11 +132,20 @@ the volume branch* — never at the root, where a provider would normally go. A 
 stopped at the seal must not download a UI library to render a passphrase box; that is
 the same cold-start path the lazy views exist to protect. A static import of anything
 under `web/src/fluent/` from `App.tsx`, `Gate.tsx`, `Shelf.tsx` or `main.tsx` silently
-undoes this — nothing fails, `index.js` just grows by ~90 KB gzip. Check it:
+undoes this — nothing fails, `index.js` just grows by ~90 KB gzip.
+
+**`test/bundle.test.ts` is that check, and it was proven to fail** before it was
+trusted: importing Fluent at the gate for real trips both the Griffel assertion and
+the size ceiling. It reads `dist/`, which `npm test` does not build, so it *skips*
+unless something built first — use:
 
 ```bash
-grep -c griffel dist/assets/index-*.js   # must be 0
+npm run verify
 ```
+
+The same test keeps framer-motion out (it was 39 KB gzip here, 41% of a sealed
+reader's JavaScript, until the animation layer moved to GSAP) and asserts GSAP core
+is present, since the seal ceremony cannot wait for a lazy chunk.
 
 ---
 

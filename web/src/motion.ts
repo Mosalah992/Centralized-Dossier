@@ -11,10 +11,14 @@
 // bounced entrance is the cheapest possible way to make the archive look like a
 // template. If a motion needs emphasis, it gets duration and delay, not recoil.
 //
-// WHAT IS NOT HERE. ScrollTrigger is registered in ./motion-scroll instead, and
-// the split is structural rather than tidy — see the note at the head of that
-// file. Gate.tsx imports THIS module statically, so anything reachable from here
-// lands in the entry chunk that a reader who has not signed in must download.
+// WHAT IS NOT HERE, AND WHY IT MATTERS WHERE ANYTHING GOES. Gate.tsx imports
+// this module statically, so everything reachable from it lands in the entry
+// chunk — the JavaScript a reader who has not signed in downloads before they
+// can see a seal to press. That is invariant 7's shape applied to animation
+// weight, and test/bundle.test.ts holds the line.
+//
+// ScrollTrigger, in particular, is not a dependency of this project. It was,
+// briefly; see the note on revealOnEnter for what happened.
 
 import { gsap } from 'gsap';
 import { CustomEase } from 'gsap/CustomEase';
@@ -24,14 +28,14 @@ gsap.registerPlugin(CustomEase);
 // ── Easings ────────────────────────────────────────────────────────────────
 //
 // All four of these were already in the repository before this file existed;
-// none is invented. Three were anonymous literals — two in Gate.tsx's motion
-// props and one in chronicle.css — and the fourth is the `--ease` token.
+// none is invented. Three were anonymous literals — two in Gate.tsx's animation
+// props and one on chronicle.css's turning leaf — and the fourth is `--ease`.
 //
-// That matters for how chronicle.css:416 should be read. It sets its own curve
-// instead of using `var(--ease)`, and its comment explains that a page turn
-// accelerates and then decelerates where the token is an ease-out. That was
-// never a deviation from a one-curve system: it was the second curve of a
-// four-curve system nobody had named. This names them.
+// The leaf's is the one worth understanding. It set its own curve rather than
+// using the token, and its comment explained that a page turn accelerates and
+// then decelerates where the token is an ease-out. That was never a deviation
+// from a one-curve system: it was the second curve of a four-curve system
+// nobody had named. This names them, and the leaf now asks for `swing` by name.
 //
 // GSAP does not accept cubic-bezier control points directly, which is the only
 // reason CustomEase is a dependency (~3 KB gzip, at the gate). Approximating
@@ -73,9 +77,9 @@ export const D = {
   leaf: 0.22,
   /** Hover, focus, small state. Gate.css:184's 0.35s. */
   hand: 0.35,
-  /** One object arriving or leaving. ledger.css:50's open-cover. */
+  /** One object arriving or leaving. The old `open-cover` keyframe's 0.6s. */
   page: 0.6,
-  /** A hinged board swinging. chronicle.css:416's leaf turn. */
+  /** A hinged board swinging. The turning leaf's 0.9s. */
   board: 0.9,
   /** A multi-beat sequence. The gate ceremony's 0.85 + 0.55 + 0.7. */
   ceremony: 1.6,
@@ -287,8 +291,9 @@ gsap.registerEffect({
  * IntersectionObserver has nothing to invalidate. The browser answers from
  * layout it already has, after every reflow, for free.
  *
- * ScrollTrigger keeps its place in ./motion-scroll for work that genuinely
- * needs scroll PROGRESS — scrubbing, pinning, parallax. This is not that.
+ * ScrollTrigger was removed from the project along with the approach. It earns
+ * its bytes for work that genuinely needs scroll PROGRESS — scrubbing, pinning,
+ * parallax — and the archive does none of that. Bring it back if that changes.
  *
  * @param elements  what to reveal. Left untouched if empty.
  * @param animate   run the arrival for one batch of elements.
