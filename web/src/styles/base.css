@@ -181,6 +181,39 @@ a {
   opacity: 0.45;
 }
 
+/* ── Fluent's typography stops at its provider ───────────────────────────── */
+
+/* FluentProvider paints its own design tokens onto its root element —
+   font-size: 15px and line-height: 20px — and everything the archive renders
+   inside a volume is a descendant of it.
+
+   A line-height given as a LENGTH inherits literally: the child does not scale
+   it by its own font-size, it just gets 20px. So every heading in every volume
+   was being set with 20px of leading whatever size it was, and the Thalmor
+   Chronicles' title — 30.4px over two lines in a 480px page — overlapped
+   itself by fifteen pixels. It read as the words being stacked on top of each
+   other, which is exactly what was happening.
+
+   Handing both properties back to `inherit` restores the archive's own
+   cascade (17px / 1.6 from `.volume`) without touching anything else Fluent
+   sets. Fluent's own controls declare their sizes on their own Griffel
+   classes and are unaffected — the search box, the dropdowns and the sort
+   headers were all checked after this went in.
+
+   CLAUDE.md's rule that the `.css` files stay authoritative for presentation
+   is the reason this is a stylesheet rule and not a prop on the provider.
+
+   TWO CLASSES, AND IT HAS TO BE. Griffel injects its styles into <head> at
+   RUNTIME, so they arrive after this stylesheet; at equal specificity the later
+   rule wins, and a bare `.fui-FluentProvider` loses every time. It was written
+   that way first and changed nothing at all. `.volume` is also the honest
+   scope: this is about the archive's own volumes, not about any provider that
+   might appear elsewhere. */
+.volume .fui-FluentProvider {
+  font-size: inherit;
+  line-height: inherit;
+}
+
 /* ── Reduced motion ──────────────────────────────────────────────────────── */
 
 /* The global switch, and it STAYS even though GSAP now owns most of the motion

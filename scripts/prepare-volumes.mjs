@@ -471,7 +471,16 @@ const LABEL = {
   statistics: { x: 0.27604, y: 0.26457, w: 0.56771, h: 0.19411, tooled: true },
   ledger:     { x: 0.27604, y: 0.26950, w: 0.56771, h: 0.18472, tooled: true },
   stipends:   { x: 0.27604, y: 0.24835, w: 0.56771, h: 0.20440, tooled: true },
-  honor:      { x: 0.27604, y: 0.26856, w: 0.56771, h: 0.18559, tooled: true },
+  // NO FILLET, AND A WIDE FADE. The other five sheet covers are dark enough
+  // that a blind stamp reads as tooling; this one is vellum, and on a pale
+  // ground the same faint line reads as a border drawn around a rectangle —
+  // which is the one thing this panel must not look like, as the note on the
+  // stamp itself says. The colours were never the problem: the erased field
+  // measures 167,150,114 against 167,149,110 for the board beside it. What
+  // gave it away was the OUTLINE, and a texture that changed at a hard edge.
+  // So: no stamp, and a fade four times the usual, which lets the synthesised
+  // grain hand back to the real one gradually instead of at a corner.
+  honor:      { x: 0.27604, y: 0.26856, w: 0.56771, h: 0.18559, tooled: false, feather: 4 },
   calendar:   { x: 0.27604, y: 0.27940, w: 0.56771, h: 0.18835, tooled: true },
   // The plaque's field, inside its gold ogee. The lettering runs to within two
   // pixels of the frame at both ends — "OF THE REALM" is set wider than the
@@ -635,10 +644,28 @@ function solve3(m, rhs) {
  * a panel graded separately would sit a shade off its own cover.
  */
 function relabel(data, width, height, panel, seed) {
-  const { x, y, w, h } = panel;
+  const feather = panel.feather ?? FEATHER;
+
+  // THE ERASE IS WIDER THAN THE PANEL, BY EXACTLY THE FEATHER.
+  //
+  // `panel` is the LETTERING area — where the painted title sits and where the
+  // app will set its own type. The fade has to happen somewhere, and if it
+  // happens inside that rectangle then its outer band is only partly erased,
+  // which leaves the painted letters showing through as ghosts. On the five
+  // dark covers nobody could see that; on the vellum one, widening the fade to
+  // soften the join brought "HALL OF" and "CEREMONIAL CITATIONS" back up out of
+  // the board.
+  //
+  // So the erase is grown by the feather on every side and runs at full
+  // strength across the whole lettering area, with the ramp landing on plain
+  // board outside it. The fillet below still uses the original rectangle: it is
+  // marking where the lettering goes, not where the repair reached.
+  const x = panel.x - feather;
+  const y = panel.y - feather;
+  const w = panel.w + feather * 2;
+  const h = panel.h + feather * 2;
   const x1 = x + w;
   const y1 = y + h;
-  const feather = panel.feather ?? FEATHER;
 
   const at = (px, py, c) => data[(py * width + px) * 4 + c];
 
@@ -760,17 +787,18 @@ function relabel(data, width, height, panel, seed) {
   // what "blind" means and what keeps this from competing with the gold frame
   // it sits inside. Light comes from the upper left, as it does everywhere in
   // this art, so a groove's upper wall catches and its lower wall loses.
-  const cx = x + w / 2;
-  const cy = y + h / 2;
-  const hw = w / 2;
-  const hh = h / 2;
+  // The ORIGINAL panel, not the grown erase — see the note at the top.
+  const cx = panel.x + panel.w / 2;
+  const cy = panel.y + panel.h / 2;
+  const hw = panel.w / 2;
+  const hh = panel.h / 2;
   const RADIUS = 4;
   const INSET = 4.5;
   const LX = -0.55;
   const LY = -0.84;
 
-  for (let py = Math.floor(y - 3); py < Math.ceil(y1 + 3); py++) {
-    for (let px = Math.floor(x - 3); px < Math.ceil(x1 + 3); px++) {
+  for (let py = Math.floor(panel.y - 3); py < Math.ceil(panel.y + panel.h + 3); py++) {
+    for (let px = Math.floor(panel.x - 3); px < Math.ceil(panel.x + panel.w + 3); px++) {
       const i = (py * width + px) * 4;
       if (data[i + 3] === 0) continue;
 
@@ -785,9 +813,9 @@ function relabel(data, width, height, panel, seed) {
       // less light overall and a shadow off the wall that overhangs it.
       if (sd < 0) {
         shade *= 1 - 0.02;
-        shade *= 1 - 0.03 * (1 - smoothstep(0, 22, py - y));
-        shade *= 1 + 0.03 * (1 - smoothstep(0, 10, y1 - py));
-        shade *= 1 - 0.03 * (1 - smoothstep(0, 12, px - x));
+        shade *= 1 - 0.03 * (1 - smoothstep(0, 22, py - panel.y));
+        shade *= 1 + 0.03 * (1 - smoothstep(0, 10, panel.y + panel.h - py));
+        shade *= 1 - 0.03 * (1 - smoothstep(0, 12, px - panel.x));
       } else {
         // The lip the stamp raised around itself.
         shade *= 1 + 0.03 * (1 - smoothstep(0, 3, sd)) * (py < cy ? 1 : -0.8);
