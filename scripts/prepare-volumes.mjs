@@ -660,12 +660,23 @@ function relabel(data, width, height, panel, seed) {
   // strength across the whole lettering area, with the ramp landing on plain
   // board outside it. The fillet below still uses the original rectangle: it is
   // marking where the lettering goes, not where the repair reached.
-  const x = panel.x - feather;
-  const y = panel.y - feather;
-  const w = panel.w + feather * 2;
-  const h = panel.h + feather * 2;
-  const x1 = x + w;
-  const y1 = y + h;
+  // WHOLE PIXELS, AND THIS IS NOT A TIDINESS POINT. These bounds index a raw
+  // RGBA buffer directly, and a fractional index into a typed array is not an
+  // error — it is silently undefined on read and silently DROPPED on write. The
+  // default feather is 2.5, so growing the panel by it put every edge on a half
+  // pixel, every write went nowhere, and the painted titles came straight back:
+  // "TOP SECRET" whole on two covers, and the live type sitting on top of the
+  // old lettering on the rest. Only Hall of Honor survived, because its feather
+  // happens to be 4.
+  //
+  // Out on both sides — floor the near edge, ceil the far one — so rounding can
+  // only ever cover MORE of the lettering, never less.
+  const x = Math.floor(panel.x - feather);
+  const y = Math.floor(panel.y - feather);
+  const x1 = Math.ceil(panel.x + panel.w + feather);
+  const y1 = Math.ceil(panel.y + panel.h + feather);
+  const w = x1 - x;
+  const h = y1 - y;
 
   const at = (px, py, c) => data[(py * width + px) * 4 + c];
 
