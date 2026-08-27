@@ -166,6 +166,7 @@ Asset prep — each reads from `Assets/` and writes committed output:
 node scripts/prepare-volumes.mjs   # book covers -> web/src/assets/volumes/
 node scripts/prepare-candles.mjs   # candle sprites
 node scripts/prepare-seal.mjs      # gate wax seal
+node scripts/prepare-music.mjs     # ambience tracks -> 96 kbps mono (needs FFMPEG=)
 node scripts/make-dev-vars.mjs     # .env -> .dev.vars for wrangler
 ```
 
@@ -356,8 +357,15 @@ Things an agent cannot discover from the repo, and should not guess.
   cron and roles lookup break in the gap.
 - `cloudflare-observability` and `cloudflare-bindings` MCP servers are configured in
   `.mcp.json` but unauthorised. `cloudflare-docs` works.
-- `public/music/golden-herald.mp3` is still 3.4 MB. Re-encoding to ~96 kbps mono would cut
-  it to roughly 600 kB but needs ffmpeg, which is not installed here.
+- The ambience tracks are re-encoded by `scripts/prepare-music.mjs` — 96 kbps mono, sources
+  in `Assets/`, output committed to `public/music/`. **ffmpeg is not a dependency and the
+  build never runs it**: pass `FFMPEG=/path/to/ffmpeg.exe` when a track changes, and bump
+  the `?v=` on the urls in `App.tsx`, or nobody holding the old file will ever see the new
+  one. 12.2 MB -> 5.9 MB across the three.
+  The note that stood here predicted ~600 kB for golden-herald and was simply wrong
+  arithmetic: 131 seconds at 96 kbps is 1.5 MB and cannot be less. Dropping to 64 kbps
+  would take the set to about 3.9 MB, but that is a judgement about the music rather than
+  a saving to take for granted.
 - The gate's fail-open limiter (invariant 4) is unresolved by design — failing closed
   trades availability for security.
 - An Aldmeris UI toggle was planned and stopped: there is no canonical Aldmeris lexicon,

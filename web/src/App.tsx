@@ -82,17 +82,17 @@ const MUSIC = '/music';
 
 /** The room tone of the archive itself, and of the gate before it opens. */
 const HALL_TRACK: Track = {
-  url: `${MUSIC}/summerset-glooms.mp3?v=1`,
+  url: `${MUSIC}/summerset-glooms.mp3?v=2`,
   title: 'Summerset Glooms',
   by: 'Vaerion Meanor',
 };
 
 /** Volumes that sound their own tone. Everywhere else keeps the hall's. */
 const VOLUME_TRACKS: Partial<Record<VolumeSlug, Track>> = {
-  history: { url: `${MUSIC}/golden-herald.mp3?v=1`, title: 'Golden Herald', by: 'Vaerion Meanor' },
+  history: { url: `${MUSIC}/golden-herald.mp3?v=2`, title: 'Golden Herald', by: 'Vaerion Meanor' },
   // Titled as the Embassy names it; the file keeps the name it arrived under.
   informants: {
-    url: `${MUSIC}/whispering-of-the-elder.mp3?v=1`,
+    url: `${MUSIC}/whispering-of-the-elder.mp3?v=2`,
     title: 'Whispers of the Elder',
   },
 };
