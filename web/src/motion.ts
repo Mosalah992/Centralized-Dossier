@@ -96,8 +96,17 @@ export const STAGGER = {
   roll: { each: 0.05, from: 'start', amount: 0.4 },
   /** A cloth embroidering outward. Finer, because there are more threads. */
   weave: { each: 0.018, from: 'start', amount: 0.5 },
-  /** Ranks falling in — outward from the centre of the shelf. */
-  muster: { each: 0.07, from: 'center' },
+  /**
+   * Ranks falling in — outward from the centre of the shelf.
+   *
+   * `grid: 'auto'` is doing real work here and is not decoration. Without it
+   * `from: 'center'` means the centre of the ARRAY, and the shelf's array is
+   * section-major: index 4 of nine is Hall of Honor, which sits top-right. The
+   * volumes filled outward from a corner and it read as arbitrary. With it,
+   * GSAP measures where the elements actually are and 'center' means the
+   * middle of the cabinet, which is what the word was meant to mean.
+   */
+  muster: { each: 0.07, from: 'center', grid: 'auto' },
 } as const;
 
 // ── Defaults ───────────────────────────────────────────────────────────────

@@ -59,12 +59,13 @@ const STANDALONE = [
 // lightest leaf sits far below this, so nothing on the cover is at risk.
 const WHITE = 200;
 
-// Books are normalised to this width. It is close to their native ~380px, so
-// the resample stays under 2% and the gold filigree keeps its edges.
+// The six sheet books are normalised to this width. It is close to their native
+// ~380px, so the resample stays under 2% and the gold filigree keeps its edges.
+// The standalone covers are normalised on HEIGHT instead — see the note where
+// the scales are chosen — so the canvas is derived rather than fixed.
 const BODY_W = 384;
 const PAD_X = 8;
 const PAD_TOP = 4;
-const CANVAS_W = BODY_W + PAD_X * 2;
 
 // A pixel counts as art only well clear of the feathered edge, so the faint
 // halo around each book does not merge the columns into one run.
@@ -153,17 +154,34 @@ function measureBook(src, region, slug) {
   const widest = Math.max(...widths);
   const bodyRows = widths.map((n, i) => (n > widest * 0.5 ? i : -1)).filter((i) => i >= 0);
 
-  const scale = BODY_W / (x1 - x0 + 1);
   return {
     slug, src,
     x0, y0,
     w: x1 - x0 + 1,
     h: y1 - y0 + 1,
-    scale,
-    // Both relative to the top of the crop, already in output pixels.
-    bodyBottom: Math.round((bodyRows[bodyRows.length - 1] + 1) * scale),
-    scaledH: Math.round((y1 - y0 + 1) * scale),
+    // Raw, in SOURCE pixels. The scale is chosen after every book has been
+    // measured — see `fit` — because one of them depends on the others.
+    rawBodyTop: bodyRows[0],
+    rawBodyBottom: bodyRows[bodyRows.length - 1] + 1,
   };
+}
+
+/**
+ * Fix a book's scale, and everything that follows from it.
+ *
+ * Split out of measureBook because the standalone covers cannot be scaled until
+ * the sheet's own body height is known, and that is not known until every book
+ * on the sheet has been measured.
+ */
+function fit(book, scale) {
+  book.scale = scale;
+  book.scaledW = Math.round(book.w * scale);
+  book.scaledH = Math.round(book.h * scale);
+  // Both relative to the top of the crop, already in output pixels.
+  book.bodyTop = Math.round(book.rawBodyTop * scale);
+  book.bodyBottom = Math.round(book.rawBodyBottom * scale);
+  book.bodyH = book.bodyBottom - book.bodyTop;
+  return book;
 }
 
 const sheet = await loadRaw(SRC);
@@ -199,7 +217,46 @@ for (let r = 0; r < rows.length; r++) {
 
 for (const { slug, file, keyWhite } of STANDALONE) {
   const src = await loadRaw(path.join(ROOT, 'Assets', file), { keyWhite });
-  books.push({ ...measureBook(src, { x: 0, y: 0, w: src.W, h: src.H }, slug), keyed: Boolean(keyWhite) });
+  books.push({
+    ...measureBook(src, { x: 0, y: 0, w: src.W, h: src.H }, slug),
+    keyed: Boolean(keyWhite),
+    standalone: true,
+  });
+}
+
+// ── Choosing each book's scale ─────────────────────────────────────────────
+//
+// THE SIX SHEET COVERS ARE NORMALISED ON WIDTH, and their body heights are left
+// to differ by the couple of percent they differ by. That variation is the
+// point: six volumes bound by hand are not the same height, and forcing them to
+// be looks worse than the variation does.
+//
+// THE STANDALONE COVERS ARE NORMALISED ON HEIGHT INSTEAD, and that is a repair.
+// Width normalisation assumed every book was drawn to roughly the sheet's
+// proportions — the comment on STANDALONE said as much — and for the Top Secret
+// volume it is not true: it is a squatter book, 0.857 wide for every unit tall
+// against the sheet's 0.828. Normalised on width it came out 448 tall where the
+// sheet's are 459 to 468, and standing it beside History of the Realm in the
+// Chronicles row put a three-and-a-half percent difference side by side. It did
+// not read as hand-bound variation. It read as one volume sitting wrong.
+//
+// So they are scaled to the sheet's median body height and come out WIDER,
+// which is honest: a squat, wide volume standing the same height as its
+// neighbours is a real thing on a real shelf. A ragged top edge is not.
+for (const book of books) {
+  if (!book.standalone) fit(book, BODY_W / book.w);
+}
+
+const sheetHeights = books
+  .filter((b) => !b.standalone)
+  .map((b) => b.bodyH)
+  .sort((a, b) => a - b);
+const targetBodyH = sheetHeights[Math.floor(sheetHeights.length / 2)];
+
+for (const book of books) {
+  if (book.standalone) {
+    fit(book, targetBodyH / (book.rawBodyBottom - book.rawBodyTop));
+  }
 }
 
 // One baseline for all of them: deep enough that the tallest body still clears
@@ -208,6 +265,9 @@ for (const { slug, file, keyWhite } of STANDALONE) {
 // never leave a newcomer floating above the shelf or clipped at the foot.
 const baseline = PAD_TOP + Math.max(...books.map((b) => b.bodyBottom));
 const canvasH = baseline + Math.max(...books.map((b) => b.scaledH - b.bodyBottom)) + PAD_TOP;
+// Wide enough for the widest book, which is no longer always BODY_W now that
+// the standalone covers are scaled to a height rather than to a width.
+const canvasW = Math.max(...books.map((b) => b.scaledW)) + PAD_X * 2;
 
 // ── Pass 2: cut, place, encode ────────────────────────────────────────────
 
@@ -407,25 +467,52 @@ function bind(data, width, height, cfg) {
 // between two painted rules. In both cases the frame is kept and only the
 // field inside it is cleared.
 const LABEL = {
-  roster:     { x: 114, y: 141, w: 218, h:  86, tooled: true },
-  statistics: { x: 114, y: 138, w: 218, h:  88, tooled: true },
-  ledger:     { x: 114, y: 143, w: 218, h:  83, tooled: true },
-  stipends:   { x: 114, y: 129, w: 218, h:  93, tooled: true },
-  honor:      { x: 114, y: 136, w: 218, h:  85, tooled: true },
-  calendar:   { x: 114, y: 146, w: 218, h:  85, tooled: true },
+  roster:     { x: 0.27604, y: 0.28066, w: 0.56771, h: 0.18729, tooled: true },
+  statistics: { x: 0.27604, y: 0.26457, w: 0.56771, h: 0.19411, tooled: true },
+  ledger:     { x: 0.27604, y: 0.26950, w: 0.56771, h: 0.18472, tooled: true },
+  stipends:   { x: 0.27604, y: 0.24835, w: 0.56771, h: 0.20440, tooled: true },
+  honor:      { x: 0.27604, y: 0.26856, w: 0.56771, h: 0.18559, tooled: true },
+  calendar:   { x: 0.27604, y: 0.27940, w: 0.56771, h: 0.18835, tooled: true },
   // The plaque's field, inside its gold ogee. The lettering runs to within two
   // pixels of the frame at both ends — "OF THE REALM" is set wider than the
   // plaque's straight runs are long — so this one is cut close and given a
   // narrower fade than the rest. It can afford one: the field is flat black, so
   // there is no texture either side of the join for a seam to show up in.
-  history:    { x: 148, y: 183, w: 181, h:  56, tooled: false, feather: 1.2 },
+  history:    { x: 0.36458, y: 0.36022, w: 0.47135, h: 0.12439, tooled: false, feather: 1.2 },
   // Between the two painted rules that already frame the title. They are the
   // volume's own cartouche and are left exactly where they are.
-  informants: { x: 118, y: 115, w: 214, h: 104, tooled: false },
-  // Same art, so the same measured panel. If the source is ever replaced these
-  // two part company and this number must be re-read off the new cover.
-  enforcement: { x: 118, y: 115, w: 214, h: 104, tooled: false },
+  informants:  { x: 0.28646, y: 0.18708, w: 0.55729, h: 0.23740, tooled: false },
+  // Same source art, so the same panel — and now genuinely the same, rather
+  // than the same numbers happening to land in the same place.
+  enforcement: { x: 0.28646, y: 0.18708, w: 0.55729, h: 0.23740, tooled: false },
 };
+
+/**
+ * Turn a book's fractional label panel into pixels on its own canvas.
+ *
+ * FRACTIONS OF THE BODY BOX, NOT CANVAS PIXELS, and that is a repair. The table
+ * above held absolute pixel rectangles measured against one particular canvas
+ * size and one particular scale. The moment a book was rescaled — which is what
+ * normalising the standalone covers on height does — the panel stayed put while
+ * the artwork moved out from under it, and the erased "TOP SECRET" it exists to
+ * cover came back through on two of the volumes.
+ *
+ * Anchored to the BODY rather than to the whole crop because the body is the
+ * thing the lettering is painted on; the ribbon hanging below it is not part of
+ * the coordinate system the panel lives in.
+ */
+function panelFor(book, canvasWidth, baselineY) {
+  const f = LABEL[book.slug];
+  const bodyH = book.bodyH;
+  return {
+    x: Math.round(Math.round((canvasWidth - book.scaledW) / 2) + f.x * book.scaledW),
+    y: Math.round(baselineY - bodyH * (1 - f.y)),
+    w: Math.round(f.w * book.scaledW),
+    h: Math.round(f.h * bodyH),
+    tooled: f.tooled,
+    feather: f.feather,
+  };
+}
 
 /** Rows sampled on each side of the panel to carry the leather across it. */
 const DONOR = 5;
@@ -741,7 +828,7 @@ for (const book of books) {
   const { data, W, H, C } = book.src;
   let pipeline = sharp(data, { raw: { width: W, height: H, channels: C } })
     .extract({ left: book.x0, top: book.y0, width: book.w, height: book.h })
-    .resize(BODY_W, book.scaledH, { kernel: 'lanczos3' });
+    .resize(book.scaledW, book.scaledH, { kernel: 'lanczos3' });
 
   if (book.modulate) pipeline = pipeline.modulate(book.modulate);
 
@@ -752,11 +839,16 @@ for (const book of books) {
   // cut out of.
   const placed = await sharp({
     create: {
-      width: CANVAS_W, height: canvasH,
+      width: canvasW, height: canvasH,
       channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 },
     },
   })
-    .composite([{ input: cover, left: PAD_X, top: baseline - book.bodyBottom }])
+    // Centred, because a book scaled to a height is not BODY_W wide.
+    .composite([{
+      input: cover,
+      left: Math.round((canvasW - book.scaledW) / 2),
+      top: baseline - book.bodyBottom,
+    }])
     .ensureAlpha()
     .raw()
     .toBuffer();
@@ -765,17 +857,17 @@ for (const book of books) {
   // whole canvas, and leather that skipped that pass would be a shade off the
   // cover it was reconstructed from.
   const grain = relabel(
-    placed, CANVAS_W, canvasH, LABEL[book.slug],
+    placed, canvasW, canvasH, panelFor(book, canvasW, baseline),
     // A seed per volume, so no two covers get the same grain, and the same
     // seed on every run, so a rerun does not put a different hide in the diff.
     [...book.slug].reduce((a, ch) => a * 31 + ch.charCodeAt(0), 7) % 997,
   );
 
-  const bound = bind(placed, CANVAS_W, canvasH, STOCK[book.slug]);
+  const bound = bind(placed, canvasW, canvasH, STOCK[book.slug]);
 
   const out = path.join(OUT_DIR, `${book.slug}.webp`);
   const result = await sharp(bound, {
-    raw: { width: CANVAS_W, height: canvasH, channels: 4 },
+    raw: { width: canvasW, height: canvasH, channels: 4 },
   })
     .webp({ quality: 90, alphaQuality: 100, effort: 6 })
     .toFile(out);
@@ -792,7 +884,7 @@ for (const book of books) {
 
 console.log(
   `\nwrote ${books.length} covers to ${path.relative(ROOT, OUT_DIR)} `
-  + `— ${CANVAS_W}x${canvasH}, standing on y=${baseline}`,
+  + `— ${canvasW}x${canvasH}, standing on y=${baseline}`,
 );
 
 // The shelf has to set its type over the panel this script just cleared, and
@@ -810,9 +902,9 @@ const labels = Object.fromEntries(
     const { x, y, w, h } = LABEL[slug];
     const round = (v) => Number(v.toFixed(5));
     return [slug, {
-      left: round(x / CANVAS_W),
+      left: round(x / canvasW),
       top: round(y / canvasH),
-      width: round(w / CANVAS_W),
+      width: round(w / canvasW),
       height: round(h / canvasH),
     }];
   }),

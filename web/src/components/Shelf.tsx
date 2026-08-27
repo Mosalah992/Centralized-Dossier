@@ -30,6 +30,14 @@ export function Shelf({ onOpen }: Props) {
    * transition on `transform` — and a tween writing inline transform to that
    * element would be chased by its own transition, which is the surest way to
    * get motion that looks broken rather than wrong.
+   *
+   * RUNS ONCE, ON MOUNT, AND THE EMPTY DEPENDENCY LIST IS THE POINT. It was
+   * keyed on `shelf.state` first, which made the volumes muster TWICE: once
+   * when the component mounted and again when the archivist answered and the
+   * state went from loading to ready. The books do not come from that fetch —
+   * they are the static SHELF registry, and the fetch only says which tab each
+   * one is bound to — so there was never anything for a second run to add
+   * except a second entrance on top of the first.
    */
   useGSAP(() => staged(({ moving }) => {
     const shelfEl = cabinet.current;
@@ -40,7 +48,9 @@ export function Shelf({ onOpen }: Props) {
 
     const arrive = gsap.fromTo(books,
       { opacity: 0, y: 18 },
-      { opacity: 1, y: 0, duration: D.board, ease: 'draw',
+      // `page`, not `board`: a board is a hinged cover swinging open, and this
+      // is one object arriving on a shelf. It is also 300ms less of it.
+      { opacity: 1, y: 0, duration: D.page, ease: 'draw',
         stagger: STAGGER.muster, clearProps: 'opacity,transform' });
     // Nine volumes blanked and never un-blanked is a shelf nobody can read.
     const rescue = failsafe(arrive);
@@ -50,7 +60,7 @@ export function Shelf({ onOpen }: Props) {
       arrive.kill();
       gsap.set(books, { clearProps: 'opacity,transform' });
     };
-  }), [shelf.state]);
+  }), []);
 
   /*
    * Motes drifting through the torchlight.

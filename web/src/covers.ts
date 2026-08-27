@@ -29,9 +29,17 @@ export const COVERS: Record<VolumeSlug, string> = {
   enforcement,
 };
 
-/** Intrinsic size of every cover, so the shelf reserves its space up front. */
-export const COVER_W = 400;
-export const COVER_H = 532;
+/**
+ * Intrinsic size of every cover, so the shelf reserves its space up front.
+ *
+ * Derived by scripts/prepare-volumes.mjs and printed by it — the canvas is
+ * sized to the widest book and the tallest ribbon, so it moves when a cover is
+ * added or a scale changes. If these two numbers stop matching what that script
+ * reports, the shelf reserves the wrong box and every cover is letterboxed
+ * inside it.
+ */
+export const COVER_W = 415;
+export const COVER_H = 537;
 
 /**
  * Where each cover's lettering panel is, as fractions of the cover.
