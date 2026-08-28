@@ -352,7 +352,11 @@
   /* Under 1 so the letter's own body sits down into the first three lines
      rather than pushing them apart. */
   line-height: 0.78;
-  padding: 0.06em 0.1em 0 0;
+  /* The top padding sets how far the letter sits down into the block. Raised
+     from 0.06em: Black Chancery carries a tall, light entry stroke on most of
+     its capitals, and at three ems that stroke stood proud of the first line
+     of text rather than beginning level with it. */
+  padding: 0.16em 0.1em 0 0;
   color: var(--rubric);
 }
 

@@ -36,6 +36,9 @@ import { Sieve } from '../fluent/Sieve';
  */
 const RUNGS: Record<string, { label: string; grave: 'death' | 'penalty' | 'none' }> = {
   execution: { label: 'Put to death', grave: 'death' },
+  // Sits next to execution because both end in a death, and stays a separate
+  // rung because only one of them was a sentence.
+  affray: { label: 'Killed in a fight', grave: 'death' },
   arrest: { label: 'Taken', grave: 'penalty' },
   interrogation: { label: 'Questioned', grave: 'penalty' },
   labour: { label: 'Set to labour', grave: 'penalty' },
@@ -207,6 +210,10 @@ export function EnforcementView() {
   }
 
   const deaths = entries.filter((e) => e.kind === 'execution').length;
+  // Counted apart from the executions rather than folded in with them. Both
+  // are deaths, and collapsing them would let a killing in an ambush read as a
+  // sentence passed — the distinction this ledger exists to keep.
+  const felled = entries.filter((e) => e.kind === 'affray').length;
   const taken = entries.filter((e) => rungGrave(e.kind) === 'penalty').length;
 
   return (
@@ -224,6 +231,7 @@ export function EnforcementView() {
         items={[
           { label: 'Acts recorded', value: entries.length },
           { label: 'Put to death', value: deaths },
+          ...(felled ? [{ label: 'Killed in a fight', value: felled }] : []),
           { label: 'Penalty exacted', value: taken },
           { label: 'Hands named', value: agents.length },
         ]}
