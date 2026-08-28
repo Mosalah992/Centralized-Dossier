@@ -60,12 +60,31 @@ for i in range(1, len(parts), 2):
     read_bodies[int(parts[i])] = parts[i + 1]
 
 def fingerprint(text):
-    """Longest run of alphanumerics, lowercased — stable across the heading and
-    formatting differences between the two files."""
-    words = re.findall(r'[a-z0-9]+', text.lower())
-    return ' '.join(words[3:23])
+    """The first twenty words of the report's PROSE, lowercased.
 
-read_prints = {fingerprint(b) for b in read_bodies.values()}
+    THE METADATA IS STRIPPED FIRST, and that is the whole of why this works.
+    An earlier version skipped three words and took the next twenty, which
+    assumed the two files agreed on what those three words were. They never
+    did: candidates.md keeps the agent's name on the body's first line and the
+    reports doc lifts it into a heading, so the offset slipped by the length of
+    each agent's name — and the doc's <sub> line has since grown "as written:"
+    and "with ..." fields that candidates.md was written before. Either alone
+    was enough to make every fingerprint miss.
+
+    It did not fail loudly. It reported all 334 net hits as unread, which reads
+    exactly like a sieve doing its job on a corpus nobody has touched, and the
+    only tell was that the number never went down. Anchoring on the prose means
+    the comparison depends on the words of the report itself and on nothing the
+    two files format differently.
+    """
+    text = re.sub(r'<sub>.*?</sub>', '', text, flags=re.S)
+    text = text.replace('```', ' ')
+    words = re.findall(r'[a-z0-9]+', text.lower())
+    return ' '.join(words[:20])
+
+# candidates.md carries "Agent — date" on the body's first line; the reports doc
+# does not. Drop it so both sides start at the same place.
+read_prints = {fingerprint(b.split(chr(10), 1)[-1]) for b in read_bodies.values()}
 
 missed = []
 for i, agent, body in hits:
@@ -73,7 +92,8 @@ for i, agent, body in hits:
         missed.append((i, agent, body))
 
 print()
-print('IN THE WIDE NET BUT NOT IN THE 195 READ:', len(missed))
+print('read reports located in the source:', len(read_prints & {fingerprint(b) for _, _, b in hits}))
+print('IN THE WIDE NET BUT NOT ALREADY READ:', len(missed))
 io.open('tmp/enforce/missed.md', 'w', encoding='utf-8', newline='\n').write(
     '\n'.join('=== [%d] %s\n%s' % (i, a, b.strip()) for i, a, b in missed))
 print('written to tmp/enforce/missed.md')

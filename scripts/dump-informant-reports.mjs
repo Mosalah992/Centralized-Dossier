@@ -30,9 +30,13 @@ const env = Object.fromEntries(
     .map((l) => [l.slice(0, l.indexOf('=')).trim(), l.slice(l.indexOf('=') + 1).trim()]),
 );
 
-const TOKEN = env.DISCORD_TOKEN;
+// DISCORD_BOT_TOKEN first, DISCORD_TOKEN second. The original key held the
+// token that was exposed in a transcript; its replacement was issued under the
+// newer name and the old one is now dead, so a script reading only the old name
+// fails with a 401 that looks like lost access rather than a renamed key.
+const TOKEN = env.DISCORD_BOT_TOKEN ?? env.DISCORD_TOKEN;
 if (!TOKEN) {
-  console.error('No DISCORD_TOKEN in .env — cannot reach Discord.');
+  console.error('No DISCORD_BOT_TOKEN or DISCORD_TOKEN in .env — cannot reach Discord.');
   process.exit(1);
 }
 
