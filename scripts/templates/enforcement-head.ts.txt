@@ -1,0 +1,77 @@
+// The Ledger of Enforcement — every act of the White-Gold Concordat, as the
+// agents who carried it out wrote it down.
+//
+// Compiled from the informants' own reports: 650 filings sieved to 195 that
+// carry a coercive act, every one of those read, and each act set down as who
+// acted, what was done, to whom, how, and how it ended. Nothing here is
+// invented and nothing is softened. Where a report names the hand that struck,
+// that hand is named.
+//
+// WHY IT IS SERVED AND NOT BUNDLED. This is a list of people the Embassy
+// arrested, fined, set to labour and put to death. Static assets are public —
+// only /api/* passes through api/_middleware.ts — so a volume compiled into the
+// browser bundle is readable by anyone with the link, gate or no gate. It is
+// served from /api/enforcement instead, and the reader's copy arrives only
+// after the middleware has checked their writ. History of the Realm is bundled
+// because the free presses printed it; this was never printed anywhere.
+//
+// AFFRAY IS NOT A RUNG OF THE LADDER, and it is filed here anyway. The other
+// nine are penalties — things the Embassy decided to do to someone after it had
+// caught them. `affray` is a death in a fight: an ambush on the Embassy road, a
+// worshipper who swung first, a shield wall at the Palace of the Kings. Nobody
+// was charged and nothing was weighed. It was left out of this register at
+// first for exactly that reason, and putting it back in was the right call:
+// a ledger of what the Embassy did to people that omits the people its agents
+// killed is not a smaller record, it is a flattering one.
+//
+// THE WHOLE LADDER IS HERE, not only the deaths. The Embassy fined an orc his
+// boots, set a man to work a sawmill for saying "Blessings of the Nine", and
+// let others walk for naming someone else — and a register of only the
+// executions would misrepresent what these agents actually spent their days
+// doing. `kind` carries which rung it was.
+//
+// NOT EVERY HAND IS OURS. Where a report records an arrest made by Whiterun, by
+// Morthal, or by the Legion, the actor is named as they were. The Embassy wrote
+// these down; it did not always do them.
+//
+// WHERE TWO REPORTS DISAGREE, BOTH ARE KEPT. Two agents' accounts of the same
+// prisoner give him two different sentences; a woman reported executed turns up
+// alive at the gate a fortnight later. The contradictions are written into the
+// records that carry them, in capitals, rather than resolved by picking — the
+// same habit docs/skyrim-press-history.md keeps with the newspapers.
+//
+// GENERATED from tmp/enforce/records.jsonl by tmp/enforce/emit.py. Edit the
+// records, not this file.
+
+export type Rung =
+  | 'execution' | 'affray' | 'arrest' | 'interrogation' | 'fine'
+  | 'labour' | 'release' | 'seizure' | 'lesser' | 'failed';
+
+export interface Enforcement {
+  /** In-world date, as the reports reckon it. */
+  date: string;
+  /** Who acted. More than one name where the taking and the killing differ. */
+  agent: string;
+  /** What that agent did. */
+  act: string;
+  /** The accused, by the name the report gives. */
+  subject: string;
+  /** Rank, race or standing, where the report supplies one. */
+  title: string;
+  /** How it was done. */
+  method: string;
+  /** How it ended. */
+  outcome: string;
+  /**
+   * The one name the act is filed under, resolved from `agent` at generation
+   * time. `agent` stays a sentence because a report names everyone who stood
+   * there; this exists so a reader can ask what a given hand has done without
+   * the browser having to parse that sentence — which was tried, and which
+   * turned one agent into four. Not always one of ours: a hold or the Legion
+   * can be the hand, and is named as such.
+   */
+  hand: string;
+  kind: Rung;
+}
+
+export const ENFORCEMENTS: Enforcement[] = [

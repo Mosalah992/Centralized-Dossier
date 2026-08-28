@@ -1,0 +1,71 @@
+// The data of History of the Realm.
+//
+// SPLIT OUT OF History.tsx so the Archives Editor can own it. The view keeps
+// its prose — the preamble, the Road to War, the transcribed Notice of Recall
+// — because those are JSX carrying real markup, and a data file cannot hold an
+// <em> without inventing a markup language to put it back. What lives here is
+// what is genuinely a record: the dated entries, and the papers they came from.
+//
+// GENERATED from content/history.json by scripts/emit-history.mjs.
+// Edit the JSON — or use the Archives Editor — not this file.
+
+export interface Entry {
+  date: string;
+  text: string;
+  /** Set for the handful of days the rest of the chronicle turns on. */
+  weight?: 'grave';
+}
+
+export const SECOND_SEED: Entry[] = [
+//{{SECOND_SEED}}
+];
+
+export const MIDYEAR: Entry[] = [
+//{{MIDYEAR}}
+];
+
+/*
+ * THE RECALL, 4E 226 — the Embassy's own notices, not the presses'.
+ *
+ * Ten years after the chronicle above, and a different kind of record: these
+ * were posted on the Embassy's boards by the officers who signed them, so they
+ * are the Embassy's account of the Embassy. Where the press entries are edited
+ * down from four papers that could contradict one another, these can only
+ * contradict THEMSELVES — and over seven days they do, twice, plainly enough
+ * that the aside beneath them does nothing but set the dates side by side.
+ *
+ * Transcribed from the notices as posted. The dates are the realm's, reckoned
+ * from the hour each was signed; the ranks and names are the roster's.
+ */
+export const RECALL: Entry[] = [
+//{{RECALL}}
+];
+
+/*
+ * THE NOTICE OF RECALL — Alinor's answer, and the only document in this volume
+ * that was sent TO the Embassy rather than posted by it.
+ *
+ * Transcribed from the sealed original. Everything else in the section above is
+ * the Embassy talking about itself; this is the Dominion talking about the
+ * Embassy, and it is set apart on the page for that reason.
+ *
+ * ITS OWN SPELLING IS KEPT. "antithecal", "Condordat", "Emmissary", and a
+ * sentence in the fifth paragraph that stops at "before ." with the name never
+ * written. A transcription that quietly corrects a document is no longer
+ * evidence of it — the same rule docs/skyrim-press-history.md keeps with the
+ * newspapers, and the errors are the reader's to weigh, not mine to tidy.
+ */
+export const RECALL_NOTICE: string[] = [
+//{{RECALL_NOTICE}}
+];
+
+export interface Paper {
+  name: string;
+  span: string;
+  staff: string;
+  note: string;
+}
+
+export const PAPERS: Paper[] = [
+//{{PAPERS}}
+];

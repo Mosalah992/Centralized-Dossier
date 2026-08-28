@@ -46,6 +46,20 @@ functions/lib/enforcement.ts
 docs/informant-reports.md
 docs/informant-events-ledger.md
 
+# THE VOLUMES' NEW SOURCE OF TRUTH. The two modules above are generated from
+# these by scripts/emit-*.mjs, so ignoring only the generated file would publish
+# the very prose it was ignored for — the same volume, one step upstream.
+#
+# content/history.json is NOT ignored, deliberately. History of the Realm is
+# bundled into the browser and is transcribed from newspapers the whole province
+# could buy; there is nothing in it the gate exists to withhold.
+content/chronicle.json
+content/enforcement.jsonl
+
+# Every save the Archives Editor takes. Snapshots of the two files above, so
+# exactly as unpublishable as they are.
+content/.history/
+
 # Hesperides was tried for --display and reverted — it comes apart into
 # disconnected strokes at label size (see the note in base.css). Nothing embeds
 # it, and this repo is public, so committing the face would redistribute a

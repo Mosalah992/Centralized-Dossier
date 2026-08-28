@@ -32,12 +32,18 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 /** Named one by one, on purpose — see the note above. */
 const FILES = [
-  ['functions/lib/chronicle.ts', 'The Thalmor Chronicles. WRITTEN, NOT DERIVED — nothing rebuilds this.'],
-  ['functions/lib/enforcement.ts', 'The Ledger of Enforcement, generated from records.jsonl by emit.py.'],
+  // THE SOURCE OF TRUTH MOVED. chronicle.ts used to be the irreplaceable file;
+  // it is now generated from content/chronicle.json, and that JSON is what
+  // cannot be rebuilt. Backing up only the generated module would have left the
+  // safety net pointed at a build artefact.
+  ['content/chronicle.json', 'The Thalmor Chronicles. WRITTEN, NOT DERIVED — nothing rebuilds this.'],
+  ['content/enforcement.jsonl', 'The Ledger, one judgement call per record. Emitted to enforcement.ts.'],
+  ['content/history.json', 'History of the Realm. Also in git, but kept here so a restore is one folder.'],
+  ['functions/lib/chronicle.ts', 'Generated. Kept so a restore can skip the emitters if it needs to.'],
+  ['functions/lib/enforcement.ts', 'Generated from content/enforcement.jsonl.'],
   ['docs/informant-reports.md', 'Every report, redacted. Regenerates from a fresh export.'],
   ['docs/informant-events-ledger.md', 'The reading pass over the reports. No script rebuilds this.'],
-  ['tmp/enforce/records.jsonl', 'THE WORKING COPY of the ledger. One judgement call per record.'],
-  ['tmp/enforce/emit.py', 'Turns records.jsonl into functions/lib/enforcement.ts.'],
+  ['tmp/enforce/emit.py', 'The original Python emitter. Superseded by scripts/emit-enforcement.mjs, kept as the record of how the ledger was built.'],
   ['tmp/enforce/candidates.md', 'The reports that were read. audit-enforcement-sieve.py needs this.'],
 ];
 
