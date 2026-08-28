@@ -124,17 +124,40 @@ function tidy(text: string): string {
 
 export function redact(text: string): string {
   return tidy(text || '')
-    .replace(/<@!?(\d{17,20})>/g, '[an agent]')
-    .replace(/<@&(\d{17,20})>/g, '[a rank]')
-    .replace(/<#(\d{17,20})>/g, '[a channel]')
+    /*
+     * A PING IS NOT PROSE, so it is removed rather than marked.
+     *
+     * These were bracketed markers — [an agent], [a rank] — and the brackets
+     * were a mistake twice over. They are the square brackets the filings were
+     * meant to be rid of, and one filing opened with one, which put the
+     * rubricated initial on "[a" and left "n agent]" stranded in the text.
+     *
+     * Nothing is lost by deleting them. A mention is somebody typing a name to
+     * summon a reader's attention; it carries no account of anything, and a
+     * report reads correctly without it — "Other Agents: @Someone" becomes
+     * "Other Agents:", which is exactly as informative once the name is gone.
+     */
+    .replace(/<@!?(\d{17,20})>/g, '')
+    .replace(/<@&(\d{17,20})>/g, '')
+    .replace(/<#(\d{17,20})>/g, '')
     // Custom emoji keep their name and lose the id that points at the guild.
     .replace(/<a?:(\w+):(\d{17,20})>/g, ':$1:')
-    // Signed CDN links expire and still encode channel and attachment ids; any
-    // other link is an offsite reference we have no reason to republish.
-    .replace(/https?:\/\/\S+/g, '[link]')
+    /*
+     * A LINK KEEPS A WORD, and it is the one thing here that does. Signed CDN
+     * links expire and still encode channel and attachment ids, so the address
+     * cannot stay — but a reader should know a filing came with something
+     * attached, because "proof:" followed by nothing reads as a report that
+     * failed rather than one that was cleaned.
+     */
+    .replace(/https?:\/\/\S+/g, 'a link')
     // Anything snowflake-shaped left is an id somebody pasted by hand.
-    .replace(/\b\d{17,20}\b/g, '[id]')
+    .replace(/\b\d{17,20}\b/g, '')
+    // Tidy what the removals left: doubled spaces mid-line, spaces before
+    // punctuation, and blank lines at the head where a mention used to sit.
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/ ([,.;:!?])/g, '$1')
     .replace(/[ \t]+$/gm, '')
+    .replace(/\n{3,}/g, '\n\n')
     .trim();
 }
 

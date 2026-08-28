@@ -40,13 +40,22 @@ function message(content: string, over: Partial<RawMessage> = {}): RawMessage {
 }
 
 describe('redaction', () => {
-  it('replaces mention markup rather than mauling it', () => {
-    // The bare-snowflake sweep would otherwise leave `<@[id]>` behind: markup
-    // that resolves to nothing and reads as nothing.
-    expect(redact('<@1498207051762106438> was there')).toBe('[an agent] was there');
-    expect(redact('<@!1498207051762106438> too')).toBe('[an agent] too');
-    expect(redact('ping <@&1498207051762106438>')).toBe('ping [a rank]');
-    expect(redact('see <#1498207051762106438>')).toBe('see [a channel]');
+  it('removes mention markup outright — a ping is not prose', () => {
+    // The markup must go before the bare-snowflake sweep, which would
+    // otherwise eat the id and leave `<@>` behind.
+    expect(redact('<@1498207051762106438> was there')).toBe('was there');
+    expect(redact('<@!1498207051762106438> too')).toBe('too');
+    expect(redact('ping <@&1498207051762106438>')).toBe('ping');
+    expect(redact('see <#1498207051762106438>')).toBe('see');
+    expect(redact('Other Agents: <@1498207051762106438>')).toBe('Other Agents:');
+  });
+
+  it('leaves no bracket behind for the drop cap to land on', () => {
+    // A filing opened with a bracketed marker in production; ::first-letter
+    // took "[a" as the rubricated initial and stranded "n agent]" in the text.
+    const opened = redact("<@1498207051762106438>\nAgent Name: Officer Jo'Khazan");
+    expect(opened.startsWith('Agent')).toBe(true);
+    expect(opened).not.toMatch(/[[\]]/);
   });
 
   it('keeps an emoji’s name and drops the id pointing at the guild', () => {
@@ -56,12 +65,14 @@ describe('redaction', () => {
 
   it('strips every link, signed CDN ones included', () => {
     const cdn = 'https://cdn.discordapp.com/attachments/149/150/x.png?ex=1&is=2&hm=deadbeef';
-    expect(redact(`proof: ${cdn}`)).toBe('proof: [link]');
-    expect(redact('http://example.com/a')).toBe('[link]');
+    // The address goes; a word stays, so "proof:" followed by nothing does not
+    // read as a report that failed rather than one that was cleaned.
+    expect(redact(`proof: ${cdn}`)).toBe('proof: a link');
+    expect(redact('http://example.com/a')).toBe('a link');
   });
 
   it('sweeps hand-pasted snowflakes', () => {
-    expect(redact('his id is 1498207051762106438 apparently')).toBe('his id is [id] apparently');
+    expect(redact('his id is 1498207051762106438 apparently')).toBe('his id is apparently');
   });
 
   it('strips the marks of the tool the report was typed into', () => {
@@ -80,15 +91,18 @@ describe('redaction', () => {
     expect(redact('_emphasised_ text')).toBe('emphasised text');
   });
 
-  it('KEEPS the redaction markers, which are themselves bracketed', () => {
-    // The ordering this pins is the whole risk in tidying: strip brackets after
-    // the redaction runs and you erase exactly the marks that tell a reader
-    // something was taken out.
-    expect(redact('**see** <@1498207051762106438> there'))
-      .toBe('see [an agent] there');
-    expect(redact('[proof: https://cdn.discordapp.com/x.png]'))
-      .toBe('proof: [link]');
-    expect(redact('*ping* <@&1498207051762106438>')).toBe('ping [a rank]');
+  it('leaves no square bracket or asterisk anywhere in the result', () => {
+    // The whole point of the pass, asserted on the shapes that carried them.
+    for (const raw of [
+      '**see** <@1498207051762106438> there',
+      '[proof: https://cdn.discordapp.com/x.png]',
+      '*ping* <@&1498207051762106438>',
+      '```[a bracketed, fenced report]```',
+      '- [ ] a task **in bold**',
+    ]) {
+      expect(redact(raw)).not.toMatch(/[[\]*]/);
+    }
+    expect(redact('**see** <@1498207051762106438> there')).toBe('see there');
   });
 
   it('leaves ordinary prose alone', () => {
