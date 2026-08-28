@@ -7,10 +7,14 @@
 // deployed, and nothing to remember to turn off. `apply: 'serve'` says the same
 // thing to Vite, and the guard in the handler says it a third time.
 //
-// It binds to whatever Vite binds to — 127.0.0.1 by default — and is not
-// authenticated, because it is not reachable. If anyone ever passes --host to
-// the dev server, this API goes with it; that is the one way this becomes a
-// hole, and it is called out in CLAUDE.md.
+// IT REFUSES ANYTHING THAT IS NOT LOCAL, and that check is the reason there is
+// no warning in CLAUDE.md about this. Vite already binds to localhost alone —
+// it prints "Network: use --host to expose" and means it — so by default this
+// API is unreachable from anywhere else on the network. But "safe as long as
+// nobody passes a flag" is a property that depends on somebody remembering,
+// and the flag is one word. The handler checks the remote address instead, so
+// `--host` exposes the archive for testing on a phone without exposing a
+// filesystem writer along with it.
 //
 // EVERY WRITE IS SNAPSHOTTED FIRST. content/.history/<slug>/<stamp>.json is
 // written before the volume is touched, so the previous state survives even if
@@ -106,6 +110,21 @@ export function archivesEditor(root: string): Plugin {
         // cost of the second check is a comparison and the cost of being wrong
         // is a write endpoint on a public origin.
         if (process.env.NODE_ENV === 'production') return next();
+
+        /*
+         * Local callers only, whatever Vite is bound to.
+         *
+         * The socket's own address is used rather than the Host header or
+         * X-Forwarded-For, because those are supplied by the caller and a
+         * caller that wants in would simply write "localhost" in them.
+         */
+        const remote = req.socket.remoteAddress ?? '';
+        const isLocal = remote === '127.0.0.1' || remote === '::1' || remote === '::ffff:127.0.0.1';
+        if (!isLocal) {
+          return json(res, 403, {
+            error: 'The Archives Editor answers only to this machine.',
+          });
+        }
 
         const url = new URL(req.url ?? '/', 'http://localhost');
         const parts = url.pathname.split('/').filter(Boolean);

@@ -233,8 +233,12 @@ That last part was wrong once — guarding the route and the render still shippe
 a 12 kB Editor chunk, because `lazy()` holds its dynamic import at module top
 level. `test/bundle.test.ts` now greps `dist/` for it.
 
-**Do not pass `--host` to the dev server** while the editor exists. The API
-binds wherever Vite binds, is unauthenticated, and writes files.
+`--host` is safe. Vite binds to localhost alone by default — it prints
+"Network: use `--host` to expose" and means it — and the editor's API refuses
+any caller whose socket is not loopback, so exposing the dev server to test the
+archive on a phone does not expose a filesystem writer with it. Verified by
+running with `--host` and calling the API from the machine's own LAN address:
+403, and the volume untouched.
 
 ## Commands
 
