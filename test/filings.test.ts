@@ -64,11 +64,31 @@ describe('redaction', () => {
     expect(redact('his id is 1498207051762106438 apparently')).toBe('his id is [id] apparently');
   });
 
-  it('demotes headings so a report cannot escape its own entry', () => {
-    // A body's `###` is otherwise indistinguishable from the page's own
-    // headings and silently breaks the outline.
-    expect(redact('### Findings')).toBe('##### Findings');
-    expect(redact('# Top')).toBe('##### Top');
+  it('strips the marks of the tool the report was typed into', () => {
+    // A filing renders as plain text, so none of this formats — it just shows.
+    expect(redact('```While patrolling I saw nothing.```')).toBe('While patrolling I saw nothing.');
+    expect(redact('[While patrolling I saw nothing.]')).toBe('While patrolling I saw nothing.');
+    expect(redact('**Agent:** Falcril')).toBe('Agent: Falcril');
+    expect(redact('*emphasis* and **strong**')).toBe('emphasis and strong');
+    expect(redact('### Findings')).toBe('Findings');
+    expect(redact('- [ ] a task')).toBe('- a task');
+  });
+
+  it('leaves an underscore inside a word alone', () => {
+    // Stripping these would maul the very handles the survivor check hunts for.
+    expect(redact('a_name_like_this')).toBe('a_name_like_this');
+    expect(redact('_emphasised_ text')).toBe('emphasised text');
+  });
+
+  it('KEEPS the redaction markers, which are themselves bracketed', () => {
+    // The ordering this pins is the whole risk in tidying: strip brackets after
+    // the redaction runs and you erase exactly the marks that tell a reader
+    // something was taken out.
+    expect(redact('**see** <@1498207051762106438> there'))
+      .toBe('see [an agent] there');
+    expect(redact('[proof: https://cdn.discordapp.com/x.png]'))
+      .toBe('proof: [link]');
+    expect(redact('*ping* <@&1498207051762106438>')).toBe('ping [a rank]');
   });
 
   it('leaves ordinary prose alone', () => {

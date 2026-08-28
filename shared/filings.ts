@@ -78,8 +78,52 @@ export function statedDate(content: string): string | null {
  * sweep below would otherwise eat the id out of `<@123…>` and leave `<@[id]>`
  * behind — markup that no longer resolves and no longer reads as anything.
  */
+/**
+ * Strip the marks of the tool the report was typed into, not of the Embassy.
+ *
+ * Agents write in Discord, so their filings arrive wrapped in code fences,
+ * bracketed whole, and shot through with ** for emphasis. The archive renders a
+ * filing as PLAIN TEXT — see the Latest Filings in Informants.tsx — so none of
+ * it formats. It simply shows: asterisks around words, ``` on its own line, a
+ * report that opens with an unclosed square bracket.
+ *
+ * IT MUST RUN BEFORE THE REDACTION BELOW, and that ordering is the whole of the
+ * care needed here. The redaction's own markers — [an agent], [a rank], [link]
+ * — are square-bracketed, so stripping brackets afterwards would erase exactly
+ * the marks that show a reader something was taken out.
+ *
+ * This is where the shared rules and scripts/build-informant-history.mjs
+ * legitimately differ, and the difference is the output format rather than
+ * drift: that script writes a markdown DOCUMENT, where an agent's ** is real
+ * emphasis and a heading has to be demoted rather than removed so it cannot
+ * escape the outline. Here there is no outline and no emphasis, only text.
+ */
+function tidy(text: string): string {
+  return text
+    // Fenced blocks and inline ticks.
+    .replace(/```+/g, '')
+    .replace(/`/g, '')
+    // ** and *, in any run.
+    .replace(/\*+/g, '')
+    // Task-list checkboxes first, as a shape. Stripping their brackets with
+    // everything else leaves "-   a task" — the dash's own space plus the two
+    // the box used to sit between.
+    .replace(/^(\s*)[-*+]\s*\[[ xX]?\]\s*/gm, '$1- ')
+    // Then wrappers: a report bracketed whole, or a bracketed aside.
+    .replace(/[[\]]/g, '')
+    // Headings, which would otherwise show their own hashes.
+    .replace(/^\s{0,3}#{1,6}\s*/gm, '')
+    // Underscores doing the same work as the asterisks, when they wrap a word
+    // rather than sit inside one — a_name_like_this is left alone.
+    .replace(/(^|\s)_+([^_\n]+?)_+(?=\s|$)/g, '$1$2')
+    .replace(/[ \t]+$/gm, '')
+    // Blank runs left where a fence or a bracketed wrapper used to be.
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 export function redact(text: string): string {
-  return (text || '')
+  return tidy(text || '')
     .replace(/<@!?(\d{17,20})>/g, '[an agent]')
     .replace(/<@&(\d{17,20})>/g, '[a rank]')
     .replace(/<#(\d{17,20})>/g, '[a channel]')
@@ -90,8 +134,6 @@ export function redact(text: string): string {
     .replace(/https?:\/\/\S+/g, '[link]')
     // Anything snowflake-shaped left is an id somebody pasted by hand.
     .replace(/\b\d{17,20}\b/g, '[id]')
-    // A report's own markdown headings must not escape into the page's outline.
-    .replace(/^#{1,4}(\s)/gm, '#####$1')
     .replace(/[ \t]+$/gm, '')
     .trim();
 }
