@@ -367,6 +367,32 @@ function VolumeSeal({ onOpen }: { onOpen: () => void }) {
   );
 }
 
+/**
+ * Which page numbers to print, given where the reader is.
+ *
+ * Always the first and the last, always the current and its neighbours, and an
+ * ellipsis wherever the run breaks. Below eight it prints them all, because a
+ * gap that hides one numeral costs a press and saves nothing.
+ *
+ * The ellipsis is not a button. It marks pages rather than offering one, and a
+ * pager that quietly moves the reader by a guessed distance when they press it
+ * is worse than one that leaves them to pick a number.
+ */
+function pageWindow(current: number, count: number): (number | 'gap')[] {
+  if (count <= 7) return Array.from({ length: count }, (_, i) => i);
+
+  const out: (number | 'gap')[] = [0];
+  const lo = Math.max(1, Math.min(current - 1, count - 4));
+  const hi = Math.min(count - 2, Math.max(current + 1, 3));
+
+  if (lo > 1) out.push('gap');
+  for (let i = lo; i <= hi; i++) out.push(i);
+  if (hi < count - 2) out.push('gap');
+
+  out.push(count - 1);
+  return out;
+}
+
 export function InformantsView() {
   // Null until the volume's door has answered, so the lock does not flash for a
   // reader who is already through it.
@@ -443,17 +469,40 @@ export function InformantsView() {
     return () => { breath.kill(); };
   }), []);
 
+  /*
+   * The reader's place, read at the moment the binding changes rather than at
+   * the moment the listener was made.
+   *
+   * THROUGH REFS, AND THAT IS THE FIX. This effect used to close over `spread`
+   * and `page` directly and re-subscribe whenever either moved, which looks
+   * equivalent and is not: the listener that actually fires is whichever one
+   * the media query is holding, and it carries the numbers from the render
+   * that installed it. Crossing 899px after paging about would convert a
+   * position the reader left several turns ago — leaf 3 came back as spread 26.
+   *
+   * The old `|| p` was a second instance of the same thing. Converting from
+   * spread 0 computes page 0, which is falsy, so the fallback fired and kept
+   * whatever page the reader had been on instead of the front of the volume.
+   */
+  const spreadRef = useRef(spread);
+  const pageRef = useRef(page);
+  spreadRef.current = spread;
+  pageRef.current = page;
+
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 899px)');
     const onChange = () => {
       setNarrow(mq.matches);
       // Keep roughly the same place across the change of binding.
-      if (mq.matches) setPage((p) => (spread === 0 ? 0 : 2 * spread - 1) || p);
-      else setSpread(page === 0 ? 0 : Math.ceil(page / 2));
+      if (mq.matches) {
+        setPage(spreadRef.current === 0 ? 0 : 2 * spreadRef.current - 1);
+      } else {
+        setSpread(pageRef.current === 0 ? 0 : Math.ceil(pageRef.current / 2));
+      }
     };
     mq.addEventListener('change', onChange);
     return () => mq.removeEventListener('change', onChange);
-  }, [spread, page]);
+  }, []);
 
   const at = useCallback(
     (i: number): Leaf | null => (i >= 0 && i < total ? leaves[i] ?? null : null),
@@ -480,6 +529,36 @@ export function InformantsView() {
       setTurning({ dir, to });
     },
     [turning, narrow, spread, maxSpread, total],
+  );
+
+  /**
+   * Go to a numbered place in the volume — what the pager and the first/last
+   * marks call.
+   *
+   * ITS INDEX IS THE PAGER'S, NOT THE LEAF'S, which is the difference between
+   * this and openAt below: a wide screen numbers spreads and a narrow one
+   * numbers leaves, and the reader is choosing the number they can see.
+   *
+   * An adjacent step is handed to turn() so it still turns a leaf. A jump
+   * across the volume is not animated at all: one leaf swinging over cannot
+   * honestly stand for six of them, and at that distance the motion says the
+   * reader moved by one when they did not.
+   */
+  const jump = useCallback(
+    (target: number) => {
+      if (turning) return;
+      const count = narrow ? total : maxSpread + 1;
+      const from = narrow ? page : spread;
+      const to = Math.min(Math.max(target, 0), count - 1);
+      if (to === from) return;
+      if (!narrow && Math.abs(to - from) === 1) {
+        turn(to > from ? 1 : -1);
+        return;
+      }
+      if (narrow) setPage(to);
+      else setSpread(to);
+    },
+    [turning, narrow, total, maxSpread, page, spread, turn],
   );
 
   /**
@@ -748,9 +827,43 @@ export function InformantsView() {
       </div>
 
       <nav className="chron-nav" aria-label="Chronicle navigation">
+        <button
+          className="chron-nav__btn chron-nav__btn--end"
+          type="button"
+          onClick={() => jump(0)}
+          disabled={first}
+          aria-label="First page"
+        >
+          ‹‹ First
+        </button>
         <button className="chron-nav__btn" type="button" onClick={() => turn(-1)} disabled={first}>
           ‹ Previous
         </button>
+
+        {/* The numbers the reader can actually press. Windowed, because a
+            volume of this length would otherwise set a rule of forty numerals
+            across the foot of the page. */}
+        <ol className="chron-nav__pages">
+          {pageWindow(narrow ? page : spread, narrow ? total : maxSpread + 1)
+            .map((slot, i) => (slot === 'gap' ? (
+              // Not a button, and not focusable: it stands for pages rather
+              // than offering one.
+              <li className="chron-nav__gap" key={`gap${i}`} aria-hidden="true">…</li>
+            ) : (
+              <li key={slot}>
+                <button
+                  type="button"
+                  className={`chron-nav__num${slot === (narrow ? page : spread) ? ' is-current' : ''}`}
+                  onClick={() => jump(slot)}
+                  aria-label={narrow ? `Page ${slot + 1}` : `Spread ${slot + 1}`}
+                  aria-current={slot === (narrow ? page : spread) ? 'page' : undefined}
+                >
+                  {slot + 1}
+                </button>
+              </li>
+            )))}
+        </ol>
+
         <span className="chron-nav__pos" aria-live="polite">
           {narrow
             ? `Page ${page + 1} of ${total}`
@@ -758,6 +871,15 @@ export function InformantsView() {
         </span>
         <button className="chron-nav__btn" type="button" onClick={() => turn(1)} disabled={last}>
           Next ›
+        </button>
+        <button
+          className="chron-nav__btn chron-nav__btn--end"
+          type="button"
+          onClick={() => jump((narrow ? total : maxSpread + 1) - 1)}
+          disabled={last}
+          aria-label="Last page"
+        >
+          Last ››
         </button>
       </nav>
     </div>

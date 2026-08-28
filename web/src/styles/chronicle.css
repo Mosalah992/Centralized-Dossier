@@ -524,8 +524,12 @@
 
 .chron-nav {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   align-items: center;
-  gap: 1.4rem;
+  /* Was 1.4rem for three children; there are now seven, and the first/last
+     marks were being pushed off a narrow row by the gaps alone. */
+  gap: 0.5rem 0.9rem;
 }
 
 .chron-nav__btn {
@@ -545,6 +549,62 @@
   border-color: #b89f6e;
 }
 .chron-nav__btn:disabled { opacity: 0.3; cursor: default; }
+
+/*
+ * The pager. Numerals in the display face, sized to sit under the leaf without
+ * competing with it — this is apparatus, not text, and it is the last thing on
+ * the page that should catch the eye.
+ *
+ * It WRAPS rather than scrolls: the nav is a flex row and on a narrow screen
+ * the numbers are the part that has to give. A pager that overflows its own
+ * row takes the first and last marks off the screen with it, which are the two
+ * controls a reader reaches for when they are lost.
+ */
+.chron-nav__pages {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chron-nav__num {
+  min-width: 1.9rem;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: none;
+  font-family: var(--display);
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  color: rgb(184 159 110 / 0.72);
+  cursor: pointer;
+}
+
+.chron-nav__num:hover {
+  color: #e9dcba;
+  border-color: rgb(184 159 110 / 0.35);
+}
+
+/* The page you are on is stated, not merely tinted: at this size a colour
+   shift alone is not a reliable difference on a dark ground. */
+.chron-nav__num.is-current {
+  color: #f3e7c8;
+  border-color: #b89f6e;
+  background: rgb(184 159 110 / 0.12);
+  cursor: default;
+}
+
+.chron-nav__gap {
+  padding: 0 0.15rem;
+  font-family: var(--display);
+  font-size: 0.8rem;
+  color: rgb(184 159 110 / 0.45);
+  user-select: none;
+}
 
 .chron-nav__pos {
   font-family: var(--display);
