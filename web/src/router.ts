@@ -9,11 +9,23 @@ import { ALL_SLUGS } from '../../shared/volumes';
 export type Route =
   | { name: 'shelf' }
   | { name: 'volume'; slug: VolumeSlug }
+  | { name: 'editor' }
   | { name: 'missing' };
 
 export function parse(pathname: string): Route {
   const path = pathname.replace(/\/+$/, '');
   if (path === '' || path === '/') return { name: 'shelf' };
+
+  /*
+   * The Archives Editor, and ONLY while the dev server is running.
+   *
+   * import.meta.env.DEV is a compile-time constant, so in a production build
+   * this whole branch is `if (false)` and Rollup removes it along with the
+   * import it guards. The route does not merely 404 in production — it does
+   * not exist, which is the only guarantee worth having about a surface that
+   * writes files.
+   */
+  if (import.meta.env.DEV && path === '/editor') return { name: 'editor' };
 
   const match = /^\/archives\/([a-z]+)$/.exec(path);
   const slug = match?.[1];

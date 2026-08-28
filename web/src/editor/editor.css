@@ -1,0 +1,430 @@
+/* The Archives Editor.
+ *
+ * It borrows the archive's tokens rather than defining its own palette: the
+ * same Cinzel capitals, the same gold on dark leather, the same rubric red for
+ * anything that means "look here". A tool that looked like a form builder would
+ * be a different room in the same building, and the writer would be looking at
+ * a text box instead of at a page.
+ *
+ * WHERE IT DELIBERATELY DIVERGES: it is a working surface, so it is denser and
+ * flatter than the volumes. No parchment texture behind an input, no wax, no
+ * ruled leaf. The chrome is quiet so the prose is the only thing with weight —
+ * which is the same reason the volumes have no chrome at all.
+ */
+
+.ed {
+  min-height: 100vh;
+  padding: 2rem clamp(1rem, 4vw, 3rem) 4rem;
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgb(38 30 18 / 0.55), transparent 60%),
+    #14100a;
+  color: #e9dcba;
+  font-family: var(--serif);
+}
+
+.ed-waiting,
+.ed-dim {
+  color: rgb(233 220 186 / 0.5);
+  font-style: italic;
+}
+
+/* ── Masthead ──────────────────────────────────────────────────────────── */
+
+.ed-mast { text-align: center; margin-bottom: 2.2rem; }
+
+.ed-mast__over {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 0.66rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: rgb(184 159 110 / 0.7);
+}
+
+.ed-mast__title {
+  margin: 0.5rem 0 0.35rem;
+  font-family: var(--display);
+  font-size: clamp(1.5rem, 3.4vw, 2.2rem);
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #d8c187;
+}
+
+.ed-mast__sub {
+  margin: 0;
+  font-size: 0.82rem;
+  font-style: italic;
+  color: rgb(233 220 186 / 0.45);
+}
+
+/* ── The shelf ─────────────────────────────────────────────────────────── */
+
+.ed-shelf {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 1.1rem;
+  max-width: 62rem;
+  margin: 0 auto;
+}
+
+.ed-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1.3rem 1.2rem;
+  text-align: left;
+  border: 1px solid rgb(184 159 110 / 0.28);
+  border-radius: 3px;
+  background: linear-gradient(160deg, rgb(58 44 24 / 0.55), rgb(28 22 14 / 0.55));
+  color: inherit;
+  cursor: pointer;
+  transition: border-color var(--dur-hand) var(--ease), transform var(--dur-hand) var(--ease);
+}
+
+.ed-card:hover:not(:disabled) {
+  border-color: rgb(184 159 110 / 0.7);
+  transform: translateY(-2px);
+}
+
+.ed-card:disabled { opacity: 0.4; cursor: default; }
+
+.ed-card__title {
+  font-family: var(--display);
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #d8c187;
+}
+
+.ed-card__file {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem;
+  color: rgb(233 220 186 / 0.45);
+}
+
+.ed-card__meta { font-size: 0.78rem; color: rgb(233 220 186 / 0.6); }
+
+/* Sealed volumes are marked in the rubricator's red — the same colour the
+   chronicle's initials use, and for the same reason: it is the thing to see. */
+.ed-card__seal {
+  margin-top: 0.3rem;
+  font-family: var(--display);
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #a33417;
+}
+
+.ed-foot {
+  max-width: 42rem;
+  margin: 2.5rem auto 0;
+  text-align: center;
+  font-size: 0.82rem;
+  line-height: 1.7;
+  color: rgb(233 220 186 / 0.5);
+}
+
+.ed-foot code,
+.ed-note code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+  color: #b89f6e;
+}
+
+/* ── The bar ───────────────────────────────────────────────────────────── */
+
+.ed-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem;
+  max-width: 82rem;
+  margin: 0 auto 1rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid rgb(184 159 110 / 0.22);
+}
+
+.ed-bar__title {
+  flex: 1 1 auto;
+  font-family: var(--display);
+  font-size: 0.95rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #d8c187;
+}
+
+.ed-bar__dirty {
+  font-family: var(--display);
+  font-size: 0.64rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #a33417;
+}
+
+.ed-btn {
+  padding: 0.42rem 0.95rem;
+  border: 1px solid rgb(184 159 110 / 0.35);
+  border-radius: 3px;
+  background: none;
+  font-family: var(--display);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #b89f6e;
+  cursor: pointer;
+  transition: color var(--dur-hand) var(--ease), border-color var(--dur-hand) var(--ease);
+}
+
+.ed-btn:hover:not(:disabled) { color: #f3e7c8; border-color: #b89f6e; }
+.ed-btn:disabled { opacity: 0.32; cursor: default; }
+
+/* Sealing is the only act here that changes a file, so it is the only control
+   that carries the gold. */
+.ed-btn--seal:not(:disabled) {
+  border-color: #b89f6e;
+  background: rgb(184 159 110 / 0.14);
+  color: #f3e7c8;
+}
+
+.ed-btn--strike:not(:disabled) { color: #c2603f; border-color: rgb(163 52 23 / 0.45); }
+.ed-btn--strike:hover:not(:disabled) { color: #e07a55; border-color: #a33417; }
+.ed-btn--small { padding: 0.22rem 0.6rem; font-size: 0.62rem; }
+.ed-btn--add { width: 100%; margin-top: 0.8rem; }
+
+.ed-note {
+  max-width: 82rem;
+  margin: 0 auto 1rem;
+  padding: 0.6rem 0.9rem;
+  border-left: 2px solid;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.ed-note--ok { border-color: #b89f6e; color: rgb(233 220 186 / 0.85); }
+.ed-note--bad { border-color: #a33417; color: #e6b8a4; }
+
+/* ── Versions ──────────────────────────────────────────────────────────── */
+
+.ed-versions {
+  max-width: 82rem;
+  margin: 0 auto 1.2rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgb(184 159 110 / 0.22);
+  border-radius: 3px;
+  background: rgb(28 22 14 / 0.5);
+}
+
+.ed-versions h3 {
+  margin: 0 0 0.7rem;
+  font-family: var(--display);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #b89f6e;
+}
+
+.ed-versions ul { margin: 0; padding: 0; list-style: none; max-height: 14rem; overflow-y: auto; }
+
+.ed-versions li {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.32rem 0;
+  font-size: 0.8rem;
+  border-bottom: 1px solid rgb(184 159 110 / 0.1);
+}
+
+.ed-versions li span:first-child { flex: 1 1 auto; font-variant-numeric: tabular-nums; }
+
+/* ── Sections ──────────────────────────────────────────────────────────── */
+
+.ed-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  max-width: 82rem;
+  margin: 0 auto 1rem;
+}
+
+.ed-tab {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: none;
+  font-family: var(--display);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgb(184 159 110 / 0.65);
+  cursor: pointer;
+}
+
+.ed-tab:hover { color: #e9dcba; }
+
+.ed-tab.is-on {
+  border-color: rgb(184 159 110 / 0.45);
+  background: rgb(184 159 110 / 0.12);
+  color: #f3e7c8;
+}
+
+.ed-tab__count { font-size: 0.62rem; opacity: 0.6; font-variant-numeric: tabular-nums; }
+
+/* ── The working surface ───────────────────────────────────────────────── */
+
+.ed-body {
+  display: grid;
+  grid-template-columns: minmax(15rem, 22rem) 1fr;
+  gap: 1.4rem;
+  max-width: 82rem;
+  margin: 0 auto;
+  align-items: start;
+}
+
+@media (max-width: 899px) {
+  .ed-body { grid-template-columns: 1fr; }
+}
+
+.ed-list ol { margin: 0; padding: 0; list-style: none; max-height: 62vh; overflow-y: auto; }
+
+.ed-search {
+  width: 100%;
+  margin-bottom: 0.7rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid rgb(184 159 110 / 0.3);
+  border-radius: 3px;
+  background: rgb(20 16 10 / 0.7);
+  color: #e9dcba;
+  font-family: var(--serif);
+  font-size: 0.86rem;
+}
+
+.ed-search::placeholder { color: rgb(233 220 186 / 0.35); font-style: italic; }
+
+.ed-row {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  text-align: left;
+  border: 1px solid transparent;
+  border-left: 2px solid transparent;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.ed-row:hover { background: rgb(184 159 110 / 0.07); }
+
+.ed-row.is-on {
+  border-left-color: #b89f6e;
+  background: rgb(184 159 110 / 0.12);
+}
+
+.ed-row__head {
+  display: block;
+  font-family: var(--display);
+  font-size: 0.68rem;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: #b89f6e;
+}
+
+.ed-row__sub {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: rgb(233 220 186 / 0.72);
+}
+
+/* The grave mark, as a rule in the margin — the same device the volume uses. */
+.ed-row__grave {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.5rem;
+  width: 2px;
+  height: 0.8rem;
+  background: #a33417;
+}
+
+/* ── The form ──────────────────────────────────────────────────────────── */
+
+.ed-pane {
+  padding: 1.2rem 1.3rem;
+  border: 1px solid rgb(184 159 110 / 0.2);
+  border-radius: 3px;
+  background: rgb(24 19 12 / 0.55);
+  min-height: 20rem;
+}
+
+.ed-pane__empty { margin: 6rem 0; text-align: center; }
+
+.ed-field { display: block; margin-bottom: 1rem; }
+
+.ed-field__label {
+  display: block;
+  margin-bottom: 0.28rem;
+  font-family: var(--display);
+  font-size: 0.64rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgb(184 159 110 / 0.85);
+}
+
+.ed-field__hint {
+  display: block;
+  margin-top: 0.28rem;
+  font-size: 0.74rem;
+  font-style: italic;
+  line-height: 1.5;
+  color: rgb(233 220 186 / 0.42);
+}
+
+.ed-input {
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid rgb(184 159 110 / 0.3);
+  border-radius: 3px;
+  background: rgb(18 14 9 / 0.8);
+  color: #f0e6cd;
+  font-family: var(--serif);
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.ed-input:focus {
+  outline: none;
+  border-color: #b89f6e;
+  box-shadow: 0 0 0 1px rgb(184 159 110 / 0.3);
+}
+
+/* Prose is set at the volume's own measure and leading, so what is typed sits
+   roughly as it will sit on the page. */
+.ed-input--prose {
+  min-height: 12rem;
+  max-width: 46rem;
+  line-height: 1.75;
+  resize: vertical;
+}
+
+.ed-warn {
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.9rem 0.6rem 1.6rem;
+  border-left: 2px solid #a33417;
+  background: rgb(163 52 23 / 0.08);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: #e6b8a4;
+}
+
+.ed-form__acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid rgb(184 159 110 / 0.16);
+}

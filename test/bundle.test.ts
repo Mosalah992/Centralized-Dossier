@@ -84,3 +84,42 @@ describe.skipIf(!entry)('the gate chunk', () => {
     expect(gzip, `${entry!.name} gzip bytes`).toBeLessThan(92_000);
   });
 });
+
+/*
+ * The Archives Editor must not be in the built site at all.
+ *
+ * NOT "unreachable" — ABSENT. The editor writes files through a dev-server API,
+ * so shipping its code to a public origin would put the vocabulary of a
+ * filesystem editor in front of a hundred readers, along with the paths it
+ * calls. Nothing there is exploitable on its own — the API does not exist in
+ * production — but code that has no business being served should not be served.
+ *
+ * THIS TEST EXISTS BECAUSE THE FIRST ATTEMPT FAILED IT. Guarding the route and
+ * the render with `import.meta.env.DEV` was not enough: React.lazy holds its
+ * dynamic import at module top level, so Rollup emitted an Editor chunk anyway
+ * — 12 kB of it, in dist/, with "Seal the volume" and the __editor paths
+ * intact. The import had to move inside the dead branch. That is exactly the
+ * kind of mistake that looks fine in the source and only shows in the output.
+ */
+describe.skipIf(!existsSync(DIST))('the Archives Editor', () => {
+  const files = existsSync(DIST)
+    ? readdirSync(DIST).map((name) => ({
+      name,
+      source: readFileSync(new URL(name, DIST), 'utf8'),
+    }))
+    : [];
+
+  it('emits no chunk of its own', () => {
+    expect(files.filter((f) => /^Editor-/.test(f.name)).map((f) => f.name)).toEqual([]);
+  });
+
+  it.each([
+    ['the filesystem API path', '__editor'],
+    ['its masthead', 'Archives Editor'],
+    ['its stylesheet', 'ed-card'],
+    ['its controls', 'Seal the volume'],
+  ])('leaves no trace of %s anywhere in the built assets', (_what, needle) => {
+    const found = files.filter((f) => f.source.includes(needle)).map((f) => f.name);
+    expect(found).toEqual([]);
+  });
+});

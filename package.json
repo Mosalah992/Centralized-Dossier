@@ -19,7 +19,8 @@
     "pages:dev": "wrangler pages dev",
     "pages:deploy": "wrangler pages deploy",
     "volumes:emit": "node scripts/emit-chronicle.mjs && node scripts/emit-enforcement.mjs && node scripts/emit-history.mjs",
-    "volumes:publish": "npm run volumes:emit && npm run typecheck && npm run build"
+    "volumes:publish": "npm run volumes:emit && npm run typecheck && npm run build",
+    "editor": "vite --open /editor"
   },
   "dependencies": {
     "@fluentui/react-components": "^9.74.6",

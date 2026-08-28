@@ -42,6 +42,24 @@ const EnforcementView = lazy(() => import('./views/Enforcement').then((m) => ({ 
  * boundary the view was already waiting in — it costs the gate nothing and the
  * shelf nothing, and arrives with the first volume anyone opens.
  */
+/*
+ * The Archives Editor.
+ *
+ * THE TERNARY IS THE POINT, and guarding only the render was not enough. A
+ * React.lazy call sits at module top level, so its dynamic import is a real
+ * import whatever the JSX around it does: the first attempt guarded the route
+ * and the render and still shipped a 12 kB Editor chunk to production, sitting
+ * in dist/ with "Seal the volume" and the __editor API paths in it.
+ *
+ * With the import INSIDE the branch, `import.meta.env.DEV` compiles to `false`,
+ * the whole expression is dead, and Rollup emits no chunk at all. That is the
+ * difference between a route nobody can reach and code that is not there.
+ * test/bundle.test.ts checks dist/ for it, because this was wrong once already.
+ */
+const EditorView = import.meta.env.DEV
+  ? lazy(() => import('./editor/Editor').then((m) => ({ default: m.EditorView })))
+  : null;
+
 const FluentShell = lazy(() =>
   import('./fluent/Shell').then((m) => ({ default: m.FluentShell })),
 );
@@ -155,6 +173,17 @@ export default function App() {
         <div className="shell">
           <main>
             {route.name === 'shelf' && <Shelf onOpen={navigate} />}
+
+            {/* The editor sits inside the gate like everything else: it is a
+                local tool, but it edits the sealed volumes, and there is no
+                reason for it to be the one door that opens without a writ. */}
+            {import.meta.env.DEV && route.name === 'editor' && EditorView && (
+              <ErrorBoundary resetKey="editor">
+                <Suspense fallback={<Consulting />}>
+                  <EditorView />
+                </Suspense>
+              </ErrorBoundary>
+            )}
 
             {route.name === 'volume' && (
               <div className={`volume volume--${route.slug}`} style={bindingVars(route.slug)}>

@@ -198,6 +198,44 @@ The bot token is a Worker secret, separate from the Pages secrets:
 node node_modules/wrangler/bin/wrangler.js secret put DISCORD_BOT_TOKEN --config chronicler/wrangler.toml
 ```
 
+### The Archives Editor
+
+A local console for the three volumes the Embassy writes itself:
+
+```bash
+npm run editor
+```
+
+It opens `/editor` on the dev server, behind the same gate as everything else.
+Chronicles, the Ledger and History are edited as records; the sheet-backed six
+are not editable at all, so a bug here can never reach the columns the clock-in
+bot owns.
+
+**It writes `content/*.json`, never a module.** The emitters turn those into
+`functions/lib/*.ts` and `web/src/views/history-data.ts`, and they are what
+refuse a volume that has lost a third of its entries. Publishing is explicit:
+
+```bash
+npm run volumes:publish
+```
+
+then a `pages deploy` you run. Nothing typed in the editor reaches a reader on
+its own.
+
+**Every save snapshots first**, to `content/.history/<slug>/`, so the state
+*before* a bad save survives it. A snapshot taken afterwards would record the
+mistake instead.
+
+**IT IS DEV-ONLY BY CONSTRUCTION, NOT BY CONFIGURATION.** The filesystem API is
+a Vite plugin marked `apply: 'serve'`; the route and the `React.lazy` import are
+both inside `import.meta.env.DEV`, so a production build emits no chunk at all.
+That last part was wrong once — guarding the route and the render still shipped
+a 12 kB Editor chunk, because `lazy()` holds its dynamic import at module top
+level. `test/bundle.test.ts` now greps `dist/` for it.
+
+**Do not pass `--host` to the dev server** while the editor exists. The API
+binds wherever Vite binds, is unauthenticated, and writes files.
+
 ## Commands
 
 ```bash
