@@ -1,4 +1,4 @@
-import type { Filing } from '../../shared/filings';
+import type { ServedFiling } from '../../shared/filings';
 // Client for /api. Same origin in development (Vite proxies to the Functions)
 // and in production (Pages serves both), so there is no base URL to configure.
 
@@ -146,7 +146,7 @@ export interface Chronicle {
    * written volume and no filings, which is the state this shipped in. Anything
    * reading this must treat missing and empty as the same.
    */
-  filings?: Filing[];
+  filings?: ServedFiling[];
 }
 
 /**

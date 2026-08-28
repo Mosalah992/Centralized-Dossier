@@ -38,6 +38,24 @@ interface Env {
 /** How many filings the volume holds. Older ones fall off the end. */
 const KEEP = 60;
 
+/*
+ * How many channels one invocation may actually FETCH from.
+ *
+ * A Worker gets fifty subrequests per invocation and the Informants category
+ * holds fifty channels, so the first version asked for every one of them and
+ * died on the fifty-first — "Too many subrequests by single Worker invocation",
+ * which is a limit, not a bug, and no amount of retrying would have helped.
+ *
+ * Two things keep it under the cap now. The channel listing already carries
+ * each channel's `last_message_id`, so a channel with nothing new since the
+ * last run is skipped WITHOUT SPENDING A SUBREQUEST AT ALL — on an ordinary
+ * night that is nearly all of them. And this budget bounds the rest, including
+ * the first run, when no cursor exists and every channel looks new. Whatever
+ * does not fit keeps its old cursor and is picked up by the next run, so the
+ * backlog drains rather than failing.
+ */
+const MAX_FETCHES = 40;
+
 const CURSOR = 'cursor';
 const FILINGS = 'filings';
 
@@ -124,6 +142,8 @@ export interface RunResult {
   dropped: number;
   scanned: number;
   skipped: number;
+  /** Channels with new messages that did not fit this run's fetch budget. */
+  deferred: number;
 }
 
 export async function collect(env: Env): Promise<RunResult> {
@@ -132,13 +152,20 @@ export async function collect(env: Env): Promise<RunResult> {
     // Fails quiet, like the archive's optional Discord door. A missing token
     // means the list stops growing; it must not mean the volume breaks.
     console.warn('chronicler: no DISCORD_BOT_TOKEN — nothing collected');
-    return { added: 0, dropped: 0, scanned: 0, skipped: 0 };
+    return { added: 0, dropped: 0, scanned: 0, skipped: 0, deferred: 0 };
   }
 
   const channels = await api<
-    { id: string; name: string; type: number; parent_id: string | null }[]
+    {
+      id: string;
+      name: string;
+      type: number;
+      parent_id: string | null;
+      /** The cheap half of the subrequest budget — see MAX_FETCHES. */
+      last_message_id: string | null;
+    }[]
   >(token, `/guilds/${env.DISCORD_GUILD_ID}/channels`);
-  if (!channels) return { added: 0, dropped: 0, scanned: 0, skipped: 0 };
+  if (!channels) return { added: 0, dropped: 0, scanned: 0, skipped: 0, deferred: 0 };
 
   const reportChannels = channels.filter(
     (c) => c.parent_id === env.INFORMANTS_CATEGORY_ID && (c.type === 0 || c.type === 5),
@@ -152,14 +179,36 @@ export async function collect(env: Env): Promise<RunResult> {
   let dropped = 0;
   let scanned = 0;
   let skipped = 0;
+  let fetches = 0;
+  let deferred = 0;
 
   for (const channel of reportChannels) {
+    // Nothing has ever been posted here.
+    if (!channel.last_message_id) continue;
+
+    // Nothing new since the last run. This is the check that makes the job fit
+    // inside its subrequest budget, and it costs nothing to make.
+    if (cursor[channel.id] === channel.last_message_id) continue;
+
+    if (fetches >= MAX_FETCHES) {
+      // Left deliberately un-advanced, so the next run comes back to it.
+      deferred++;
+      continue;
+    }
+    fetches++;
+
     const messages = await since(token, channel.id, cursor[channel.id]);
     if (messages === null) {
       skipped++;
       continue;
     }
-    if (messages.length === 0) continue;
+    if (messages.length === 0) {
+      // The listing said there was something and the fetch disagreed — take
+      // the listing's word for it, or this channel is re-fetched every night
+      // forever for a message we can never see.
+      cursor[channel.id] = channel.last_message_id;
+      continue;
+    }
 
     scanned += messages.length;
 
@@ -190,10 +239,12 @@ export async function collect(env: Env): Promise<RunResult> {
   await env.CHRONICLE_FILINGS.put(CURSOR, JSON.stringify(cursor));
   await env.CHRONICLE_FILINGS.put(
     'last-run',
-    JSON.stringify({ at: new Date().toISOString(), added: fresh.length, dropped, skipped }),
+    JSON.stringify({
+      at: new Date().toISOString(), added: fresh.length, dropped, skipped, deferred,
+    }),
   );
 
-  return { added: fresh.length, dropped, scanned, skipped };
+  return { added: fresh.length, dropped, scanned, skipped, deferred };
 }
 
 export default {
@@ -202,7 +253,8 @@ export default {
       collect(env).then((r) => {
         console.log(
           `chronicler: ${r.added} new filing(s) from ${r.scanned} message(s); `
-          + `${r.dropped} dropped in redaction, ${r.skipped} channel(s) unreadable`,
+          + `${r.dropped} dropped in redaction, ${r.skipped} unreadable, `
+          + `${r.deferred} deferred to the next run`,
         );
       }),
     );

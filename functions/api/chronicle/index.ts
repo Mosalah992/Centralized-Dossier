@@ -17,7 +17,7 @@
 
 import { CHRONICLE_COOKIE_NAME, readCookie, readWrit } from '../../lib/session';
 import { MONTHS, POWERS, UNRESOLVED } from '../../lib/chronicle';
-import type { Filing } from '../../../shared/filings';
+import type { Filing, ServedFiling } from '../../../shared/filings';
 
 interface Env {
   GATE_SECRET: string;
@@ -61,9 +61,11 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
    * nothing else; the written volume is already in hand and does not depend on
    * this having worked.
    */
-  let filings: Filing[] = [];
+  let filings: ServedFiling[] = [];
   try {
-    filings = ((await env.CHRONICLE_FILINGS?.get('filings', 'json')) as Filing[] | null) ?? [];
+    const stored = ((await env.CHRONICLE_FILINGS?.get('filings', 'json')) as Filing[] | null) ?? [];
+    // The message id stays on this side of the wire.
+    filings = stored.map(({ agent, filedAt, inWorld, text }) => ({ agent, filedAt, inWorld, text }));
   } catch {
     filings = [];
   }

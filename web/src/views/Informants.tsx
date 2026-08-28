@@ -18,7 +18,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import type { Filing } from '../../../shared/filings';
+import type { ServedFiling } from '../../../shared/filings';
 import type { ReactNode } from 'react';
 import { useGSAP } from '@gsap/react';
 
@@ -295,7 +295,7 @@ function buildLeaves(chronicle: Chronicle, term: string, guided: boolean): Leaf[
   const filings = chronicle.filings ?? [];
   if (filings.length) {
     const filingLeaves: Leaf[] = [];
-    let batch: Filing[] = [];
+    let batch: ServedFiling[] = [];
     let spent = 0;
 
     const flushFilings = () => {
@@ -320,7 +320,7 @@ function buildLeaves(chronicle: Chronicle, term: string, guided: boolean): Leaf[
               </p>
             )}
             {mine.map((f) => (
-              <article className="chron-filing" key={f.id}>
+              <article className="chron-filing" key={`${f.agent}-${f.filedAt}`}>
                 <p className="chron-filing__head">
                   <span className="chron-filing__agent">{mark(f.agent, term)}</span>
                   {f.inWorld && <span className="chron-filing__when">{f.inWorld}</span>}

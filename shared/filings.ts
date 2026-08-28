@@ -29,7 +29,11 @@ export interface RawMessage {
 
 /** One filing, redacted and safe to serve. */
 export interface Filing {
-  /** Discord message id — never served; used to order and de-duplicate. */
+  /**
+   * Discord message id. Kept in KV to order and de-duplicate; STRIPPED at the
+   * API boundary, so it never reaches a reader — see ServedFiling and the map
+   * in functions/api/chronicle/index.ts.
+   */
   id: string;
   /** The channel's name with "-reports" trimmed, e.g. `telandor`. */
   agent: string;
@@ -174,3 +178,14 @@ export function toFilings(
 
   return { filings, dropped };
 }
+
+/**
+ * A filing as a reader receives it.
+ *
+ * The message id is gone. It identifies nobody by itself, which is why the
+ * survivor check does not object to it, but it is a live handle on a message in
+ * a channel and the volume has no use for it — the ordering it exists for has
+ * already happened by the time this is built. Publishing an identifier because
+ * nothing forbade it is how the interesting ones get out.
+ */
+export type ServedFiling = Omit<Filing, 'id'>;
