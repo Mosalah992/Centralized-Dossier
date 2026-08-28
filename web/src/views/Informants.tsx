@@ -241,7 +241,9 @@ function buildLeaves(chronicle: Chronicle, term: string, guided: boolean): Leaf[
     spent += power.note.length;
   }
   flushPowers();
-  leaves.push(...powerLeaves);
+  // NOT pushed here — see the note above the colophon. The powers are built at
+  // this point because the packing needs `chronicle.powers` in scope, and they
+  // are laid in at the back of the volume.
 
   const gapLeaves: Leaf[] = [];
   let gaps: typeof chronicle.unresolved = [];
@@ -383,6 +385,21 @@ function buildLeaves(chronicle: Chronicle, term: string, guided: boolean): Leaf[
     flushFilings();
     leaves.push(...filingLeaves);
   }
+
+  /*
+   * THE POWERS ARRAYED, at the back.
+   *
+   * They used to sit between the last month and the closing apparatus, which
+   * put four pages of standing description in the middle of a chronicle that
+   * runs by date — the reader came off Last Seed, read a survey of the Empire,
+   * the holds and the orders, and then had to pick the thread up again at the
+   * Warden. A reference table belongs where a reader goes looking for it rather
+   * than where they trip over it.
+   *
+   * Before the colophon and not after it: the colophon is the book's note about
+   * itself and is the last leaf by definition.
+   */
+  leaves.push(...powerLeaves);
 
   leaves.push({
     head: 'Colophon',
