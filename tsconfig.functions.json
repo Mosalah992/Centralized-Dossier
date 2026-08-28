@@ -7,5 +7,10 @@
     "lib": ["ES2022"],
     "types": ["@cloudflare/workers-types"]
   },
-  "include": ["functions", "server", "shared"]
+  // `chronicler` is a separate Worker with its own wrangler.toml, but it runs
+  // on the same runtime and shares shared/filings.ts, so it is typechecked
+  // here rather than given a third project. It is the only unattended code in
+  // the repo; leaving it outside `npm run typecheck` would mean the one thing
+  // nobody watches is also the one thing nothing checks.
+  "include": ["functions", "server", "shared", "chronicler"]
 }

@@ -1,0 +1,44 @@
+name = "thalmor-chronicler"
+main = "src/index.ts"
+
+# Matched to the archive's own, and to wrangler 3.x — this repo is pinned to
+# Node 18 so the clock-in bot's toolchain is left alone. See ../.nvmrc.
+compatibility_date = "2024-09-23"
+
+# ONCE A NIGHT, AT 04:00 UTC. Cron Triggers run on UTC and the time is chosen to
+# be nowhere near when the community plays: a run that overlaps a session reads
+# a channel mid-conversation and files half a report, then files the other half
+# tomorrow as a second one.
+#
+# THIS IS THE REASON THIS WORKER EXISTS AT ALL. Cron Triggers require a
+# `scheduled()` handler, and Pages Functions do not have one — they are
+# request-only. The archive itself therefore cannot carry this job, however much
+# it belongs to it, and the two projects meet in the KV namespace below.
+[triggers]
+crons = ["0 4 * * *"]
+
+# The SAME namespace the Pages project binds read-side. If these two ids ever
+# disagree the archive shows an empty Latest Filings and nothing anywhere
+# reports an error — the read simply finds a different, empty namespace.
+[[kv_namespaces]]
+binding = "CHRONICLE_FILINGS"
+id = "e5d0df6b87984e46b38fc498bebb1b69"
+
+[vars]
+# The Embassy's own guild — the one the export scripts talk to. NOT the Keizaal
+# server that was added to the archive's admission list: that widened who may
+# READ the archive, and has nothing to do with whose reports are collected.
+DISCORD_GUILD_ID = "1498139135758831749"
+
+# The Informants category. Every text channel filed under it is read; anything
+# the bot cannot see is counted as a gap and skipped, never treated as empty.
+INFORMANTS_CATEGORY_ID = "1498207051762106438"
+
+# Secret, set with:
+#   wrangler secret put DISCORD_BOT_TOKEN --name thalmor-chronicler
+#
+# UNSET IS A SUPPORTED STATE and is what ships until it is set: collect()
+# returns zero and logs, the archive shows whatever filings it already holds,
+# and nothing breaks. That is deliberate, and it is the same shape as the
+# archive's optional Discord door — an unconfigured job must not take a volume
+# down. See invariant 4 in ../CLAUDE.md.

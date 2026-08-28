@@ -613,6 +613,50 @@
   color: #b89f6e;
 }
 
+/* ── The Latest Filings ───────────────────────────────────────────────── */
+
+/*
+ * These must not read like the chronicle above them.
+ *
+ * The written months are the Embassy's own prose; these are the reports as they
+ * arrived, pulled overnight and not yet read into the record. The difference is
+ * carried by a rule down the left and a smaller, cooler heading line — the same
+ * distinction a docket has from a fair copy. It is deliberately NOT prettier
+ * than the chronicle: a filing that looked more finished than a composed entry
+ * would invert the volume's own hierarchy.
+ */
+.chron-p--standfirst {
+  font-style: italic;
+  color: rgb(60 44 22 / 0.8);
+}
+
+.chron-filing {
+  margin: 0 0 1.1rem;
+  padding-left: 0.75rem;
+  border-left: 2px solid rgb(122 92 46 / 0.28);
+}
+
+.chron-filing__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.55rem;
+  margin: 0 0 0.25rem;
+  font-family: var(--display);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgb(90 68 34 / 0.85);
+}
+
+.chron-filing__agent { font-weight: 700; }
+
+/* The in-world date the agent wrote, and the day the report actually landed.
+   Both are kept: they disagree often, and which one is right is exactly the
+   sort of judgement the reading pass makes and this list does not. */
+.chron-filing__when { font-style: italic; letter-spacing: 0.1em; }
+.chron-filing__filed { margin-left: auto; opacity: 0.65; }
+
 /* ── One leaf at a time ───────────────────────────────────────────────── */
 
 /*

@@ -1,3 +1,4 @@
+import type { Filing } from '../../shared/filings';
 // Client for /api. Same origin in development (Vite proxies to the Functions)
 // and in production (Pages serves both), so there is no base URL to configure.
 
@@ -137,6 +138,15 @@ export interface Chronicle {
   months: ChronicleMonth[];
   powers: { name: string; note: string }[];
   unresolved: { name: string; note: string }[];
+  /*
+   * The Latest Filings — raw reports the chronicler Worker pulled overnight.
+   *
+   * OPTIONAL, because the Worker, its KV namespace and its token are each
+   * allowed to be absent: an archive deployed without any of them serves the
+   * written volume and no filings, which is the state this shipped in. Anything
+   * reading this must treat missing and empty as the same.
+   */
+  filings?: Filing[];
 }
 
 /**

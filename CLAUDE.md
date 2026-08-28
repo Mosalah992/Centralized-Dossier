@@ -57,6 +57,11 @@ web/src/          The SPA
   router.ts       ~40-line history-API router; no dependency
   api.ts          Fetch hooks + GATE_SEALED_EVENT
 
+chronicler/       A SEPARATE Worker. Cron Triggers need a scheduled() handler and
+                  Pages Functions have none, so the nightly pull of new informant
+                  reports cannot live in functions/. Runs 04:00 UTC, writes the
+                  Latest Filings to KV; the archive reads the same namespace.
+
 functions/        Cloudflare Pages Functions -> /api/*
   api/_middleware.ts    The gate. Guards everything except /api/gate
   api/gate.ts           POST word -> writ cookie; GET status; DELETE clears
@@ -148,6 +153,46 @@ reader's JavaScript, until the animation layer moved to GSAP) and asserts GSAP c
 is present, since the seal ceremony cannot wait for a lazy chunk.
 
 ---
+
+### The nightly filings
+
+`chronicler/` is a second wrangler project and deploys on its own:
+
+```bash
+cd chronicler && node ../node_modules/wrangler/bin/wrangler.js deploy
+```
+
+It reads the Informants category once a night, redacts through
+`shared/filings.ts`, and writes at most 60 filings to the `CHRONICLE_FILINGS` KV
+namespace. `/api/chronicle` reads that namespace and serves them after the
+written months; `Informants.tsx` sets them as **Latest Filings**, marked as
+received rather than chronicled. The volume's own prose is never touched by it —
+a month is read out of the reports and rewritten, and no cron can do that.
+
+Three things about it are deliberate:
+
+- **It only ever reads Discord.** No write path, for the same reason
+  `server/gsheets.ts` is readonly-scoped: an unattended nightly job must not be
+  able to post to a channel a hundred people are in.
+- **A filing that fails the survivor check is dropped, not flagged.** The export
+  script prints `REFUSING TO WRITE` and stops, because a human is at the
+  keyboard. At 04:00 there is nobody to read a warning before a hundred people
+  read the leak. `test/filings.test.ts` pins that behaviour.
+- **Missing token, missing binding and a quiet night render identically** — as
+  no section at all. The same shape as invariant 4's optional Discord door: an
+  unconfigured accessory must not take down the one volume that already needs
+  the Worker up to be read.
+
+**The KV id appears in two files** (`wrangler.toml` and `chronicler/wrangler.toml`)
+and they must agree. If they drift, the archive shows an empty filings list and
+*nothing anywhere reports an error* — the read simply finds a different, empty
+namespace.
+
+The bot token is a Worker secret, separate from the Pages secrets:
+
+```bash
+cd chronicler && node ../node_modules/wrangler/bin/wrangler.js secret put DISCORD_BOT_TOKEN
+```
 
 ## Commands
 

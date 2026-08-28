@@ -16,6 +16,23 @@ pages_build_output_dir = "dist"
 binding = "GATE_ATTEMPTS"
 id = "0b84bdb3c52141a08506032df9c004d1"
 
+# The Latest Filings, written nightly by the thalmor-chronicler Worker and read
+# here. THIS SIDE IS READ-ONLY BY CONVENTION — nothing under functions/ writes
+# to it, for the same reason server/gsheets.ts mints a readonly token: the job
+# owns this data and a bug in a request handler must not be able to rewrite it.
+#
+# Cron Triggers need a scheduled() handler and Pages Functions have none, which
+# is why the collector is a separate Worker at all. The two projects meet here,
+# so THE ID MUST MATCH chronicler/wrangler.toml. If they drift apart the volume
+# shows an empty filings list and nothing reports an error — the read just finds
+# a different, empty namespace.
+#
+# Absent binding is a supported state: /api/chronicle serves the written months
+# and omits the filings. See functions/api/chronicle/index.ts.
+[[kv_namespaces]]
+binding = "CHRONICLE_FILINGS"
+id = "e5d0df6b87984e46b38fc498bebb1b69"
+
 [vars]
 # The archive spreadsheet. The clock-in bot writes Roster G/H/J/K here; this
 # site only ever reads.

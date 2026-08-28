@@ -17,10 +17,21 @@
 
 import { CHRONICLE_COOKIE_NAME, readCookie, readWrit } from '../../lib/session';
 import { MONTHS, POWERS, UNRESOLVED } from '../../lib/chronicle';
+import type { Filing } from '../../../shared/filings';
 
 interface Env {
   GATE_SECRET: string;
   GATE_EPOCH?: string;
+  /*
+   * The Latest Filings, written nightly by the thalmor-chronicler Worker.
+   *
+   * OPTIONAL, AND ITS ABSENCE IS SILENT BY DESIGN. An unbound namespace, an
+   * empty one, and a night the collector found nothing are the same thing to a
+   * reader: the volume's written months, and no filings after them. Sealing or
+   * erroring because an accessory feed is unconfigured would take down the one
+   * volume that already needs the Worker up to be read at all.
+   */
+  CHRONICLE_FILINGS?: KVNamespace;
 }
 
 export const onRequestGet: PagesFunction<Env> = async (context) => {
@@ -44,11 +55,25 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     return json({ error: 'This volume is sealed under its own word.' }, 403);
   }
 
+  /*
+   * Read-only, and it never fails the request. A KV read that throws — or a
+   * value that is somehow not the shape we wrote — costs the filings and
+   * nothing else; the written volume is already in hand and does not depend on
+   * this having worked.
+   */
+  let filings: Filing[] = [];
+  try {
+    filings = ((await env.CHRONICLE_FILINGS?.get('filings', 'json')) as Filing[] | null) ?? [];
+  } catch {
+    filings = [];
+  }
+
   return json({
     fetchedAtUtc: new Date().toISOString(),
     months: MONTHS,
     powers: POWERS,
     unresolved: UNRESOLVED,
+    filings,
   });
 };
 

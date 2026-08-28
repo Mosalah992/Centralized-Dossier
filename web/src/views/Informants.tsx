@@ -17,6 +17,8 @@
 // the whole point of the volume: see SealedVolume in shared/types.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+import type { Filing } from '../../../shared/filings';
 import type { ReactNode } from 'react';
 import { useGSAP } from '@gsap/react';
 
@@ -275,6 +277,75 @@ function buildLeaves(chronicle: Chronicle, term: string, guided: boolean): Leaf[
   }
   flushGaps();
   leaves.push(...gapLeaves);
+
+  /*
+   * ── The Latest Filings ──────────────────────────────────────────────────
+   *
+   * Raw reports, pulled nightly by the chronicler Worker and NOT written up.
+   * They are set apart from everything above them on purpose: the months are
+   * composed prose, read out of the reports and rewritten, and these are the
+   * reports themselves with the handles taken out. Letting the two sit in one
+   * sequence would quietly claim the volume had chronicled something it has
+   * only received.
+   *
+   * Absent, empty, and "the collector found nothing last night" all render the
+   * same way — as no section at all — which is right: a heading over an empty
+   * list tells the reader about the machinery rather than about the Embassy.
+   */
+  const filings = chronicle.filings ?? [];
+  if (filings.length) {
+    const filingLeaves: Leaf[] = [];
+    let batch: Filing[] = [];
+    let spent = 0;
+
+    const flushFilings = () => {
+      if (!batch.length) return;
+      const mine = batch;
+      const first = filingLeaves.length === 0;
+
+      filingLeaves.push({
+        head: 'Latest Filings',
+        body: (
+          <>
+            {first && <h2 className="chron-h">Latest Filings</h2>}
+            {first && (
+              <p className="chron-p chron-p--standfirst">
+                {prose(
+                  'Reports received since the chronicle was last written, set down as '
+                  + 'they were filed. They have not been read into the record above: no '
+                  + 'judgement has been passed on them, nothing has been corroborated, '
+                  + 'and no month has been composed from them yet.',
+                  term, guided,
+                )}
+              </p>
+            )}
+            {mine.map((f) => (
+              <article className="chron-filing" key={f.id}>
+                <p className="chron-filing__head">
+                  <span className="chron-filing__agent">{mark(f.agent, term)}</span>
+                  {f.inWorld && <span className="chron-filing__when">{f.inWorld}</span>}
+                  <span className="chron-filing__filed">{f.filedAt.slice(0, 10)}</span>
+                </p>
+                <p className="chron-p">{prose(f.text, term, guided)}</p>
+              </article>
+            ))}
+          </>
+        ),
+        items: mine.map((f) => ({ label: f.agent, text: f.text })),
+      });
+
+      batch = [];
+      spent = 0;
+    };
+
+    for (const f of filings) {
+      if (batch.length && spent + f.text.length > PAGE_BUDGET) flushFilings();
+      batch.push(f);
+      spent += f.text.length;
+    }
+    flushFilings();
+    leaves.push(...filingLeaves);
+  }
 
   leaves.push({
     head: 'Colophon',
