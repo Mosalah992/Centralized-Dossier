@@ -301,7 +301,19 @@ browsing GitHub exactly what it withholds.
 
 **These are not in git history and cannot be recovered from it.** The deployed
 Worker holds the chronicle and the ledger; a local copy is the only other one. Back
-them up somewhere outside the repo — a clone plus a `git log -S` will not find them.
+them up somewhere outside the repo — a clone plus a `git log -S` will not find them:
+
+```bash
+node scripts/backup-held-back.mjs
+```
+
+It copies the four files above plus the `tmp/enforce/` working set to a dated
+folder under `~/Documents/thalmor-archive-backup` (override with `BACKUP_DIR`),
+verifies every copy by reading it back, and writes a MANIFEST with checksums. It
+names each file explicitly rather than globbing, and refuses to write inside the
+repo — a glob that caught `.env` would put live secrets in a plain folder, which
+is worse than the loss it guards against. **Re-run it after any change to the
+ledger**, since `tmp/` is ignored and nothing else keeps a second copy.
 
 `docs/informant-reports.md` *is* reproducible: given a fresh export to `tmp/`,
 `scripts/build-informant-history.mjs` regenerates it, and it is the only file that
