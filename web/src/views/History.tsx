@@ -1,7 +1,12 @@
 // History of the Realm — the one volume the Embassy writes rather than reads.
 //
-// Its account is assembled from the free presses of Skyrim: four papers whose
-// surviving issues cover Second Seed 1 to Midyear 15 of 4E 216. The text is
+// Its account is assembled from two sources, and they are kept apart on the
+// page because they are not the same kind of evidence. The first is the free
+// presses of Skyrim: four papers whose surviving issues cover Second Seed 1 to
+// Midyear 15 of 4E 216. The second is the Embassy's own posted notices of
+// Heartfire 4E 226, ten years on — transcribed from the boards they were nailed
+// to, and therefore testimony rather than reportage. A notice is the Embassy
+// speaking about itself; the volume says so where it prints one. The text is
 // held here rather than in the roster sheet for the same reason the First
 // Emissaries' deeds are — it is settled history, and a grid of cells is the
 // wrong shape for it. There is no tab behind this volume and no API call for
@@ -180,6 +185,47 @@ const MIDYEAR: Entry[] = [
   },
 ];
 
+/*
+ * THE RECALL, 4E 226 — the Embassy's own notices, not the presses'.
+ *
+ * Ten years after the chronicle above, and a different kind of record: these
+ * were posted on the Embassy's boards by the officers who signed them, so they
+ * are the Embassy's account of the Embassy. Where the press entries are edited
+ * down from four papers that could contradict one another, these can only
+ * contradict THEMSELVES — and over seven days they do, twice, plainly enough
+ * that the aside beneath them does nothing but set the dates side by side.
+ *
+ * Transcribed from the notices as posted. The dates are the realm's, reckoned
+ * from the hour each was signed; the ranks and names are the roster's.
+ */
+const RECALL: Entry[] = [
+  {
+    date: 'Heartfire 21',
+    text: 'The Embassy answers a letter circulated by Nyssara Velrith of Northkeep, formerly of the Dominion’s service. Canonreeve Ancarion declares her dishonourable and an enemy of the Thalmor and of the Third Aldmeri Dominion — not for leaving, which mer may do, but for recruiting from the Embassy’s own in its most uncertain hour, and for demanding that they denounce the Dominion to earn her shelter. He accepts her rule that Dominion issue may not be carried out of the service, and holds her house to it first: the late First Emissary Malen Velrith kept his issued glass, his weapons and coin of the faction to his deathbed, never returned nor accounted, and the Embassy demands them back before any relocation. He closes that the Dominion is not silent because it has abandoned Skyrim, but because it is deciding what Skyrim is worth.',
+  },
+  {
+    date: 'Heartfire 21, by night',
+    text: 'Battlereeve Annatar confines all personnel to Embassy grounds until further notice, the Imperial forces having been expelled from a united Skyrim. No patrols, escorts, investigations or operations beyond the walls, under any circumstances. He thanks the Embassy’s people for what they have given through difficult months, and states plainly that neither the length of the restriction nor the next course of action is known.',
+  },
+  {
+    date: 'Heartfire 22',
+    text: 'Grand Ambassador Valynwe Velrith reports the High King’s personal promise that no court, hold or guard will attack or arrest a Thalmor for being one — and that the Embassy is nonetheless the only ground that can be guaranteed. Agents may defend themselves from the rabble by the High King’s own leave, but may not instigate and may not pursue. Any who leave off duty are to wear no colours of the Thalmor and do so at their own risk. Dominion representatives are to meet the High King on Middas.',
+  },
+  {
+    date: 'Heartfire 25',
+    weight: 'grave',
+    text: 'THE RESTRUCTURE. High Inquisitor Ariniel dissolves the Thalmor of Skyrim into the Dominion Delegation and Embassy, answerable directly to Alinor’s Council. The office of First Emissary is abolished and is not to be filled again; the Thalmor Council is reinstated in full, with every department seated on it. All houses, clans and noble styles within the Embassy are purged as a threat to the State, and House Velrith is named as neither existing within the Dominion nor representing it. Khajiit and Bosmer are removed from every command position and confined to the Dominion Staff, capped at Assistant, and to a reformed Auxiliary. Resignation is abolished — those who left in recent days are given three days to return or be held guilty of crimes against the State, and Altmer permitted to go are to be shipped to Alinor for the rest of their lives. Talos worship is to go unhunted for want of the means to pursue it, a suspension the notice twice calls temporary; records may still be kept and investigations continue.',
+  },
+  {
+    date: 'Heartfire 26',
+    text: 'Canonreeve Ancarion closes his chapter in Skyrim and returns to Alinor, placing his authority and his responsibilities in the hands of his assistant, Mihir Vas Vihaan. He writes that he has kept the Embassy’s records, balanced its ledgers, built its systems and watched its people grow within them, and that little more can be added by his remaining. He intends a library on the shores of Auridon, and within it an account of the Embassy’s time in Skyrim — not the victories and the failures alone, but the names, the reports, the arguments, the friendships and the foolishness that would otherwise disappear when they leave. Beside it, a small garden of flowers gathered from Skyrim: not to remember it fondly, nor to forget it, but because they were here.',
+  },
+  {
+    date: 'Heartfire 27',
+    text: 'Further reforms are posted. The Black Talons pass under Internal Affairs, the duties of the two being held to be the same work. A Chancellor is created with a seat on the Council, charged with development, the reform of law and the drafting of legislation, and Vaerion Meanor is appointed to it; the former Advisor’s style is renamed Grand Envoy. The Diplomatic wing is capped at four or five Ambassadors, the military ranks are to be renamed, the application process reformed and the penal code rewritten. All Bosmer and Khajiit are ordered to report to the Embassy. Ka’Taravi is made Captain of the Auxiliary and Jo’Khazan its Officer; Arendor Raelendis is raised Inquisitor, Mihir Vas Vihaan confirmed Canonreeve, and Iwelien Loraenthal made High Justiciar.',
+  },
+];
+
 interface Paper {
   name: string;
   span: string;
@@ -259,7 +305,7 @@ export function HistoryView() {
   return (
     <Page
       title="History of the Realm"
-      subtitle="As Recorded by the Free Presses of Skyrim"
+      subtitle="As Recorded by the Free Presses of Skyrim, and by the Embassy’s Own Hand"
     >
       {/* This volume keeps its account as written prose rather than as data, so
           the guide walks the rendered tree instead of being threaded through a
@@ -434,6 +480,52 @@ export function HistoryView() {
               peace, on the night the sealed temple opened to them.
             </dd>
           </dl>
+        </div>
+      </section>
+
+      <section aria-label="The recall">
+        <h2 className="page__heading">The Recall, 4E 226</h2>
+        <div className="chronicle__preamble">
+          <p>
+            Ten years on, the war the presses saw coming has been fought and
+            settled against the Empire: the Legion is expelled, Skyrim is united
+            and independent, and the Embassy stands in a province that no longer
+            has an Imperial reason to tolerate it. Through those weeks Alinor did
+            not answer. Then, within seven days, it answered entirely — with a
+            recall, a dissolution and a reformation.
+          </p>
+          <p>
+            What follows is <em>not</em> the presses. These are the Embassy&rsquo;s
+            own notices, posted on its own boards and signed by the officers who
+            gave them, transcribed here as they were written. They are testimony,
+            not reportage, and they are kept apart from the chronicle above for
+            that reason. A notice records what the Embassy declared on a given
+            day. Whether the declaration held is a question the record cannot
+            answer about itself.
+          </p>
+        </div>
+        <ol className="chronicle">
+          {RECALL.map((entry) => (
+            <li
+              className={`chronicle__entry${entry.weight ? ` chronicle__entry--${entry.weight}` : ''}`}
+              key={`${entry.date}-${entry.text.slice(0, 24)}`}
+            >
+              <span className="chronicle__date">{entry.date}</span>
+              <span className="chronicle__text">{entry.text}</span>
+            </li>
+          ))}
+        </ol>
+        <div className="chronicle__preamble">
+          <p className="chronicle__aside">
+            Two of these notices are answered by a later one, and the archive
+            keeps both rather than choosing. On the one and twentieth the Embassy
+            filed a recovery order against the estate of House Velrith; on the
+            five and twentieth House Velrith was declared not to exist within the
+            Dominion. The claim and the house it was made against were dissolved
+            in the same week. And the office of First Emissary, abolished on the
+            five and twentieth and never to be filled again, is the office in
+            whose name the Hall of Honor is still kept.
+          </p>
         </div>
       </section>
 
