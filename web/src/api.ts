@@ -139,6 +139,12 @@ export interface Chronicle {
   powers: { name: string; note: string }[];
   unresolved: { name: string; note: string }[];
   /*
+   * The funeral notice that closes the volume's one open thread. Optional
+   * because an archive deployed against an older Worker will not send it, and a
+   * missing notice must render as no section rather than as an error.
+   */
+  funeral?: { lead: string; notice: string[]; close: string };
+  /*
    * The Latest Filings — raw reports the chronicler Worker pulled overnight.
    *
    * OPTIONAL, because the Worker, its KV namespace and its token are each

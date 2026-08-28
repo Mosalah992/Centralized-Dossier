@@ -163,7 +163,7 @@ function buildLeaves(chronicle: Chronicle, term: string, guided: boolean): Leaf[
   leaves.push({
     head: 'Before the Chronicle',
     body: (
-      <>
+      <div className="chron-foreword">
         <h2 className="chron-h">Before the Chronicle</h2>
         {/* Written through `prose` like the entries are, so guided reading does
             not stop at the foreword and leave the reader wondering whether it
@@ -193,7 +193,7 @@ function buildLeaves(chronicle: Chronicle, term: string, guided: boolean): Leaf[
             term, guided,
           )}
         </p>
-      </>
+      </div>
     ),
   });
 
@@ -277,6 +277,43 @@ function buildLeaves(chronicle: Chronicle, term: string, guided: boolean): Leaf[
   }
   flushGaps();
   leaves.push(...gapLeaves);
+
+  /*
+   * ── The funeral ─────────────────────────────────────────────────────────
+   *
+   * Set as a document rather than written up as an entry, for the same reason
+   * the Notice of Recall is in History of the Realm: the Embassy did not write
+   * it. Every other page in this volume is the Embassy's account of what it
+   * did; this is a notice posted for the province, and the one thing the
+   * archive holds on how its longest search ended.
+   */
+  const funeral = chronicle.funeral;
+  if (funeral) {
+    leaves.push({
+      head: 'The Warden of the Pale',
+      body: (
+        <div className="chron-obit">
+          <h2 className="chron-h">The Warden of the Pale</h2>
+          <p className="chron-p">{prose(funeral.lead, term, guided)}</p>
+          <figure className="chron-notice">
+            {funeral.notice.map((line, i) => (
+              <p
+                className={i === 1 || i === 2 ? 'chron-notice__name' : 'chron-notice__line'}
+                key={line.slice(0, 28)}
+              >
+                {mark(line, term)}
+              </p>
+            ))}
+            <p className="chron-notice__close">{mark(funeral.close, term)}</p>
+          </figure>
+        </div>
+      ),
+      items: [
+        { label: 'Ghorzug, Warden of the Pale', text: funeral.lead },
+        { label: 'Eirik Colderwater', text: funeral.notice.join(' ') },
+      ],
+    });
+  }
 
   /*
    * ── The Latest Filings ──────────────────────────────────────────────────

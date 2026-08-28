@@ -16,7 +16,7 @@
 // bundle. See the note at the head of that file for why.
 
 import { CHRONICLE_COOKIE_NAME, readCookie, readWrit } from '../../lib/session';
-import { MONTHS, POWERS, UNRESOLVED } from '../../lib/chronicle';
+import { FUNERAL, MONTHS, POWERS, UNRESOLVED } from '../../lib/chronicle';
 import type { Filing, ServedFiling } from '../../../shared/filings';
 
 interface Env {
@@ -75,6 +75,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     months: MONTHS,
     powers: POWERS,
     unresolved: UNRESOLVED,
+    funeral: FUNERAL,
     filings,
   });
 };

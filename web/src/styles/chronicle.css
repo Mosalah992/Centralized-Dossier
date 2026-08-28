@@ -341,7 +341,30 @@
  * allowed — see invariant 5 and scripts/prepare-initials.py. What makes a
  * calligraphic hand illegible at label size is exactly what makes it right at
  * three ems and one letter. */
-.chron-entry__text::first-letter {
+/* THE RULE IS THE WHOLE VOLUME, not only the dated entries.
+ *
+ * A rubricator did not go through a book marking some openings and leaving
+ * others in the text ink; the red letter is what tells a reader "a new thing
+ * starts here", and applying it to two thirds of the openings says the other
+ * third is a continuation, which is false. So every passage that opens
+ * something takes one: the foreword, each month's standfirst, each entry, each
+ * of the powers and the unresolved, each filing, and the colophon.
+ *
+ * WHAT DOES NOT TAKE ONE, and this is the other half of the rule. Headings are
+ * already set apart in the display face — a red initial on a line that is
+ * wholly a title is decoration, not a mark. Second and later paragraphs inside
+ * one passage do not, because they are not openings. Neither does the closing
+ * signature, nor the title page, which is a plate rather than a page of text.
+ *
+ * TWO SIZES, because a drop cap may never be taller than the passage it opens.
+ * Three ems is three lines; a standfirst or one of the short notes below can be
+ * two, and a three-line letter beside a two-line note hangs off the bottom of
+ * its own paragraph. See the shorter block after this one. */
+.chron-entry__text::first-letter,
+.chron-filing .chron-p::first-letter,
+.chron-foreword .chron-p:first-of-type::first-letter,
+.chron-colophon .chron-p:first-of-type::first-letter,
+.chron-obit .chron-p:first-of-type::first-letter {
   float: left;
   font-family: 'Black Chancery', var(--serif);
   /* Not bold, ever. The grave entries set their text at 600 and this face has
@@ -359,6 +382,25 @@
   padding: 0.16em 0.1em 0 0;
   color: var(--rubric);
 }
+
+/* The short passages: a month's standfirst, and the notes against each power
+   and each unresolved name. Two lines rather than three, for the reason given
+   above — the letter has to fit inside what it opens. */
+.chron-standfirst::first-letter,
+.chron-list dd::first-letter {
+  float: left;
+  font-family: 'Black Chancery', var(--serif);
+  font-weight: 400;
+  font-size: 2.1em;
+  line-height: 0.82;
+  padding: 0.14em 0.09em 0 0;
+  color: var(--rubric);
+}
+
+/* The standfirst is set in italic, and Black Chancery has no italic cut — the
+   browser would slant the roman, which on a calligraphic face reads as a
+   mistake rather than as emphasis. */
+.chron-standfirst::first-letter { font-style: normal; }
 
 /* The handful of days the rest of the chronicle turns on. Marked with a rule
    in the margin rather than a colour change, so it survives being printed and
@@ -615,6 +657,49 @@
   font-size: 0.8rem;
   letter-spacing: 0.12em;
   color: #b89f6e;
+}
+
+/* ── A notice posted for the province ─────────────────────────────────────
+ *
+ * The funeral notice. Centred, spaced, and quiet: this is the one page in the
+ * volume the Embassy did not write, and it should not sound like the Embassy.
+ *
+ * NO RUBRICATED INITIAL HERE, deliberately, and it is the one exception to the
+ * rule above. The red letter is the Embassy's rubricator marking its own book;
+ * putting one on a notice the holds posted for their own dead would be the
+ * archive writing on someone else's page.
+ */
+.chron-notice {
+  margin: 1.4rem 0 0;
+  padding: 1.3rem 1.1rem 1.1rem;
+  border-top: 1px solid rgb(122 92 46 / 0.28);
+  border-bottom: 1px solid rgb(122 92 46 / 0.28);
+  text-align: center;
+}
+
+.chron-notice__line {
+  margin: 0 0 0.8rem;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* The two names the notice is for. Set in the display face and given room:
+   on the sheet they stand alone between rules of blank space. */
+.chron-notice__name {
+  margin: 1rem 0;
+  font-family: var(--display);
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+  color: rgb(40 28 14 / 0.92);
+}
+
+.chron-notice__close {
+  margin: 1.2rem 0 0;
+  font-family: var(--display);
+  font-size: 0.86rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgb(60 44 22 / 0.85);
 }
 
 /* ── The Latest Filings ───────────────────────────────────────────────── */
