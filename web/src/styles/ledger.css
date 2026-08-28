@@ -1309,6 +1309,73 @@ button.day::before {
   margin-top: 1.3rem;
 }
 
+/* ── A writ received ──────────────────────────────────────────────────────
+ *
+ * The Notice of Recall, and anything else the Embassy was SENT rather than
+ * wrote. It is set as a document — ruled border, its own margins, the salutation
+ * standing apart — because the difference between a paper the Embassy issued
+ * and one issued against it is the whole reason this section exists, and prose
+ * alone does not carry it.
+ *
+ * Deliberately cooler than the page around it. It is not the Embassy's hand,
+ * so it does not take the Embassy's warmth: the ground is a shade lighter and
+ * the rule a shade greyer than the ledger's own. The impulse to give it a wax
+ * seal and a flourish was the wrong one — an archive that dresses a document
+ * up is editorialising about it.
+ */
+.writ {
+  margin: 2rem 0;
+  padding: 1.6rem 1.7rem 1.3rem;
+  border: 1px solid rgb(122 92 46 / 0.32);
+  /* A second, inset rule: the double border is what makes a sheet read as a
+     writ rather than as a pull-quote. */
+  outline: 1px solid rgb(122 92 46 / 0.16);
+  outline-offset: 5px;
+  background: rgb(255 253 246 / 0.35);
+}
+
+.writ__head {
+  margin: 0 0 1.1rem;
+  text-align: center;
+}
+
+.writ__kind {
+  display: block;
+  font-family: var(--display);
+  font-size: 1.05rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgb(60 44 22 / 0.9);
+}
+
+.writ__from {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.78rem;
+  font-style: italic;
+  letter-spacing: 0.02em;
+  color: rgb(90 68 34 / 0.7);
+}
+
+.writ__p {
+  margin: 0 0 0.85rem;
+  line-height: 1.62;
+}
+
+/* The salutation sits on its own, as it does on the sheet. */
+.writ__p--salutation {
+  margin-bottom: 1.1rem;
+  font-style: italic;
+}
+
+.writ__sign {
+  margin: 1.3rem 0 0;
+  text-align: right;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: rgb(60 44 22 / 0.85);
+}
+
 .press {
   padding: 1rem 1.1rem;
   background: color-mix(in srgb, var(--cover) 4%, rgba(239, 230, 210, 0.5));

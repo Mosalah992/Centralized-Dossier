@@ -226,6 +226,51 @@ const RECALL: Entry[] = [
   },
 ];
 
+/*
+ * THE NOTICE OF RECALL — Alinor's answer, and the only document in this volume
+ * that was sent TO the Embassy rather than posted by it.
+ *
+ * Transcribed from the sealed original. Everything else in the section above is
+ * the Embassy talking about itself; this is the Dominion talking about the
+ * Embassy, and it is set apart on the page for that reason.
+ *
+ * ITS OWN SPELLING IS KEPT. "antithecal", "Condordat", "Emmissary", and a
+ * sentence in the fifth paragraph that stops at "before ." with the name never
+ * written. A transcription that quietly corrects a document is no longer
+ * evidence of it — the same rule docs/skyrim-press-history.md keeps with the
+ * newspapers, and the errors are the reader's to weigh, not mine to tidy.
+ */
+const RECALL_NOTICE: string[] = [
+  'To the former personnel of the Thalmor Embassy of Skyrim,',
+  'Your actions of late in Skyrim have brought disrepute upon the Aldmeri '
+  + 'Dominion and upon our very race. You have failed or outright abandoned the '
+  + 'duties to which you are oathsworn, fled from lesser races in a time of war '
+  + 'and brought shame upon the very principles on which we have built our '
+  + 'Dominion.',
+  'Word has reached our ears of the Embassy’s fall from grace in recent '
+  + 'months. The penetration of lesser beast-folk into the ranks of the Thalmor, '
+  + 'even raised to higher stations than fellow Altmer, is antithecal to our very '
+  + 'way of life. I write this with the utmost disgrace as I hold reports of '
+  + 'senior members of the Embassy even forming romantic relationships with these '
+  + 'lesser beings — a most heinous crime against both the Dominion and the '
+  + 'Altmeri race.',
+  'You were sent to the northern province to enforce the White-Gold Condordat '
+  + '— not to integrate with the barbarism of its people. Your actions bring '
+  + 'disgrace to Alinor and must be answered for.',
+  'You are hereby commanded to depart Skyrim immediately and surrender '
+  + 'yourselves to the Dominion Embassy in the Imperial City. From there, you '
+  + 'will be arrested and taken under escort to the Summerset Isles to answer for '
+  + 'your crimes before .',
+  'These terms are not to be negotiated. Neither the so-called nobles of '
+  + 'Northkeep nor self-proclaimed High King of Skyrim can protect you from this '
+  + 'summons. There remains one courtesy afforded to you: return willingly as '
+  + 'servants who have failed in their duty, or refuse and find yourself '
+  + 'condemned in absentia.',
+  'Should any member of the former Skyrim mission remain within the rebel '
+  + 'province after receipt of this order, no further summons shall be issued. '
+  + 'You need not be reminded of the consequences.',
+];
+
 interface Paper {
   name: string;
   span: string;
@@ -515,7 +560,44 @@ export function HistoryView() {
             </li>
           ))}
         </ol>
+        {/* Alinor's answer, set as a document rather than as an entry: it is
+            the only thing in this volume that was sent TO the Embassy. */}
+        <figure className="writ">
+          <figcaption className="writ__head">
+            <span className="writ__kind">Notice of Recall</span>
+            <span className="writ__from">From Alinor, to the former personnel of the Embassy</span>
+          </figcaption>
+          <div className="writ__body">
+            {RECALL_NOTICE.map((para, i) => (
+              <p className={i === 0 ? 'writ__p writ__p--salutation' : 'writ__p'} key={para.slice(0, 32)}>
+                {para}
+              </p>
+            ))}
+          </div>
+          <p className="writ__sign">
+            Signed,<br />
+            <strong>High Emmissary Oriwyneth</strong>
+          </p>
+        </figure>
+
         <div className="chronicle__preamble">
+          <p className="chronicle__aside">
+            The notice is transcribed as it was written, errors and all
+            &mdash; <em>antithecal</em>, <em>Condordat</em>, <em>Emmissary</em>,
+            and a sentence in the fifth paragraph that stops at
+            &ldquo;before&nbsp;.&rdquo; with the name never entered. A
+            transcription that quietly corrects a document stops being evidence
+            of it. The Embassy holds no date for its arrival; it names its
+            readers <em>former</em> personnel and Skyrim a <em>rebel province</em>,
+            so it cannot predate the province&rsquo;s independence.
+          </p>
+          <p className="chronicle__aside">
+            One reading is worth setting down and not asserting. The notice
+            condemns the raising of Khajiit and Bosmer to stations above Altmer;
+            the Restructure of the five and twentieth removed them from every
+            command position. Whether the Embassy was answering this letter or
+            anticipating it, the record does not say.
+          </p>
           <p className="chronicle__aside">
             Two of these notices are answered by a later one, and the archive
             keeps both rather than choosing. On the one and twentieth the Embassy
