@@ -159,8 +159,12 @@ is present, since the seal ceremony cannot wait for a lazy chunk.
 `chronicler/` is a second wrangler project and deploys on its own:
 
 ```bash
-cd chronicler && node ../node_modules/wrangler/bin/wrangler.js deploy
+node node_modules/wrangler/bin/wrangler.js deploy --config chronicler/wrangler.toml
 ```
+
+Both commands here take `--config` rather than a `cd`, deliberately: this machine's
+shell is PowerShell 5.1, where `&&` is a parser error, so `cd chronicler && …`
+does not run. See the environment note above.
 
 It reads the Informants category once a night, redacts through
 `shared/filings.ts`, and writes at most 60 filings to the `CHRONICLE_FILINGS` KV
@@ -191,7 +195,7 @@ namespace.
 The bot token is a Worker secret, separate from the Pages secrets:
 
 ```bash
-cd chronicler && node ../node_modules/wrangler/bin/wrangler.js secret put DISCORD_BOT_TOKEN
+node node_modules/wrangler/bin/wrangler.js secret put DISCORD_BOT_TOKEN --config chronicler/wrangler.toml
 ```
 
 ## Commands
@@ -229,6 +233,8 @@ node node_modules/wrangler/bin/wrangler.js pages deploy dist --project-name thal
 
 - **PowerShell blocks `npm.ps1` / `npx.ps1`** (execution policy). Use `npx.cmd`, Git Bash,
   or call the binary directly: `node node_modules/wrangler/bin/wrangler.js`.
+  **It is PowerShell 5.1, so `&&` is a parser error too** — chain with `;`, or avoid
+  chaining altogether by passing `--config` instead of `cd`-ing into a subproject.
   Do **not** advise changing the execution policy — it is a machine-wide security setting
   and the workarounds cost nothing.
 - **npm 11 gates native install scripts.** Approvals for `esbuild`, `sharp` and `workerd`
