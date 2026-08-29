@@ -145,7 +145,7 @@ the size ceiling. It reads `dist/`, which `npm test` does not build, so it *skip
 unless something built first — use:
 
 ```bash
-npm run verify
+npm.cmd run verify
 ```
 
 The same test keeps framer-motion out (it was 39 KB gzip here, 41% of a sealed
@@ -203,7 +203,7 @@ node node_modules/wrangler/bin/wrangler.js secret put DISCORD_BOT_TOKEN --config
 A local console for the three volumes the Embassy writes itself:
 
 ```bash
-npm run editor
+npm.cmd run editor
 ```
 
 It opens `/editor` on the dev server, behind the same gate as everything else.
@@ -216,7 +216,7 @@ bot owns.
 refuse a volume that has lost a third of its entries. Publishing is explicit:
 
 ```bash
-npm run volumes:publish
+npm.cmd run volumes:publish
 ```
 
 then a `pages deploy` you run. Nothing typed in the editor reaches a reader on
@@ -240,7 +240,7 @@ silently.
 Check the volumes at any time, in about a second:
 
 ```bash
-npm run volumes:check
+npm.cmd run volumes:check
 ```
 
 It compares each volume against its generated module and against the newest
@@ -264,12 +264,12 @@ running with `--host` and calling the API from the machine's own LAN address:
 ## Commands
 
 ```bash
-npm run dev          # UI on :5173, proxies /api to :8788
-npm run pages:dev    # Functions on :8788 — needs .dev.vars
-npm run build        # tsc --noEmit && vite build
-npm run typecheck    # both tsconfigs
-npm test             # vitest (46 tests; the .live suite is skipped by default)
-npm run dump         # re-dump every sheet tab to tmp/ after a schema change
+npm.cmd run dev          # UI on :5173, proxies /api to :8788
+npm.cmd run pages:dev    # Functions on :8788 — needs .dev.vars
+npm.cmd run build        # tsc --noEmit && vite build
+npm.cmd run typecheck    # both tsconfigs
+npm.cmd test             # vitest (46 tests; the .live suite is skipped by default)
+npm.cmd run dump         # re-dump every sheet tab to tmp/ after a schema change
 ```
 
 Asset prep — each reads from `Assets/` and writes committed output:
@@ -286,7 +286,7 @@ node scripts/make-dev-vars.mjs     # .env -> .dev.vars for wrangler
 nothing on its own:
 
 ```bash
-npm run build
+npm.cmd run build
 node node_modules/wrangler/bin/wrangler.js pages deploy dist --project-name thalmor-archives
 ```
 
@@ -294,8 +294,12 @@ node node_modules/wrangler/bin/wrangler.js pages deploy dist --project-name thal
 
 ## Environment gotchas
 
-- **PowerShell blocks `npm.ps1` / `npx.ps1`** (execution policy). Use `npx.cmd`, Git Bash,
-  or call the binary directly: `node node_modules/wrangler/bin/wrangler.js`.
+- **PowerShell blocks `npm.ps1` / `npx.ps1`** (execution policy), which is why every
+  command in this file is written `npm.cmd` and `npx.cmd` rather than `npm` and `npx`.
+  That is not a typo and should not be "tidied" — bare `npm` fails on this machine, and
+  a command that has to be corrected before it runs is a command nobody trusts. In Git
+  Bash the bare forms work; the `.cmd` forms work in both, so they are what is written.
+  For wrangler, call the binary directly: `node node_modules/wrangler/bin/wrangler.js`.
   **It is PowerShell 5.1, so `&&` is a parser error too** — chain with `;`, or avoid
   chaining altogether by passing `--config` instead of `cd`-ing into a subproject.
   Do **not** advise changing the execution policy — it is a machine-wide security setting
