@@ -3,13 +3,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useGSAP } from '@gsap/react';
 
-import { gsap, staged } from '../motion';
+import { D, gsap, staged } from '../motion';
 import { useVolume } from '../api';
 import { Consulting, Notice } from '../components/Notice';
 import { Page, Registers, figure } from '../components/Page';
 import type { CalendarDay } from '../../../shared/types';
 import { MONTHS } from '../../../shared/parsers/calendar';
-import { RATE, clockParts, machineHour, reckon, type InWorldMoment } from '../../../shared/reckoning';
+import { RATE, clockParts, dayProgress, machineHour, reckon, type InWorldMoment } from '../../../shared/reckoning';
 import { EMBASSY_OBSERVANCES, withObservances } from '../../../shared/observances';
 import { TAMRIELIC_HOLIDAYS } from '../../../shared/holidays';
 import { constellationOf, standing } from '../../../shared/constellations';
@@ -359,6 +359,21 @@ export function lowerPath(surface: number, floor: number, neck: number): string 
   return `M 12 ${surface} Q 30 ${surface - mound * 2} 48 ${surface} L 48 ${floor} L 12 ${floor} Z`;
 }
 
+/**
+ * Has the day rolled over between these two readings?
+ *
+ * The in-world day runs 0 to 1 and then starts again, so midnight is the one
+ * moment the fraction goes DOWN. Any fall at all would do as a test, except
+ * that a reader switching tabs can leave the ticker unread for a while and the
+ * clock is running at twice real time — so the threshold is half a day, which
+ * only a rollover can produce.
+ *
+ * Pure, and exported, because a moment that happens once every twenty-four
+ * hours is otherwise a moment nobody can check.
+ */
+export const dayTurned = (previous: number, now: number): boolean =>
+  previous > 0.5 && now < previous - 0.5;
+
 /** The apex of the heap — where the falling stream should land. */
 export const moundPeak = (surface: number, floor: number, neck: number): number =>
   surface - moundHeight(surface, floor, neck);
@@ -371,6 +386,8 @@ function Hourglass({ fraction }: { fraction: number }) {
   const upper = useRef<SVGPathElement>(null);
   const lower = useRef<SVGPathElement>(null);
   const fall = useRef<SVGLineElement>(null);
+  /** The whole glass, so midnight can turn it over. */
+  const root = useRef<SVGSVGElement>(null);
 
   /*
    * The sand moves; React does not.
@@ -391,22 +408,41 @@ function Hourglass({ fraction }: { fraction: number }) {
   useGSAP(() => staged(({ moving }) => {
     if (!upper.current || !lower.current) return;
 
-    const setUpperY = gsap.quickSetter(upper.current, 'attr') as (v: object) => void;
-    const setLowerY = gsap.quickSetter(lower.current, 'attr') as (v: object) => void;
-    const setFall = fall.current
-      ? gsap.quickSetter(fall.current, 'attr') as (v: object) => void
-      : null;
+    /*
+     * setAttribute, NOT gsap.quickSetter('attr'), and the difference is the
+     * whole reason the glass stood still.
+     *
+     * quickSetter with "attr" is built for numeric attributes — the docs
+     * demonstrate cx and cy, and its values go through GSAP's parser so that
+     * "+=100" and "random(-100,100)" work. A path's `d` is a string of
+     * commands and it is not a number, so the write was quietly dropped: the
+     * ticker ran, the grains fell, and the shape on screen stayed whatever
+     * React had rendered at mount. Nothing threw, nothing warned, and the
+     * hourglass froze the moment it appeared.
+     *
+     * A plain setAttribute is also the fastest thing available — quickSetter's
+     * whole purpose is to get closer to this, not further from it. GSAP is
+     * still what drives the loop; it just is not what writes the string.
+     */
+    const upperEl = upper.current;
+    const lowerEl = lower.current;
+    const fallEl = fall.current;
 
     const draw = () => {
-      const at = reckon().dayFraction;
+      // dayProgress, not reckon().dayFraction — see the note on it. The
+      // quantised one is what a clock face wants and what made this stand
+      // still.
+      const at = dayProgress();
       const top = TOP + (NECK - TOP) * at;
       const bottom = FLOOR - (FLOOR - NECK) * at;
-      setUpperY({ d: upperPath(top, TOP, NECK) });
-      setLowerY({ d: lowerPath(bottom, FLOOR, NECK) });
+      upperEl.setAttribute('d', upperPath(top, TOP, NECK));
+      lowerEl.setAttribute('d', lowerPath(bottom, FLOOR, NECK));
       // The stream ends on the APEX of the heap, not on the level it would
       // have had if it were flat — otherwise the last few pixels of the fall
       // disappear behind the cone it is building.
-      if (setFall) setFall({ y2: Math.max(NECK, moundPeak(bottom, FLOOR, NECK)) });
+      if (fallEl) {
+        fallEl.setAttribute('y2', String(Math.max(NECK, moundPeak(bottom, FLOOR, NECK))));
+      }
     };
 
     draw();
@@ -415,21 +451,74 @@ function Hourglass({ fraction }: { fraction: number }) {
     // clock face, not an animation: the level still says what time it is.
     if (!moving) return;
 
+    /*
+     * THE GLASS TURNS AT MIDNIGHT, because that is what an hourglass does when
+     * its sand runs out and it is the only moment in the day this clock has to
+     * mark. Everything else it does is a millimetre an hour.
+     *
+     * A half turn rather than a full one: the frame is symmetrical, so 180
+     * degrees is indistinguishable from where it started, and the rotation is
+     * reset to zero the moment it lands. The sand redraws to full through the
+     * turn on its own — `draw` is still running — so the bulb fills as the
+     * glass comes over, which is the part that sells it.
+     *
+     * `swing`, not `break` or `shut`: this is a hinged object being tipped, and
+     * the motion language has a curve for exactly that.
+     */
+    let previous = dayProgress();
+    const glass = root.current;
+
+    const turn = () => {
+      if (!glass) return;
+      gsap.fromTo(glass,
+        { rotate: 0 },
+        {
+          rotate: 180,
+          duration: D.board,
+          ease: 'swing',
+          transformOrigin: '50% 50%',
+          // Cleared rather than left at 180: a symmetrical frame makes the two
+          // states identical, and leaving a transform on means the NEXT turn
+          // starts from 180 and goes to 360.
+          onComplete: () => gsap.set(glass, { clearProps: 'rotate,transformOrigin' }),
+        });
+    };
+
     // The grains: a dashed stroke whose offset travels, which reads as falling
     // where a solid bar would just sit there. Its own tween rather than part of
     // `draw`, because the sand level tracks the clock and the grains do not.
     // Exactly one dash period (1.6 + 2.6) per half second, so the stream
     // repeats seamlessly and reads as a continuous fall rather than a loop.
+    /*
+     * ONE GRAIN PER IN-WORLD SECOND, derived rather than guessed.
+     *
+     * The dash is 1.6 on, 2.6 off — one period is 4.2 units — and the stream
+     * travels exactly one period per second of realm time. That used to be
+     * written as a flat 0.5s with a comment explaining that it happened to be
+     * right at the current rate. It is the rate that makes it right, so it now
+     * says so: change RATE in shared/reckoning.ts and the sand keeps pace with
+     * the clock instead of quietly falling at the wrong speed.
+     */
     const grains = fall.current
       ? gsap.to(fall.current, {
-        strokeDashoffset: -4.2, duration: 0.5, ease: 'none', repeat: -1,
+        strokeDashoffset: -4.2, duration: 1 / RATE, ease: 'none', repeat: -1,
       })
       : null;
 
-    gsap.ticker.add(draw);
+    // The turn is decided on the same tick that draws, so the sand and the
+    // glass agree about which day it is.
+    const tick = () => {
+      const at = dayProgress();
+      if (dayTurned(previous, at)) turn();
+      previous = at;
+      draw();
+    };
+
+    gsap.ticker.add(tick);
     return () => {
-      gsap.ticker.remove(draw);
+      gsap.ticker.remove(tick);
       grains?.kill();
+      if (glass) gsap.killTweensOf(glass);
     };
   }), []);
 
@@ -443,7 +532,7 @@ function Hourglass({ fraction }: { fraction: number }) {
   return (
     /* Hidden from the reading order: the hour is written out beside it, and a
        description of the sand would only say the same thing twice. */
-    <svg className="sandglass" viewBox="0 0 60 100" aria-hidden focusable="false">
+    <svg ref={root} className="sandglass" viewBox="0 0 60 100" aria-hidden focusable="false">
       <defs>
         {/* The sand is cut to the bulbs, so its two curved surfaces can run the
             full width of the glass and let the clip decide where they end. */}
