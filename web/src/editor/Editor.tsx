@@ -178,11 +178,30 @@ const api = {
     if (!res.ok) throw new Error((await res.json()).error ?? res.statusText);
     return res.json();
   },
-  async save(slug: string, data: unknown, etag: string) {
+  /**
+   * Compose the file here, hash it here, and let the other end prove it.
+   *
+   * The editor used to hand over its data and let the plugin decide what bytes
+   * to write. That is one serialisation too many: if the browser's idea of the
+   * file and the file on disk ever diverge there is nothing to compare them
+   * against, and a save that quietly lost something would report success.
+   *
+   * Now the text below IS the file. Its hash travels with it, the plugin reads
+   * the file back after writing, and a mismatch anywhere in that chain is an
+   * error rather than a silent edit.
+   */
+  async save(slug: string, data: unknown, etag: string, format: 'json' | 'jsonl') {
+    const text = format === 'jsonl'
+      ? `${(data as unknown[]).map((r) => JSON.stringify(r)).join('\n')}\n`
+      : `${JSON.stringify(data, null, 2)}\n`;
+
+    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+    const sha = [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
+
     const res = await fetch(`/__editor/volume/${slug}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data, etag }),
+      body: JSON.stringify({ text, sha, etag }),
     });
     const body = await res.json();
     if (!res.ok) throw Object.assign(new Error(body.error ?? res.statusText), { status: res.status });
@@ -211,6 +230,7 @@ interface VolumeCard {
 export function EditorView() {
   const [shelf, setShelf] = useState<VolumeCard[] | null>(null);
   const [slug, setSlug] = useState<string | null>(null);
+  const [format, setFormat] = useState<'json' | 'jsonl'>('json');
   const [data, setData] = useState<any>(null);
   const [etag, setEtag] = useState('');
   const [dirty, setDirty] = useState(false);
@@ -260,6 +280,7 @@ export function EditorView() {
       setSlug(s);
       setData(got.data);
       setEtag(got.etag);
+      setFormat(got.format);
       setSectionId(null);
       setSelected(null);
       setTerm('');
@@ -280,11 +301,17 @@ export function EditorView() {
   const save = useCallback(async () => {
     if (!slug || !data) return;
     try {
-      const res = await api.save(slug, data, etag);
+      const res = await api.save(slug, data, etag, format);
       setEtag(res.etag);
       setDirty(false);
       setVersions((await api.versions(slug)).versions ?? []);
-      setNote({ kind: 'ok', text: `Sealed. ${res.bytes.toLocaleString()} bytes written.` });
+      setNote({
+        kind: 'ok',
+        // The hash is said out loud rather than merely checked, so "sealed"
+        // means something a reader can act on: it is the file on disk, not a
+        // report that the write returned without throwing.
+        text: `Sealed. ${res.bytes.toLocaleString()} bytes, verified on disk (${res.sha.slice(0, 12)}).`,
+      });
     } catch (err) {
       const e = err as Error & { status?: number };
       setNote({

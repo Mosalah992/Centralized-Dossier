@@ -188,7 +188,14 @@ export function archivesEditor(root: string): Plugin {
             const v = bySlug.get(parts[1]);
             if (!v) return json(res, 404, { error: 'no such volume' });
 
-            const payload = JSON.parse(await readBody(req)) as { data: unknown; etag?: string };
+            const payload = JSON.parse(await readBody(req)) as {
+              /** The exact file text, composed and hashed by the browser. */
+              text?: string;
+              sha?: string;
+              /** The older shape, kept so a tab open across a reload still saves. */
+              data?: unknown;
+              etag?: string;
+            };
             const file = abs(v.file);
             const before = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '';
 
@@ -207,9 +214,28 @@ export function archivesEditor(root: string): Plugin {
               });
             }
 
-            const text = v.format === 'jsonl'
+            /*
+             * THE BROWSER DECIDES THE BYTES, AND PROVES IT.
+             *
+             * This used to take the editor's data as JSON and re-serialise it
+             * here. That leaves a gap nobody can see across: what the browser
+             * meant to write and what actually got written are two separate
+             * serialisations, and if they ever disagree — a lost character, a
+             * bad decode, a fault in transit — the file is wrong and every
+             * party involved believes it succeeded.
+             *
+             * So the client composes the exact file text and sends its sha256
+             * alongside. This end writes those bytes verbatim, reads them back
+             * off disk, and checks that hash. Nothing in between is trusted,
+             * including this handler.
+             *
+             * `data` is still accepted, so a tab left open across a reload does
+             * not start failing mid-edit — but it takes the old, unverifiable
+             * path and the response says `verified: false` when it does.
+             */
+            const text = payload.text ?? (v.format === 'jsonl'
               ? `${(payload.data as unknown[]).map((r) => JSON.stringify(r)).join('\n')}\n`
-              : `${JSON.stringify(payload.data, null, 2)}\n`;
+              : `${JSON.stringify(payload.data, null, 2)}\n`);
 
             // Snapshot BEFORE writing — see the note at the top of this file.
             if (before) {
@@ -236,16 +262,34 @@ export function archivesEditor(root: string): Plugin {
              * one was found.
              */
             const written = fs.readFileSync(file, 'utf8');
-            if (written !== text) {
+            const onDisk = sha256(written);
+
+            /*
+             * CHECKED AGAINST THE BROWSER'S OWN HASH, not merely against what
+             * this handler happened to build. Those are different claims: the
+             * second only says the write survived the disk, the first says the
+             * bytes on disk are the bytes the editor meant to save.
+             */
+            if (written !== text || (payload.sha && payload.sha !== onDisk)) {
               return json(res, 500, {
-                error: 'The volume did not survive being written. Nothing has been lost — '
-                  + 'the previous state is in content/.history — but do not trust this save.',
-                expected: Buffer.byteLength(text),
-                found: Buffer.byteLength(written),
+                error: 'The volume did not survive being written. Nothing is lost — the '
+                  + 'previous state is in content/.history — but do not trust this save.',
+                expectedBytes: Buffer.byteLength(text),
+                foundBytes: Buffer.byteLength(written),
+                browserSha: payload.sha ?? null,
+                diskSha: onDisk,
               });
             }
 
-            return json(res, 200, { ok: true, bytes: Buffer.byteLength(text), etag: hash(text) });
+            return json(res, 200, {
+              ok: true,
+              bytes: Buffer.byteLength(text),
+              etag: hash(text),
+              sha: onDisk,
+              // False means the browser did not compose the bytes itself, so
+              // the save is only as trustworthy as this end's serialisation.
+              verified: Boolean(payload.sha),
+            });
           }
 
           // GET /__editor/history/:slug            — the snapshots
@@ -293,7 +337,12 @@ export function archivesEditor(root: string): Plugin {
 }
 
 function hash(text: string): string {
-  return crypto.createHash('sha256').update(text).digest('hex').slice(0, 16);
+  return sha256(text).slice(0, 16);
+}
+
+/** Full digest — what the browser computes and what the file is checked against. */
+function sha256(text: string): string {
+  return crypto.createHash('sha256').update(text, 'utf8').digest('hex');
 }
 
 function parseJsonl(raw: string): unknown[] {

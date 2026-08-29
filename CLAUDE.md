@@ -226,6 +226,27 @@ its own.
 *before* a bad save survives it. A snapshot taken afterwards would record the
 mistake instead.
 
+**A save is verified end to end.** The browser composes the exact file text,
+hashes it, and sends both; the plugin writes those bytes verbatim, reads the
+file back, and compares the hash *the browser* computed against the file *on
+disk*. A mismatch anywhere in that chain is a 500 and nothing is written. This
+exists because `content/chronicle.json` lost eight characters out of a Powers
+note on the editor's first day — a loss the pipeline test caught and the backup
+undid, but whose cause was never found. The save path was afterwards proved
+lossless through both the API and the full browser sequence, so the fix is not
+a patch for a known bug: it makes an unexplained loss impossible to repeat
+silently.
+
+Check the volumes at any time, in about a second:
+
+```bash
+npm run volumes:check
+```
+
+It compares each volume against its generated module and against the newest
+backup. A difference from the backup is printed, not failed — editing is the
+point — but it is the line that would have shown that loss on the day.
+
 **IT IS DEV-ONLY BY CONSTRUCTION, NOT BY CONFIGURATION.** The filesystem API is
 a Vite plugin marked `apply: 'serve'`; the route and the `React.lazy` import are
 both inside `import.meta.env.DEV`, so a production build emits no chunk at all.
