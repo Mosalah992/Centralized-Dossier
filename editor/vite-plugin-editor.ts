@@ -71,17 +71,34 @@ const bySlug = new Map(VOLUME_FILES.map((v) => [v.slug, v]));
 /** ISO instant, safe for a filename on Windows. */
 const stamp = () => new Date().toISOString().replace(/[:.]/g, '-');
 
+/**
+ * Read a request body as text.
+ *
+ * BUFFERS COLLECTED AND JOINED ONCE, not decoded chunk by chunk. The obvious
+ * `body += chunk` decodes each chunk on its own, and a volume is sixty
+ * kilobytes with four hundred-odd multi-byte characters in it — every curly
+ * apostrophe and em dash in the chronicle. A chunk boundary that lands in the
+ * middle of one of those decodes both halves to replacement characters, and
+ * the corruption is a character deep in a file nobody re-reads. It depends on
+ * where the network split the body, so it would appear once in a hundred saves
+ * and never in a test.
+ */
 function readBody(req: import('node:http').IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
-    let body = '';
+    const chunks: Buffer[] = [];
+    let size = 0;
     // A volume is a few hundred kB; anything past a megabyte is a mistake or a
     // client that has lost its place, and neither should be held in memory.
     const LIMIT = 4 * 1024 * 1024;
-    req.on('data', (chunk) => {
-      body += chunk;
-      if (body.length > LIMIT) reject(new Error('body too large'));
+    req.on('data', (chunk: Buffer) => {
+      size += chunk.length;
+      if (size > LIMIT) {
+        reject(new Error('body too large'));
+        return;
+      }
+      chunks.push(chunk);
     });
-    req.on('end', () => resolve(body));
+    req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
     req.on('error', reject);
   });
 }
@@ -202,6 +219,32 @@ export function archivesEditor(root: string): Plugin {
             }
 
             fs.writeFileSync(file, text);
+
+            /*
+             * READ IT BACK BEFORE CALLING IT SAVED.
+             *
+             * A volume lost eight characters out of a Powers note during the
+             * first day this editor was used. The API round-trips losslessly
+             * when tested directly, so the cause was never found — and that is
+             * precisely why this is here. An editor that reports "Sealed" for a
+             * write it did not verify is an editor whose success message means
+             * nothing, and the file it writes is the only copy of two of these
+             * volumes.
+             *
+             * The cost is one read of a sixty-kilobyte file. The alternative is
+             * discovering the loss from a test days later, which is how this
+             * one was found.
+             */
+            const written = fs.readFileSync(file, 'utf8');
+            if (written !== text) {
+              return json(res, 500, {
+                error: 'The volume did not survive being written. Nothing has been lost — '
+                  + 'the previous state is in content/.history — but do not trust this save.',
+                expected: Buffer.byteLength(text),
+                found: Buffer.byteLength(written),
+              });
+            }
+
             return json(res, 200, { ok: true, bytes: Buffer.byteLength(text), etag: hash(text) });
           }
 

@@ -299,13 +299,77 @@ function useInWorldNow(periodMs: number): InWorldMoment {
  * neck at y=50, so the sand levels are a single interpolation read in opposite
  * directions rather than two sets of numbers to keep in agreement.
  */
+/*
+ * THE TWO SURFACES, AND WHY THEY ARE CURVED.
+ *
+ * The sand used to be two flat-topped rectangles cut to the bulbs. At a glass
+ * three and a half rem wide that reads as a vessel draining LIQUID: liquid is
+ * the thing whose surface stays level. Sand does not. It funnels where it
+ * leaves and it cones where it lands, and those two curves are the whole of
+ * what tells the eye which material it is looking at.
+ *
+ * They are also the only detail worth adding at this size. Individual grains
+ * were considered and rejected: the stream is about seventeen pixels tall, so a
+ * grain would be smaller than a pixel and the work would go into something
+ * nobody can see. A silhouette survives being small. A particle does not.
+ *
+ * Both curves are quadratics whose apex sits at the midpoint, so the control
+ * point is twice the depth: `Q 30 (y ± 2d) 48 y` peaks at exactly `y ∓ d`.
+ * The paths are still clipped to the bulbs, which is why they can run the full
+ * width and overshoot without being trimmed by hand.
+ */
+export function upperPath(surface: number, top: number, neck: number): string {
+  const remaining = Math.max(0, neck - surface);
+  const drained = neck === top ? 1 : (surface - top) / (neck - top);
+
+  /*
+   * THE FUNNEL DEEPENS AS THE BULB DRAINS, and getting that the wrong way
+   * round is what the first version did. Keying the depth off how much sand
+   * REMAINS gives a glass that is deeply cratered the moment it is turned and
+   * almost flat by evening — which is precisely backwards, and obvious the
+   * instant the two are drawn side by side rather than reasoned about.
+   *
+   * It keys off progress instead. Flat at the turn, cratering through the day,
+   * and clamped by the sand still in the bulb so the dip can never cut below
+   * the neck it drains into.
+   */
+  const dip = Math.min(0.6 + 3.4 * drained, remaining * 0.45);
+  return `M 12 ${surface} Q 30 ${surface + dip * 2} 48 ${surface} L 48 ${neck} L 12 ${neck} Z`;
+}
+
+/**
+ * How high the heap stands above the level around it.
+ *
+ * THREE LIMITS, and the third is one a test found rather than one I foresaw.
+ * A cone builds under the neck from the first grains and then stops growing,
+ * because a real heap keeps its angle and only widens — that is the 2.8. It
+ * cannot be taller than the sand that has actually landed, or the first grains
+ * would arrive as a spike — that is the `filled` term. And near the end of the
+ * day, when the surface has climbed almost to the neck, it must not go on
+ * rising THROUGH the neck into the bulb above. The clip was hiding that last
+ * one, so it looked right while being wrong, which is exactly the sort of thing
+ * that stops being hidden the moment somebody redraws the glass.
+ */
+function moundHeight(surface: number, floor: number, neck: number): number {
+  return Math.min(2.8, Math.max(0, floor - surface) * 0.42, Math.max(0, surface - neck));
+}
+
+export function lowerPath(surface: number, floor: number, neck: number): string {
+  const mound = moundHeight(surface, floor, neck);
+  return `M 12 ${surface} Q 30 ${surface - mound * 2} 48 ${surface} L 48 ${floor} L 12 ${floor} Z`;
+}
+
+/** The apex of the heap — where the falling stream should land. */
+export const moundPeak = (surface: number, floor: number, neck: number): number =>
+  surface - moundHeight(surface, floor, neck);
+
 function Hourglass({ fraction }: { fraction: number }) {
   const NECK = 50;
   const TOP = 12;
   const FLOOR = 88;
 
-  const upper = useRef<SVGRectElement>(null);
-  const lower = useRef<SVGRectElement>(null);
+  const upper = useRef<SVGPathElement>(null);
+  const lower = useRef<SVGPathElement>(null);
   const fall = useRef<SVGLineElement>(null);
 
   /*
@@ -337,9 +401,12 @@ function Hourglass({ fraction }: { fraction: number }) {
       const at = reckon().dayFraction;
       const top = TOP + (NECK - TOP) * at;
       const bottom = FLOOR - (FLOOR - NECK) * at;
-      setUpperY({ y: top, height: Math.max(0, NECK - top) });
-      setLowerY({ y: bottom, height: Math.max(0, FLOOR - bottom) });
-      if (setFall) setFall({ y2: Math.max(50, bottom) });
+      setUpperY({ d: upperPath(top, TOP, NECK) });
+      setLowerY({ d: lowerPath(bottom, FLOOR, NECK) });
+      // The stream ends on the APEX of the heap, not on the level it would
+      // have had if it were flat — otherwise the last few pixels of the fall
+      // disappear behind the cone it is building.
+      if (setFall) setFall({ y2: Math.max(NECK, moundPeak(bottom, FLOOR, NECK)) });
     };
 
     draw();
@@ -378,9 +445,8 @@ function Hourglass({ fraction }: { fraction: number }) {
        description of the sand would only say the same thing twice. */
     <svg className="sandglass" viewBox="0 0 60 100" aria-hidden focusable="false">
       <defs>
-        {/* The sand is drawn as plain rectangles and cut to the bulbs, so the
-            cone the eye expects comes from the glass rather than from geometry
-            that would have to be recomputed at every level. */}
+        {/* The sand is cut to the bulbs, so its two curved surfaces can run the
+            full width of the glass and let the clip decide where they end. */}
         <clipPath id="sandglass-upper">
           <path d="M 13 12 L 47 12 C 47 29 33 44 31 49 L 29 49 C 27 44 13 29 13 12 Z" />
         </clipPath>
@@ -403,20 +469,8 @@ function Hourglass({ fraction }: { fraction: number }) {
       </g>
 
       <g className="sandglass__sand">
-        <rect
-          ref={upper}
-          x="12" width="36"
-          y={upperSurface}
-          height={Math.max(0, NECK - upperSurface)}
-          clipPath="url(#sandglass-upper)"
-        />
-        <rect
-          ref={lower}
-          x="12" width="36"
-          y={lowerSurface}
-          height={Math.max(0, FLOOR - lowerSurface)}
-          clipPath="url(#sandglass-lower)"
-        />
+        <path ref={upper} d={upperPath(upperSurface, TOP, NECK)} clipPath="url(#sandglass-upper)" />
+        <path ref={lower} d={lowerPath(lowerSurface, FLOOR, NECK)} clipPath="url(#sandglass-lower)" />
       </g>
 
       {/* Grains rather than a bar: a dashed stroke whose offset is animated
@@ -425,7 +479,7 @@ function Hourglass({ fraction }: { fraction: number }) {
         <line
           ref={fall}
           className="sandglass__fall"
-          x1="30" y1="49" x2="30" y2={Math.max(50, lowerSurface)}
+          x1="30" y1="49" x2="30" y2={Math.max(NECK, moundPeak(lowerSurface, FLOOR, NECK))}
         />
       )}
     </svg>
