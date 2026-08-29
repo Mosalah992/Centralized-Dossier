@@ -17,8 +17,8 @@
 // which are the part that will be tuned.
 
 import { describe, expect, it } from 'vitest';
-import { dayTurned, lowerPath, moundPeak, upperPath } from '../web/src/views/Honors';
-import { dayProgress, reckon } from '../shared/reckoning';
+import { lowerPath, moundPeak, turned, upperPath } from '../web/src/views/Honors';
+import { RATE, minuteProgress, reckon } from '../shared/reckoning';
 
 /** Evaluate a quadratic Bezier at t. */
 const qy = (a: number, c: number, b: number, t: number) =>
@@ -82,21 +82,21 @@ describe('the sand surfaces', () => {
  */
 describe('the turn of the day', () => {
   it('fires when the fraction rolls over', () => {
-    expect(dayTurned(0.999, 0.001)).toBe(true);
-    expect(dayTurned(0.9, 0.02)).toBe(true);
+    expect(turned(0.999, 0.001)).toBe(true);
+    expect(turned(0.9, 0.02)).toBe(true);
   });
 
   it('does not fire on ordinary forward time', () => {
-    expect(dayTurned(0.1, 0.2)).toBe(false);
-    expect(dayTurned(0.5, 0.5001)).toBe(false);
-    expect(dayTurned(0.99, 0.995)).toBe(false);
+    expect(turned(0.1, 0.2)).toBe(false);
+    expect(turned(0.5, 0.5001)).toBe(false);
+    expect(turned(0.99, 0.995)).toBe(false);
   });
 
   it('does not fire on a small backward step', () => {
     // Clocks are re-read, not accumulated, so a reading can land marginally
     // behind the last one. That is not a new day.
-    expect(dayTurned(0.6, 0.5999)).toBe(false);
-    expect(dayTurned(0.3, 0.1)).toBe(false);
+    expect(turned(0.6, 0.5999)).toBe(false);
+    expect(turned(0.3, 0.1)).toBe(false);
   });
 
   it('never fires twice for one midnight', () => {
@@ -105,7 +105,7 @@ describe('the turn of the day', () => {
     let previous = 0.998;
     const fired: number[] = [];
     for (const now of [0.999, 0.0004, 0.0009, 0.002]) {
-      if (dayTurned(previous, now)) fired.push(now);
+      if (turned(previous, now)) fired.push(now);
       previous = now;
     }
     expect(fired).toEqual([0.0004]);
@@ -115,32 +115,39 @@ describe('the turn of the day', () => {
 /*
  * The continuous reading the sand runs on.
  */
-describe('dayProgress', () => {
-  it('agrees with the clock, to within the minute the clock rounds away', () => {
-    // If these ever drift apart, the sand and the hour beside it disagree
-    // about what time it is — which is worse than the sand standing still.
-    for (let i = 0; i < 500; i++) {
-      const t = Date.UTC(2026, 7, 28) + i * 137_000;
-      const quantised = reckon(t).dayFraction;
-      const continuous = dayProgress(t);
-      const minute = 1 / 1440;
-      expect(continuous).toBeGreaterThanOrEqual(quantised - 1e-9);
-      expect(continuous).toBeLessThan(quantised + minute + 1e-9);
+describe('minuteProgress', () => {
+  it('runs a full 0 to 1 within one in-world minute', () => {
+    const t = Date.UTC(2026, 7, 28, 12);
+    const half = 30_000 / RATE;   // half an in-world minute in real ms
+    const a = minuteProgress(t);
+    const b = minuteProgress(t + half);
+    // Half a minute later it is half a turn further on, wrapping if it passed
+    // the end. Either way it MOVED, and by a lot.
+    expect(Math.abs(b - a)).toBeGreaterThan(0.3);
+  });
+
+  it('moves visibly between two readings a second apart', () => {
+    // The whole point of the change. A day's reading moves 0.00002 in a
+    // second; this moves a thirtieth of the glass.
+    const t = Date.UTC(2026, 7, 28, 12);
+    const step = Math.abs(minuteProgress(t + 1000) - minuteProgress(t));
+    expect(step).toBeGreaterThan(0.02);
+  });
+
+  it('stays inside its bounds', () => {
+    for (let i = 0; i < 2000; i++) {
+      const p = minuteProgress(Date.UTC(2026, 0, 1) + i * 997);
+      expect(p).toBeGreaterThanOrEqual(0);
+      expect(p).toBeLessThan(1);
     }
   });
 
-  it('moves between one minute and the next, where the clock does not', () => {
-    // The whole point: two readings a second apart must differ.
-    const t = Date.UTC(2026, 7, 28, 12);
-    expect(dayProgress(t + 1000)).toBeGreaterThan(dayProgress(t));
-    expect(reckon(t + 1000).dayFraction).toBe(reckon(t).dayFraction);
-  });
-
-  it('stays inside the day', () => {
-    for (let i = 0; i < 2000; i++) {
-      const p = dayProgress(Date.UTC(2026, 0, 1) + i * 61_000);
-      expect(p).toBeGreaterThanOrEqual(0);
-      expect(p).toBeLessThan(1);
+  it('agrees with the clock about when a minute begins', () => {
+    // At the instant reckon() shows a new minute, the glass has just turned.
+    for (let i = 0; i < 400; i++) {
+      const t = Date.UTC(2026, 7, 28) + i * 3_137;
+      const before = reckon(t - 1).minute;
+      if (reckon(t).minute !== before) expect(minuteProgress(t)).toBeLessThan(0.06);
     }
   });
 });

@@ -151,6 +151,30 @@ export function dayProgress(nowMs: number = Date.now()): number {
   return minuteOfDay / MINUTES_PER_DAY;
 }
 
+/**
+ * How far through the current in-world MINUTE it is.
+ *
+ * WHY THE SANDGLASS RUNS ON THIS AND NOT ON THE DAY. A glass whose level marks
+ * the time of day cannot be seen to move. The surface crosses thirty-eight
+ * units in a day, the glass is drawn three and a half rem wide, and the
+ * arithmetic comes out at eight ten-thousandths of a pixel per second — one
+ * pixel every twenty-one minutes. Continuous, correct, and indistinguishable
+ * from a picture.
+ *
+ * A minute crosses the same distance in thirty real seconds: about one and a
+ * sixth pixels per second, which is sand falling. And it gives the glass the
+ * thing it was missing, which is an ending — it empties, it turns over, and it
+ * starts again, twice a minute, in front of you.
+ *
+ * Nothing is lost by it. The date and the hour are set in type beside the
+ * glass and always were; the level was saying the same thing far less legibly.
+ */
+export function minuteProgress(nowMs: number = Date.now()): number {
+  const elapsedMinutes = ((nowMs - ANCHOR.realMs) / 60_000) * RATE;
+  const totalMinutes = ANCHOR.minuteOfDay + elapsedMinutes;
+  return totalMinutes - Math.floor(totalMinutes);
+}
+
 export function reckon(nowMs: number = Date.now()): InWorldMoment {
   const elapsedMinutes = ((nowMs - ANCHOR.realMs) / 60_000) * RATE;
   const totalMinutes = Math.floor(ANCHOR.minuteOfDay + elapsedMinutes);

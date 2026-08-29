@@ -9,7 +9,7 @@ import { Consulting, Notice } from '../components/Notice';
 import { Page, Registers, figure } from '../components/Page';
 import type { CalendarDay } from '../../../shared/types';
 import { MONTHS } from '../../../shared/parsers/calendar';
-import { RATE, clockParts, dayProgress, machineHour, reckon, type InWorldMoment } from '../../../shared/reckoning';
+import { RATE, clockParts, machineHour, minuteProgress, reckon, type InWorldMoment } from '../../../shared/reckoning';
 import { EMBASSY_OBSERVANCES, withObservances } from '../../../shared/observances';
 import { TAMRIELIC_HOLIDAYS } from '../../../shared/holidays';
 import { constellationOf, standing } from '../../../shared/constellations';
@@ -360,18 +360,16 @@ export function lowerPath(surface: number, floor: number, neck: number): string 
 }
 
 /**
- * Has the day rolled over between these two readings?
+ * Has the glass run out between these two readings?
  *
- * The in-world day runs 0 to 1 and then starts again, so midnight is the one
- * moment the fraction goes DOWN. Any fall at all would do as a test, except
- * that a reader switching tabs can leave the ticker unread for a while and the
- * clock is running at twice real time — so the threshold is half a day, which
- * only a rollover can produce.
+ * The reading runs 0 to 1 and then starts again, so the turn is the one moment
+ * it goes DOWN. Any fall would do as a test except that a reader switching
+ * tabs can leave the ticker unread for a while, so the threshold is half the
+ * measure — which only a rollover can produce.
  *
- * Pure, and exported, because a moment that happens once every twenty-four
- * hours is otherwise a moment nobody can check.
+ * Pure and exported so the turn can be tested without waiting for one.
  */
-export const dayTurned = (previous: number, now: number): boolean =>
+export const turned = (previous: number, now: number): boolean =>
   previous > 0.5 && now < previous - 0.5;
 
 /** The apex of the heap — where the falling stream should land. */
@@ -429,10 +427,11 @@ function Hourglass({ fraction }: { fraction: number }) {
     const fallEl = fall.current;
 
     const draw = () => {
-      // dayProgress, not reckon().dayFraction — see the note on it. The
-      // quantised one is what a clock face wants and what made this stand
-      // still.
-      const at = dayProgress();
+      // minuteProgress, not the day — see the note on it. A day's worth of
+      // sand moves one pixel every twenty-one minutes; a minute's worth falls
+      // at better than a pixel a second, which is the difference between a
+      // clock and a picture of one.
+      const at = minuteProgress();
       const top = TOP + (NECK - TOP) * at;
       const bottom = FLOOR - (FLOOR - NECK) * at;
       upperEl.setAttribute('d', upperPath(top, TOP, NECK));
@@ -465,7 +464,7 @@ function Hourglass({ fraction }: { fraction: number }) {
      * `swing`, not `break` or `shut`: this is a hinged object being tipped, and
      * the motion language has a curve for exactly that.
      */
-    let previous = dayProgress();
+    let previous = minuteProgress();
     const glass = root.current;
 
     const turn = () => {
@@ -474,7 +473,7 @@ function Hourglass({ fraction }: { fraction: number }) {
         { rotate: 0 },
         {
           rotate: 180,
-          duration: D.board,
+          duration: D.page,
           ease: 'swing',
           transformOrigin: '50% 50%',
           // Cleared rather than left at 180: a symmetrical frame makes the two
@@ -505,11 +504,11 @@ function Hourglass({ fraction }: { fraction: number }) {
       })
       : null;
 
-    // The turn is decided on the same tick that draws, so the sand and the
-    // glass agree about which day it is.
+    // The turn is decided on the same tick that draws, so the glass and the
+    // sand never disagree about whether it has run out.
     const tick = () => {
-      const at = dayProgress();
-      if (dayTurned(previous, at)) turn();
+      const at = minuteProgress();
+      if (turned(previous, at)) turn();
       previous = at;
       draw();
     };
@@ -622,7 +621,7 @@ function InWorldPlate({ today }: { today: CalendarDay | null }) {
 
   return (
     <aside className="reckoning">
-      <Hourglass fraction={now.dayFraction} />
+      <Hourglass fraction={minuteProgress()} />
 
       <div className="reckoning__reading">
         <p className="reckoning__eyebrow">The hour in the realm</p>
