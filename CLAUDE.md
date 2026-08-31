@@ -39,18 +39,35 @@ hinged things do not recoil. And **every entrance that blanks its target must ca
 no frames, and the blanking is otherwise permanent. That is not theoretical — it put
 nine volumes at `opacity: 0` on a shelf nobody could read.
 
-**anime.js drives exactly one thing: the astrolabe.** `web/src/components/Astrolabe.tsx`
-is the only file that imports it, and GSAP remains the motion language everywhere
-else. The two engines never animate the same element — whichever writes last
-wins, and a property owned by both is a property that flickers.
+**anime.js drives the calendar's two instruments and nothing else.**
+`web/src/components/Astrolabe.tsx` (the hour, and the season's asterism) and
+`web/src/components/Orrery.tsx` (the Wheel of Mundus) are the only files that
+import it; GSAP remains the motion language everywhere else. The two engines
+never animate the same element — whichever writes last wins, and a property
+owned by both is a property that flickers.
 
 It is ~19 kB gzipped, which is nearly the whole headroom the entry chunk had, so
-**it must never reach the gate chunk.** The calendar gets it inside its own lazy
-view; the shelf — which `App.tsx` imports statically — reaches it through
-`React.lazy`. `test/bundle.test.ts` fails if `animejs`, `createTimer` or
-`astro-bezel` appear in `index-*.js`. This is invariant 7 again, and the Editor
-chunk already proved that guarding a render is not the same as guarding an
-import.
+**it must never reach the gate chunk.** Both instruments live inside the
+calendar's own lazy view, so the library ships in `Honors-*.js` and a reader
+stopped at the seal never pays for it. `test/bundle.test.ts` fails if `animejs`,
+`createTimer` or `astro-bezel` appear in `index-*.js`. This is invariant 7
+again, and the Editor chunk already proved that guarding a render is not the
+same as guarding an import.
+
+An astrolabe was hung on the shelf too, first in a corner and then as a
+watermark on the backboard. Both were rejected on the same ground — a clock in a
+room of ledgers is out of place — so the cabinet carries no instrument, and
+anything put there in future has to pull anime.js through `React.lazy`, because
+`App.tsx` imports `Shelf` statically.
+
+**The Wheel of Mundus turns three bodies and holds eight still**, and that is a
+sourcing decision rather than an unfinished one. `shared/mundus.ts` carries the
+periods, the sources they came from, and where the sources contradict each other
+— Masser and Secunda have written cycles and Magnus has a stated relationship to
+Masser, while the eight Divine planets have no recorded courses at all. The
+plate says so in its own prose. Do not give them orbits to make the picture
+livelier; that would put eight invented numbers in the volume the archive is
+most careful with.
 
 `seal-invite` in `Gate.css` is the last CSS animation in the archive and stays CSS.
 It is the login affordance — its own comment records that readers could not find the
@@ -84,6 +101,7 @@ functions/        Cloudflare Pages Functions -> /api/*
 
 server/           gsheets.ts (readonly Sheets client) · archive.ts (load + parse)
 shared/           volumes.ts (THE registry) · types.ts · text.ts · parsers/
+                  mundus.ts (the moons' reckoned courses, and what is NOT known)
 scripts/          Asset prep + sheet tooling (all committed, outputs committed)
 Assets/           Source art in, as delivered
 public/           Served verbatim: music/, seal.webp, _redirects, robots.txt

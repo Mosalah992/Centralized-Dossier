@@ -1510,3 +1510,16 @@ button.day::before {
   }
   .sign__born { max-width: none; }
 }
+
+/* ── The Wheel of Mundus ─────────────────────────────────────────────────── */
+
+/* Its own plate at the foot of the calendar, ruled off from the year above it
+   the way the other sections are. The wheel brings its own night; this only
+   gives it room and a line to sit under. */
+.wheel-plate {
+  margin-top: clamp(2rem, 4vw, 3.2rem);
+  padding-top: clamp(1.6rem, 3vw, 2.4rem);
+  border-top: 1px solid var(--rule);
+  display: grid;
+  justify-items: center;
+}

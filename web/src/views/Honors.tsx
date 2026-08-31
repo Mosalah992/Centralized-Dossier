@@ -22,6 +22,7 @@ import { withParchmentPalette } from '../../../shared/parchment';
  * import, has to reach it through a dynamic one instead — see Shelf.tsx.
  */
 import { Astrolabe } from '../components/Astrolabe';
+import { Orrery } from '../components/Orrery';
 import indumoril from '../assets/indumoril.jpg';
 import ganaril from '../assets/ganaril.jpg';
 import malen from '../assets/malen.jpg';
@@ -837,6 +838,14 @@ export function CalendarView() {
           </div>
         ))}
       </div>
+
+      {/* The sky the year is reckoned against, at the foot of the volume.
+          It goes HERE rather than on the reckoning plate above, where the
+          astrolabe already keeps the hour: two instruments on one strip would
+          compete, and this one wants to be round and large. */}
+      <section className="wheel-plate" aria-label="The Wheel of Mundus">
+        <Orrery />
+      </section>
 
     </Page>
   );

@@ -1,0 +1,163 @@
+/* The Wheel of Mundus.
+ *
+ * The astrolabe's sibling, and painted to look it: night ground, foil line,
+ * rubric at the centre of things. It carries its own night for the same reason
+ * the astrolabe does — this sits on a parchment page, and gold lettering on
+ * cream is barely a mark. See the note at the top of astrolabe.css.
+ *
+ * The two moons are the one place a colour arrives that is neither foil nor
+ * rubric, and it is a reading rather than a choice: over Skyrim, Masser is
+ * large and ruddy and Secunda small and pale grey. They are still drawn as
+ * engraved discs, not as photographs.
+ */
+
+.wheel {
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  gap: 1.1rem;
+}
+
+.wheel__face {
+  display: block;
+  width: min(30rem, 100%);
+  height: auto;
+  overflow: visible;
+}
+
+/* ── Rings and rim ────────────────────────────────────────────────────── */
+
+.wheel-ring {
+  fill: none;
+  stroke: color-mix(in srgb, var(--foil, #b89f6e) 22%, transparent);
+  stroke-width: 0.25;
+  stroke-dasharray: 5.5 3.5;
+  transform-origin: 50px 50px;
+}
+
+/* The sun's ring and the moons' are solid: those three are the courses this
+   wheel actually claims to know, and a dashed ring reads as a supposition. */
+.wheel-ring--sun,
+.wheel-ring--moon {
+  stroke-dasharray: none;
+  stroke: color-mix(in srgb, var(--foil, #b89f6e) 34%, transparent);
+}
+
+.wheel-rim {
+  fill: none;
+  stroke: color-mix(in srgb, var(--foil, #b89f6e) 42%, transparent);
+  stroke-width: 0.4;
+}
+
+.wheel-tick {
+  stroke: color-mix(in srgb, var(--foil, #b89f6e) 55%, transparent);
+  stroke-width: 0.5;
+  stroke-linecap: round;
+}
+
+/* The month in season. */
+.wheel-tick--season {
+  stroke: var(--rubric, #a33417);
+  stroke-width: 1.1;
+}
+
+/* ── The eight ────────────────────────────────────────────────────────── */
+
+.wheel-planet {
+  fill: color-mix(in srgb, var(--foil, #b89f6e) 85%, #f3e7c8);
+}
+
+/* ── Magnus ───────────────────────────────────────────────────────────── */
+
+.wheel-sun { fill: #f0dfab; }
+
+.wheel-sun-halo {
+  fill: color-mix(in srgb, #f0dfab 22%, transparent);
+}
+
+/* ── The moons ────────────────────────────────────────────────────────── */
+
+.wheel-moon--masser { fill: #c9a08d; }
+.wheel-moon--secunda { fill: #d2ccc0; }
+
+/* The shadow that gives a moon its phase. Solid, and the colour of the night
+   it is clipped against, so the lit part reads as a shape rather than as a
+   disc with a grey patch on it. */
+.wheel-shade { fill: #0d0c13; }
+
+.wheel-moon-rim {
+  fill: none;
+  stroke: color-mix(in srgb, var(--foil, #b89f6e) 46%, transparent);
+  stroke-width: 0.3;
+}
+
+/* ── Nirn ─────────────────────────────────────────────────────────────── */
+
+.wheel-nirn { fill: #24303a; }
+
+.wheel-nirn-rim {
+  fill: none;
+  stroke: var(--rubric, #a33417);
+  stroke-width: 0.75;
+}
+
+/* ── The legend ───────────────────────────────────────────────────────── */
+
+.wheel__legend {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: center;
+  max-width: 34rem;
+  text-align: center;
+}
+
+.wheel__title {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 0.82rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--ink, #241d14);
+}
+
+.wheel__readings {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem 1.6rem;
+}
+
+.wheel__readings > div {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.wheel__readings dt {
+  font-family: var(--display);
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--ink-soft, #4d4232) 78%, transparent);
+}
+
+.wheel__readings dd {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--ink, #241d14);
+}
+
+.wheel__note {
+  margin: 0;
+  max-width: 30rem;
+  font-size: 0.82rem;
+  font-style: italic;
+  line-height: 1.55;
+  color: var(--ink-soft, #4d4232);
+}
+
+@media (max-width: 899px) {
+  .wheel__face { width: min(22rem, 100%); }
+  .wheel__readings { gap: 0.4rem 1rem; }
+}
