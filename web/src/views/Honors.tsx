@@ -21,7 +21,6 @@ import { withParchmentPalette } from '../../../shared/parchment';
  * Honors chunk and never in the entry bundle. The shelf, which is a static
  * import, has to reach it through a dynamic one instead — see Shelf.tsx.
  */
-import { Astrolabe } from '../components/Astrolabe';
 import { Firmament } from '../components/Firmament';
 import { Orrery } from '../components/Orrery';
 import indumoril from '../assets/indumoril.jpg';

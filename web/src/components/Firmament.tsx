@@ -13,6 +13,14 @@
 // rather than shuffling on each visit — the same reason the wood texture's
 // phases are hard-coded.
 //
+// THE STARS ARE NOT FIRES. In this cosmology a star is a hole: the Magne-Ge
+// tore their way out through Oblivion to reach Aetherius, and every star is one
+// of those punctures with Aetherius burning through it from behind. So they are
+// drawn as apertures rather than as discs — a hard bright centre inside a bloom
+// that has no edge, the way light behaves coming through a hole rather than the
+// way a painted dot does. It costs one extra circle each and it is the single
+// most lore-bearing thing on the plate.
+//
 // THE PROJECTION IS DONE IN JS, NOT IN CSS 3D. CSS can rotate a box in space
 // but it cannot draw a line between two points that are both moving in it, and
 // the asterism is mostly lines. So the rotation and the perspective divide are
@@ -20,14 +28,12 @@
 // keeps the whole thing in the engraved language the rest of the archive uses,
 // rather than turning into a stack of transformed divs.
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 
 import { animate, createTimer, stagger, utils } from 'animejs';
 
 import { CONSTELLATIONS, type Constellation, standing } from '../../../shared/constellations';
 import { reckon } from '../../../shared/reckoning';
-
-import { Astrolabe } from './Astrolabe';
 
 /** Focal length for the perspective divide. Larger is a flatter, longer lens. */
 const FOCAL = 260;
@@ -59,6 +65,9 @@ export function Firmament() {
   const sign: Constellation = CONSTELLATIONS[chosen]!;
 
   const stage = useRef<SVGSVGElement>(null);
+  // url(#id) is document-global; two charts on one page sharing one would have
+  // the second silently repaint the first.
+  const gid = useId().replace(/:/g, '');
   /*
    * Where the reader has pushed the view, -1..1 on each axis.
    *
@@ -78,16 +87,17 @@ export function Firmament() {
     if (!el) return undefined;
 
     const stars = Array.from(el.querySelectorAll<SVGCircleElement>('.firm-star'));
+    const blooms = Array.from(el.querySelectorAll<SVGCircleElement>('.firm-bloom'));
     const joins = Array.from(el.querySelectorAll<SVGLineElement>('.firm-join'));
     const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     if (still) {
-      utils.set([...stars, ...joins], { opacity: 1 });
+      utils.set([...stars, ...blooms, ...joins], { opacity: 1 });
     } else {
       // The sign arrives: stars first, then the lines drawn between them. Only
       // opacity — position belongs to the projection below and the two must not
       // both write it.
-      animate(stars, { opacity: [0, 1], duration: 520, ease: 'outQuad', delay: stagger(48) });
+      animate([...stars, ...blooms], { opacity: [0, 1], duration: 520, ease: 'outQuad', delay: stagger(48) });
       animate(joins, {
         opacity: [0, 1],
         duration: 620,
@@ -123,9 +133,10 @@ export function Firmament() {
          * before it is an ornament. Twenty-six degrees is enough to show that
          * the stars are not on one plane and not enough to lose the shape.
          *
-         * It is NOT driven by the in-world clock, unlike the astrolabe beside
-         * it. This is a viewpoint, not a reading, and dressing it up as one
-         * would be claiming the sky turns at a rate the archive knows.
+         * It is NOT driven by the in-world clock the way the sandglass above
+         * and the wheel below are. This is a viewpoint, not a reading, and
+         * dressing it up as one would claim the sky turns at a rate the
+         * archive knows.
          */
         const t = still ? 0 : ((performance.now() - started) % DRIFT_MS) / DRIFT_MS;
         const yaw = ((Math.sin(t * Math.PI * 2) * SWING + nudge.current.x * 16) * Math.PI) / 180;
@@ -142,8 +153,21 @@ export function Firmament() {
           // Nearer stars are larger and brighter, which is the depth cue that
           // actually reads at this size — the perspective divide alone is far
           // too subtle across sixty units of z.
-          node.setAttribute('r', ((i === 0 ? 1.9 : 1.35) * f.scale).toFixed(2));
-          node.style.opacity = String(Math.min(1, 0.42 + (f.scale - 0.8) * 2.1));
+          const core = (i === 0 ? 1.55 : 1.05) * f.scale;
+          node.setAttribute('r', core.toFixed(2));
+          const lit = Math.min(1, 0.42 + (f.scale - 0.8) * 2.1);
+          node.style.opacity = String(lit);
+
+          // The Aetherius behind the tear. It tracks the same point, three and
+          // a half times the size, and dims faster with distance than the core
+          // does — a hole further off leaks less light, not just smaller light.
+          const bloom = blooms[i];
+          if (bloom) {
+            bloom.setAttribute('cx', f.x.toFixed(2));
+            bloom.setAttribute('cy', f.y.toFixed(2));
+            bloom.setAttribute('r', (core * 3.6).toFixed(2));
+            bloom.style.opacity = String(lit * lit);
+          }
         }
 
         for (let i = 0; i < joins.length; i++) {
@@ -170,13 +194,6 @@ export function Firmament() {
   return (
     <section className="firmament" aria-label="The Firmament">
       <div className="firmament__body">
-        {/* The instrument keeps the hour. Its own asterism is off: the sky is
-            the whole right-hand side of this plate now, and an object that
-            repeats the thing beside it is the same reading twice. */}
-        <div className="firmament__instrument">
-          <Astrolabe size={230} legend={false} asterism={false} />
-        </div>
-
         <div
           className="firmament__stage"
           onPointerMove={(e) => {
@@ -195,8 +212,27 @@ export function Firmament() {
             role="img"
             aria-label={`The sign of ${sign.name}, drawn in the round`}
           >
+            <defs>
+              {/* What comes through the tear. Bright at the puncture and gone
+                  by its edge — a hole, not a glow painted around a dot. */}
+              <radialGradient id={`firm-aetherius-${gid}`}>
+                <stop offset="0%" stopColor="#fff8e2" stopOpacity="0.62" />
+                <stop offset="38%" stopColor="#e9d9ad" stopOpacity="0.22" />
+                <stop offset="100%" stopColor="#c9a86a" stopOpacity="0" />
+              </radialGradient>
+            </defs>
             {sign.lines.map((pair, i) => (
               <line key={`${sign.name}-l-${i}`} className="firm-join" x1="50" y1="50" x2="50" y2="50" />
+            ))}
+            {/* The bloom goes under every core, so no star's halo washes over
+                the star in front of it. */}
+            {sign.stars.map((_, i) => (
+              <circle
+                key={`${sign.name}-b-${i}`}
+                className="firm-bloom"
+                cx="50" cy="50" r="1"
+                fill={`url(#firm-aetherius-${gid})`}
+              />
             ))}
             {sign.stars.map((_, i) => (
               <circle key={`${sign.name}-s-${i}`} className="firm-star" cx="50" cy="50" r="1" />
@@ -227,10 +263,11 @@ export function Firmament() {
       </nav>
 
       <p className="firmament__note">
-        The stars of a sign do not stand together; they stand in a line from
-        Nirn, and nowhere else. The chart is turned a little either way so that
-        this can be seen — the depths are the draughtsman's, not the Firmament's,
-        and no distance is recorded here.
+        A star is not a fire. It is a tear in Oblivion, and what shines through
+        is Aetherius behind it. Nor do the stars of a sign stand together: they
+        stand in a line from Nirn and nowhere else, which is why the chart is
+        turned a little either way. The depths are the draughtsman's, not the
+        Firmament's, and no distance is recorded here.
       </p>
     </section>
   );

@@ -128,7 +128,7 @@ describe.skipIf(!existsSync(DIST))('the Archives Editor', () => {
  * anime.js must never reach the chunk a reader downloads at the seal.
  *
  * The archive's motion language is GSAP and stays GSAP; anime.js drives exactly
- * one thing, the astrolabe, and it is roughly nineteen kilobytes gzipped. The
+ * the calendar's instruments, and it is roughly nineteen kilobytes gzipped. The
  * entry chunk had about twenty kilobytes of headroom under its ceiling when the
  * instrument was added, so importing it plainly from Shelf — which App.tsx
  * imports statically — would have spent nearly all of it on an ornament that a
@@ -142,7 +142,8 @@ describe.skipIf(!entry)('anime.js', () => {
   it.each([
     ['the library itself', 'animejs'],
     ['its timer', 'createTimer'],
-    ['the instrument it drives', 'astro-bezel'],
+    ['the instruments it drives', 'firm-star'],
+    ['and the wheel', 'wheel-arm'],
   ])('is absent from the gate chunk: %s', (_what, needle) => {
     expect(entry!.source.includes(needle), `${needle} found in ${entry!.name}`).toBe(false);
   });
@@ -150,17 +151,18 @@ describe.skipIf(!entry)('anime.js', () => {
   /*
    * WHERE it lands is Rollup's business; that it lands SOMEWHERE ELSE is ours.
    *
-   * This asserted a chunk named Astrolabe-*.js while the shelf pulled the
-   * component through React.lazy. The shelf no longer carries the instrument,
-   * so Rollup folds it into the calendar's view chunk and that filename stops
-   * existing — which would have failed a test that was never really about the
-   * filename. The invariant is the one above plus this: it ships, and it ships
-   * somewhere a reader at the seal does not pay for.
+   * This asserted a chunk named Astrolabe-*.js, which existed only while the
+   * shelf pulled that component through React.lazy. The shelf lost its
+   * instrument, then the astrolabe was withdrawn altogether, and the filename
+   * stopped existing — which would have failed a test that was never really
+   * about the filename. The invariant is the one above plus this: the
+   * instruments ship, and they ship somewhere a reader at the seal does not
+   * pay for.
    */
   it('ships in a lazy chunk rather than not at all', () => {
     const carriers = readdirSync(DIST)
       .filter((f) => f.endsWith('.js') && f !== entry!.name)
-      .filter((f) => readFileSync(new URL(f, DIST), 'utf8').includes('astro-bezel'));
-    expect(carriers, 'the astrolabe is in no chunk at all').not.toHaveLength(0);
+      .filter((f) => readFileSync(new URL(f, DIST), 'utf8').includes('firm-star'));
+    expect(carriers, 'the Firmament is in no chunk at all').not.toHaveLength(0);
   });
 });

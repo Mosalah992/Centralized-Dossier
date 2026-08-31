@@ -40,25 +40,28 @@ no frames, and the blanking is otherwise permanent. That is not theoretical — 
 nine volumes at `opacity: 0` on a shelf nobody could read.
 
 **anime.js drives the calendar's two instruments and nothing else.**
-`web/src/components/Astrolabe.tsx` (the hour, and the season's asterism) and
-`web/src/components/Orrery.tsx` (the Wheel of Mundus) are the only files that
-import it; GSAP remains the motion language everywhere else. The two engines
-never animate the same element — whichever writes last wins, and a property
-owned by both is a property that flickers.
+`web/src/components/Firmament.tsx` (the thirteen signs, projected in three
+dimensions) and `web/src/components/Orrery.tsx` (the Wheel of Mundus) are the
+only files that import it; GSAP remains the motion language everywhere else. The
+two engines never animate the same element — whichever writes last wins, and a
+property owned by both is a property that flickers.
 
 It is ~19 kB gzipped, which is nearly the whole headroom the entry chunk had, so
 **it must never reach the gate chunk.** Both instruments live inside the
 calendar's own lazy view, so the library ships in `Honors-*.js` and a reader
 stopped at the seal never pays for it. `test/bundle.test.ts` fails if `animejs`,
-`createTimer` or `astro-bezel` appear in `index-*.js`. This is invariant 7
-again, and the Editor chunk already proved that guarding a render is not the
-same as guarding an import.
+`createTimer`, `firm-star` or `wheel-arm` appear in `index-*.js`. This is
+invariant 7 again, and the Editor chunk already proved that guarding a render is
+not the same as guarding an import.
 
-An astrolabe was hung on the shelf too, first in a corner and then as a
-watermark on the backboard. Both were rejected on the same ground — a clock in a
-room of ledgers is out of place — so the cabinet carries no instrument, and
-anything put there in future has to pull anime.js through `React.lazy`, because
-`App.tsx` imports `Shelf` statically.
+**There was a third instrument and it is gone.** An astrolabe — a bezel keeping
+the in-world day against an hour ring, with the season's asterism in its field —
+was hung on the shelf (twice: in a corner, then as a watermark on the backboard)
+and then on the calendar's reckoning plate. Every placement got the same verdict
+from the person it was built for. It is in the history if it is ever wanted;
+what replaced it does the same job better, because the Firmament gives the sky a
+plate wide enough to read and the reckoning bar still carries the hour beside
+the sandglass. Do not reinstate it as an ornament.
 
 **The Wheel of Mundus turns three bodies and holds eight still**, and that is a
 sourcing decision rather than an unfinished one. `shared/mundus.ts` carries the
@@ -68,6 +71,12 @@ Masser, while the eight Divine planets have no recorded courses at all. The
 plate says so in its own prose. Do not give them orbits to make the picture
 livelier; that would put eight invented numbers in the volume the archive is
 most careful with.
+
+**The Firmament's depth is a drawing device and says so on the page.** No source
+gives distances to these stars; the z values are hashed from each star's own
+coordinates so a sign is identical every time it is opened. Its view drifts on
+plain elapsed time rather than the in-world clock, deliberately — a viewpoint is
+not a reading.
 
 `seal-invite` in `Gate.css` is the last CSS animation in the archive and stays CSS.
 It is the login affordance — its own comment records that readers could not find the

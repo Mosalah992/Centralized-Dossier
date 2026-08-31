@@ -6,8 +6,9 @@
  * asterism can be read and that turning it a few degrees actually shows
  * something.
  *
- * Night ground, as the astrolabe and the wheel are, and for the reason recorded
- * at the top of astrolabe.css: stars drawn dark on cream read as a stain.
+ * Night ground, as the wheel below it is, and for a reason worth keeping now
+ * that the stylesheet which recorded it has gone with the astrolabe: an
+ * asterism drawn as dark dots on cream reads as a stain rather than as a sky.
  */
 
 .firmament {
@@ -25,15 +26,13 @@
 
 .firmament__body {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
   gap: clamp(1rem, 2.5vw, 2.2rem);
 }
 
-.firmament__instrument {
-  /* The instrument is the smaller half here — the sky is the subject. */
-  width: clamp(9rem, 16vw, 14.4rem);
-}
+/* The astrolabe stood here and was taken out — see CLAUDE.md. The stage has the
+   full width now, which is what the sky wanted in the first place. */
 
 /* ── The stage ────────────────────────────────────────────────────────── */
 
@@ -163,9 +162,7 @@
 }
 
 @media (max-width: 899px) {
-  /* The instrument steps aside on a phone: two objects side by side at this
-     width leaves neither one readable, and the sky is the subject. */
-  .firmament__body { grid-template-columns: minmax(0, 1fr); }
-  .firmament__instrument { display: none; }
+  /* The chart and its reading stack on a phone; side by side at this width
+     leaves neither readable. */
   .firmament__stage { grid-template-columns: minmax(0, 1fr); }
 }

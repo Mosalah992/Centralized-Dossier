@@ -34,7 +34,6 @@ import './styles/shelf.css';
 import './styles/ledger.css';
 import './styles/chronicle.css';
 import './styles/enforcement.css';
-import './styles/astrolabe.css';
 import './styles/orrery.css';
 import './styles/firmament.css';
 
