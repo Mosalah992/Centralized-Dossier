@@ -33,6 +33,8 @@ const MARKS = 28;
 const R_OUTER = 46;
 const R_TICK_IN = 40;
 const R_HOUR = 33;
+/** The seal's ring — clear of the hour ring above it and the asterism inside. */
+const R_SEAL = 26;
 
 interface Props {
   /** The instrument is drawn at whatever size its container gives it. */
@@ -246,14 +248,32 @@ export function Astrolabe({ size = 260, quiet = false, legend = true }: Props) {
         <g className="astro-seal">
           {marks.map((i) => {
             const a = (i / MARKS) * Math.PI * 2;
-            const r = 9 + (i % 3) * 2.4;
+            /*
+             * The seal's own ring, OUTSIDE the asterism rather than inside it.
+             *
+             * It sat at r 9-14 first, which on the dark shelf looked like a
+             * seal and on the calendar's parchment looked like a tangle: that
+             * is exactly the radius the constellation's body occupies, so the
+             * marks fell among the stars and the joining lines ran through the
+             * core. The face now reads strictly outward — bezel, hours, seal,
+             * asterism, core — and no two rings share a radius.
+             *
+             * ONE radius, not three. The first attempt stepped the radius by
+             * i % 3 for texture and got the opposite: twenty-eight marks at
+             * three radii read as scatter, not as a ring somebody punched. The
+             * rhythm comes from size instead — every seventh is larger, which
+             * gives the ring four quarter-marks a reader can count by.
+             */
+            const r = R_SEAL;
+            const big = i % 7 === 0;
+            const w = big ? 1.6 : 1.05;
             const x = cx + Math.sin(a) * r;
             const y = cy - Math.cos(a) * r;
             return (
               <rect
                 key={i}
-                className="astro-mark"
-                x={x - 0.55} y={y - 0.55} width={1.1} height={1.1}
+                className={`astro-mark${big ? ' astro-mark--quarter' : ''}`}
+                x={x - w / 2} y={y - w / 2} width={w} height={w}
                 transform={`rotate(${(a * 180) / Math.PI} ${x} ${y})`}
                 style={{ transformOrigin: `${x}px ${y}px` }}
               />

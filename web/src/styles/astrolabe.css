@@ -139,3 +139,9 @@
   .astro-star,
   .astro-mark { opacity: 1 !important; }
 }
+
+/* Every seventh mark is heavier, so the seal's ring has quarters to count by
+   the way the bezel and the hour ring do. */
+.astro-mark--quarter {
+  fill: color-mix(in srgb, var(--foil, #b89f6e) 95%, #f3e7c8);
+}
