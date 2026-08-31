@@ -39,6 +39,19 @@ hinged things do not recoil. And **every entrance that blanks its target must ca
 no frames, and the blanking is otherwise permanent. That is not theoretical — it put
 nine volumes at `opacity: 0` on a shelf nobody could read.
 
+**anime.js drives exactly one thing: the astrolabe.** `web/src/components/Astrolabe.tsx`
+is the only file that imports it, and GSAP remains the motion language everywhere
+else. The two engines never animate the same element — whichever writes last
+wins, and a property owned by both is a property that flickers.
+
+It is ~19 kB gzipped, which is nearly the whole headroom the entry chunk had, so
+**it must never reach the gate chunk.** The calendar gets it inside its own lazy
+view; the shelf — which `App.tsx` imports statically — reaches it through
+`React.lazy`. `test/bundle.test.ts` fails if `animejs`, `createTimer` or
+`astro-bezel` appear in `index-*.js`. This is invariant 7 again, and the Editor
+chunk already proved that guarding a render is not the same as guarding an
+import.
+
 `seal-invite` in `Gate.css` is the last CSS animation in the archive and stays CSS.
 It is the login affordance — its own comment records that readers could not find the
 door until it was added — and a CSS keyframe cannot fail to parse.

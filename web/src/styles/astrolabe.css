@@ -1,0 +1,141 @@
+/* The Astrolabe of the Realm.
+ *
+ * Gold on dark, as the shelf is. It borrows the archive's own tokens rather
+ * than inventing a palette, and it is deliberately QUIETER than the instrument
+ * it was modelled on: the anime.js dial is lit in five saturated colours
+ * because it is advertising an animation engine. This one sits in a Thalmor
+ * archive, where the only colours are gold, ink and the rubricator's red.
+ *
+ * Every value below is painted from a token or from the gold the shelf uses,
+ * so the instrument reads the same on the shelf's dark ground and on the
+ * calendar's parchment.
+ */
+
+.astro {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  max-width: 100%;
+}
+
+.astro__face {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* ── The bezel ────────────────────────────────────────────────────────── */
+
+.astro-tick {
+  stroke: color-mix(in srgb, var(--foil, #b89f6e) 55%, transparent);
+  stroke-width: 0.45;
+  stroke-linecap: round;
+}
+
+/* One in twelve is longer and brighter — the marks a reader counts by. */
+.astro-tick--hour {
+  stroke: color-mix(in srgb, var(--foil, #b89f6e) 90%, #f3e7c8);
+  stroke-width: 0.7;
+}
+
+.astro-rim {
+  fill: none;
+  stroke: color-mix(in srgb, var(--foil, #b89f6e) 34%, transparent);
+  stroke-width: 0.4;
+}
+
+.astro-rim--inner {
+  stroke-dasharray: 0.8 2.2;
+  stroke: color-mix(in srgb, var(--foil, #b89f6e) 26%, transparent);
+}
+
+/* ── The hour ring ────────────────────────────────────────────────────── */
+
+.astro-hour { fill: color-mix(in srgb, var(--foil, #b89f6e) 50%, transparent); }
+.astro-hour--quarter { fill: color-mix(in srgb, var(--foil, #b89f6e) 95%, #f3e7c8); }
+
+/* ── The season's asterism ────────────────────────────────────────────── */
+
+/*
+ * The faintest thing on the face, on purpose. The constellations elsewhere in
+ * the archive sit "at the weight of a watermark, faint enough that no reader
+ * takes them for a record" — these are invented, and they are drawn as such
+ * here too.
+ */
+.astro-join {
+  stroke: color-mix(in srgb, var(--foil, #b89f6e) 30%, transparent);
+  stroke-width: 0.3;
+}
+
+.astro-star {
+  fill: color-mix(in srgb, var(--foil, #b89f6e) 72%, #fff6dd);
+}
+
+/* ── The seal ─────────────────────────────────────────────────────────── */
+
+.astro-mark {
+  fill: color-mix(in srgb, var(--foil, #b89f6e) 80%, transparent);
+}
+
+/* The one place the rubric red appears: the centre of the instrument, which is
+   the Dominion's own mark and the only thing on the face that is not a
+   measurement. */
+.astro-core {
+  fill: none;
+  stroke: var(--rubric, #a33417);
+  stroke-width: 0.7;
+}
+
+/* ── The fast hand ────────────────────────────────────────────────────── */
+
+.astro-needle line {
+  stroke: color-mix(in srgb, var(--gold-bright, #d8c187) 85%, transparent);
+  stroke-width: 0.55;
+  stroke-linecap: round;
+}
+
+/* ── Legend ───────────────────────────────────────────────────────────── */
+
+.astro__legend {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  text-align: center;
+}
+
+.astro__sign {
+  font-family: var(--display);
+  font-size: 0.74rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold-bright, #d8c187);
+}
+
+.astro__note {
+  font-size: 0.76rem;
+  font-style: italic;
+  color: color-mix(in srgb, var(--foil, #b89f6e) 70%, transparent);
+}
+
+/* ── The shelf's quieter one ──────────────────────────────────────────── */
+
+/*
+ * On the shelf the instrument is an ornament beside nine volumes, not the
+ * subject of the page. It loses its legend and drops back so it cannot compete
+ * with the covers, which are the thing a reader came to open.
+ */
+.astro--quiet { opacity: 0.55; }
+/* The shelf overrides this with its own weight — see shelf.css. */
+.astro--quiet .astro__legend { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  /* The instrument is still readable; it simply does not move. The component
+     also short-circuits its own animation — this is the belt to that brace. */
+  .astro-tick,
+  .astro-star,
+  .astro-mark { opacity: 1 !important; }
+}

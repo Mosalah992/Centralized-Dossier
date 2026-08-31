@@ -15,6 +15,13 @@ import { TAMRIELIC_HOLIDAYS } from '../../../shared/holidays';
 import { constellationOf, standing } from '../../../shared/constellations';
 import type { Constellation } from '../../../shared/constellations';
 import { withParchmentPalette } from '../../../shared/parchment';
+/*
+ * The astrolabe is imported directly here, and that is safe BECAUSE this view
+ * is lazy: Honors.tsx is behind React.lazy in App.tsx, so anime.js lands in the
+ * Honors chunk and never in the entry bundle. The shelf, which is a static
+ * import, has to reach it through a dynamic one instead — see Shelf.tsx.
+ */
+import { Astrolabe } from '../components/Astrolabe';
 import indumoril from '../assets/indumoril.jpg';
 import ganaril from '../assets/ganaril.jpg';
 import malen from '../assets/malen.jpg';
@@ -647,10 +654,14 @@ function InWorldPlate({ today }: { today: CalendarDay | null }) {
 
       {/* The sign in season. It belongs on this plate rather than in the grid
           because it is a property of the month rather than of any day, and the
-          plate is already where the archive says what time it is. */}
+          plate is already where the archive says what time it is.
+          The astrolabe replaces the plain asterism that used to sit here: it
+          draws the same stars from the same table and puts them inside an
+          instrument that also keeps the hour, so the plate says one thing in
+          one object instead of two things in two. */}
       {sign && (
         <div className="sign">
-          <Asterism sign={sign} />
+          <Astrolabe size={190} legend={false} />
           <div className="sign__reading">
             <p className="sign__name">{sign.name}</p>
             <p className="sign__standing">{standing(sign)}</p>

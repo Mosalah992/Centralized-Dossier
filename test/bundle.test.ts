@@ -123,3 +123,33 @@ describe.skipIf(!existsSync(DIST))('the Archives Editor', () => {
     expect(found).toEqual([]);
   });
 });
+
+/*
+ * anime.js must never reach the chunk a reader downloads at the seal.
+ *
+ * The archive's motion language is GSAP and stays GSAP; anime.js drives exactly
+ * one thing, the astrolabe, and it is roughly nineteen kilobytes gzipped. The
+ * entry chunk had about twenty kilobytes of headroom under its ceiling when the
+ * instrument was added, so importing it plainly from Shelf — which App.tsx
+ * imports statically — would have spent nearly all of it on an ornament that a
+ * reader stopped at the gate cannot even see.
+ *
+ * So the shelf reaches it through React.lazy and the calendar gets it inside
+ * its own already-lazy view. This is invariant 7 again, and the Editor chunk
+ * proved that guarding a render is not the same as guarding an import.
+ */
+describe.skipIf(!entry)('anime.js', () => {
+  it.each([
+    ['the library itself', 'animejs'],
+    ['its timer', 'createTimer'],
+    ['the instrument it drives', 'astro-bezel'],
+  ])('is absent from the gate chunk: %s', (_what, needle) => {
+    expect(entry!.source.includes(needle), `${needle} found in ${entry!.name}`).toBe(false);
+  });
+
+  it('is in a chunk of its own, so it arrives after the shelf has painted', () => {
+    const own = readdirSync(DIST).filter((f) => /^Astrolabe-.*\.js$/.test(f));
+    expect(own).toHaveLength(1);
+    expect(readFileSync(new URL(own[0]!, DIST), 'utf8')).toContain('astro-bezel');
+  });
+});

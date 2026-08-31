@@ -126,30 +126,6 @@ export function toDayOfYear(monthIndex: number, day: number): number {
  * The in-world moment at a real instant. Pure — pass `Date.now()`, or any other
  * instant to reckon a different one.
  */
-/**
- * How far through the day it is, UNROUNDED.
- *
- * reckon() floors to whole in-world minutes, and it is right to: a clock face
- * reads "8:34 PM", a calendar highlights one square, and neither wants a
- * number that changes sixty times a second. Everything on this page uses it.
- *
- * The sandglass is the exception, and quantising it is what made it look
- * broken. One in-world minute is 1/1440 of the day and thirty real seconds at
- * the current rate, so the sand level held perfectly still and then jumped —
- * twice a minute, by about a fortieth of a bulb. Falling sand that moves twice
- * a minute is a picture of an hourglass, not an hourglass.
- *
- * Same arithmetic as reckon() with the floor taken off the minutes, so the two
- * agree to within the minute reckon() rounds away. test/reckoning proves that.
- */
-export function dayProgress(nowMs: number = Date.now()): number {
-  const elapsedMinutes = ((nowMs - ANCHOR.realMs) / 60_000) * RATE;
-  const totalMinutes = ANCHOR.minuteOfDay + elapsedMinutes;
-  // Floor division on the DAY, not the minute — instants before the anchor
-  // still reckon backwards correctly.
-  const minuteOfDay = totalMinutes - Math.floor(totalMinutes / MINUTES_PER_DAY) * MINUTES_PER_DAY;
-  return minuteOfDay / MINUTES_PER_DAY;
-}
 
 /**
  * How far through the current in-world MINUTE it is.
@@ -173,6 +149,23 @@ export function minuteProgress(nowMs: number = Date.now()): number {
   const elapsedMinutes = ((nowMs - ANCHOR.realMs) / 60_000) * RATE;
   const totalMinutes = ANCHOR.minuteOfDay + elapsedMinutes;
   return totalMinutes - Math.floor(totalMinutes);
+}
+
+/**
+ * How far through the day it is, unrounded.
+ *
+ * The sandglass does NOT use this — see minuteProgress above for why a day's
+ * worth of sand cannot be seen to move. The astrolabe does: its outer ring
+ * carries the whole day and turns through 360 degrees across it, so a quarter
+ * of a degree every thirty seconds reads as a slow, continuous drift where the
+ * same reading in a 38-unit column read as nothing at all. Same number, two
+ * very different distances on the screen.
+ */
+export function dayProgress(nowMs: number = Date.now()): number {
+  const elapsedMinutes = ((nowMs - ANCHOR.realMs) / 60_000) * RATE;
+  const totalMinutes = ANCHOR.minuteOfDay + elapsedMinutes;
+  const minuteOfDay = totalMinutes - Math.floor(totalMinutes / MINUTES_PER_DAY) * MINUTES_PER_DAY;
+  return minuteOfDay / MINUTES_PER_DAY;
 }
 
 export function reckon(nowMs: number = Date.now()): InWorldMoment {
