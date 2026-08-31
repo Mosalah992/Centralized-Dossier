@@ -331,10 +331,15 @@ export function Firmament() {
         Firmament's, and no distance is recorded here.
       </p>
       <p className="firmament__note">
-        Masser and Secunda keep their reckoned courses, and Magnus stands
-        opposite Masser as it is written. The eight planets of the Divines are
-        set where they are held to stand; the Embassy has no reckoning of their
-        courses and does not invent one.
+        The wheel is turned faster than the sky, so that it can be watched at
+        all; what it keeps true is the bodies' relations to one another. Secunda
+        overtakes Masser at the reckoned rate and closes with it every fifth
+        turn, and Magnus stands opposite Masser as it is written. The eight
+        planets of the Divines have no recorded courses whatever — they are set
+        turning at a declared pace, each ring slower than the ring within it, so
+        that the arrangement can be read, and nothing is claimed by their speed.
+        The phases and the conjunction named above are reckoned from the true
+        clock and are untouched by any of it.
       </p>
     </section>
   );

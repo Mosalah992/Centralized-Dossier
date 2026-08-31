@@ -23,8 +23,10 @@
  * which is exactly what the source says happens, and which is NOT stated as a
  * separate fact anywhere. The periods predict it. Nothing here asserts it.
  *
- * THE EIGHT DIVINE PLANETS HAVE NO PERIODS. Nobody wrote them down, so the
- * orrery draws them where they are and does not pretend to know how they move.
+ * THE EIGHT DIVINE PLANETS HAVE NO PERIODS. Nobody wrote them down. They were
+ * held still on the wheel for that reason at first; they turn now, on a stated
+ * convention rather than on a reckoning, and the difference is kept visible —
+ * see the tempo section at the foot of this file and the note on the plate.
  */
 
 import { DAYS_PER_YEAR, dayProgress, reckon } from './reckoning';
@@ -129,6 +131,79 @@ export function conjunction(nowMs: number = Date.now()): number {
   const { masser, secunda } = revolutions(nowMs);
   const apart = Math.abs(wrap(masser - secunda + 0.5) - 0.5) * 2;
   return 1 - apart;
+}
+
+/*
+ * ── THE WHEEL'S OWN TEMPO ────────────────────────────────────────────────
+ *
+ * Everything above this line is the reckoning. Everything below it is the
+ * speed at which a picture of the reckoning is turned, and the two must not be
+ * confused — so they are separated here rather than tangled together in the
+ * component.
+ *
+ * WHY A DISPLAY TEMPO EXISTS AT ALL. At their true courses these bodies crawl.
+ * Masser turns once an in-world day, which at the archive's two-to-one rate is
+ * one turn every twelve real hours — about half a degree a minute. A wheel that
+ * moves half a degree a minute is a still picture to anybody who looks at it,
+ * and this archive has already learned that the expensive way: the sandglass
+ * measured a whole day, moved one pixel every twenty-one minutes, and was
+ * reported as broken.
+ *
+ * WHAT IS STILL TRUE. The tempo scales the whole wheel and nothing else, so
+ * every RELATION between the bodies survives it: Secunda still overtakes Masser
+ * at 24/20, the two still close every fifth of Masser's turns, and Magnus still
+ * stands exactly opposite Masser. The phase names, the conjunction reading and
+ * everything else in the legend are computed from the real clock above and are
+ * untouched by any of this.
+ *
+ * WHAT IS NOT. How fast the wheel turns says nothing about how fast the sky
+ * does, and the plate says so in its own prose.
+ */
+
+/** One turn of Masser on the wheel, in seconds. */
+const WHEEL_TURN_SECONDS = 44;
+
+/**
+ * Where each body stands ON THE WHEEL — the drawn positions, not the reckoned
+ * ones. `revolutions` above remains the truth and is what the readings use.
+ */
+export function wheelTurns(nowMs: number = Date.now()) {
+  const t = nowMs / (WHEEL_TURN_SECONDS * 1000);
+  const masser = wrap(t);
+  return {
+    masser,
+    secunda: wrap(t * (24 / 20)),
+    magnus: wrap(masser + 0.5),
+  };
+}
+
+/**
+ * The eight, turning.
+ *
+ * THIS IS A CONVENTION, NOT A RECKONING, and it is the same kind of convention
+ * as the alphabetical ring order and the choice of which sphere stands for
+ * which Divine: nothing records how these bodies move, so the wheel declares a
+ * rule and applies it evenly rather than picking eight numbers that look right.
+ *
+ * The rule is the plainest one that produces a sky rather than a fairground: an
+ * outer ring takes longer than the ring inside it, by a constant factor. The
+ * periods are therefore in a geometric run, no two planets ever share an
+ * arrangement for long, and the whole thing is one number a reader could check.
+ *
+ * They run against Masser's direction — the eight are not moons and there is no
+ * reason for them to keep company with one — which also means the wheel never
+ * settles into a pattern where everything drifts as a single frozen shape.
+ */
+const DIVINE_INNER_SECONDS = 68;
+const DIVINE_RING_FACTOR = 1.27;
+
+export function divineTurns(nowMs: number = Date.now()): number[] {
+  return DIVINE_PLANETS.map((_, i) => {
+    const period = DIVINE_INNER_SECONDS * DIVINE_RING_FACTOR ** i;
+    // The eighth of a turn each starts at keeps them from lining up into a
+    // spoke at the moment the page opens.
+    return wrap(-nowMs / (period * 1000) + i / DIVINE_PLANETS.length);
+  });
 }
 
 /**

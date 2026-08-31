@@ -78,14 +78,24 @@ ten bodies and the wheel needs twelve, so two of the spare spheres are turned in
 hue to stand in; the script says so, and the mapping of sphere to Divine is a
 convention declared in `Orrery.tsx`, like the alphabetical ring order.
 
-**The Wheel of Mundus turns three bodies and holds eight still**, and that is a
-sourcing decision rather than an unfinished one. `shared/mundus.ts` carries the
-periods, the sources they came from, and where the sources contradict each other
-— Masser and Secunda have written cycles and Magnus has a stated relationship to
-Masser, while the eight Divine planets have no recorded courses at all. The
-plate says so in its own prose. Do not give them orbits to make the picture
-livelier; that would put eight invented numbers in the volume the archive is
-most careful with.
+**`shared/mundus.ts` is split in two and the split is the whole point.** Above
+the tempo section is the RECKONING: the moons' cycles, the sources they came
+from, and where those sources contradict each other. Below it is the speed at
+which a picture of that reckoning is turned. Readings — phase names, the
+conjunction — come from the reckoning and only from it. Positions on the wheel
+come from the tempo.
+
+The wheel held the eight Divine planets still at first, because no source gives
+their courses, and it read as a chart rather than a sky. They turn now on a
+DECLARED CONVENTION — one rule, evenly applied, each ring slower than the ring
+within it — which is the same kind of convention as the alphabetical ring order
+and the choice of which sphere stands for which Divine. The tempo scales the
+whole wheel, so every relation survives it: Secunda still overtakes Masser at
+24/20, they still close every fifth turn, Magnus still stands opposite Masser.
+
+Keep that separation. It is fine to change how fast the wheel turns; it is not
+fine to let a drawn speed leak into a reading, or to drop the note on the plate
+that tells a reader which is which.
 
 **The Firmament's depth is a drawing device and says so on the page.** No source
 gives distances to these stars; the z values are hashed from each star's own

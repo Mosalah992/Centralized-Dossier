@@ -25,7 +25,7 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { animate, createTimer, stagger, utils } from 'animejs';
 
 import { constellationOf } from '../../../shared/constellations';
-import { DIVINE_PLANETS, conjunction, phases, revolutions } from '../../../shared/mundus';
+import { DIVINE_PLANETS, conjunction, divineTurns, phases, wheelTurns } from '../../../shared/mundus';
 import { MONTH_LENGTHS, reckon } from '../../../shared/reckoning';
 
 import amberUrl from '../assets/mundus/amber.webp';
@@ -256,23 +256,29 @@ export function Orrery({ bare = false }: Props) {
      * settles on are the true ones, and after three seconds the wheel is
      * telling the same slow truth it always was.
      */
-    const opened = performance.now();
-    const WIND_MS = 3000;
-    const wind = () => {
-      const t = (performance.now() - opened) / WIND_MS;
-      if (t >= 1 || still) return 0;
-      const ease = (1 - t) * (1 - t);
-      return ease * 1.5;
-    };
+    const divines = Array.from(el.querySelectorAll<SVGGElement>('.wheel-arm--divine'));
 
+    /*
+     * The wind-in that used to sit here is gone, and good riddance: it existed
+     * only because the wheel crawled, spinning the bodies back a turn and a
+     * half so that something moved while a reader was looking. The wheel has a
+     * tempo of its own now (shared/mundus.ts), so the motion is simply there.
+     */
     const timer = createTimer({
       duration: Infinity,
       onUpdate: () => {
-        const turn = revolutions();
-        const w = wind();
-        place(masser, R_MASSER, turn.masser - w);
-        place(secunda, R_SECUNDA, turn.secunda - w * 1.2);
-        place(magnus, R_MAGNUS, turn.magnus - w);
+        const turn = wheelTurns();
+        place(masser, R_MASSER, turn.masser);
+        place(secunda, R_SECUNDA, turn.secunda);
+        place(magnus, R_MAGNUS, turn.magnus);
+
+        const eight = divineTurns();
+        for (let i = 0; i < divines.length; i++) {
+          const node = divines[i];
+          const t = eight[i];
+          if (!node || t === undefined) continue;
+          place(node, Number(node.dataset.ring ?? 0), t);
+        }
 
         /*
          * The phase, as a shadow disc slid across the moon.
@@ -365,22 +371,23 @@ export function Orrery({ bare = false }: Props) {
       {/* The eight, on their rings, standing still. */}
       {DIVINE_PLANETS.map((planet, i) => {
         const r = RING_INNER + i * RING_STEP;
-        const p = on(r, i / DIVINE_PLANETS.length);
         return (
           <g key={planet.name}>
             {/* Each ring's dashes are offset from its neighbour's, or all
                 eight line up radially and the rings stop reading as rings —
                 they become one starburst hatching the whole field. */}
             <path className="wheel-ring" d={ringPath(r)} strokeDashoffset={i * 1.7} />
-            <image
-              className="wheel-planet"
-              href={DIVINE_SPRITES[planet.name]}
-              x={p.x - 2.5 * p.scale} y={p.y - 2.5 * p.scale}
-              width={5 * p.scale} height={5 * p.scale}
-              style={{ opacity: p.depth > 0 ? 0.72 : 1 }}
-            >
-              <title>{`${planet.name}, of ${planet.of}`}</title>
-            </image>
+            {/* Placed by the timer, as the moons are. The body sits at the
+                arm's origin so its own drawing never turns with the orbit. */}
+            <g className="wheel-arm wheel-arm--divine" data-ring={r}>
+              <image
+                className="wheel-planet"
+                href={DIVINE_SPRITES[planet.name]}
+                x="-2.5" y="-2.5" width="5" height="5"
+              >
+                <title>{`${planet.name}, of ${planet.of}`}</title>
+              </image>
+            </g>
           </g>
         );
       })}
@@ -388,7 +395,6 @@ export function Orrery({ bare = false }: Props) {
       {/* Magnus, on the outermost ring, opposite Masser. */}
       <path className="wheel-ring wheel-ring--sun" d={ringPath(R_MAGNUS)} />
       <g className="wheel-arm wheel-arm--magnus">
-        <circle className="wheel-sun-halo" r="5.6" />
         <image className="wheel-sun" href={magnusUrl} x="-3.6" y="-3.6" width="7.2" height="7.2" />
       </g>
 
@@ -401,8 +407,11 @@ export function Orrery({ bare = false }: Props) {
           moon on the near side of its orbit passes in front of the world and
           one on the far side is drawn behind it. That occlusion is most of
           what sells the tilt; the dimming only helps it. */}
+      {/* No rim, and no halo on Magnus either. A drawn ring around a
+          photograph of a world is two hands on one object — a diagram
+          annotating a picture — and the bodies carry their own light in
+          the art already. */}
       <image className="wheel-nirn" href={nirnUrl} x="45.2" y="45.2" width="9.6" height="9.6" />
-      <circle className="wheel-nirn-rim" cx="50" cy="50" r="4.9" />
 
       {/*
         * The moons keep their phase shadows over the photographs.
