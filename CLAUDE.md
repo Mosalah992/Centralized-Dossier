@@ -93,9 +93,17 @@ and the choice of which sphere stands for which Divine. The tempo scales the
 whole wheel, so every relation survives it: Secunda still overtakes Masser at
 24/20, they still close every fifth turn, Magnus still stands opposite Masser.
 
-Keep that separation. It is fine to change how fast the wheel turns; it is not
-fine to let a drawn speed leak into a reading, or to drop the note on the plate
-that tells a reader which is which.
+Keep that separation in the code: it is fine to change how fast the wheel turns,
+and not fine to let a drawn speed leak into a reading.
+
+**The plate no longer says any of this.** A paragraph under the scene explained
+the tempo, what it keeps true, and that the eight have no recorded courses; the
+keeper removed it, and that is their call — it was two heavy blocks of italic
+under a picture and it read as such on a phone. The consequence is worth being
+plain about rather than leaving for someone to rediscover: a reader now sees a
+moving sky with no way to tell the drawn pace from the reckoned phases beside
+it. The distinction survives only here and in `shared/mundus.ts`. Do not put a
+note back on the plate without asking first — it has been taken off once.
 
 **The Firmament's depth is a drawing device and says so on the page.** No source
 gives distances to these stars; the z values are hashed from each star's own
