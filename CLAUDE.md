@@ -111,20 +111,33 @@ coordinates so a sign is identical every time it is opened. Its view drifts on
 plain elapsed time rather than the in-world clock, deliberately — a viewpoint is
 not a reading.
 
-**The calendar marks what is held, not what is observed.** `shared/events.ts`
-carries the standing events — Gambling Night, the Mystery Coffers, the People's
-Lottery, the Mondas Mass — as RECURRENCES rather than dates: "every Sundas",
-"the first Loredas of the month". The view resolves them onto cells by matching
-the weekday the sheet gives each day, so a rule written once marks every
-occurrence in the year and nobody maintains a list.
+**The calendar marks what is held and what is remembered, not what is
+observed.** `shared/events.ts` carries two kinds of rule and renders both
+through one `Mark`, so the view has a single thing to draw:
 
-Two things follow from that and are easy to undo by accident. The wording is the
-hosts' and their terms are theirs to change; where a notice contradicts itself
-the contradiction is kept and flagged rather than smoothed. And an ordinal rule
+- **Standing events** recur on a WEEKDAY — "every Sundas", "the first Loredas
+  of the month" — which is how the hosts announce them and the only form that
+  survives the year turning. They are resolved by matching the weekday the
+  sheet gives each day, so a rule written once marks every occurrence.
+- **Fixed days** are dates in the Tamrielic year: the birthdays, and the two
+  days of the Great Awakening. They fall on their date whatever weekday it is.
+
+Fixed days sort first, so a birthday keeps its colour on a day that also holds
+something. Birthdays and the Awakening share a colour each — fourteen legend
+entries would be a legend nobody reads.
+
+Three things follow and are easy to undo by accident. The wording is the
+keepers' and the terms are theirs to change; where a record contradicts itself
+the contradiction is kept and flagged rather than smoothed. An ordinal rule
 counts WEEKDAYS, not dates — the first Loredas of a month is the first Loredas
-in it, which is the 2nd in a month beginning on a Fredas. `test/events.test.ts`
-pins that, because marking the first seven days' Loredas instead is right in
-most months and wrong in the rest.
+in it, which is the 2nd in a month beginning on a Fredas. And **a recorded
+birthsign is never overruled by the month it falls in**: Orion du Bois is
+recorded under the Lord and born in Rain's Hand, whose sign is the Mage, and
+that disagreement is reproduced because which half is the error is the keeper's
+to say. Where no sign was recorded the month's is used and said to be the
+month's. `test/events.test.ts` pins all of it, including that a date cannot fall
+outside its own month — a day that does is simply never drawn and nobody finds
+out.
 
 **The Tamrielic feasts are gone from the page but not from the repo.**
 `shared/holidays.ts`, `shared/observances.ts` and `shared/parchment.ts` were

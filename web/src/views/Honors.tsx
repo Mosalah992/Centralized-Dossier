@@ -18,7 +18,7 @@ import type { Constellation } from '../../../shared/constellations';
  * Honors chunk and never in the entry bundle. The shelf, which is a static
  * import, has to reach it through a dynamic one instead — see Shelf.tsx.
  */
-import { STANDING_EVENTS, type StandingEvent, eventsOn } from '../../../shared/events';
+import { LEGEND, type Mark, marksFor } from '../../../shared/events';
 import { Firmament } from '../components/Firmament';
 import indumoril from '../assets/indumoril.jpg';
 import ganaril from '../assets/ganaril.jpg';
@@ -274,11 +274,11 @@ export function HonorView() {
  * falls back to the weekday alone rather than to the sheet's colour label,
  * which named a legend that no longer exists.
  */
-function dayTitle(day: CalendarDay, held: StandingEvent[]): string {
-  if (!held.length) return day.weekday;
+function dayTitle(day: CalendarDay, marks: Mark[]): string {
+  if (!marks.length) return day.weekday;
   return [
     day.weekday,
-    ...held.map((e) => `${e.name} — ${e.hours.join('; ')}`),
+    ...marks.map((m) => [m.name, ...m.lines].join(' — ')),
   ].join('\n');
 }
 
@@ -695,7 +695,7 @@ export function CalendarView() {
    * by month name and number.
    */
   const held = useMemo(() => {
-    const map = new Map<CalendarDay, StandingEvent[]>();
+    const map = new Map<CalendarDay, Mark[]>();
     if (!year) return map;
     for (const month of year.months) {
       const nth = new Map<string, number>();
@@ -703,8 +703,8 @@ export function CalendarView() {
         if (!day) continue;
         const count = (nth.get(day.weekday) ?? 0) + 1;
         nth.set(day.weekday, count);
-        const events = eventsOn(day.weekday, count);
-        if (events.length) map.set(day, events);
+        const marks = marksFor(month.index, day.day, day.weekday, count);
+        if (marks.length) map.set(day, marks);
       }
     }
     return map;
@@ -750,7 +750,7 @@ export function CalendarView() {
         items={[
           { label: 'Months', value: figure(year.months.length) },
           { label: 'Days reckoned', value: figure(days.filter(Boolean).length) },
-          { label: 'Days held', value: figure(noted.length) },
+          { label: 'Days marked', value: figure(noted.length) },
         ]}
       />
 
@@ -775,23 +775,24 @@ export function CalendarView() {
                 if (!day) {
                   return <div className="day day--empty" key={`empty-${index}`} aria-hidden />;
                 }
-                const events = held.get(day) ?? [];
+                const marks = held.get(day) ?? [];
                 const current = isToday(month.index, day.day);
                 const className =
-                  `day${events.length ? ' day--event' : ''}${current ? ' day--today' : ''}`;
-                // A day that holds two things is washed in the first of them;
+                  `day${marks.length ? ' day--event' : ''}${current ? ' day--today' : ''}`;
+                // A day carrying two things is washed in the first of them and
                 // the note lists both. Two colours in one cell reads as a
-                // gradient rather than as two events.
-                const wash = events[0]?.color;
+                // gradient rather than as two markings — and since fixed days
+                // sort first, a birthday keeps its colour on a Loredas.
+                const wash = marks[0]?.color;
 
                 // A plain day is not interactive, and a button would promise a
                 // keyboard user something to do with it.
-                if (!events.length && !current) {
+                if (!marks.length && !current) {
                   return (
                     <div
                       className={className}
                       key={`${month.name}-${day.day}`}
-                      title={dayTitle(day, events)}
+                      title={dayTitle(day, marks)}
                     >
                       {day.day}
                     </div>
@@ -807,12 +808,12 @@ export function CalendarView() {
                     style={{ background: wash }}
                     // Kept for the mouse, which gets the note without a click.
                     // It is not what carries the note — see below.
-                    title={current ? `Today — ${dayTitle(day, events)}` : dayTitle(day, events)}
+                    title={current ? `Today — ${dayTitle(day, marks)}` : dayTitle(day, marks)}
                     aria-current={current ? 'date' : undefined}
-                    aria-expanded={events.length ? chosen : undefined}
+                    aria-expanded={marks.length ? chosen : undefined}
                     aria-label={
-                      events.length
-                        ? `${current ? 'Today. ' : ''}${month.name} ${day.day}: ${events.map((e) => e.name).join(', ')}`
+                      marks.length
+                        ? `${current ? 'Today. ' : ''}${month.name} ${day.day}: ${marks.map((m) => m.name).join(', ')}`
                         : `Today, ${month.name} ${day.day}`
                     }
                     onClick={() =>
@@ -840,27 +841,15 @@ export function CalendarView() {
             </p>
             {(held.get(choice.day) ?? []).length > 0 ? (
               <ul className="daynote__held">
-                {(held.get(choice.day) ?? []).map((e) => (
-                  <li className="daynote__item" key={e.name}>
-                    <p className="daynote__name">{e.name}</p>
-                    <p className="daynote__host">{e.host} — {e.where}</p>
-                    {e.hours.map((hour) => (
-                      <p className="daynote__hour" key={hour}>{hour}</p>
+                {(held.get(choice.day) ?? []).map((m) => (
+                  <li className="daynote__item" key={m.name}>
+                    <p className="daynote__name">{m.name}</p>
+                    {m.standfirst && <p className="daynote__host">{m.standfirst}</p>}
+                    {m.lines.map((line) => (
+                      <p className="daynote__hour" key={line}>{line}</p>
                     ))}
-                    {e.terms && <p className="daynote__terms">{e.terms}</p>}
-                    {/* The notice gave a real instant for the first drawing.
-                        The archive reckons it into the realm's own calendar
-                        here rather than carrying a converted date that would
-                        have to be kept in step by hand. */}
-                    {e.firstHeldUtc && (() => {
-                      const first = reckon(Date.parse(e.firstHeldUtc));
-                      return (
-                        <p className="daynote__terms">
-                          First held {MONTHS[first.monthIndex - 1]} {first.day}, 4E {first.year}
-                        </p>
-                      );
-                    })()}
-                    <p className="daynote__summary">{e.summary}</p>
+                    {m.terms && <p className="daynote__terms">{m.terms}</p>}
+                    {m.summary && <p className="daynote__summary">{m.summary}</p>}
                   </li>
                 ))}
               </ul>
@@ -882,13 +871,11 @@ export function CalendarView() {
       {/* The legend used to name the sheet's festival colours. It names what
           is actually held now, and each entry says on which day. */}
       <div className="legend">
-        {STANDING_EVENTS.map((e) => (
-          <div className="legend__item" key={e.name}>
-            <span className="legend__swatch" style={{ background: e.color }} />
-            {e.name}
-            <span className="legend__when">
-              {e.ordinal === 1 ? `first ${e.weekday} of the month` : `every ${e.weekday}`}
-            </span>
+        {LEGEND.map((entry) => (
+          <div className="legend__item" key={entry.label}>
+            <span className="legend__swatch" style={{ background: entry.color }} />
+            {entry.label}
+            <span className="legend__when">{entry.when}</span>
           </div>
         ))}
       </div>

@@ -9,8 +9,17 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { STANDING_EVENTS, eventsOfWeekday, eventsOn } from '../shared/events';
-import { WEEKDAYS } from '../shared/parsers/calendar';
+import { constellationOf } from '../shared/constellations';
+import {
+  FIXED_DAYS,
+  STANDING_EVENTS,
+  eventsOfWeekday,
+  eventsOn,
+  marksFor,
+  signOf,
+} from '../shared/events';
+import { MONTHS, WEEKDAYS } from '../shared/parsers/calendar';
+import { MONTH_LENGTHS } from '../shared/reckoning';
 
 describe('the standing events', () => {
   it('falls only on weekdays the calendar actually has', () => {
@@ -80,5 +89,69 @@ describe('the standing events', () => {
       }
     }
     expect(marked).toEqual([2]);
+  });
+});
+
+/*
+ * The fixed days: dates rather than weekday rules.
+ *
+ * The failure that matters here is a date that cannot exist — Sun's Dawn 30, or
+ * a month index off by one — because a day that falls outside its month is
+ * simply never drawn and nobody finds out. Every entry is checked against the
+ * year's real month lengths.
+ */
+describe('the fixed days', () => {
+  it('falls on days its month actually has', () => {
+    for (const e of FIXED_DAYS) {
+      expect(e.monthIndex, `${e.name} has no such month`).toBeGreaterThanOrEqual(1);
+      expect(e.monthIndex, `${e.name} has no such month`).toBeLessThanOrEqual(12);
+      const length = MONTH_LENGTHS[e.monthIndex - 1]!;
+      expect(e.day, `${e.name} falls outside ${MONTHS[e.monthIndex - 1]}`).toBeGreaterThanOrEqual(1);
+      expect(e.day, `${e.name} falls outside ${MONTHS[e.monthIndex - 1]}`).toBeLessThanOrEqual(length);
+    }
+  });
+
+  it('marks each birthday once in the year', () => {
+    const births = FIXED_DAYS.filter((e) => e.kind === 'birth');
+    let marked = 0;
+    for (let m = 1; m <= 12; m++) {
+      for (let d = 1; d <= MONTH_LENGTHS[m - 1]!; d++) {
+        // A weekday nothing recurs on, so only fixed days answer.
+        marked += marksFor(m, d, 'Middas', 1).length;
+      }
+    }
+    expect(marked).toBe(FIXED_DAYS.length);
+    expect(births.length).toBeGreaterThan(0);
+  });
+
+  it('gives a birthday its recorded sign, and says when a sign is only the month’s', () => {
+    const recorded = FIXED_DAYS.find((e) => e.name === 'Ancarion Saelthar')!;
+    expect(signOf(recorded)).toEqual({ sign: 'The Serpent', recorded: true });
+
+    // Luthien's register gave no sign, so the month's stands in — and is
+    // labelled as the month's rather than passed off as a record.
+    const derived = FIXED_DAYS.find((e) => e.name === 'Luthien')!;
+    expect(signOf(derived)?.recorded).toBe(false);
+  });
+
+  /*
+   * ORION DU BOIS IS RECORDED UNDER A SIGN HIS MONTH DOES NOT CARRY. That is
+   * reproduced deliberately, so this asserts the disagreement still stands
+   * rather than asserting it away: if someone later "fixes" the register to
+   * agree with the calendar, this fails and they have to mean it.
+   */
+  it('keeps the register’s birthsign even where the month disagrees', () => {
+    const orion = FIXED_DAYS.find((e) => e.name === 'Orion du Bois')!;
+    expect(signOf(orion)).toEqual({ sign: 'The Lord', recorded: true });
+    expect(constellationOf(orion.monthIndex)?.name).not.toBe('The Lord');
+  });
+
+  it('puts a birthday before a standing event on the same day', () => {
+    // Fixed days sort first, so a birthday keeps the cell's colour on a day
+    // that also holds something.
+    const birth = FIXED_DAYS.find((e) => e.kind === 'birth')!;
+    const marks = marksFor(birth.monthIndex, birth.day, 'Sundas', 1);
+    expect(marks.length).toBeGreaterThan(1);
+    expect(marks[0]!.name).toBe(birth.name);
   });
 });
