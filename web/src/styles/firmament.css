@@ -1,0 +1,171 @@
+/* The Firmament: the plate under the clock.
+ *
+ * THE RECTANGLE IS THE POINT. The sign used to sit at the right-hand end of the
+ * reckoning bar at 190 px, which is not a chart of anything — thirteen stars in
+ * a thumbnail. It gets a plate of its own here, wide and deep enough that the
+ * asterism can be read and that turning it a few degrees actually shows
+ * something.
+ *
+ * Night ground, as the astrolabe and the wheel are, and for the reason recorded
+ * at the top of astrolabe.css: stars drawn dark on cream read as a stain.
+ */
+
+.firmament {
+  margin: clamp(1rem, 2vw, 1.6rem) 0 0;
+  padding: clamp(1.1rem, 2.2vw, 1.7rem);
+  border-radius: 2px;
+  border: 1px solid color-mix(in srgb, var(--foil, #b89f6e) 20%, transparent);
+  background:
+    radial-gradient(60% 80% at 76% 40%, rgba(52, 50, 74, 0.34), transparent 70%),
+    linear-gradient(180deg, #14131c, #0b0a11 70%, #08070c);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.05), inset 0 20px 40px rgba(0, 0, 0, 0.5);
+  display: grid;
+  gap: clamp(0.9rem, 1.8vw, 1.4rem);
+}
+
+.firmament__body {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(1rem, 2.5vw, 2.2rem);
+}
+
+.firmament__instrument {
+  /* The instrument is the smaller half here — the sky is the subject. */
+  width: clamp(9rem, 16vw, 14.4rem);
+}
+
+/* ── The stage ────────────────────────────────────────────────────────── */
+
+.firmament__stage {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  align-items: center;
+  gap: clamp(0.8rem, 2vw, 1.8rem);
+  min-height: clamp(13rem, 26vw, 20rem);
+}
+
+.firmament__field {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 20rem;
+  overflow: visible;
+  /* The pointer nudges the view; say so. */
+  cursor: crosshair;
+}
+
+.firm-join {
+  stroke: color-mix(in srgb, var(--foil, #b89f6e) 34%, transparent);
+  stroke-width: 0.32;
+  stroke-linecap: round;
+}
+
+.firm-star {
+  fill: #f6ecd3;
+  /* The glow is the star, not a filter — the same economy the sign panel this
+     replaced used, on thirteen circles rather than nine. */
+  stroke: color-mix(in srgb, var(--foil, #b89f6e) 46%, transparent);
+  stroke-width: 0.6;
+  paint-order: stroke;
+}
+
+/* ── The reading ──────────────────────────────────────────────────────── */
+
+.firmament__reading {
+  display: grid;
+  gap: 0.35rem;
+  align-content: center;
+}
+
+.firmament__reading > * { margin: 0; }
+
+.firmament__name {
+  font-family: var(--display);
+  font-size: clamp(1.05rem, 2.2vw, 1.55rem);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold-bright, #d8c187);
+}
+
+.firmament__standing {
+  font-family: var(--display);
+  font-size: 0.64rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--foil, #b89f6e) 72%, transparent);
+}
+
+.firmament__born {
+  margin-top: 0.35rem;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: color-mix(in srgb, #e8dcc2 80%, transparent);
+}
+
+/* ── The thirteen, along the foot ─────────────────────────────────────── */
+
+.firmament__signs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.3rem 0.15rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid color-mix(in srgb, var(--foil, #b89f6e) 14%, transparent);
+}
+
+.firmament__sign {
+  appearance: none;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  padding: 0.3rem 0.62rem;
+  font-family: var(--display);
+  font-size: 0.63rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--foil, #b89f6e) 58%, transparent);
+  border-bottom: 1px solid transparent;
+  transition: color var(--dur-hand, 0.35s) var(--ease), border-color var(--dur-hand, 0.35s) var(--ease);
+}
+
+.firmament__sign:hover,
+.firmament__sign:focus-visible {
+  color: var(--gold-bright, #d8c187);
+}
+
+.firmament__sign.is-chosen {
+  color: var(--gold-bright, #d8c187);
+  border-bottom-color: color-mix(in srgb, var(--foil, #b89f6e) 70%, transparent);
+}
+
+/* The sign whose season it actually is, marked so that browsing the thirteen
+   never loses track of which one the calendar above is standing in. */
+.firmament__sign.is-season::after {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 3px;
+  margin-left: 0.4em;
+  vertical-align: 0.35em;
+  border-radius: 50%;
+  background: var(--rubric, #a33417);
+}
+
+.firmament__note {
+  margin: 0;
+  text-align: center;
+  font-size: 0.78rem;
+  font-style: italic;
+  line-height: 1.55;
+  color: color-mix(in srgb, #cbbb98 62%, transparent);
+}
+
+@media (max-width: 899px) {
+  /* The instrument steps aside on a phone: two objects side by side at this
+     width leaves neither one readable, and the sky is the subject. */
+  .firmament__body { grid-template-columns: minmax(0, 1fr); }
+  .firmament__instrument { display: none; }
+  .firmament__stage { grid-template-columns: minmax(0, 1fr); }
+}

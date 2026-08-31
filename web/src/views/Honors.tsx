@@ -22,6 +22,7 @@ import { withParchmentPalette } from '../../../shared/parchment';
  * import, has to reach it through a dynamic one instead — see Shelf.tsx.
  */
 import { Astrolabe } from '../components/Astrolabe';
+import { Firmament } from '../components/Firmament';
 import { Orrery } from '../components/Orrery';
 import indumoril from '../assets/indumoril.jpg';
 import ganaril from '../assets/ganaril.jpg';
@@ -625,23 +626,11 @@ function InWorldPlate({ today }: { today: CalendarDay | null }) {
         )}
       </div>
 
-      {/* The sign in season. It belongs on this plate rather than in the grid
-          because it is a property of the month rather than of any day, and the
-          plate is already where the archive says what time it is.
-          The astrolabe replaces the plain asterism that used to sit here: it
-          draws the same stars from the same table and puts them inside an
-          instrument that also keeps the hour, so the plate says one thing in
-          one object instead of two things in two. */}
-      {sign && (
-        <div className="sign">
-          <Astrolabe size={190} legend={false} />
-          <div className="sign__reading">
-            <p className="sign__name">{sign.name}</p>
-            <p className="sign__standing">{standing(sign)}</p>
-            <p className="sign__born">{sign.born}</p>
-          </div>
-        </div>
-      )}
+      {/*
+        * The sign used to be squeezed in here beside the hour, and it was too
+        * small to be a chart of anything — a 190px instrument at the end of a
+        * thin bar. It has its own plate below now; see Firmament.tsx.
+        */}
     </aside>
   );
 }
@@ -729,6 +718,7 @@ export function CalendarView() {
       />
 
       <InWorldPlate today={today} />
+      <Firmament />
 
       <div className="year">
         {year.months.map((month) => (

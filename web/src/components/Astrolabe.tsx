@@ -50,9 +50,17 @@ interface Props {
    * reading twice.
    */
   legend?: boolean;
+  /**
+   * Whether the instrument draws the season's asterism in its field.
+   *
+   * Off inside the Firmament, where the sky is the whole plate beside it. An
+   * instrument that repeats the object next to it is the same reading twice —
+   * the same reason `legend` exists.
+   */
+  asterism?: boolean;
 }
 
-export function Astrolabe({ size = 260, quiet = false, legend = true }: Props) {
+export function Astrolabe({ size = 260, quiet = false, legend = true, asterism = true }: Props) {
   const root = useRef<SVGSVGElement>(null);
   // The gradient is referenced by url(#id), which is document-global — two
   // instruments on one page sharing an id would have the second silently
@@ -257,6 +265,7 @@ export function Astrolabe({ size = 260, quiet = false, legend = true }: Props) {
         </g>
 
         {/* The season's asterism, drawn from its own stars. */}
+        {asterism && (
         <g className="astro-sign">
           {sign.lines.map(([a, b], i) => {
             const s1 = stars[a];
@@ -275,6 +284,7 @@ export function Astrolabe({ size = 260, quiet = false, legend = true }: Props) {
               style={{ transformOrigin: `${x}px ${y}px` }} />
           ))}
         </g>
+        )}
 
         {/* The seal, assembled from marks that fly in from the rim. */}
         <g className="astro-seal">

@@ -36,6 +36,7 @@ import './styles/chronicle.css';
 import './styles/enforcement.css';
 import './styles/astrolabe.css';
 import './styles/orrery.css';
+import './styles/firmament.css';
 
 const container = document.getElementById('root');
 if (!container) throw new Error('#root is missing from index.html');
