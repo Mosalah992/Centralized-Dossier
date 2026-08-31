@@ -207,17 +207,15 @@ export function Orrery({ bare = false }: Props) {
     /*
      * The three that move.
      *
-     * Position is written as a transform on a group whose child sits at the
-     * ring's radius, so the body's own drawing — the phase terminator, the
-     * craters — never rotates with the orbit. A moon that spins as it goes
-     * round is a moon drawn by somebody who did not look at one.
+     * Position is written as a transform on the group; the body itself sits at
+     * that group's origin, so its own drawing never turns with the orbit. A
+     * moon that spins as it goes round is a moon drawn by somebody who has not
+     * looked at one.
      */
     const arm = (sel: string) => el.querySelector(sel) as SVGGElement | null;
     const masser = arm('.wheel-arm--masser');
     const secunda = arm('.wheel-arm--secunda');
     const magnus = arm('.wheel-arm--magnus');
-    const masserShade = el.querySelector('.wheel-shade--masser') as SVGCircleElement | null;
-    const secundaShade = el.querySelector('.wheel-shade--secunda') as SVGCircleElement | null;
 
     /*
      * Placed by transform ATTRIBUTE rather than by anime's `utils.set`.
@@ -240,22 +238,6 @@ export function Orrery({ bare = false }: Props) {
       node.style.opacity = String(p.depth > 0 ? 0.72 : 1);
     };
 
-    /*
-     * THE WHEEL WINDS INTO PLACE, and this is the only reason it is watchable.
-     *
-     * At their reckoned courses these bodies crawl. Masser turns once an
-     * in-world day, which at the archive's two-to-one rate is one turn every
-     * twelve real hours — about half a degree a minute. A reader who looks for
-     * five seconds sees a still picture, and the sandglass already taught this
-     * archive that lesson the expensive way: a level measuring a whole day
-     * moves a pixel every twenty-one minutes and can never be seen to move.
-     *
-     * So the wheel arrives spun back and settles: a quadratic ease that is a
-     * turn and a half out at the start and exactly zero after three seconds.
-     * It is an ENTRANCE, not a rate. Nothing is claimed by it, the positions it
-     * settles on are the true ones, and after three seconds the wheel is
-     * telling the same slow truth it always was.
-     */
     const divines = Array.from(el.querySelectorAll<SVGGElement>('.wheel-arm--divine'));
 
     /*
@@ -280,29 +262,6 @@ export function Orrery({ bare = false }: Props) {
           place(node, Number(node.dataset.ring ?? 0), t);
         }
 
-        /*
-         * The phase, as a shadow disc slid across the moon.
-         *
-         * Crude next to a real terminator, and right for this: the archive
-         * draws in engraved line, and a soft photographic terminator would be
-         * the one thing on the page rendered in a different hand.
-         *
-         * THE OFFSET IS NOT LINEAR IN THE PHASE, which is what the first
-         * version got wrong — it slid the shadow evenly from one side to the
-         * other, which puts the shadow dead centre at fraction 0.5 and draws a
-         * BLACK disc at exactly the moment the legend says "Full".
-         *
-         * The shadow is the same size as the moon, so what matters is how far
-         * its centre stands from the moon's: zero covers the moon completely
-         * (new), and two radii clears it entirely (full). Waxing and waning are
-         * the same distances approached from opposite sides, which is what the
-         * sign change at half a cycle is.
-         */
-        const p = phases();
-        const shadeAt = (fraction: number, r: number) =>
-          fraction <= 0.5 ? -4 * r * fraction : 4 * r * (1 - fraction);
-        if (masserShade) masserShade.setAttribute('cx', String(shadeAt(p.masser.fraction, 3.6)));
-        if (secundaShade) secundaShade.setAttribute('cx', String(shadeAt(p.secunda.fraction, 2.35)));
       },
     });
 
@@ -329,10 +288,6 @@ export function Orrery({ bare = false }: Props) {
           <stop offset="70%" stopColor="#0c0b12" />
           <stop offset="100%" stopColor="#07060a" />
         </radialGradient>
-        {/* Each moon is clipped to its own disc, so the shadow that gives it a
-            phase cannot spill onto the sky beside it. */}
-        <clipPath id={`clip-masser-${gid}`}><circle cx="0" cy="0" r="3.6" /></clipPath>
-        <clipPath id={`clip-secunda-${gid}`}><circle cx="0" cy="0" r="2.35" /></clipPath>
       </defs>
 
       {/*
@@ -357,7 +312,12 @@ export function Orrery({ bare = false }: Props) {
       <path className="wheel-rim" d={ringPath(R_RIM)} />
       {MONTH_LENGTHS.map((_, i) => {
         const t = i / 12;
-        const a = on(R_RIM - 2.4, t);
+        // The month in season reaches further in than its eleven neighbours, so
+        // it is found by shape as well as by weight — it used to be found by
+        // being the only red thing on a gold wheel, and that stopped being
+        // available when Nirn's red ring came off.
+        const season = i + 1 === month;
+        const a = on(R_RIM - (season ? 4.4 : 2.4), t);
         const b = on(R_RIM, t);
         return (
           <line
@@ -414,26 +374,25 @@ export function Orrery({ bare = false }: Props) {
       <image className="wheel-nirn" href={nirnUrl} x="45.2" y="45.2" width="9.6" height="9.6" />
 
       {/*
-        * The moons keep their phase shadows over the photographs.
+        * NO PHASE SHADOW ON EITHER MOON.
         *
-        * The sphere in the sheet is lit from its own direction and knows
-        * nothing about where Magnus is standing; the shadow is the reading,
-        * and it has to survive the body underneath it changing from a flat
-        * disc to a picture. Clipped to the moon's circle so it cannot spill
-        * onto the stars.
+        * A black disc slid across a photograph does not read as a phase; it
+        * reads as a photograph with a bite out of it. The drawn shadow worked
+        * while the moons were flat foil discs of the archive's own making —
+        * over art that is already lit from its own direction, with its own
+        * terminator, a second shadow is a second light source and the eye picks
+        * the disagreement immediately.
+        *
+        * The phase is not lost. It was always a READING rather than a drawing,
+        * and it is still named in full beside the sign below the scene, where
+        * it is reckoned from the true clock rather than from the wheel's tempo.
         */}
       <g className="wheel-arm wheel-arm--secunda">
         <image className="wheel-moon" href={secundaUrl} x="-2.35" y="-2.35" width="4.7" height="4.7" />
-        <g clipPath={`url(#clip-secunda-${gid})`}>
-          <circle className="wheel-shade wheel-shade--secunda" cx="-4.2" cy="0" r="2.35" />
-        </g>
       </g>
 
       <g className="wheel-arm wheel-arm--masser">
         <image className="wheel-moon" href={masserUrl} x="-3.6" y="-3.6" width="7.2" height="7.2" />
-        <g clipPath={`url(#clip-masser-${gid})`}>
-          <circle className="wheel-shade wheel-shade--masser" cx="-6.4" cy="0" r="3.6" />
-        </g>
       </g>
     </svg>
   );

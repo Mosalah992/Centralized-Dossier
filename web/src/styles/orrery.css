@@ -56,10 +56,21 @@
   stroke-linecap: round;
 }
 
-/* The month in season. */
+/*
+ * The month in season.
+ *
+ * It was struck in the rubric red, which was right while Nirn wore a red ring
+ * at the centre — the two were the wheel's pair of red marks and belonged to
+ * each other. The ring came off, and a single red dash on a rim of gold stopped
+ * reading as a mark and started reading as something spilled.
+ *
+ * It is the brightest gold on the wheel instead, and longer and heavier than
+ * its eleven neighbours. Weight can carry a mark on its own; it does not need a
+ * second colour to do it.
+ */
 .wheel-tick--season {
-  stroke: var(--rubric, #a33417);
-  stroke-width: 1.1;
+  stroke: color-mix(in srgb, var(--gold-bright, #d8c187) 92%, #fff6dd);
+  stroke-width: 1.15;
 }
 
 /* ── The eight ────────────────────────────────────────────────────────── */
