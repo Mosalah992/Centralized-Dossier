@@ -111,6 +111,30 @@ coordinates so a sign is identical every time it is opened. Its view drifts on
 plain elapsed time rather than the in-world clock, deliberately — a viewpoint is
 not a reading.
 
+**The calendar marks what is held, not what is observed.** `shared/events.ts`
+carries the standing events — Gambling Night, the Mystery Coffers, the People's
+Lottery, the Mondas Mass — as RECURRENCES rather than dates: "every Sundas",
+"the first Loredas of the month". The view resolves them onto cells by matching
+the weekday the sheet gives each day, so a rule written once marks every
+occurrence in the year and nobody maintains a list.
+
+Two things follow from that and are easy to undo by accident. The wording is the
+hosts' and their terms are theirs to change; where a notice contradicts itself
+the contradiction is kept and flagged rather than smoothed. And an ordinal rule
+counts WEEKDAYS, not dates — the first Loredas of a month is the first Loredas
+in it, which is the 2nd in a month beginning on a Fredas. `test/events.test.ts`
+pins that, because marking the first seven days' Loredas instead is right in
+most months and wrong in the rest.
+
+**The Tamrielic feasts are gone from the page but not from the repo.**
+`shared/holidays.ts`, `shared/observances.ts` and `shared/parchment.ts` were
+overlaid onto the sheet's year and are no longer called by anything but their
+own tests. They were left in place deliberately — the events above went up "for
+now" and the feasts may come back — so a reader finding three modules with no
+callers is looking at something parked, not something forgotten. Nothing was
+removed from the spreadsheet, and nothing here could: `server/` is readonly by
+invariant 2.
+
 `seal-invite` in `Gate.css` is the last CSS animation in the archive and stays CSS.
 It is the login affordance — its own comment records that readers could not find the
 door until it was added — and a CSS keyframe cannot fail to parse.
@@ -144,6 +168,7 @@ functions/        Cloudflare Pages Functions -> /api/*
 server/           gsheets.ts (readonly Sheets client) · archive.ts (load + parse)
 shared/           volumes.ts (THE registry) · types.ts · text.ts · parsers/
                   mundus.ts (the moons' reckoned courses, and what is NOT known)
+                  events.ts (WHAT THE REALM ACTUALLY HOLDS — see below)
 scripts/          Asset prep + sheet tooling (all committed, outputs committed)
 Assets/           Source art in, as delivered
 public/           Served verbatim: music/, seal.webp, _redirects, robots.txt
