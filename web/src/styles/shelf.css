@@ -198,13 +198,32 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: clamp(1.05rem, 1.8vw, 1.6rem);
   padding: clamp(1.2rem, 2.2vw, 1.8rem);
+  /*
+   * THE BACKBOARD IS A REAL BOARD NOW — scripts/make-cabinet-wood.mjs, which
+   * generates it rather than downloading it, so nothing here carries a licence
+   * to check. It replaces a repeating-linear-gradient that put a white hairline
+   * every ten pixels forever: evenly spaced, dead straight, and identical from
+   * one end of the cabinet to the other, which reads as corduroy rather than
+   * as timber.
+   *
+   * ORDER MATTERS AND THE IMAGE IS OPAQUE, so it goes at the bottom. Layered
+   * anywhere higher it would paint over the glow and the vertical falloff
+   * beneath it and flatten the whole cabinet. The lighting that used to live in
+   * the base gradient is therefore expressed as a translucent shade ABOVE the
+   * board, and the old flat gradient stays underneath as the fallback for a
+   * reader whose image never arrives.
+   */
   background:
     linear-gradient(90deg,
       rgba(0, 0, 0, 0.42),
       transparent 5% 95%,
       rgba(0, 0, 0, 0.42)),
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 10px),
     radial-gradient(55rem 20rem at 50% 0%, rgba(202, 141, 63, 0.12), transparent 72%),
+    linear-gradient(180deg,
+      rgba(18, 13, 10, 0) 0%,
+      rgba(18, 13, 10, 0.5) 62%,
+      rgba(11, 8, 7, 0.86) 100%),
+    url('../assets/cabinet-wood.webp') 0 0 / auto repeat,
     linear-gradient(180deg, #211711, #120d0a 65%, #0b0807);
   border-inline: 1px solid rgba(198, 168, 94, 0.18);
   box-shadow:
