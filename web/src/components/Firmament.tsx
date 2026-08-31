@@ -33,7 +33,11 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { animate, createTimer, stagger, utils } from 'animejs';
 
 import { CONSTELLATIONS, type Constellation, standing } from '../../../shared/constellations';
+import { conjunction, phases } from '../../../shared/mundus';
 import { reckon } from '../../../shared/reckoning';
+
+import { Orrery } from './Orrery';
+import skyUrl from '../assets/mundus/starfield.webp';
 
 /** Focal length for the perspective divide. Larger is a flatter, longer lens. */
 const FOCAL = 260;
@@ -65,6 +69,22 @@ export function Firmament() {
   const sign: Constellation = CONSTELLATIONS[chosen]!;
 
   const stage = useRef<SVGSVGElement>(null);
+  const sky = useRef<HTMLDivElement>(null);
+
+  /*
+   * The moons' readings, on a slow tick.
+   *
+   * They came up here when the Wheel of Mundus was folded into this plate: one
+   * sky should have one place that says what it is doing, and the wheel's own
+   * legend would have been a second caption under the same picture. A phase
+   * name changes once in three in-world days, so re-rendering for it is free —
+   * the bodies themselves never go through React.
+   */
+  const [sky_reading, setSkyReading] = useState(() => ({ ...phases(), close: conjunction() }));
+  useEffect(() => {
+    const id = window.setInterval(() => setSkyReading({ ...phases(), close: conjunction() }), 20_000);
+    return () => window.clearInterval(id);
+  }, []);
   // url(#id) is document-global; two charts on one page sharing one would have
   // the second silently repaint the first.
   const gid = useId().replace(/:/g, '');
@@ -142,6 +162,22 @@ export function Firmament() {
         const yaw = ((Math.sin(t * Math.PI * 2) * SWING + nudge.current.x * 16) * Math.PI) / 180;
         const pitch = ((Math.cos(t * Math.PI * 2) * NOD + nudge.current.y * 10) * Math.PI) / 180;
 
+        /*
+         * The sky behind moves too, and barely.
+         *
+         * A starfield that slides at any noticeable rate turns the plate into a
+         * screensaver and pulls the eye off the chart in front of it. This is
+         * about a pixel every two seconds — enough that the scene is never
+         * quite still, slow enough that nobody catches it moving. It is also
+         * why it is a translate and not a parallax off the pointer: the stars
+         * are a very long way off and would not shift for a reader leaning in.
+         */
+        if (sky.current) {
+          const drift = ((performance.now() - started) % (DRIFT_MS * 9)) / (DRIFT_MS * 9);
+          sky.current.style.transform =
+            `translate3d(${(-drift * 6).toFixed(2)}%, ${(Math.sin(drift * Math.PI * 2) * 1.4).toFixed(2)}%, 0)`;
+        }
+
         const flat = points.map((p) => project(p, yaw, pitch));
 
         for (let i = 0; i < stars.length; i++) {
@@ -205,6 +241,9 @@ export function Firmament() {
           }}
           onPointerLeave={() => { nudge.current = { x: 0, y: 0 }; }}
         >
+          {/* Aetherius, a very long way behind everything. */}
+          <div className="firmament__sky" ref={sky} aria-hidden />
+
           <svg
             ref={stage}
             viewBox="0 0 100 100"
@@ -239,11 +278,33 @@ export function Firmament() {
             ))}
           </svg>
 
-          <div className="firmament__reading">
+          {/* The wheel, in front of the sign it is turning under. */}
+          <div className="firmament__wheel">
+            <Orrery bare />
+          </div>
+        </div>
+
+        <div className="firmament__reading">
+          <div>
             <p className="firmament__name">{sign.name}</p>
             <p className="firmament__standing">{standing(sign)}</p>
             <p className="firmament__born">{sign.born}</p>
           </div>
+
+          <dl className="firmament__sky-reading">
+            <div>
+              <dt>Masser</dt>
+              <dd>{sky_reading.masser.name}</dd>
+            </div>
+            <div>
+              <dt>Secunda</dt>
+              <dd>{sky_reading.secunda.name}</dd>
+            </div>
+            <div>
+              <dt>The moons</dt>
+              <dd>{sky_reading.close > 0.94 ? 'In conjunction' : 'Apart'}</dd>
+            </div>
+          </dl>
         </div>
       </div>
 
@@ -268,6 +329,12 @@ export function Firmament() {
         stand in a line from Nirn and nowhere else, which is why the chart is
         turned a little either way. The depths are the draughtsman's, not the
         Firmament's, and no distance is recorded here.
+      </p>
+      <p className="firmament__note">
+        Masser and Secunda keep their reckoned courses, and Magnus stands
+        opposite Masser as it is written. The eight planets of the Divines are
+        set where they are held to stand; the Embassy has no reckoning of their
+        courses and does not invent one.
       </p>
     </section>
   );

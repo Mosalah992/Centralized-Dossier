@@ -22,7 +22,6 @@ import { withParchmentPalette } from '../../../shared/parchment';
  * import, has to reach it through a dynamic one instead — see Shelf.tsx.
  */
 import { Firmament } from '../components/Firmament';
-import { Orrery } from '../components/Orrery';
 import indumoril from '../assets/indumoril.jpg';
 import ganaril from '../assets/ganaril.jpg';
 import malen from '../assets/malen.jpg';
@@ -828,13 +827,10 @@ export function CalendarView() {
         ))}
       </div>
 
-      {/* The sky the year is reckoned against, at the foot of the volume.
-          It goes HERE rather than on the reckoning plate above, where the
-          astrolabe already keeps the hour: two instruments on one strip would
-          compete, and this one wants to be round and large. */}
-      <section className="wheel-plate" aria-label="The Wheel of Mundus">
-        <Orrery />
-      </section>
+      {/* The Wheel of Mundus stood here, on a plate of its own at the foot.
+          It moved up into the Firmament, where the sky it draws is the same sky
+          the sign is drawn on — two plates of one sky, a screen apart, was the
+          calendar saying the same thing twice. */}
 
     </Page>
   );

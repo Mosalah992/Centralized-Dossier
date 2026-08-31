@@ -63,6 +63,21 @@ what replaced it does the same job better, because the Firmament gives the sky a
 plate wide enough to read and the reckoning bar still carries the hour beside
 the sandglass. Do not reinstate it as an ornament.
 
+**The Firmament is one scene in three layers** — the starfield behind, the
+season's sign in the middle distance, the Wheel of Mundus tilted in front — and
+it lives in `.firmament__stage` alone. The wheel had its own plate at the foot
+of the calendar first; two plates of one sky, a screen apart, was the volume
+saying the same thing twice. `Orrery` renders `bare` inside the scene, which
+drops its figure, its legend AND its own night disc: an opaque field there
+painted over both of the layers it was moved in to join.
+
+**The bodies are photographs, cut by `scripts/prepare-orrery.mjs`** from a sheet
+the keeper supplied and confirmed is theirs to embed — which matters because
+`web/src/assets` is served from public URLs, gate or no gate. The sheet holds
+ten bodies and the wheel needs twelve, so two of the spare spheres are turned in
+hue to stand in; the script says so, and the mapping of sphere to Divine is a
+convention declared in `Orrery.tsx`, like the alphabetical ring order.
+
 **The Wheel of Mundus turns three bodies and holds eight still**, and that is a
 sourcing decision rather than an unfinished one. `shared/mundus.ts` carries the
 periods, the sources they came from, and where the sources contradict each other
@@ -318,6 +333,7 @@ Asset prep — each reads from `Assets/` and writes committed output:
 node scripts/prepare-volumes.mjs   # book covers -> web/src/assets/volumes/
 node scripts/prepare-candles.mjs   # candle sprites
 node scripts/prepare-seal.mjs      # gate wax seal
+node scripts/prepare-orrery.mjs    # the bodies of Mundus + the starfield
 node scripts/prepare-music.mjs     # ambience tracks -> 96 kbps mono (needs FFMPEG=)
 node scripts/make-dev-vars.mjs     # .env -> .dev.vars for wrangler
 ```

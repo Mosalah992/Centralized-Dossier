@@ -166,3 +166,86 @@
      leaves neither readable. */
   .firmament__stage { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* ── The scene ───────────────────────────────────────────────────────────
+ *
+ * Three layers in one box, and the order is the whole point: Aetherius behind
+ * everything, the sign's stars in the middle distance, the bodies of Mundus in
+ * front. They are separate elements rather than one drawing because they live
+ * in different spaces — the constellation is a flat pattern given depth, the
+ * wheel is a tilted plane, and the sky is neither.
+ */
+
+.firmament__stage {
+  position: relative;
+  display: block;
+  min-height: clamp(16rem, 32vw, 26rem);
+  border-radius: 2px;
+  /* The sky drifts, so it has to be cropped to the plate or it shows its edge. */
+  overflow: hidden;
+}
+
+.firmament__sky {
+  position: absolute;
+  /* Oversized, because it moves: at rest the overflow is what keeps the
+     starfield's own edges outside the frame. */
+  inset: -8%;
+  background: url('../assets/mundus/starfield.webp') center / cover no-repeat;
+  opacity: 0.62;
+  will-change: transform;
+}
+
+/* Both charts fill the plate and sit over the sky. */
+.firmament__field,
+.firmament__wheel {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+}
+
+.firmament__wheel { pointer-events: none; }
+
+.firmament__wheel .wheel__face {
+  width: 100%;
+  height: 100%;
+}
+
+/* The asterism drops back once there is a solar system in front of it: it is
+   the sky the wheel turns under, not the subject any more. */
+.firmament__field { opacity: 0.72; }
+
+/* ── The reading, below the scene ────────────────────────────────────── */
+
+.firmament__reading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.8rem 2rem;
+  padding-top: 0.9rem;
+}
+
+.firmament__sky-reading {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1.4rem;
+}
+
+.firmament__sky-reading > div { display: grid; gap: 0.1rem; }
+
+.firmament__sky-reading dt {
+  font-family: var(--display);
+  font-size: 0.58rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--foil, #b89f6e) 62%, transparent);
+}
+
+.firmament__sky-reading dd {
+  margin: 0;
+  font-size: 0.86rem;
+  color: color-mix(in srgb, #e8dcc2 82%, transparent);
+}

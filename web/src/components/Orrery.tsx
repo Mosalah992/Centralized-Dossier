@@ -28,6 +28,41 @@ import { constellationOf } from '../../../shared/constellations';
 import { DIVINE_PLANETS, conjunction, phases, revolutions } from '../../../shared/mundus';
 import { MONTH_LENGTHS, reckon } from '../../../shared/reckoning';
 
+import amberUrl from '../assets/mundus/amber.webp';
+import ashUrl from '../assets/mundus/ash.webp';
+import azureUrl from '../assets/mundus/azure.webp';
+import cinderUrl from '../assets/mundus/cinder.webp';
+import magnusUrl from '../assets/mundus/magnus.webp';
+import masserUrl from '../assets/mundus/masser.webp';
+import nirnUrl from '../assets/mundus/nirn.webp';
+import paleUrl from '../assets/mundus/pale.webp';
+import roseUrl from '../assets/mundus/rose.webp';
+import rustUrl from '../assets/mundus/rust.webp';
+import secundaUrl from '../assets/mundus/secunda.webp';
+import verdantUrl from '../assets/mundus/verdant.webp';
+
+/*
+ * WHICH SPHERE STANDS FOR WHICH DIVINE IS A CONVENTION, exactly as the
+ * alphabetical ring order is, and for the same reason: nothing records what any
+ * of them looks like. The list is fixed here so the wheel is the same wheel
+ * every time it is opened, and ordered so that no two neighbouring rings carry
+ * bodies that read alike.
+ *
+ * `azure` and `amber` are `pale` and `rust` turned in hue — the supplied sheet
+ * held ten bodies and the wheel needs twelve. scripts/prepare-orrery.mjs makes
+ * them and says so.
+ */
+const DIVINE_SPRITES: Record<string, string> = {
+  Akatosh: rustUrl,
+  Arkay: verdantUrl,
+  Dibella: roseUrl,
+  Julianos: ashUrl,
+  Kynareth: azureUrl,
+  Mara: paleUrl,
+  Stendarr: cinderUrl,
+  Zenithar: amberUrl,
+};
+
 /** The rings the eight stand on, innermost first. Spacing is drawing, not distance. */
 const RING_INNER = 16;
 const RING_STEP = 3.1;
@@ -105,7 +140,18 @@ function ringPath(r: number): string {
  * width and the viewBox does the rest — so a number here would be a second
  * place to change it and a chance for the two to disagree.
  */
-export function Orrery() {
+interface Props {
+  /**
+   * Render the face alone, with no figure, legend or note around it.
+   *
+   * The wheel moved inside the Firmament's stage, where it is one layer of a
+   * scene rather than a plate of its own, and the readings it used to carry sit
+   * with the sign's reading there instead.
+   */
+  bare?: boolean;
+}
+
+export function Orrery({ bare = false }: Props) {
   const root = useRef<SVGSVGElement>(null);
   const gid = useId().replace(/:/g, '');
 
@@ -234,109 +280,135 @@ export function Orrery() {
     };
   }, []);
 
+  const face = (
+    <svg
+      ref={root}
+      // Cropped to what the tilt actually occupies: a projected ring of 48
+      // reaches about 28 units either side of centre vertically, and framing
+      // the full square would letterbox the wheel inside its own plate.
+      viewBox="0 19 100 62"
+      className="wheel__face"
+      role="img"
+      aria-label="A wheel of Mundus: Nirn at the centre, the two moons, the sun, and the eight planets of the Divines"
+    >
+      <defs>
+        <radialGradient id={`wheel-night-${gid}`} cx="50%" cy="42%">
+          <stop offset="0%" stopColor="#1c1b26" />
+          <stop offset="70%" stopColor="#0c0b12" />
+          <stop offset="100%" stopColor="#07060a" />
+        </radialGradient>
+        {/* Each moon is clipped to its own disc, so the shadow that gives it a
+            phase cannot spill onto the sky beside it. */}
+        <clipPath id={`clip-masser-${gid}`}><circle cx="0" cy="0" r="3.6" /></clipPath>
+        <clipPath id={`clip-secunda-${gid}`}><circle cx="0" cy="0" r="2.35" /></clipPath>
+      </defs>
+
+      {/*
+        * The wheel brings its own night ONLY when it stands alone.
+        *
+        * On its own plate the field is what lifts the system off the parchment.
+        * Inside the Firmament there is already a sky — a starfield behind and
+        * the sign's own stars between — and an opaque disc here painted over
+        * both of them, which is the whole reason the wheel was moved into that
+        * scene in the first place.
+        *
+        * Tilted with everything else when it is drawn: a round field behind an
+        * elliptical system leaves a third of the plate empty above and below
+        * and reads as a system painted on a coin.
+        */}
+      {!bare && (
+        <path className="wheel-field" d={ringPath(R_RIM + 3)} fill={`url(#wheel-night-${gid})`} />
+      )}
+
+      {/* The rim, and the twelve months around it. The month in season is lit
+          — the one place this wheel says what time of year it is. */}
+      <path className="wheel-rim" d={ringPath(R_RIM)} />
+      {MONTH_LENGTHS.map((_, i) => {
+        const t = i / 12;
+        const a = on(R_RIM - 2.4, t);
+        const b = on(R_RIM, t);
+        return (
+          <line
+            key={i}
+            className={`wheel-tick${i + 1 === month ? ' wheel-tick--season' : ''}`}
+            x1={a.x} y1={a.y} x2={b.x} y2={b.y}
+          />
+        );
+      })}
+
+      {/* The eight, on their rings, standing still. */}
+      {DIVINE_PLANETS.map((planet, i) => {
+        const r = RING_INNER + i * RING_STEP;
+        const p = on(r, i / DIVINE_PLANETS.length);
+        return (
+          <g key={planet.name}>
+            {/* Each ring's dashes are offset from its neighbour's, or all
+                eight line up radially and the rings stop reading as rings —
+                they become one starburst hatching the whole field. */}
+            <path className="wheel-ring" d={ringPath(r)} strokeDashoffset={i * 1.7} />
+            <image
+              className="wheel-planet"
+              href={DIVINE_SPRITES[planet.name]}
+              x={p.x - 2.5 * p.scale} y={p.y - 2.5 * p.scale}
+              width={5 * p.scale} height={5 * p.scale}
+              style={{ opacity: p.depth > 0 ? 0.72 : 1 }}
+            >
+              <title>{`${planet.name}, of ${planet.of}`}</title>
+            </image>
+          </g>
+        );
+      })}
+
+      {/* Magnus, on the outermost ring, opposite Masser. */}
+      <path className="wheel-ring wheel-ring--sun" d={ringPath(R_MAGNUS)} />
+      <g className="wheel-arm wheel-arm--magnus">
+        <circle className="wheel-sun-halo" r="5.6" />
+        <image className="wheel-sun" href={magnusUrl} x="-3.6" y="-3.6" width="7.2" height="7.2" />
+      </g>
+
+      {/* The two moons. Masser is the larger and ruddy; Secunda the small pale
+          one — as they hang over Skyrim. */}
+      <path className="wheel-ring wheel-ring--moon" d={ringPath(R_MASSER)} />
+      <path className="wheel-ring wheel-ring--moon" d={ringPath(R_SECUNDA)} />
+
+      {/* Nirn sits BETWEEN the rings and the moons in document order, so a
+          moon on the near side of its orbit passes in front of the world and
+          one on the far side is drawn behind it. That occlusion is most of
+          what sells the tilt; the dimming only helps it. */}
+      <image className="wheel-nirn" href={nirnUrl} x="45.2" y="45.2" width="9.6" height="9.6" />
+      <circle className="wheel-nirn-rim" cx="50" cy="50" r="4.9" />
+
+      {/*
+        * The moons keep their phase shadows over the photographs.
+        *
+        * The sphere in the sheet is lit from its own direction and knows
+        * nothing about where Magnus is standing; the shadow is the reading,
+        * and it has to survive the body underneath it changing from a flat
+        * disc to a picture. Clipped to the moon's circle so it cannot spill
+        * onto the stars.
+        */}
+      <g className="wheel-arm wheel-arm--secunda">
+        <image className="wheel-moon" href={secundaUrl} x="-2.35" y="-2.35" width="4.7" height="4.7" />
+        <g clipPath={`url(#clip-secunda-${gid})`}>
+          <circle className="wheel-shade wheel-shade--secunda" cx="-4.2" cy="0" r="2.35" />
+        </g>
+      </g>
+
+      <g className="wheel-arm wheel-arm--masser">
+        <image className="wheel-moon" href={masserUrl} x="-3.6" y="-3.6" width="7.2" height="7.2" />
+        <g clipPath={`url(#clip-masser-${gid})`}>
+          <circle className="wheel-shade wheel-shade--masser" cx="-6.4" cy="0" r="3.6" />
+        </g>
+      </g>
+    </svg>
+  );
+
+  // Inside the Firmament the wheel is a layer of somebody else's scene.
+  if (bare) return face;
+
   return (
     <figure className="wheel">
-      <svg
-        ref={root}
-        // Cropped to what the tilt actually occupies: a projected ring of 48
-        // reaches about 28 units either side of centre vertically, and framing
-        // the full square would letterbox the wheel inside its own plate.
-        viewBox="0 19 100 62"
-        className="wheel__face"
-        role="img"
-        aria-label="A wheel of Mundus: Nirn at the centre, the two moons, the sun, and the eight planets of the Divines"
-      >
-        <defs>
-          <radialGradient id={`wheel-night-${gid}`} cx="50%" cy="42%">
-            <stop offset="0%" stopColor="#1c1b26" />
-            <stop offset="70%" stopColor="#0c0b12" />
-            <stop offset="100%" stopColor="#07060a" />
-          </radialGradient>
-          {/* Each moon is clipped to its own disc, so the shadow that gives it a
-              phase cannot spill onto the sky beside it. */}
-          <clipPath id={`clip-masser-${gid}`}><circle cx="0" cy="0" r="3.6" /></clipPath>
-          <clipPath id={`clip-secunda-${gid}`}><circle cx="0" cy="0" r="2.35" /></clipPath>
-        </defs>
-
-        {/* The night is tilted with everything else. A round field behind an
-            elliptical system leaves a third of the plate empty above and below,
-            and reads as a system painted on a coin rather than as a system seen
-            at an angle. Same projected outline as the rim, three units wider. */}
-        <path className="wheel-field" d={ringPath(R_RIM + 3)} fill={`url(#wheel-night-${gid})`} />
-
-        {/* The rim, and the twelve months around it. The month in season is lit
-            — the one place this wheel says what time of year it is. */}
-        <path className="wheel-rim" d={ringPath(R_RIM)} />
-        {MONTH_LENGTHS.map((_, i) => {
-          const t = i / 12;
-          const a = on(R_RIM - 2.4, t);
-          const b = on(R_RIM, t);
-          return (
-            <line
-              key={i}
-              className={`wheel-tick${i + 1 === month ? ' wheel-tick--season' : ''}`}
-              x1={a.x} y1={a.y} x2={b.x} y2={b.y}
-            />
-          );
-        })}
-
-        {/* The eight, on their rings, standing still. */}
-        {DIVINE_PLANETS.map((planet, i) => {
-          const r = RING_INNER + i * RING_STEP;
-          const p = on(r, i / DIVINE_PLANETS.length);
-          return (
-            <g key={planet.name}>
-              {/* Each ring's dashes are offset from its neighbour's, or all
-                  eight line up radially and the rings stop reading as rings —
-                  they become one starburst hatching the whole field. */}
-              <path className="wheel-ring" d={ringPath(r)} strokeDashoffset={i * 1.7} />
-              <circle
-                className="wheel-planet"
-                cx={p.x} cy={p.y} r={1.15 * p.scale}
-                style={{ transformOrigin: `${p.x}px ${p.y}px`, opacity: p.depth > 0 ? 0.72 : 1 }}
-              >
-                <title>{`${planet.name}, of ${planet.of}`}</title>
-              </circle>
-            </g>
-          );
-        })}
-
-        {/* Magnus, on the outermost ring, opposite Masser. */}
-        <path className="wheel-ring wheel-ring--sun" d={ringPath(R_MAGNUS)} />
-        <g className="wheel-arm wheel-arm--magnus">
-          <circle className="wheel-sun-halo" r="4.4" />
-          <circle className="wheel-sun" r="2.6" />
-        </g>
-
-        {/* The two moons. Masser is the larger and ruddy; Secunda the small pale
-            one — as they hang over Skyrim. */}
-        <path className="wheel-ring wheel-ring--moon" d={ringPath(R_MASSER)} />
-        <path className="wheel-ring wheel-ring--moon" d={ringPath(R_SECUNDA)} />
-
-        {/* Nirn sits BETWEEN the rings and the moons in document order, so a
-            moon on the near side of its orbit passes in front of the world and
-            one on the far side is drawn behind it. That occlusion is most of
-            what sells the tilt; the dimming only helps it. */}
-        <circle className="wheel-nirn" cx="50" cy="50" r="4.2" />
-        <circle className="wheel-nirn-rim" cx="50" cy="50" r="4.2" />
-
-        <g className="wheel-arm wheel-arm--secunda">
-          <circle className="wheel-moon wheel-moon--secunda" r="2.35" />
-          <g clipPath={`url(#clip-secunda-${gid})`}>
-            <circle className="wheel-shade wheel-shade--secunda" cx="-4.2" cy="0" r="2.35" />
-          </g>
-          <circle className="wheel-moon-rim" r="2.35" />
-        </g>
-
-        <g className="wheel-arm wheel-arm--masser">
-          <circle className="wheel-moon wheel-moon--masser" r="3.6" />
-          <g clipPath={`url(#clip-masser-${gid})`}>
-            <circle className="wheel-shade wheel-shade--masser" cx="-6.4" cy="0" r="3.6" />
-          </g>
-          <circle className="wheel-moon-rim" r="3.6" />
-        </g>
-      </svg>
-
+      {face}
       <figcaption className="wheel__legend">
         <p className="wheel__title">The Wheel of Mundus</p>
         <dl className="wheel__readings">
