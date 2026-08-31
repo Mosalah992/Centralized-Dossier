@@ -240,13 +240,39 @@ export function Orrery({ bare = false }: Props) {
       node.style.opacity = String(p.depth > 0 ? 0.72 : 1);
     };
 
+    /*
+     * THE WHEEL WINDS INTO PLACE, and this is the only reason it is watchable.
+     *
+     * At their reckoned courses these bodies crawl. Masser turns once an
+     * in-world day, which at the archive's two-to-one rate is one turn every
+     * twelve real hours — about half a degree a minute. A reader who looks for
+     * five seconds sees a still picture, and the sandglass already taught this
+     * archive that lesson the expensive way: a level measuring a whole day
+     * moves a pixel every twenty-one minutes and can never be seen to move.
+     *
+     * So the wheel arrives spun back and settles: a quadratic ease that is a
+     * turn and a half out at the start and exactly zero after three seconds.
+     * It is an ENTRANCE, not a rate. Nothing is claimed by it, the positions it
+     * settles on are the true ones, and after three seconds the wheel is
+     * telling the same slow truth it always was.
+     */
+    const opened = performance.now();
+    const WIND_MS = 3000;
+    const wind = () => {
+      const t = (performance.now() - opened) / WIND_MS;
+      if (t >= 1 || still) return 0;
+      const ease = (1 - t) * (1 - t);
+      return ease * 1.5;
+    };
+
     const timer = createTimer({
       duration: Infinity,
       onUpdate: () => {
         const turn = revolutions();
-        place(masser, R_MASSER, turn.masser);
-        place(secunda, R_SECUNDA, turn.secunda);
-        place(magnus, R_MAGNUS, turn.magnus);
+        const w = wind();
+        place(masser, R_MASSER, turn.masser - w);
+        place(secunda, R_SECUNDA, turn.secunda - w * 1.2);
+        place(magnus, R_MAGNUS, turn.magnus - w);
 
         /*
          * The phase, as a shadow disc slid across the moon.
