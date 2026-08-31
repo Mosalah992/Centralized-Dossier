@@ -521,36 +521,10 @@
   }
 }
 
-/* The astrolabe, stamped into the back of the cabinet.
- *
- * It was first hung in the top-right corner and that was wrong twice over: it
- * ran off the cabinet's edge, and it landed on the HONORS & CALENDAR plate. An
- * ornament that occludes a label is not an ornament.
- *
- * So it goes BEHIND, centred, at the weight of a watermark — the way a maker's
- * mark is stamped into the backboard of a real cabinet and shows only between
- * the volumes standing in front of it. It cannot collide with anything because
- * everything else on this page is painted over it, and it cannot be clipped
- * because it is inset from all four edges.
- */
-.archive-cabinet__instrument {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  /* Behind the shelves and the books, which create their own stacking
-     contexts; z-index 0 rather than -1 so it stays inside the cabinet's own
-     context and cannot fall behind the page. */
-  z-index: 0;
-  pointer-events: none;
-}
-
-/* Faint enough that it reads as tooling in the wood rather than as a second
-   object competing with nine covers. */
-.archive-cabinet__instrument .astro { opacity: 0.16; }
-
-@media (max-width: 899px) {
-  /* On a phone the covers already fill the cabinet and the mark would only be
-     visible in the gaps. It is an ornament; it goes. */
-  .archive-cabinet__instrument { display: none; }
-}
+/* THE CABINET CARRIES NO INSTRUMENT, and that is a decision rather than an
+   omission. An astrolabe was hung here, first in the corner and then stamped
+   into the backboard as a watermark; both readings were the same verdict from
+   the person it was built for — a clock in a room of ledgers is out of place,
+   and at watermark weight it was not even a good one. The instrument belongs
+   on the calendar's plate, where the archive is already saying what time it
+   is. See web/src/components/Astrolabe.tsx. */

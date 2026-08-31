@@ -1,17 +1,38 @@
 /* The Astrolabe of the Realm.
  *
- * Gold on dark, as the shelf is. It borrows the archive's own tokens rather
- * than inventing a palette, and it is deliberately QUIETER than the instrument
- * it was modelled on: the anime.js dial is lit in five saturated colours
- * because it is advertising an animation engine. This one sits in a Thalmor
- * archive, where the only colours are gold, ink and the rubricator's red.
+ * IT BRINGS ITS OWN NIGHT, and every colour below follows from that.
  *
- * Every value below is painted from a token or from the gold the shelf uses,
- * so the instrument reads the same on the shelf's dark ground and on the
- * calendar's parchment.
+ * The first version painted with `--foil` straight onto whatever was behind
+ * it. On the shelf's near-black cabinet that was right. On the calendar's
+ * parchment it was a pale cover-lettering gold on cream — barely a mark, and
+ * the whole face dissolved into the plate. Repainting it in a dark bronze
+ * fixed the contrast and broke something else: the note that used to sit in
+ * ledger.css, over the panel this component replaced, had already recorded why
+ * — "an asterism drawn as dark dots on cream reads as a stain rather than a
+ * sky." Nine dark specks on paper is a stain.
+ *
+ * So the instrument carries a night disc of its own and is lettered in foil on
+ * top of it, which is the ground that palette was chosen for. The shelf's copy
+ * drops the disc: the cabinet is already dark, and a second dark circle there
+ * would read as a grey plate floating behind the books.
+ *
+ * Colours are set once, as tokens, in the two blocks below. Everything after
+ * them is geometry and weight.
  */
 
 .astro {
+  /* ── Night. The default: the calendar's plate, or any parchment page. ── */
+
+  /* The ruled lines, and the marks a reader counts by. */
+  --astro-line: color-mix(in srgb, var(--foil, #b89f6e) 62%, transparent);
+  --astro-strong: color-mix(in srgb, var(--foil, #b89f6e) 96%, #f3e7c8);
+  /* Stars are the brightest thing on the face — they are the sky. */
+  --astro-star: #f4ead1;
+  --astro-star-halo: color-mix(in srgb, var(--foil, #b89f6e) 55%, transparent);
+  /* The rims and the asterism's joins, which are meant to be faint. */
+  --astro-faint: color-mix(in srgb, var(--foil, #b89f6e) 34%, transparent);
+  --astro-hair: color-mix(in srgb, var(--foil, #b89f6e) 26%, transparent);
+
   margin: 0;
   display: flex;
   flex-direction: column;
@@ -19,6 +40,9 @@
   gap: 0.7rem;
   max-width: 100%;
 }
+
+/* ── The dark cabinet, which supplies its own night. ──────────────────── */
+.astro--quiet .astro-field { opacity: 0; }
 
 .astro__face {
   display: block;
@@ -30,55 +54,64 @@
 /* ── The bezel ────────────────────────────────────────────────────────── */
 
 .astro-tick {
-  stroke: color-mix(in srgb, var(--foil, #b89f6e) 55%, transparent);
-  stroke-width: 0.45;
+  stroke: var(--astro-line);
+  stroke-width: 0.5;
   stroke-linecap: round;
 }
 
-/* One in twelve is longer and brighter — the marks a reader counts by. */
+/* One in twelve is longer and heavier — the marks a reader counts by. */
 .astro-tick--hour {
-  stroke: color-mix(in srgb, var(--foil, #b89f6e) 90%, #f3e7c8);
-  stroke-width: 0.7;
+  stroke: var(--astro-strong);
+  stroke-width: 0.85;
 }
 
 .astro-rim {
   fill: none;
-  stroke: color-mix(in srgb, var(--foil, #b89f6e) 34%, transparent);
-  stroke-width: 0.4;
+  stroke: var(--astro-faint);
+  stroke-width: 0.45;
 }
 
 .astro-rim--inner {
   stroke-dasharray: 0.8 2.2;
-  stroke: color-mix(in srgb, var(--foil, #b89f6e) 26%, transparent);
+  stroke: var(--astro-hair);
 }
 
 /* ── The hour ring ────────────────────────────────────────────────────── */
 
-.astro-hour { fill: color-mix(in srgb, var(--foil, #b89f6e) 50%, transparent); }
-.astro-hour--quarter { fill: color-mix(in srgb, var(--foil, #b89f6e) 95%, #f3e7c8); }
+.astro-hour { fill: var(--astro-line); }
+.astro-hour--quarter { fill: var(--astro-strong); }
 
 /* ── The season's asterism ────────────────────────────────────────────── */
 
 /*
- * The faintest thing on the face, on purpose. The constellations elsewhere in
- * the archive sit "at the weight of a watermark, faint enough that no reader
- * takes them for a record" — these are invented, and they are drawn as such
- * here too.
+ * The stars are solid and the lines between them are not. The constellations
+ * elsewhere in the archive sit "at the weight of a watermark, faint enough that
+ * no reader takes them for a record" — these are invented, and the JOINS are
+ * drawn as such. The stars themselves are positions, which is a fact, so they
+ * are printed at full weight.
  */
 .astro-join {
-  stroke: color-mix(in srgb, var(--foil, #b89f6e) 30%, transparent);
-  stroke-width: 0.3;
+  stroke: var(--astro-hair);
+  stroke-width: 0.35;
 }
 
 .astro-star {
-  fill: color-mix(in srgb, var(--foil, #b89f6e) 72%, #fff6dd);
+  fill: var(--astro-star);
+  /* The glow is the star, not a filter — the same trick the panel this
+     replaced used, and for the same reason: a drop-shadow on nine small
+     circles costs more than it is worth on a page that already paints a year. */
+  stroke: var(--astro-star-halo);
+  stroke-width: 0.8;
+  paint-order: stroke;
 }
 
 /* ── The seal ─────────────────────────────────────────────────────────── */
 
-.astro-mark {
-  fill: color-mix(in srgb, var(--foil, #b89f6e) 80%, transparent);
-}
+.astro-mark { fill: var(--astro-line); }
+
+/* Every seventh mark is heavier, so the seal's ring has quarters to count by
+   the way the bezel and the hour ring have theirs. */
+.astro-mark--quarter { fill: var(--astro-strong); }
 
 /* The one place the rubric red appears: the centre of the instrument, which is
    the Dominion's own mark and the only thing on the face that is not a
@@ -86,14 +119,23 @@
 .astro-core {
   fill: none;
   stroke: var(--rubric, #a33417);
-  stroke-width: 0.7;
+  stroke-width: 0.8;
 }
 
 /* ── The fast hand ────────────────────────────────────────────────────── */
 
+/*
+ * The only thing on the face a reader can watch move, so it may not be subtle
+ * — but it is not red either. A long red hand off a centre pivot is a WALL
+ * CLOCK, and the whole point of this object is that it is an instrument that
+ * happens to keep time rather than a clock that has been decorated. It is
+ * struck in the same foil as the hour marks, and the rubric stays where it
+ * belongs: the seal at the centre, which is the one thing on the face that is
+ * not a measurement.
+ */
 .astro-needle line {
-  stroke: color-mix(in srgb, var(--gold-bright, #d8c187) 85%, transparent);
-  stroke-width: 0.55;
+  stroke: var(--astro-strong);
+  stroke-width: 0.9;
   stroke-linecap: round;
 }
 
@@ -118,18 +160,20 @@
 .astro__note {
   font-size: 0.76rem;
   font-style: italic;
-  color: color-mix(in srgb, var(--foil, #b89f6e) 70%, transparent);
+  color: var(--ink-soft, #4d4232);
 }
+
+/* The night disc. Painted by the component, which owns the gradient. */
+.astro-field { transition: none; }
 
 /* ── The shelf's quieter one ──────────────────────────────────────────── */
 
 /*
  * On the shelf the instrument is an ornament beside nine volumes, not the
- * subject of the page. It loses its legend and drops back so it cannot compete
- * with the covers, which are the thing a reader came to open.
+ * subject of the page. It loses its legend so it cannot compete with the
+ * covers, which are the thing a reader came to open. Its overall weight is set
+ * by shelf.css, which knows what it is sitting on.
  */
-.astro--quiet { opacity: 0.55; }
-/* The shelf overrides this with its own weight — see shelf.css. */
 .astro--quiet .astro__legend { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -138,10 +182,4 @@
   .astro-tick,
   .astro-star,
   .astro-mark { opacity: 1 !important; }
-}
-
-/* Every seventh mark is heavier, so the seal's ring has quarters to count by
-   the way the bezel and the hour ring do. */
-.astro-mark--quarter {
-  fill: color-mix(in srgb, var(--foil, #b89f6e) 95%, #f3e7c8);
 }

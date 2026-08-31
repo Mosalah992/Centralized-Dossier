@@ -18,7 +18,7 @@
 // test/bundle.test.ts fails if anime.js appears in the entry chunk, because
 // invariant 7 is exactly this and it has been broken once already.
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useId, useMemo, useRef } from 'react';
 
 import { animate, createTimer, stagger, svg, utils } from 'animejs';
 
@@ -54,6 +54,10 @@ interface Props {
 
 export function Astrolabe({ size = 260, quiet = false, legend = true }: Props) {
   const root = useRef<SVGSVGElement>(null);
+  // The gradient is referenced by url(#id), which is document-global — two
+  // instruments on one page sharing an id would have the second silently
+  // repaint the first.
+  const gid = useId().replace(/:/g, '');
 
   /*
    * The season's sign, or the Serpent when the month has none.
@@ -185,6 +189,34 @@ export function Astrolabe({ size = 260, quiet = false, legend = true }: Props) {
         role="img"
         aria-label={`An astrolabe of the realm, showing the sign of ${sign.name}`}
       >
+        {/*
+          * NIGHT, under everything.
+          *
+          * The asterism this replaced sat on its own dark disc, and the note in
+          * ledger.css said why: "an asterism drawn as dark dots on cream reads
+          * as a stain rather than a sky." That is exactly right, and drawing
+          * the instrument in bronze on the parchment ignored it — the stars
+          * became nine dark specks on paper and the whole face washed out into
+          * the plate behind it.
+          *
+          * So the instrument brings its own night with it, and can then be
+          * lettered in the same foil the covers are. The shelf's copy hides
+          * this: the cabinet is already dark, and a second dark disc there
+          * would be a grey plate floating behind the books.
+          */}
+        <defs>
+          <radialGradient id={`astro-night-${gid}`} cx="50%" cy="45%">
+            <stop offset="0%" stopColor="#1b1a24" />
+            <stop offset="72%" stopColor="#0c0b11" />
+            <stop offset="100%" stopColor="#08070c" />
+          </radialGradient>
+        </defs>
+        <circle
+          className="astro-field"
+          cx={cx} cy={cy} r={R_OUTER + 2.5}
+          fill={`url(#astro-night-${gid})`}
+        />
+
         {/* The bezel: ticks around the rim, turning with the day. */}
         <g className="astro-bezel" style={{ transformOrigin: '50px 50px' }}>
           {ticks.map((i) => {

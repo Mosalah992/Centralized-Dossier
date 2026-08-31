@@ -1,7 +1,7 @@
 // The archive index. The cabinet is the primary object on this page; the
 // heading stays ceremonial but compact so the six physical volumes dominate.
 
-import { Suspense, lazy, useRef } from 'react';
+import { useRef } from 'react';
 import { useGSAP } from '@gsap/react';
 
 import { useShelf } from '../api';
@@ -10,21 +10,6 @@ import { SHELF, isOwnWork } from '../../../shared/volumes';
 import { BINDINGS } from '../theme';
 import { Book } from './Book';
 import { Notice } from './Notice';
-
-/*
- * THE ASTROLABE IS LAZY HERE, AND IT HAS TO BE.
- *
- * Shelf is a static import in App.tsx, so anything it imports normally lands in
- * the entry chunk — the one a reader downloads before they have answered the
- * gate, and the one test/bundle.test.ts caps. anime.js is larger than the
- * headroom that chunk had left, so importing it directly would have broken the
- * ceiling rather than merely nudged it.
- *
- * Behind React.lazy it becomes its own chunk, fetched after the shelf has
- * painted. Nobody waiting at the seal pays for it, and the cabinet does not
- * wait on it either — see the null fallback below.
- */
-const Astrolabe = lazy(() => import('./Astrolabe').then((m) => ({ default: m.Astrolabe })));
 
 interface Props {
   onOpen: (href: string) => void;
@@ -142,14 +127,6 @@ export function Shelf({ onOpen }: Props) {
           <span className="archive-cabinet__title">Archive Cabinet</span>
         </div>
 
-        {/* The maker's mark on the cabinet's backboard. A null fallback rather
-            than a notice: it is an ornament, and a cabinet that announces a
-            missing ornament is worse than one that simply has not got it. */}
-        <div className="archive-cabinet__instrument" aria-hidden>
-          <Suspense fallback={null}>
-            <Astrolabe size={420} quiet legend={false} />
-          </Suspense>
-        </div>
         <div className="archive-cabinet__interior">
           {SHELF.map((section) => (
             <section

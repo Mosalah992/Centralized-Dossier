@@ -581,34 +581,6 @@ function Hourglass({ fraction }: { fraction: number }) {
   );
 }
 
-/**
- * The sign whose season it is, drawn from its own stars.
- *
- * The asterism is data, not art: shared/constellations.ts gives each sign star
- * positions in a 100x100 field and pairs of indices to join, so this draws
- * whatever is in the table rather than carrying thirteen hand-made pictures
- * that would drift from it.
- */
-function Asterism({ sign }: { sign: Constellation }) {
-  return (
-    <svg className="sign__field" viewBox="-8 -8 116 116" aria-hidden focusable="false">
-      {sign.lines.map(([a, b], i) => {
-        const from = sign.stars[a];
-        const to = sign.stars[b];
-        if (!from || !to) return null;
-        return (
-          <line key={i} className="sign__line" x1={from[0]} y1={from[1]} x2={to[0]} y2={to[1]} />
-        );
-      })}
-      {sign.stars.map(([x, y], i) => (
-        // The first star of each sign is its brightest, by the table's own
-        // ordering, so it carries the larger disc.
-        <circle key={i} className="sign__star" cx={x} cy={y} r={i === 0 ? 3.4 : 2.2} />
-      ))}
-    </svg>
-  );
-}
-
 /** The plate above the year: what day it is in the realm, and what hour. */
 function InWorldPlate({ today }: { today: CalendarDay | null }) {
   /*

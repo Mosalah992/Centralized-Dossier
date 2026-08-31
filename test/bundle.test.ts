@@ -134,9 +134,9 @@ describe.skipIf(!existsSync(DIST))('the Archives Editor', () => {
  * imports statically — would have spent nearly all of it on an ornament that a
  * reader stopped at the gate cannot even see.
  *
- * So the shelf reaches it through React.lazy and the calendar gets it inside
- * its own already-lazy view. This is invariant 7 again, and the Editor chunk
- * proved that guarding a render is not the same as guarding an import.
+ * It reaches readers inside the calendar's own already-lazy view. This is
+ * invariant 7 again, and the Editor chunk proved that guarding a render is not
+ * the same as guarding an import.
  */
 describe.skipIf(!entry)('anime.js', () => {
   it.each([
@@ -147,9 +147,20 @@ describe.skipIf(!entry)('anime.js', () => {
     expect(entry!.source.includes(needle), `${needle} found in ${entry!.name}`).toBe(false);
   });
 
-  it('is in a chunk of its own, so it arrives after the shelf has painted', () => {
-    const own = readdirSync(DIST).filter((f) => /^Astrolabe-.*\.js$/.test(f));
-    expect(own).toHaveLength(1);
-    expect(readFileSync(new URL(own[0]!, DIST), 'utf8')).toContain('astro-bezel');
+  /*
+   * WHERE it lands is Rollup's business; that it lands SOMEWHERE ELSE is ours.
+   *
+   * This asserted a chunk named Astrolabe-*.js while the shelf pulled the
+   * component through React.lazy. The shelf no longer carries the instrument,
+   * so Rollup folds it into the calendar's view chunk and that filename stops
+   * existing — which would have failed a test that was never really about the
+   * filename. The invariant is the one above plus this: it ships, and it ships
+   * somewhere a reader at the seal does not pay for.
+   */
+  it('ships in a lazy chunk rather than not at all', () => {
+    const carriers = readdirSync(DIST)
+      .filter((f) => f.endsWith('.js') && f !== entry!.name)
+      .filter((f) => readFileSync(new URL(f, DIST), 'utf8').includes('astro-bezel'));
+    expect(carriers, 'the astrolabe is in no chunk at all').not.toHaveLength(0);
   });
 });
