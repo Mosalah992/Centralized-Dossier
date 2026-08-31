@@ -307,25 +307,23 @@ export function Orrery({ bare = false }: Props) {
         <path className="wheel-field" d={ringPath(R_RIM + 3)} fill={`url(#wheel-night-${gid})`} />
       )}
 
-      {/* The rim, and the twelve months around it. The month in season is lit
-          — the one place this wheel says what time of year it is. */}
+      {/*
+        * The rim, and twelve even marks for the twelve months.
+        *
+        * NONE OF THEM IS SINGLED OUT. The month in season was marked here — in
+        * the rubric first, then in a heavier gold once Nirn's red ring came off
+        * — and it never stopped reading as a blemish on the rim rather than as
+        * a mark on it. It also had nothing to say that the plate below does not
+        * already say better: the sign in season is named there in full, in
+        * words, with its guardian and its charge. A ring of twelve is a ring of
+        * twelve.
+        */}
       <path className="wheel-rim" d={ringPath(R_RIM)} />
       {MONTH_LENGTHS.map((_, i) => {
         const t = i / 12;
-        // The month in season reaches further in than its eleven neighbours, so
-        // it is found by shape as well as by weight — it used to be found by
-        // being the only red thing on a gold wheel, and that stopped being
-        // available when Nirn's red ring came off.
-        const season = i + 1 === month;
-        const a = on(R_RIM - (season ? 4.4 : 2.4), t);
+        const a = on(R_RIM - 2.4, t);
         const b = on(R_RIM, t);
-        return (
-          <line
-            key={i}
-            className={`wheel-tick${i + 1 === month ? ' wheel-tick--season' : ''}`}
-            x1={a.x} y1={a.y} x2={b.x} y2={b.y}
-          />
-        );
+        return <line key={i} className="wheel-tick" x1={a.x} y1={a.y} x2={b.x} y2={b.y} />;
       })}
 
       {/* The eight, on their rings, standing still. */}
