@@ -5,13 +5,14 @@
 // Reads  Assets/Arcane mini game assets/*.png
 // Writes web/src/assets/arcane/*.webp
 //
-// PROVENANCE IS THE KEEPER'S CALL AND IS NOT SETTLED HERE. The design notes for
-// this game say plainly: "Do not extract textures, meshes, or audio from game
-// files. Repo is public." These sprites were supplied by the keeper against that
-// note and the question was raised with them. If the answer is that they came
-// out of game files, the fix is not in this script — it is to keep both the
-// sources and the output out of git, because `web/src/assets` is served from
-// public URLs whatever the gate is doing.
+// PROVENANCE, ASKED AND ANSWERED. The design notes for this game say plainly:
+// "Do not extract textures, meshes, or audio from game files. Repo is public."
+// The sprites read as first-person Altmer gauntlets and the question was
+// therefore put to the keeper, who confirmed they are their own work and free
+// to embed. That answer is why both the sources under `Assets/` and the output
+// here are committed rather than held back — everything under `web/src/assets`
+// is served from public URLs whatever the gate is doing, so the question had to
+// be settled before any of it shipped, not after.
 //
 // THE HANDS ARE NOT TRIMMED. Every hand pose is delivered on the same 1672x941
 // frame, and that shared frame is the only thing keeping the poses registered to

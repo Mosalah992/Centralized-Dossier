@@ -196,12 +196,13 @@ its feet land. Placed by hand they floated. Both constants were read off this
 background and neither survives a different one — the honest limit of a faked
 perspective.
 
-**Provenance is unsettled and is the keeper's call.** The game's own design
-notes say not to extract textures from game files and that the repo is public;
-the supplied sprites appear to be exactly that, and the question was put to the
-keeper rather than decided here. If the answer is that they came out of game
-files, both `Assets/Arcane mini game assets/` and `web/src/assets/arcane/` need
-to leave git — everything under `web/src/assets` is served from public URLs.
+**Provenance was asked and answered: the sprites are the keeper's own work**,
+confirmed by them and free to embed. Worth keeping the exchange on record rather
+than only the outcome — the game's own design notes forbid extracting textures
+from game files in a public repo, these read as first-person Altmer gauntlets,
+and the question was put before anything was pushed. Everything under
+`web/src/assets` is served from public URLs whatever the gate does, so that is
+the order it has to happen in. Apply the same test to the next art that arrives.
 
 `seal-invite` in `Gate.css` is the last CSS animation in the archive and stays CSS.
 It is the login affordance — its own comment records that readers could not find the
