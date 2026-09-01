@@ -138,6 +138,33 @@ describe.skipIf(!existsSync(DIST))('the Archives Editor', () => {
  * invariant 7 again, and the Editor chunk proved that guarding a render is not
  * the same as guarding an import.
  */
+/*
+ * Slay the Heretic.
+ *
+ * A canvas engine, a licensing model and five sprites. None of it belongs
+ * anywhere near a reader who has not got past the seal — the game is a route
+ * off the shelf, not part of the archive's furniture. Invariant 7's shape for
+ * the third time: guarded by React.lazy in App.tsx, and checked here rather
+ * than trusted, because the Editor chunk already proved that guarding the
+ * render is not the same as guarding the import.
+ */
+describe.skipIf(!entry)('the game', () => {
+  it.each([
+    ['its markup', 'slay__canvas'],
+    ['its office', 'Thaumaturgical'],
+    ['its effects', 'frostBranch'],
+  ])('is absent from the gate chunk: %s', (_what, needle) => {
+    expect(entry!.source.includes(needle), `${needle} found in ${entry!.name}`).toBe(false);
+  });
+
+  it('ships in a lazy chunk rather than not at all', () => {
+    const carriers = readdirSync(DIST)
+      .filter((f) => f.endsWith('.js') && f !== entry!.name)
+      .filter((f) => readFileSync(new URL(f, DIST), 'utf8').includes('slay__canvas'));
+    expect(carriers, 'the game is in no chunk at all').not.toHaveLength(0);
+  });
+});
+
 describe.skipIf(!entry)('anime.js', () => {
   it.each([
     ['the library itself', 'animejs'],

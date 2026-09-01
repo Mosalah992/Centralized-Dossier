@@ -1,0 +1,375 @@
+/* Slay the Heretic.
+ *
+ * The game takes the whole viewport and does not use the archive's page
+ * furniture — no shelf, no volume binding, no parchment. It is a different
+ * room in the same building, so it keeps the archive's typefaces and its gold,
+ * and nothing else.
+ *
+ * Hand-written, like every other stylesheet here. No framework: the archive's
+ * whole presentation layer is custom properties and plain rules, and a utility
+ * framework in one route would be the only place in the codebase you could not
+ * read a component's appearance off its own stylesheet.
+ */
+
+.slay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: #0a0806;
+  color: #e9dec4;
+  overflow: auto;
+}
+
+.slay__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+/* ── Cards: the menu and the pause overlay share one ─────────────────── */
+
+.slay--menu,
+.slay__pause {
+  display: grid;
+  place-items: center;
+  padding: 2rem 1.25rem;
+}
+
+.slay__pause {
+  position: absolute;
+  inset: 0;
+  background: rgba(6, 5, 4, 0.78);
+  backdrop-filter: blur(3px);
+}
+
+.slay__card {
+  width: min(34rem, 100%);
+  padding: clamp(1.5rem, 4vw, 2.6rem);
+  border: 1px solid rgba(201, 162, 39, 0.32);
+  border-radius: 2px;
+  background:
+    radial-gradient(70% 90% at 50% 0%, rgba(201, 162, 39, 0.10), transparent 70%),
+    linear-gradient(180deg, #17120d, #0c0907);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.05), 0 24px 60px rgba(0, 0, 0, 0.6);
+  text-align: center;
+}
+
+.slay__eyebrow {
+  margin: 0 0 0.5rem;
+  font-family: var(--display);
+  font-size: 0.6rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--gold) 70%, transparent);
+}
+
+.slay__title {
+  margin: 0 0 0.8rem;
+  font-family: var(--display);
+  font-size: clamp(1.6rem, 5vw, 2.6rem);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold-bright);
+}
+
+.slay__blurb {
+  margin: 0 auto 1.2rem;
+  max-width: 26rem;
+  line-height: 1.6;
+  color: color-mix(in srgb, #e9dec4 78%, transparent);
+}
+
+.slay__keys {
+  margin: 0 auto 1.6rem;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.86rem;
+  color: color-mix(in srgb, #e9dec4 62%, transparent);
+}
+
+.slay__keys b { color: var(--gold-bright); font-weight: 600; }
+
+.slay__menuActions {
+  display: grid;
+  gap: 0.5rem;
+  justify-items: stretch;
+}
+
+.slay__begin,
+.slay__leave,
+.slay__submit,
+.slay__enter,
+.slay__back,
+.slay__reveal {
+  appearance: none;
+  cursor: pointer;
+  font-family: var(--display);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border-radius: 2px;
+  transition: background var(--dur-hand, 0.35s) var(--ease),
+    border-color var(--dur-hand, 0.35s) var(--ease),
+    color var(--dur-hand, 0.35s) var(--ease);
+}
+
+.slay__begin,
+.slay__submit,
+.slay__enter {
+  padding: 0.7rem 1.2rem;
+  font-size: 0.72rem;
+  border: 1px solid rgba(201, 162, 39, 0.55);
+  background: linear-gradient(180deg, rgba(201, 162, 39, 0.22), rgba(90, 60, 20, 0.5));
+  color: var(--gold-bright);
+}
+
+.slay__begin:hover,
+.slay__submit:hover,
+.slay__enter:hover {
+  background: linear-gradient(180deg, rgba(201, 162, 39, 0.34), rgba(110, 74, 24, 0.6));
+}
+
+.slay__leave,
+.slay__back,
+.slay__reveal {
+  padding: 0.55rem 1rem;
+  font-size: 0.64rem;
+  border: 1px solid rgba(201, 162, 39, 0.22);
+  background: transparent;
+  color: color-mix(in srgb, #e9dec4 66%, transparent);
+}
+
+.slay__leave:hover,
+.slay__back:hover,
+.slay__reveal:hover {
+  border-color: rgba(201, 162, 39, 0.5);
+  color: var(--gold-bright);
+}
+
+.slay__smallprint {
+  margin: 1.4rem 0 0;
+  font-size: 0.74rem;
+  font-style: italic;
+  color: color-mix(in srgb, #e9dec4 42%, transparent);
+}
+
+/* ── The Office ──────────────────────────────────────────────────────── */
+
+.slay--bureau { padding: clamp(1.2rem, 4vw, 3rem) 1.25rem 5rem; }
+
+.slay__bureau {
+  width: min(60rem, 100%);
+  margin-inline: auto;
+}
+
+.slay__bureauHead { text-align: center; margin-bottom: 1.8rem; }
+.slay__bureauHead h1 {
+  margin: 0 0 0.4rem;
+  font-family: var(--display);
+  font-size: clamp(1.3rem, 3.4vw, 2rem);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-bright);
+}
+
+.slay__rank { margin: 0; font-size: 0.86rem; color: color-mix(in srgb, #e9dec4 70%, transparent); }
+.slay__rank b { color: var(--gold-bright); font-weight: 600; }
+
+.slay__cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
+  gap: 1.2rem;
+}
+
+.slay__panel {
+  padding: 1.2rem;
+  border: 1px solid rgba(201, 162, 39, 0.2);
+  background: linear-gradient(180deg, rgba(30, 24, 17, 0.7), rgba(14, 11, 8, 0.7));
+}
+
+.slay__panel h2 {
+  margin: 0 0 0.7rem;
+  font-family: var(--display);
+  font-size: 0.66rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--gold) 78%, transparent);
+}
+
+.slay__panel h2 + * { margin-top: 0; }
+.slay__panel > h2:not(:first-child) { margin-top: 1.4rem; }
+
+.slay__effects {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: 0.35rem;
+}
+
+.slay__effect {
+  appearance: none;
+  cursor: pointer;
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.5rem 0.6rem;
+  text-align: left;
+  border: 1px solid rgba(201, 162, 39, 0.18);
+  background: rgba(0, 0, 0, 0.25);
+  color: #e9dec4;
+  border-radius: 2px;
+}
+
+.slay__effect:hover { border-color: rgba(201, 162, 39, 0.45); }
+.slay__effect.is-on {
+  border-color: var(--gold);
+  background: rgba(201, 162, 39, 0.16);
+}
+
+/* The two nobody gets a seal for are shown, not hidden — an office you cannot
+   submit the wrong thing to is not an office. The rubric edge is the warning. */
+.slay__effect.is-proscribed { border-left: 3px solid var(--rubric); }
+
+.slay__effectName { font-size: 0.84rem; }
+.slay__effectSchool {
+  font-family: var(--display);
+  font-size: 0.54rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, #e9dec4 45%, transparent);
+}
+
+.slay__note {
+  margin: 0.7rem 0 0;
+  font-size: 0.82rem;
+  font-style: italic;
+  color: color-mix(in srgb, #e9dec4 60%, transparent);
+}
+
+.slay__deliveries { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+
+.slay__delivery {
+  appearance: none;
+  cursor: pointer;
+  padding: 0.4rem 0.75rem;
+  font-family: var(--display);
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  border: 1px solid rgba(201, 162, 39, 0.18);
+  background: rgba(0, 0, 0, 0.25);
+  color: color-mix(in srgb, #e9dec4 70%, transparent);
+  border-radius: 2px;
+}
+
+.slay__delivery.is-on { border-color: var(--gold); color: var(--gold-bright); }
+
+.slay__slider { display: grid; gap: 0.3rem; margin-bottom: 1rem; }
+
+.slay__sliderHead {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--display);
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, #e9dec4 62%, transparent);
+}
+
+.slay__sliderHead b { color: var(--gold-bright); }
+
+.slay__slider input {
+  width: 100%;
+  accent-color: var(--gold);
+}
+
+.slay__reading {
+  margin: 1rem 0 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  text-align: center;
+}
+
+.slay__reading > div { display: grid; gap: 0.15rem; }
+.slay__reading dt {
+  font-family: var(--display);
+  font-size: 0.54rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, #e9dec4 45%, transparent);
+}
+.slay__reading dd { margin: 0; font-size: 1.1rem; color: var(--gold-bright); }
+.slay__reading dd.is-warn { color: #e0a94a; }
+.slay__reading dd.is-bad { color: #e06a60; }
+
+.slay__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-top: 1.5rem;
+}
+
+/* ── The ruling ──────────────────────────────────────────────────────── */
+
+.slay__ruling {
+  margin: 1.4rem auto 0;
+  max-width: 40rem;
+  padding: 1.1rem 1.3rem;
+  border: 1px solid;
+  border-radius: 2px;
+  text-align: center;
+}
+
+.slay__ruling--approved { border-color: rgba(120, 170, 110, 0.5); background: rgba(60, 90, 55, 0.18); }
+.slay__ruling--restricted { border-color: rgba(224, 169, 74, 0.5); background: rgba(110, 80, 25, 0.18); }
+.slay__ruling--refused { border-color: rgba(163, 52, 23, 0.6); background: rgba(90, 26, 14, 0.22); }
+
+.slay__stamp {
+  margin: 0 0 0.4rem;
+  font-family: var(--display);
+  font-size: 0.78rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold-bright);
+}
+
+.slay__rulingBody { margin: 0; line-height: 1.6; color: color-mix(in srgb, #e9dec4 82%, transparent); }
+
+.slay__warn {
+  margin: 0.7rem 0 0;
+  font-size: 0.82rem;
+  font-style: italic;
+  color: #e0a94a;
+}
+
+.slay__register,
+.slay__registerBar {
+  margin: 1.2rem 0 0;
+  text-align: center;
+  font-family: var(--display);
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #e0a94a;
+}
+
+.slay__registerBar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  margin: 0;
+  padding: 0.6rem;
+  background: rgba(8, 6, 5, 0.72);
+}
+
+.slay__registerBar.is-dispatched { color: #e06a60; }
+
+.slay--bureau .slay__back { display: block; margin: 2rem auto 0; }
+
+@media (max-width: 640px) {
+  .slay__reading { grid-template-columns: repeat(2, 1fr); }
+}

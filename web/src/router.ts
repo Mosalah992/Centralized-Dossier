@@ -10,6 +10,7 @@ export type Route =
   | { name: 'shelf' }
   | { name: 'volume'; slug: VolumeSlug }
   | { name: 'editor' }
+  | { name: 'game' }
   | { name: 'missing' };
 
 export function parse(pathname: string): Route {
@@ -26,6 +27,15 @@ export function parse(pathname: string): Route {
    * writes files.
    */
   if (import.meta.env.DEV && path === '/editor') return { name: 'editor' };
+
+  /*
+   * Slay the Heretic.
+   *
+   * Matched case-insensitively because the URL was specified with a capital S
+   * and nobody types it that way twice. The link the archive gives out is the
+   * capitalised one; /slaytheheretic reaches the same place rather than a 404.
+   */
+  if (path.toLowerCase() === '/slaytheheretic') return { name: 'game' };
 
   const match = /^\/archives\/([a-z]+)$/.exec(path);
   const slug = match?.[1];

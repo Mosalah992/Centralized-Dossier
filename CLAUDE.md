@@ -148,6 +148,61 @@ callers is looking at something parked, not something forgotten. Nothing was
 removed from the spreadsheet, and nothing here could: `server/` is readonly by
 invariant 2.
 
+### Slay the Heretic
+
+A spellcrafting game at `/Slaytheheretic`, reached by its own route rather than
+from the shelf. Compose a working, submit it to the Office of Thaumaturgical
+Licensing for a ruling, then cast it in the proving chamber.
+
+**The tension is bureaucratic, not martial.** A working too strong for the
+caster's rank is REFUSED, never quietly weakened, and a refused working can
+still be carried — every cast of one is entered in the Register of Interest and
+at the third a Justiciar is dispatched. That is the whole payoff; do not "fix"
+it by blocking the cast.
+
+**`shared/spellcraft.ts` is the model and the only place it lives.** Cost,
+grades, instability, the ruling, the Register. It knows nothing of canvases, so
+`test/spellcraft.test.ts` can pin all of it — including that the ruling's order
+IS the ruling: proscribed effect, then rank, then the instability ceiling. Each
+step is checked against the step that would otherwise swallow it, because
+telling an Emissary their clearance is insufficient for necromancy is the wrong
+refusal.
+
+**Instability is ours, not canon**, and it is what stops "every slider to
+maximum" being the answer. Cost prices a working; instability says how badly it
+wants to go wrong, driven by magnitude past 25, by area, and by the burst term —
+a lot of magnitude crammed into almost no duration.
+
+**The chamber rides `gsap.ticker`, not its own rAF.** One frame source on the
+page, one delta, and `globalTimeline.timeScale()` gives the misfire its
+slow-motion beat for free. The particle field stays hand-rolled: a cast spawns
+~140 particles living under a second, and tweening those would allocate 140
+tween objects per cast to integrate arithmetic that is already three lines.
+
+**Nothing about the effects is a sprite.** Lightning is midpoint displacement,
+frost is recursive branching. The core of every bolt is near-white — putting the
+palette's hue in the centre is what makes it read as a coloured squiggle instead
+of as light.
+
+**The fingertip anchors are measured, not typed.** `prepare-arcane.mjs` walks
+each hand sprite's alpha to find the top of each hand and writes `anchors.json`;
+the chamber maps those through the rect the sprite is drawn in. Anchoring the
+charge at fixed canvas fractions put the light on the wrist, and wrongly in each
+pose, since each raises a different hand to a different height.
+
+**The dummies' vertical position is derived, not chosen.** On a fixed camera the
+ground is a line, so only a dummy's scale is free and `groundAt()` decides where
+its feet land. Placed by hand they floated. Both constants were read off this
+background and neither survives a different one — the honest limit of a faked
+perspective.
+
+**Provenance is unsettled and is the keeper's call.** The game's own design
+notes say not to extract textures from game files and that the repo is public;
+the supplied sprites appear to be exactly that, and the question was put to the
+keeper rather than decided here. If the answer is that they came out of game
+files, both `Assets/Arcane mini game assets/` and `web/src/assets/arcane/` need
+to leave git — everything under `web/src/assets` is served from public URLs.
+
 `seal-invite` in `Gate.css` is the last CSS animation in the archive and stays CSS.
 It is the login affordance — its own comment records that readers could not find the
 door until it was added — and a CSS keyframe cannot fail to parse.
@@ -179,6 +234,10 @@ functions/        Cloudflare Pages Functions -> /api/*
   lib/swr.ts            Stale-while-revalidate over the Worker's own cache
 
 server/           gsheets.ts (readonly Sheets client) · archive.ts (load + parse)
+web/src/game/     Slay the Heretic — the spellcrafting game at /Slaytheheretic
+                  SlayTheHeretic.tsx (shell) · Bureau.tsx (the Office)
+                  Chamber.tsx (canvas) · vfx.ts (procedural lightning/frost)
+
 shared/           volumes.ts (THE registry) · types.ts · text.ts · parsers/
                   mundus.ts (the moons' reckoned courses, and what is NOT known)
                   events.ts (WHAT THE REALM ACTUALLY HOLDS — see below)
@@ -390,6 +449,7 @@ node scripts/prepare-volumes.mjs   # book covers -> web/src/assets/volumes/
 node scripts/prepare-candles.mjs   # candle sprites
 node scripts/prepare-seal.mjs      # gate wax seal
 node scripts/prepare-orrery.mjs    # the bodies of Mundus + the starfield
+node scripts/prepare-arcane.mjs    # the proving chamber's sprites + fingertip anchors
 node scripts/prepare-music.mjs     # ambience tracks -> 96 kbps mono (needs FFMPEG=)
 node scripts/make-dev-vars.mjs     # .env -> .dev.vars for wrangler
 ```

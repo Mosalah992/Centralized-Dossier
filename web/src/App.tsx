@@ -60,6 +60,18 @@ const EditorView = import.meta.env.DEV
   ? lazy(() => import('./editor/Editor').then((m) => ({ default: m.EditorView })))
   : null;
 
+/*
+ * The game, behind React.lazy like every view.
+ *
+ * It carries five sprites and a canvas engine, none of which a reader at the
+ * seal has any business downloading — invariant 7's shape again. Rollup gives
+ * it a chunk of its own and test/bundle.test.ts fails if any of it turns up in
+ * index-*.js.
+ */
+const SlayTheHeretic = lazy(() =>
+  import('./game/SlayTheHeretic').then((m) => ({ default: m.SlayTheHeretic })),
+);
+
 const FluentShell = lazy(() =>
   import('./fluent/Shell').then((m) => ({ default: m.FluentShell })),
 );
@@ -173,6 +185,17 @@ export default function App() {
         <div className="shell">
           <main>
             {route.name === 'shelf' && <Shelf onOpen={navigate} />}
+
+            {/* The game takes the whole viewport and sits outside the archive's
+                page furniture, so it renders as a sibling of the shelf rather
+                than inside a volume's binding. */}
+            {route.name === 'game' && (
+              <ErrorBoundary>
+                <Suspense fallback={<Consulting />}>
+                  <SlayTheHeretic onLeave={() => navigate('/')} />
+                </Suspense>
+              </ErrorBoundary>
+            )}
 
             {/* The editor sits inside the gate like everything else: it is a
                 local tool, but it edits the sealed volumes, and there is no
