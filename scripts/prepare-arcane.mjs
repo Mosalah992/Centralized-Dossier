@@ -182,6 +182,24 @@ async function fingertips(file) {
   return { left: anchor(0, half), right: anchor(half, width) };
 }
 
+/*
+ * The one sound, copied rather than re-encoded.
+ *
+ * prepare-music.mjs re-encodes the ambience tracks to 96 kbps mono because they
+ * are minutes long and the saving is megabytes. This is twenty-one kilobytes of
+ * crackle: re-encoding it would save a few hundred bytes and would put ffmpeg —
+ * deliberately not a dependency of this project — between anyone and a working
+ * build. Copied, so the output still comes from a committed script.
+ */
+const SOUNDS = [{ src: '-sparks-.mp3', name: 'sparks.mp3' }];
+for (const snd of SOUNDS) {
+  const from = path.join(IN, snd.src);
+  if (!fs.existsSync(from)) throw new Error(`missing sound: ${snd.src}`);
+  const to = path.join(OUT, snd.name);
+  fs.copyFileSync(from, to);
+  console.log(`  ${snd.name.padEnd(12)} ${' '.repeat(11)} ${(fs.statSync(to).size / 1024).toFixed(1).padStart(7)} kB  the shock discharge`);
+}
+
 const anchors = {};
 for (const job of JOBS) {
   if (!job.alpha || job.trim) continue;

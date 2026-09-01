@@ -179,6 +179,13 @@ slow-motion beat for free. The particle field stays hand-rolled: a cast spawns
 ~140 particles living under a second, and tweening those would allocate 140
 tween objects per cast to integrate arithmetic that is already three lines.
 
+**The one sound obeys the archive's mute.** The chamber plays `sparks.mp3` on a
+shock cast, through a pool of four so rapid casts overlap instead of cutting
+each other off, and it reads `ambienceWanted()` and the `AMBIENCE_CHANGED_EVENT`
+that the ambience roundel writes. That roundel is the only audio control a
+reader has; a game that keeps crackling after it is switched off makes the
+control a liar. Anything else that gains a voice here does the same.
+
 **Nothing about the effects is a sprite.** Lightning is midpoint displacement,
 frost is recursive branching. The core of every bolt is near-white — putting the
 palette's hue in the centre is what makes it read as a coloured squiggle instead

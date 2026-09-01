@@ -40,6 +40,9 @@ import {
 } from './vfx';
 
 import anchors from '../assets/arcane/anchors.json';
+import { AMBIENCE_CHANGED_EVENT, ambienceWanted } from '../components/Ambience';
+
+import sparksUrl from '../assets/arcane/sparks.mp3';
 import chamberUrl from '../assets/arcane/chamber.webp';
 import dummyUrl from '../assets/arcane/dummy.webp';
 import handsIdleUrl from '../assets/arcane/hands-idle.webp';
@@ -183,6 +186,22 @@ function load(src: string): HTMLImageElement {
   return img;
 }
 
+/**
+ * A pool of one sound, so casts can overlap.
+ *
+ * A single Audio element restarted on every cast cuts itself off — hold, throw,
+ * throw again and the second cast silences the first mid-crackle. Four elements
+ * cycled round is enough for any rate a hand can actually cast at, and costs
+ * four decodes of a twenty-one kilobyte file.
+ */
+function pool(src: string, size: number): HTMLAudioElement[] {
+  return Array.from({ length: size }, () => {
+    const a = new Audio(src);
+    a.preload = 'auto';
+    return a;
+  });
+}
+
 export function Chamber({
   workings, rulings, onUnlicensedCast, onPause, paused, onCleared, resetToken,
 }: Props) {
@@ -287,6 +306,30 @@ export function Chamber({
       (window as unknown as { __chamber?: World }).__chamber = w;
     }
 
+    /*
+     * SOUND OBEYS THE ARCHIVE'S MUTE. The roundel in the corner is the only
+     * audio control a reader has, and a game that keeps crackling after it is
+     * switched off makes that control a liar. `ambienceWanted` reads the same
+     * stored preference the ambience does, and the event keeps it live — the
+     * preference alone would not tell us the moment the roundel was clicked.
+     */
+    const sparks = pool(sparksUrl, 4);
+    let sparkNext = 0;
+    let audible = ambienceWanted();
+    const onAmbience = () => { audible = ambienceWanted(); };
+    window.addEventListener(AMBIENCE_CHANGED_EVENT, onAmbience);
+
+    const crackle = (power: number) => {
+      if (!audible) return;
+      const a = sparks[sparkNext++ % sparks.length];
+      if (!a) return;
+      a.currentTime = 0;
+      a.volume = Math.min(1, 0.25 + power * 0.45);
+      // Autoplay policy rejects until a gesture; a cast IS one, so this only
+      // ever fires on a rejection worth ignoring rather than logging.
+      void a.play().catch(() => {});
+    };
+
     const pointer = { x: 0, y: 0 };
 
     const resize = () => {
@@ -386,6 +429,9 @@ export function Chamber({
       if (w.magicka < cost) { say('Not magicka enough. Wait for it to return.'); return; }
       w.magicka -= cost;
       w.casts += 1;
+      // Before the misfire branch, so a working that turns in the hand still
+      // makes the noise a discharge makes.
+      if (pal.kind === 'bolt') crackle(power);
 
       if (r.seal === 'refused') onUnlicensedCast();
 
@@ -897,6 +943,8 @@ export function Chamber({
       gsap.globalTimeline.timeScale(1);
       window.removeEventListener('resize', resize);
       window.removeEventListener('keydown', key);
+      window.removeEventListener(AMBIENCE_CHANGED_EVENT, onAmbience);
+      for (const a of sparks) { a.pause(); a.src = ''; }
       el.removeEventListener('contextmenu', menu);
       el.removeEventListener('pointerdown', down);
       el.removeEventListener('pointermove', move);
