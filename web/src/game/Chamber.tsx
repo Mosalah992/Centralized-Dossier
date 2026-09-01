@@ -101,6 +101,14 @@ interface World {
   shake: number;
   boltClock: number;
   emberClock: number;
+  /*
+   * A bolt working is CHANNELLED, not thrown. Holding pours it out until the
+   * caster is dry — which is what Sparks is — so it needs its own state rather
+   * than riding the charge-and-release path every other school uses.
+   */
+  channelling: boolean;
+  /** Latches the Register entry, so one channel is one entry and not sixty. */
+  channelLogged: boolean;
   notice: string;
   noticeLife: number;
   casts: number;
@@ -285,6 +293,7 @@ export function Chamber({
         { fx: 0.68, fy: groundAt(0.44), scale: 0.44, hp: 100, max: 100, hit: 0, frost: 0 },
       ],
       flash: 0, shake: 0, boltClock: 0, emberClock: 0,
+      channelling: false, channelLogged: false,
       notice: '', noticeLife: 0,
       casts: 0, misfires: 0,
     };
@@ -315,6 +324,17 @@ export function Chamber({
      */
     const sparks = pool(sparksUrl, 4);
     let sparkNext = 0;
+    /*
+     * The stream's own voice, looping, separate from the pool.
+     *
+     * A channel is one continuous sound, not a burst repeated — retriggering
+     * the pooled clip at some interval would give a stutter that lands
+     * differently every time. One looping element, started and stopped with the
+     * channel itself.
+     */
+    const stream = new Audio(sparksUrl);
+    stream.loop = true;
+    stream.preload = 'auto';
     let audible = ambienceWanted();
     const onAmbience = () => { audible = ambienceWanted(); };
     window.addEventListener(AMBIENCE_CHANGED_EVENT, onAmbience);
@@ -401,6 +421,50 @@ export function Chamber({
 
     const say = (text: string) => { w.notice = text; w.noticeLife = 3.2; };
 
+    /**
+     * What the caster is pointing at: the nearest standing dummy to the cursor,
+     * or the cursor itself when nothing is near it.
+     *
+     * Shared by the channel's damage and its drawing, so the beam can never
+     * strike one thing and be drawn at another.
+     */
+    const aimedAt = (): { x: number; y: number; dummy: Dummy | null } => {
+      let best: Dummy | null = null;
+      let bestD = Infinity;
+      for (const d of w.dummies) {
+        if (d.hp <= 0) continue;
+        const dist = Math.hypot(d.fx * w.w - pointer.x, d.fy * w.h - pointer.y);
+        if (dist < bestD) { bestD = dist; best = d; }
+      }
+      // Only snap when the cursor is genuinely near it; further off, the beam
+      // goes where it was pointed and hits nothing, which is the honest result.
+      if (best && bestD < w.w * 0.16) {
+        return { x: best.fx * w.w, y: best.fy * w.h - w.h * 0.52 * best.scale * 0.55, dummy: best };
+      }
+      return { x: pointer.x, y: pointer.y, dummy: null };
+    };
+
+    const stopChannel = () => {
+      if (!w.channelling) return;
+      w.channelling = false;
+      w.channelLogged = false;
+      stream.pause();
+      stream.currentTime = 0;
+    };
+
+    const startChannel = () => {
+      const r = spell.current.rulings[w.casting];
+      w.channelling = true;
+      if (!w.channelLogged) {
+        w.channelLogged = true;
+        if (r.seal === 'refused') onUnlicensedCast();
+      }
+      if (audible) {
+        stream.volume = 0.5;
+        void stream.play().catch(() => {});
+      }
+    };
+
     /* ── Casting ──────────────────────────────────────────────────── */
 
     const release = () => {
@@ -409,6 +473,14 @@ export function Chamber({
       const power = w.charge;
       w.charge = 0;
       w.hand = 'idle';
+
+      /*
+       * A channelled working has already been paying for itself, frame by
+       * frame, and has already done its damage. Letting go simply stops it —
+       * there is nothing left to throw, and throwing a projectile here as well
+       * would charge the caster twice for one spell.
+       */
+      if (w.channelling) { stopChannel(); return; }
       if (power < 0.12) return;
 
       const k = spell.current.workings[w.casting];
@@ -429,9 +501,8 @@ export function Chamber({
       if (w.magicka < cost) { say('Not magicka enough. Wait for it to return.'); return; }
       w.magicka -= cost;
       w.casts += 1;
-      // Before the misfire branch, so a working that turns in the hand still
-      // makes the noise a discharge makes.
-      if (pal.kind === 'bolt') crackle(power);
+      // Thrown workings only: a channelled one has its own looping voice.
+      if (pal.kind === 'bolt' && !w.channelling) crackle(power);
 
       if (r.seal === 'refused') onUnlicensedCast();
 
@@ -544,6 +615,74 @@ export function Chamber({
       // hertz is about a fifth of a second to arrive: present, not snappy.
       w.aimX += (pointer.x - w.aimX) * Math.min(1, dt * 6);
       w.aimY += (pointer.y - w.aimY) * Math.min(1, dt * 6);
+      /*
+       * THE STREAM. It drains while it runs and stops when the caster is dry,
+       * which is the whole shape of the spell: not a decision about when to
+       * let go, but a resource you can watch emptying.
+       *
+       * Drain is priced off the same licensed cost a thrown working pays, at a
+       * rate per SECOND rather than per cast, so a bigger working empties you
+       * faster. Regen keeps running underneath it — the net is what matters,
+       * and suppressing it would make the bar's behaviour a special case.
+       */
+      if (w.channelling) {
+        const k = spell.current.workings[w.casting];
+        const r = spell.current.rulings[w.casting];
+        /*
+           * Three times the per-cast price, per second. At sixty frames a
+           * second that empties a full pool of an ordinary Sparks in about nine
+           * seconds against the regen — long enough to be a stream, short
+           * enough that the bar is something you watch rather than ignore.
+           */
+          const drain = Math.max(12, r.cost * CAST_PRICE * 3) * dt;
+        if (w.magicka <= drain) {
+          w.magicka = 0;
+          w.holding = false;
+          w.hand = 'idle';
+          w.charge = 0;
+          stopChannel();
+          say('Magicka spent. The stream fails.');
+        } else {
+          w.magicka -= drain;
+          const target = aimedAt();
+
+          // Damage is per second, and splashes by area as a thrown working does.
+          if (target.dummy) {
+            const reach = 26 + k.area * 6;
+            for (const d of w.dummies) {
+              if (d.hp <= 0) continue;
+              const dist = Math.hypot(d.fx * w.w - target.x, d.fy * w.h - target.y);
+              if (d !== target.dummy && dist > reach) continue;
+              const falloff = d === target.dummy ? 1 : Math.max(0.25, 1 - dist / (reach || 1));
+              d.hp = Math.max(0, d.hp - k.magnitude * 0.85 * falloff * dt);
+              d.hit = Math.max(d.hit, 0.35);
+            }
+            burst(w.particles, target.x, target.y, paletteFor(k.effectId), 2, 150);
+          }
+
+          /*
+           * A misfire can take a channel mid-stream. Rolled per second rather
+           * than per cast, or a held spell would be strictly safer than a
+           * thrown one — which is backwards, since it is the one being kept
+           * open in the hand.
+           */
+          if (Math.random() < misfireChance(r.instability) * dt) {
+            const pal = paletteFor(k.effectId);
+            const [px, py] = tip(w.hand, 'right');
+            burst(w.particles, px, py, pal, 90, 340);
+            w.flash = 1;
+            w.shake = 26;
+            w.misfires += 1;
+            w.magicka = Math.max(0, w.magicka - 30);
+            w.holding = false;
+            stopChannel();
+            say('The stream turned in your hand.');
+            gsap.globalTimeline.timeScale(0.25);
+            gsap.to(gsap.globalTimeline, { timeScale: 1, duration: 1.1, ease: 'power2.out', overwrite: true });
+          }
+        }
+      }
+
       w.magicka = Math.min(w.magickaMax, w.magicka + w.magickaMax * MAGICKA_REGEN * dt);
 
       stepParticles(w.particles, dt, 120);
@@ -650,7 +789,7 @@ export function Chamber({
       // replaced faster or the stream stops crackling and starts strobing.
       if (w.boltClock > 0.036) {
         w.boltClock = 0;
-        if (w.holding && w.charge > 0.18) {
+        if (w.holding && (w.channelling || w.charge > 0.18)) {
           const pal = paletteFor(spell.current.workings[w.casting].effectId);
           if (pal.kind === 'bolt') {
             w.bolts = w.bolts.filter((b) => b.life < 0.3);
@@ -664,10 +803,20 @@ export function Chamber({
             const pts = chargePoints();
             const a0 = pts[0]!;
             const a1 = pts[pts.length - 1]!;
-            const knot: readonly [number, number] = [
-              (a0[0] + a1[0]) / 2 + (Math.random() - 0.5) * 30,
-              Math.min(a0[1], a1[1]) - 40 - w.charge * 40 + (Math.random() - 0.5) * 20,
-            ];
+            /*
+             * While channelling the arcs run to WHAT IS BEING AIMED AT. Before
+             * the stream existed they ran to a knot floating above the palms,
+             * which is right for a spell being gathered and wrong for one being
+             * poured: a beam that stops short of its target does not read as
+             * reaching it.
+             */
+            const at = w.channelling ? aimedAt() : null;
+            const knot: readonly [number, number] = at
+              ? [at.x + (Math.random() - 0.5) * 22, at.y + (Math.random() - 0.5) * 22]
+              : [
+                (a0[0] + a1[0]) / 2 + (Math.random() - 0.5) * 30,
+                Math.min(a0[1], a1[1]) - 40 - w.charge * 40 + (Math.random() - 0.5) * 20,
+              ];
             /*
              * MORE ARCS, AND THEY OVERLAP. One path replaced every frame reads
              * as a single flicking line; three or four live at once, each
@@ -675,7 +824,12 @@ export function Chamber({
              * hand. The count rises with the charge, so a held spell visibly
              * gathers rather than merely brightening.
              */
-            const strands = 2 + Math.round(w.charge * 3);
+            // A channel pours at full strength from the first frame; there is
+            // no gathering to show, so it does not scale with charge.
+            // Three while channelling, not four: at four overlapping strands
+            // with a heavy core the beam fuses into an undifferentiated plume
+            // and stops reading as lightning at all. The structure is the point.
+            const strands = w.channelling ? 3 : 2 + Math.round(w.charge * 3);
             const paths: (readonly [number, number])[][] = [];
             for (let n = 0; n < strands; n++) {
               const wobble: readonly [number, number] = [
@@ -781,7 +935,9 @@ export function Chamber({
       fctx.clearRect(0, 0, w.w, w.h);
       // Heavier core: 1.4 was a wire, and the reference these were built from
       // is a rope of light. The white centre is what carries it.
-      for (const b of w.bolts) strokeArc(fctx, b.paths, pal, 2.1);
+      // A channelled beam is many overlapping strands, so each wants a thinner
+      // core than a single thrown bolt or they merge into one white rope.
+      for (const b of w.bolts) strokeArc(fctx, b.paths, pal, w.channelling ? 1.6 : 2.1);
       for (const f of w.frosts) frostBurst(fctx, f.x, f.y, f.r, pal, 1 - f.life / 0.9);
       for (const p of w.shots) {
         const x = p.x + (p.tx - p.x) * p.t;
@@ -893,9 +1049,27 @@ export function Chamber({
     };
 
     const tick = () => {
-      if (held.current) return;
-      // Clamped so a backgrounded tab does not return and integrate a whole
-      // second in one frame, teleporting every projectile past its target.
+      if (held.current) {
+        // Pausing mid-stream must stop the sound as well as the simulation, or
+        // the chamber goes on crackling behind the pause card.
+        if (w.channelling) { w.holding = false; stopChannel(); }
+        return;
+      }
+      /*
+       * Clamped so a backgrounded tab does not return and integrate a whole
+       * second in one frame, teleporting every projectile past its target.
+       *
+       * THE CLAMP DILATES TIME BELOW 20 FPS, and that is a deliberate trade
+       * rather than an oversight. A frame taking longer than 50 ms advances the
+       * simulation by 50 ms regardless, so on a machine rendering at eleven
+       * frames a second the chamber runs at about half speed — measured, in a
+       * headless browser with no GPU: 1.7 seconds simulated in 3.15 real.
+       * Everything stays internally consistent, so it plays correctly, only
+       * slowly. The alternative is honouring the true delta and having spells
+       * jump the room in a single step, which is worse in every way that
+       * matters. Anything tuned against a slow machine's readings will be wrong
+       * on a fast one; tune at sixty.
+       */
       const dt = Math.min(gsap.ticker.deltaRatio() / 60, 0.05);
       step(dt);
       paint();
@@ -921,6 +1095,11 @@ export function Chamber({
       w.casting = ev.button === 2 ? 'left' : 'right';
       w.hand = w.dual ? 'idle' : w.casting;
       el.setPointerCapture(ev.pointerId);
+      // A bolt working streams from the moment it is held; everything else
+      // gathers first and goes on release.
+      if (paletteFor(spell.current.workings[w.casting].effectId).kind === 'bolt') {
+        startChannel();
+      }
     };
     const move = (ev: PointerEvent) => at(ev);
     // Without this the right button opens the browser's own menu mid-cast.
@@ -945,6 +1124,8 @@ export function Chamber({
       window.removeEventListener('keydown', key);
       window.removeEventListener(AMBIENCE_CHANGED_EVENT, onAmbience);
       for (const a of sparks) { a.pause(); a.src = ''; }
+      stream.pause();
+      stream.src = '';
       el.removeEventListener('contextmenu', menu);
       el.removeEventListener('pointerdown', down);
       el.removeEventListener('pointermove', move);
