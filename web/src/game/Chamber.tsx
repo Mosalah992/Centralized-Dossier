@@ -98,7 +98,26 @@ interface Props {
   paused: boolean;
 }
 
-const MAGICKA_REGEN = 0.11;
+/*
+ * MAGICKA REGEN, HALVED AFTER PLAYING IT. The design notes called 0.11 a guess
+ * awaiting playtesting, and the playtest was unambiguous: at eleven percent of
+ * the pool a second, a modest cast cost about eleven magicka and the pool put
+ * seventeen back before the projectile had landed. Magicka was never a
+ * constraint — you could not spend it faster than it returned, and the bar sat
+ * pinned at full for the whole session.
+ *
+ * At 0.055 an empty pool takes about eighteen seconds, a modest working costs a
+ * few seconds of it, and the biggest ones leave you genuinely waiting.
+ */
+const MAGICKA_REGEN = 0.055;
+
+/**
+ * What fraction of a working's licensed cost is charged to cast it.
+ *
+ * Raised with the regen above for the same reason: the two numbers only mean
+ * anything relative to each other.
+ */
+const CAST_PRICE = 0.16;
 
 /*
  * The hands sit a little under full frame.
@@ -192,6 +211,22 @@ export function Chamber({ working, ruling, onUnlicensedCast, onPause, paused }: 
     };
     world.current = w;
 
+    /*
+     * A probe, and ONLY while the dev server is running.
+     *
+     * `import.meta.env.DEV` is a compile-time constant, so this whole block is
+     * `if (false)` in a production build and Rollup removes it — the same
+     * guarantee the Editor route relies on. It exists because the chamber is a
+     * simulation in a ref that React never renders: without a handle on it, a
+     * playtest can only look at pixels and guess, and "did that cast take forty
+     * health off the middle dummy" is not a question a screenshot answers.
+     * Tuning wants it too — the instability ceiling and the regen are still
+     * guesses, and they are guessed at against these numbers.
+     */
+    if (import.meta.env.DEV) {
+      (window as unknown as { __chamber?: World }).__chamber = w;
+    }
+
     const pointer = { x: 0, y: 0 };
 
     const resize = () => {
@@ -270,7 +305,7 @@ export function Chamber({ working, ruling, onUnlicensedCast, onPause, paused }: 
        * workings empty the caster in one throw and leave them waiting on the
        * regen, which is the tension the chamber is actually for.
        */
-      const cost = Math.min(w.magickaMax * 0.85, Math.max(4, r.cost * 0.12));
+      const cost = Math.min(w.magickaMax * 0.85, Math.max(4, r.cost * CAST_PRICE));
       if (w.magicka < cost) { say('Not magicka enough. Wait for it to return.'); return; }
       w.magicka -= cost;
       w.casts += 1;
@@ -603,6 +638,7 @@ export function Chamber({ working, ruling, onUnlicensedCast, onPause, paused }: 
     window.addEventListener('keydown', key);
 
     return () => {
+      if (import.meta.env.DEV) delete (window as unknown as { __chamber?: World }).__chamber;
       gsap.ticker.remove(tick);
       gsap.globalTimeline.timeScale(1);
       window.removeEventListener('resize', resize);
