@@ -65,6 +65,8 @@ interface Dummy {
 interface Projectile {
   x: number; y: number; tx: number; ty: number;
   t: number; life: number; target: Dummy | null;
+  /** Whose working this was, so the impact reads the right one. */
+  hand: 'left' | 'right';
 }
 
 interface World {
@@ -73,16 +75,29 @@ interface World {
   holding: boolean;
   dual: boolean;
   hand: 'idle' | 'left' | 'right';
+  /** Which hand's working is being charged. */
+  casting: 'left' | 'right';
+  /*
+   * Where the hands are pointed, in canvas units, eased toward the cursor.
+   *
+   * Not the cursor itself: hands that snap to the pointer read as a cursor with
+   * gloves on. Easing toward it gives them the weight of arms.
+   */
+  aimX: number; aimY: number;
+  cleared: boolean;
   magicka: number;
   magickaMax: number;
   particles: Particle[];
   bolts: { paths: (readonly [number, number])[][]; life: number }[];
   frosts: { x: number; y: number; r: number; life: number }[];
+  /** Shockwaves, expanding out of an impact. */
+  rings: { x: number; y: number; life: number; max: number; r: number }[];
   shots: Projectile[];
   dummies: Dummy[];
   flash: number;
   shake: number;
   boltClock: number;
+  emberClock: number;
   notice: string;
   noticeLife: number;
   casts: number;
@@ -90,12 +105,17 @@ interface World {
 }
 
 interface Props {
-  working: Working;
-  ruling: Ruling;
+  /** One working per hand, as a mage carries them. */
+  workings: { left: Working; right: Working };
+  rulings: { left: Ruling; right: Ruling };
   /** Counted by the shell, so the Register survives leaving the chamber. */
   onUnlicensedCast: () => void;
   onPause: () => void;
   paused: boolean;
+  /** Raised when the last dummy goes down, so the shell can offer a way on. */
+  onCleared: () => void;
+  /** Bumped by the shell to stand the dummies back up. */
+  resetToken: number;
 }
 
 /*
@@ -143,8 +163,18 @@ const HAND_SCALE = 0.9;
  * and neither survives a different background, which is the honest limit of a
  * faked perspective — see the note on Dummy.scale.
  */
-const HORIZON = 0.55;
-const GROUND_SPAN = 0.17;
+/*
+ * Read off the deployed frame rather than guessed at a second time.
+ *
+ * The first pair put the dummies well above the paving — they hung at the
+ * height of the far wall with clear ground beneath them, which is worse than
+ * being too low, because a thing standing slightly wrong reads as a thing
+ * standing on nothing. In this courtyard the wall meets the floor around 0.62
+ * of the frame and the near paving runs to about 0.88, so a full-size target
+ * belongs a good deal further down than 0.72.
+ */
+const HORIZON = 0.62;
+const GROUND_SPAN = 0.26;
 const groundAt = (scale: number) => HORIZON + GROUND_SPAN * scale;
 
 function load(src: string): HTMLImageElement {
@@ -153,7 +183,9 @@ function load(src: string): HTMLImageElement {
   return img;
 }
 
-export function Chamber({ working, ruling, onUnlicensedCast, onPause, paused }: Props) {
+export function Chamber({
+  workings, rulings, onUnlicensedCast, onPause, paused, onCleared, resetToken,
+}: Props) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const world = useRef<World | null>(null);
   /*
@@ -161,8 +193,8 @@ export function Chamber({ working, ruling, onUnlicensedCast, onPause, paused }: 
    * changing the working between casts does not mean tearing down the ticker
    * and rebuilding the whole chamber.
    */
-  const spell = useRef({ working, ruling });
-  spell.current = { working, ruling };
+  const spell = useRef({ workings, rulings });
+  spell.current = { workings, rulings };
   const held = useRef(paused);
   held.current = paused;
 
@@ -186,12 +218,26 @@ export function Chamber({ working, ruling, onUnlicensedCast, onPause, paused }: 
     const hctx = handBuf.getContext('2d')!;
     const fxBuf = document.createElement('canvas');
     const fctx = fxBuf.getContext('2d')!;
+    /*
+     * A third buffer, for tinting a struck dummy.
+     *
+     * THIS IS THE BOX EXPLOSION. The hit flash and the frost were painted as
+     * `fillRect` over the dummy's bounding box under `lighter` — which is
+     * exactly a rectangle of light, and looked like one: every Destruction
+     * impact put a glowing box round the target. A sprite is not its bounding
+     * box, so the tint has to be clipped to the pixels the sprite actually
+     * painted. Same `source-atop` trick the hands use, in a buffer sized once
+     * rather than allocated per frame.
+     */
+    const tintBuf = document.createElement('canvas');
+    const tctx = tintBuf.getContext('2d')!;
 
     const w: World = {
       w: 0, h: 0,
       charge: 0, holding: false, dual: false, hand: 'idle',
+      casting: 'right', aimX: 0, aimY: 0, cleared: false,
       magicka: 220, magickaMax: 220,
-      particles: [], bolts: [], frosts: [], shots: [],
+      particles: [], bolts: [], frosts: [], rings: [], shots: [],
       /*
        * Pushed to the edges, because the HANDS OWN THE MIDDLE of the frame. At
        * the first placement the outer two stood at 0.26 and 0.75 and were
@@ -200,12 +246,26 @@ export function Chamber({ working, ruling, onUnlicensedCast, onPause, paused }: 
        *
        * `fy` is derived from `scale` by `groundAt`, not chosen: see above.
        */
+      /*
+       * ALL THREE IN THE PAVED CORRIDOR, which is narrower than the frame.
+       *
+       * `groundAt` assumes one receding plane across the whole width, and that
+       * is true of the middle of this courtyard and false at its edges: the
+       * sides are raised beds and steps, so a dummy at a tenth or a ninth of
+       * the width stood at the right height for a floor that is not there and
+       * hung in the air over a hedge. The formula is sound; it just only
+       * describes the corridor, so that is where the targets go.
+       *
+       * Which is also where they are visible. The arms own the bottom corners
+       * of a first-person frame, and the corridor is exactly the gap between
+       * them.
+       */
       dummies: [
-        { fx: 0.14, fy: groundAt(0.5), scale: 0.5, hp: 100, max: 100, hit: 0, frost: 0 },
-        { fx: 0.5, fy: groundAt(0.78), scale: 0.78, hp: 100, max: 100, hit: 0, frost: 0 },
-        { fx: 0.87, fy: groundAt(0.44), scale: 0.44, hp: 100, max: 100, hit: 0, frost: 0 },
+        { fx: 0.41, fy: groundAt(0.46), scale: 0.46, hp: 100, max: 100, hit: 0, frost: 0 },
+        { fx: 0.545, fy: groundAt(0.58), scale: 0.58, hp: 100, max: 100, hit: 0, frost: 0 },
+        { fx: 0.68, fy: groundAt(0.44), scale: 0.44, hp: 100, max: 100, hit: 0, frost: 0 },
       ],
-      flash: 0, shake: 0, boltClock: 0,
+      flash: 0, shake: 0, boltClock: 0, emberClock: 0,
       notice: '', noticeLife: 0,
       casts: 0, misfires: 0,
     };
@@ -247,11 +307,27 @@ export function Chamber({ working, ruling, onUnlicensedCast, onPause, paused }: 
     resize();
     window.addEventListener('resize', resize);
 
-    /* Where the hand sprite is actually drawn, and where its fingers are. */
+    /*
+     * Where the hand sprite is drawn — and it MOVES WITH THE AIM.
+     *
+     * The hands were pinned to the bottom centre, so the caster was a statue
+     * throwing spells at wherever the mouse happened to be: nothing connected
+     * the aim to the arms. They now slide against the cursor, a long way less
+     * than the cursor travels, which is how a first-person view sells arms
+     * attached to a body rather than a sprite pasted over a photograph.
+     *
+     * AIM_X is generous and AIM_Y is not. Swinging the arms sideways reads as
+     * turning; sliding them as far vertically reads as the hands falling off
+     * the bottom of the screen.
+     */
+    const AIM_X = 0.075;
+    const AIM_Y = 0.035;
     const handRect = () => {
       const hw = w.w * HAND_SCALE;
       const hh = w.h * HAND_SCALE;
-      return { x: (w.w - hw) / 2, y: w.h - hh, w: hw, h: hh };
+      const dx = (w.aimX / w.w - 0.5) * 2 * w.w * AIM_X;
+      const dy = (w.aimY / w.h - 0.5) * 2 * w.h * AIM_Y;
+      return { x: (w.w - hw) / 2 + dx, y: w.h - hh + dy, w: hw, h: hh };
     };
 
     /*
@@ -292,7 +368,8 @@ export function Chamber({ working, ruling, onUnlicensedCast, onPause, paused }: 
       w.hand = 'idle';
       if (power < 0.12) return;
 
-      const { working: k, ruling: r } = spell.current;
+      const k = spell.current.workings[w.casting];
+      const r = spell.current.rulings[w.casting];
       const pal = paletteFor(k.effectId);
       /*
        * THE COST IS CAPPED AT MOST OF THE POOL, and that cap is a design
@@ -353,22 +430,44 @@ export function Chamber({ working, ruling, onUnlicensedCast, onPause, paused }: 
         t: 0,
         life: 0.28,
         target: best,
+        hand: w.casting,
       });
       burst(w.particles, from[0], from[1], pal, 26, 150);
       w.flash = 0.35 * power;
     };
 
     const impact = (p: Projectile) => {
-      const { working: k, ruling: r } = spell.current;
+      const k = spell.current.workings[p.hand];
+      const r = spell.current.rulings[p.hand];
       const pal = paletteFor(k.effectId);
       const e = effectOf(k);
       const power = 1;
 
-      if (pal.kind === 'frost') w.frosts.push({ x: p.tx, y: p.ty, r: 40 + k.area * 2.2, life: 0.9 });
-      if (pal.kind === 'bolt') w.bolts.push({ paths: arc([p.x, p.y], [p.tx, p.ty], 0.22), life: 0.24 });
-      burst(w.particles, p.tx, p.ty, pal, 80, 220 + k.magnitude * 2);
-      w.flash = Math.min(1, 0.3 + k.magnitude / 140);
-      w.shake = 6 + k.magnitude * 0.16;
+      /*
+       * THE IMPACT IS THE PAYOFF and it was costing eighty particles and a
+       * shrug. It now lands in three layers, which is what makes a hit read as
+       * an event rather than as a puff: a fast bright core that is gone in a
+       * fifth of a second, a slower wide spray, and a ring that expands out of
+       * the point of contact.
+       */
+      if (pal.kind === 'frost') w.frosts.push({ x: p.tx, y: p.ty, r: 52 + k.area * 2.6, life: 1.1 });
+      if (pal.kind === 'bolt') {
+        w.bolts.push({ paths: arc([p.x, p.y], [p.tx, p.ty], 0.22), life: 0.24 });
+        // Discharge legs, thrown outward from the point of contact.
+        for (let i = 0; i < 5; i++) {
+          const a = Math.random() * Math.PI * 2;
+          const r = 40 + Math.random() * 70;
+          w.bolts.push({
+            paths: arc([p.tx, p.ty], [p.tx + Math.cos(a) * r, p.ty + Math.sin(a) * r], 0.3),
+            life: 0.16 + Math.random() * 0.12,
+          });
+        }
+      }
+      burst(w.particles, p.tx, p.ty, pal, 60, 520 + k.magnitude * 4);
+      burst(w.particles, p.tx, p.ty, pal, 90, 190 + k.magnitude * 2);
+      w.rings.push({ x: p.tx, y: p.ty, life: 0.42, max: 0.42, r: 90 + k.magnitude * 1.6 });
+      w.flash = Math.min(1, 0.45 + k.magnitude / 90);
+      w.shake = 12 + k.magnitude * 0.3;
 
       const heals = e.id === 'heal';
       for (const d of w.dummies) {
@@ -395,6 +494,10 @@ export function Chamber({ working, ruling, onUnlicensedCast, onPause, paused }: 
         w.charge = Math.min(1, w.charge + dt * 0.85);
         w.hand = w.dual ? 'idle' : 'right';
       }
+      // Ease the arms toward the cursor. A tenth of the gap per frame at sixty
+      // hertz is about a fifth of a second to arrive: present, not snappy.
+      w.aimX += (pointer.x - w.aimX) * Math.min(1, dt * 6);
+      w.aimY += (pointer.y - w.aimY) * Math.min(1, dt * 6);
       w.magicka = Math.min(w.magickaMax, w.magicka + w.magickaMax * MAGICKA_REGEN * dt);
 
       stepParticles(w.particles, dt, 120);
@@ -414,14 +517,95 @@ export function Chamber({ working, ruling, onUnlicensedCast, onPause, paused }: 
         f.life -= dt;
         if (f.life <= 0) w.frosts.splice(i, 1);
       }
+      for (let i = w.rings.length - 1; i >= 0; i--) {
+        const r = w.rings[i]!;
+        r.life -= dt;
+        if (r.life <= 0) w.rings.splice(i, 1);
+      }
+
+      /*
+       * A HELD SPELL HAS TO DO SOMETHING. The charge was a radial gradient that
+       * grew — which for Flame meant a static orange blob sitting on the
+       * fingertips, and it read as anticlimactic because nothing about it moved.
+       *
+       * Every school now sheds while it gathers: embers climbing off a flame,
+       * shards falling out of a frost, motes drawn inward for the rest. It is
+       * the same particle field the impact uses, emitted slowly, and it costs
+       * almost nothing.
+       */
+      if (w.holding && w.charge > 0.1) {
+        const pal = paletteFor(spell.current.workings[w.casting].effectId);
+        w.emberClock += dt;
+        const every = 0.03 - w.charge * 0.015;
+        while (w.emberClock > every) {
+          w.emberClock -= every;
+          for (const [px, py] of chargePoints()) {
+            const spread = 10 + w.charge * 18;
+            const ex = px + (Math.random() - 0.5) * spread;
+            const ey = py + (Math.random() - 0.5) * spread;
+            if (pal.kind === 'flame') {
+              // Embers rise and drift; that is the whole read of fire.
+              w.particles.push({
+                x: ex, y: ey,
+                vx: (Math.random() - 0.5) * 40,
+                vy: -60 - Math.random() * 90 - w.charge * 60,
+                life: 0, max: 0.4 + Math.random() * 0.5,
+                size: 1.4 + Math.random() * 2.4,
+                hue: Math.random() < 0.45 ? pal.core : pal.body,
+              });
+            } else if (pal.kind === 'frost') {
+              w.particles.push({
+                x: ex, y: ey,
+                vx: (Math.random() - 0.5) * 30,
+                vy: 20 + Math.random() * 50,
+                life: 0, max: 0.5 + Math.random() * 0.5,
+                size: 1 + Math.random() * 2,
+                hue: Math.random() < 0.5 ? pal.core : pal.body,
+              });
+            } else if (pal.kind === 'bolt') {
+              /*
+               * Sparks. Bolts were the one school shedding nothing while held,
+               * on the reasoning that the arcs were enough — they are not. A
+               * spark is thrown fast, dies fast and falls, which is what makes
+               * the arcs look like they are ABLADING off something rather than
+               * being drawn in the air.
+               */
+              const a = Math.random() * Math.PI * 2;
+              const sp = 120 + Math.random() * 260 * (0.4 + w.charge);
+              w.particles.push({
+                x: ex, y: ey,
+                vx: Math.cos(a) * sp,
+                vy: Math.sin(a) * sp - 40,
+                life: 0, max: 0.16 + Math.random() * 0.26,
+                size: 0.9 + Math.random() * 1.8,
+                hue: Math.random() < 0.6 ? pal.core : pal.body,
+              });
+            } else {
+              // Drawn INWARD: the working is gathering, not shedding.
+              const a = Math.random() * Math.PI * 2;
+              const r = 40 + Math.random() * 40;
+              w.particles.push({
+                x: px + Math.cos(a) * r, y: py + Math.sin(a) * r,
+                vx: -Math.cos(a) * (60 + Math.random() * 60),
+                vy: -Math.sin(a) * (60 + Math.random() * 60),
+                life: 0, max: 0.45,
+                size: 1 + Math.random() * 1.8,
+                hue: pal.body,
+              });
+            }
+          }
+        }
+      }
 
       // Regenerate the bolt paths a few times a second so they crackle rather
       // than sit still. Every frame is too busy to read; this is about 24 Hz.
       w.boltClock += dt;
-      if (w.boltClock > 0.042) {
+      // 28 Hz rather than 24: the arcs are longer-lived now, so they have to be
+      // replaced faster or the stream stops crackling and starts strobing.
+      if (w.boltClock > 0.036) {
         w.boltClock = 0;
         if (w.holding && w.charge > 0.18) {
-          const pal = paletteFor(spell.current.working.effectId);
+          const pal = paletteFor(spell.current.workings[w.casting].effectId);
           if (pal.kind === 'bolt') {
             w.bolts = w.bolts.filter((b) => b.life < 0.3);
             /*
@@ -438,11 +622,27 @@ export function Chamber({ working, ruling, onUnlicensedCast, onPause, paused }: 
               (a0[0] + a1[0]) / 2 + (Math.random() - 0.5) * 30,
               Math.min(a0[1], a1[1]) - 40 - w.charge * 40 + (Math.random() - 0.5) * 20,
             ];
-            const paths = pts.length > 1
-              ? [...arc(a0, knot, 0.2), ...arc(a1, knot, 0.2),
-                ...(w.charge > 0.45 ? arc(a0, a1, 0.26) : [])]
-              : arc(a0, knot, 0.2);
-            w.bolts.push({ paths, life: 0.06 });
+            /*
+             * MORE ARCS, AND THEY OVERLAP. One path replaced every frame reads
+             * as a single flicking line; three or four live at once, each
+             * outliving its replacement, reads as a stream pouring off the
+             * hand. The count rises with the charge, so a held spell visibly
+             * gathers rather than merely brightening.
+             */
+            const strands = 2 + Math.round(w.charge * 3);
+            const paths: (readonly [number, number])[][] = [];
+            for (let n = 0; n < strands; n++) {
+              const wobble: readonly [number, number] = [
+                knot[0] + (Math.random() - 0.5) * 26,
+                knot[1] + (Math.random() - 0.5) * 26,
+              ];
+              paths.push(...arc(a0, wobble, 0.22));
+              if (pts.length > 1) paths.push(...arc(a1, wobble, 0.22));
+            }
+            if (pts.length > 1 && w.charge > 0.45) paths.push(...arc(a0, a1, 0.26));
+            // Three frames rather than one, so strands overlap instead of
+            // replacing each other.
+            w.bolts.push({ paths, life: 0.11 });
           }
         }
       }
@@ -451,13 +651,22 @@ export function Chamber({ working, ruling, onUnlicensedCast, onPause, paused }: 
         d.hit = Math.max(0, d.hit - dt * 2);
         d.frost = Math.max(0, d.frost - dt * 0.25);
       }
+      /*
+       * The end of a round, raised once. Latched rather than tested each frame
+       * because `onCleared` sets React state, and firing it sixty times a
+       * second would remount the shell under the chamber's feet.
+       */
+      if (!w.cleared && w.dummies.every((d) => d.hp <= 0)) {
+        w.cleared = true;
+        onCleared();
+      }
       w.flash = Math.max(0, w.flash - dt * 2.4);
       w.shake = Math.max(0, w.shake - dt * 46);
       w.noticeLife = Math.max(0, w.noticeLife - dt);
     };
 
     const paint = () => {
-      const { working: k } = spell.current;
+      const k = spell.current.workings[w.casting];
       const pal: Palette = paletteFor(k.effectId);
       const sx = (Math.random() - 0.5) * w.shake;
       const sy = (Math.random() - 0.5) * w.shake;
@@ -487,18 +696,31 @@ export function Chamber({ working, ruling, onUnlicensedCast, onPause, paused }: 
         ctx.save();
         if (d.hp <= 0) ctx.globalAlpha = 0.35;
         ctx.drawImage(art.dummy, x, y, dw, dh);
-        if (d.frost > 0.02) {
+        /*
+         * The tint, clipped to the dummy's own shape. See tintBuf above for
+         * what this replaced and why it looked like a box.
+         */
+        const tint = (color: string, alpha: number) => {
+          if (alpha <= 0.02) return;
+          const bw = Math.max(2, Math.ceil(dw));
+          const bh = Math.max(2, Math.ceil(dh));
+          if (tintBuf.width !== bw || tintBuf.height !== bh) {
+            tintBuf.width = bw;
+            tintBuf.height = bh;
+          }
+          tctx.clearRect(0, 0, bw, bh);
+          tctx.globalCompositeOperation = 'source-over';
+          tctx.globalAlpha = 1;
+          tctx.drawImage(art.dummy, 0, 0, bw, bh);
+          tctx.globalCompositeOperation = 'source-atop';
+          tctx.fillStyle = color;
+          tctx.fillRect(0, 0, bw, bh);
           ctx.globalCompositeOperation = 'lighter';
-          ctx.globalAlpha = d.frost * 0.5;
-          ctx.fillStyle = '#bfe9ff';
-          ctx.fillRect(x, y, dw, dh);
-        }
-        if (d.hit > 0.02) {
-          ctx.globalCompositeOperation = 'lighter';
-          ctx.globalAlpha = d.hit * 0.6;
-          ctx.fillStyle = pal.body;
-          ctx.fillRect(x, y, dw, dh);
-        }
+          ctx.globalAlpha = alpha;
+          ctx.drawImage(tintBuf, x, y, dw, dh);
+        };
+        tint('#bfe9ff', d.frost * 0.55);
+        tint(pal.body, d.hit * 0.75);
         ctx.restore();
 
         // Health, painted rather than laid out.
@@ -511,11 +733,21 @@ export function Chamber({ working, ruling, onUnlicensedCast, onPause, paused }: 
 
       /* Effects go to their own buffer so the bloom has something to blur. */
       fctx.clearRect(0, 0, w.w, w.h);
-      for (const b of w.bolts) strokeArc(fctx, b.paths, pal, 1.4);
+      // Heavier core: 1.4 was a wire, and the reference these were built from
+      // is a rope of light. The white centre is what carries it.
+      for (const b of w.bolts) strokeArc(fctx, b.paths, pal, 2.1);
       for (const f of w.frosts) frostBurst(fctx, f.x, f.y, f.r, pal, 1 - f.life / 0.9);
       for (const p of w.shots) {
         const x = p.x + (p.tx - p.x) * p.t;
         const y = p.y + (p.ty - p.y) * p.t;
+        /*
+         * A bolt spell does not throw a ball. It stays connected to the hand
+         * while it crosses, which is what makes Sparks read as a stream rather
+         * than as a thrown pebble that happens to be purple.
+         */
+        if (paletteFor(spell.current.workings[p.hand].effectId).kind === 'bolt') {
+          strokeArc(fctx, arc([p.x, p.y], [x, y], 0.26), pal, 1.8);
+        }
         fctx.save();
         fctx.globalCompositeOperation = 'lighter';
         const g = fctx.createRadialGradient(x, y, 0, x, y, 26);
@@ -526,6 +758,20 @@ export function Chamber({ working, ruling, onUnlicensedCast, onPause, paused }: 
         fctx.beginPath();
         fctx.arc(x, y, 26, 0, Math.PI * 2);
         fctx.fill();
+        fctx.restore();
+      }
+      /* The shockwave: a thinning ring, easing out so it slams then settles. */
+      for (const r of w.rings) {
+        const t = 1 - r.life / r.max;
+        const eased = 1 - (1 - t) * (1 - t);
+        fctx.save();
+        fctx.globalCompositeOperation = 'lighter';
+        fctx.globalAlpha = (1 - t) * 0.7;
+        fctx.strokeStyle = pal.core;
+        fctx.lineWidth = Math.max(0.5, 7 * (1 - t));
+        fctx.beginPath();
+        fctx.arc(r.x, r.y, eased * r.r, 0, Math.PI * 2);
+        fctx.stroke();
         fctx.restore();
       }
       paintParticles(fctx, w.particles);
@@ -545,10 +791,14 @@ export function Chamber({ working, ruling, onUnlicensedCast, onPause, paused }: 
         ctx.save();
         ctx.globalCompositeOperation = 'lighter';
         for (const [px, py] of chargePoints()) {
-          const r = 16 + w.charge * 44;
+          // Bigger, and pulsing: a light that is perfectly steady reads as a
+          // decal. The wobble is small enough not to be seen as an animation.
+          const pulse = 1 + Math.sin(performance.now() / 90) * 0.06;
+          const r = (26 + w.charge * 78) * pulse;
           const g = ctx.createRadialGradient(px, py, 0, px, py, r);
           g.addColorStop(0, '#ffffff');
-          g.addColorStop(0.3, pal.body);
+          g.addColorStop(0.18, '#ffffff');
+          g.addColorStop(0.42, pal.body);
           g.addColorStop(1, 'transparent');
           ctx.fillStyle = g;
           ctx.beginPath();
@@ -580,14 +830,9 @@ export function Chamber({ working, ruling, onUnlicensedCast, onPause, paused }: 
       ctx.font = '11px Georgia, serif';
       ctx.fillText('MAGICKA', 24, w.h - 50);
 
-      const e = effectOf(k);
       ctx.textAlign = 'right';
-      ctx.fillText(`${e.name} · magnitude ${k.magnitude}`, w.w - 24, w.h - 50);
-      ctx.fillStyle = spell.current.ruling.seal === 'refused' ? '#e06a60' : 'rgba(233,222,196,0.6)';
-      ctx.fillText(
-        spell.current.ruling.seal === 'refused' ? 'UNLICENSED' : spell.current.ruling.seal.toUpperCase(),
-        w.w - 24, w.h - 34,
-      );
+      ctx.fillText(`Right hand — ${effectOf(spell.current.workings.right).name}`, w.w - 24, w.h - 50);
+      ctx.fillText(`Left hand — ${effectOf(spell.current.workings.left).name}`, w.w - 24, w.h - 34);
       ctx.textAlign = 'left';
 
       if (w.noticeLife > 0) {
@@ -623,14 +868,23 @@ export function Chamber({ working, ruling, onUnlicensedCast, onPause, paused }: 
       at(ev);
       w.holding = true;
       w.dual = ev.shiftKey;
+      /*
+       * Left button throws the RIGHT hand's working and right button the left
+       * hand's, as a mage carries one in each. Shift casts both at once.
+       */
+      w.casting = ev.button === 2 ? 'left' : 'right';
+      w.hand = w.dual ? 'idle' : w.casting;
       el.setPointerCapture(ev.pointerId);
     };
     const move = (ev: PointerEvent) => at(ev);
+    // Without this the right button opens the browser's own menu mid-cast.
+    const menu = (ev: Event) => ev.preventDefault();
     const up = (ev: PointerEvent) => { at(ev); release(); };
     const key = (ev: KeyboardEvent) => {
       if (ev.key === 'Escape') { w.holding = false; w.charge = 0; onPause(); }
     };
 
+    el.addEventListener('contextmenu', menu);
     el.addEventListener('pointerdown', down);
     el.addEventListener('pointermove', move);
     el.addEventListener('pointerup', up);
@@ -643,12 +897,30 @@ export function Chamber({ working, ruling, onUnlicensedCast, onPause, paused }: 
       gsap.globalTimeline.timeScale(1);
       window.removeEventListener('resize', resize);
       window.removeEventListener('keydown', key);
+      el.removeEventListener('contextmenu', menu);
       el.removeEventListener('pointerdown', down);
       el.removeEventListener('pointermove', move);
       el.removeEventListener('pointerup', up);
       el.removeEventListener('pointercancel', up);
     };
-  }, [onPause, onUnlicensedCast]);
+  }, [onPause, onUnlicensedCast, onCleared]);
+
+  /*
+   * Standing the dummies back up, without rebuilding the chamber.
+   *
+   * A separate effect keyed on the token rather than part of the big one: that
+   * effect loads five images, allocates three buffers and registers a ticker,
+   * and none of that wants doing again just because somebody asked for another
+   * round.
+   */
+  useEffect(() => {
+    const w = world.current;
+    if (!w) return;
+    for (const d of w.dummies) { d.hp = d.max; d.hit = 0; d.frost = 0; }
+    w.cleared = false;
+    w.particles.length = 0;
+    w.shots.length = 0;
+  }, [resetToken]);
 
   return <canvas ref={canvas} className="slay__canvas" aria-label="The proving chamber" />;
 }

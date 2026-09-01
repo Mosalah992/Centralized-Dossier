@@ -1,16 +1,19 @@
-// The Office of Thaumaturgical Licensing.
+// The spellbook — and, still, the Office of Thaumaturgical Licensing.
 //
-// The whole compose-and-submit half of the game. It is ordinary React and
-// ordinary DOM: nothing here runs per frame, the panels re-render only when a
-// slider moves, and the canvas next door never sees any of it.
+// You carry a working in each hand and tune either. Every effect is selectable,
+// including the two nobody gets a seal for: LICENSING NO LONGER GATES ANYTHING,
+// so this screen is where you equip spells rather than where you ask permission
+// to have them.
 //
-// The assessment updates live as you drag, but the RULING does not. Cost and
-// instability are arithmetic anyone may see; the seal is the Office's opinion
-// and has to be asked for. That gap is where the game lives — the reading tells
-// you what you have built, and submitting is a decision about whether to find
-// out what the clerk thinks of it.
+// The Office's ruling is still here, updating live beside each hand, because it
+// is worth knowing what you are carrying before you throw it — a working the
+// Office would refuse is one whose casts go in the Register of Interest, and
+// one likely to turn in your hand. Advice, not a lock.
+//
+// Ordinary React and ordinary DOM. Nothing here runs per frame; the panels
+// re-render on a slider, and the canvas next door never sees any of it.
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
 import {
   DELIVERIES,
@@ -21,18 +24,18 @@ import {
   LIMITS,
   costOf,
   effectOf,
-  instabilityOf,
   gradeOf,
+  instabilityOf,
   misfireChance,
-  ruleOn,
 } from '../../../shared/spellcraft';
 
+type Hand = 'left' | 'right';
+
 interface Props {
-  working: Working;
-  onChange: (w: Working) => void;
+  workings: { left: Working; right: Working };
+  onChange: (w: { left: Working; right: Working }) => void;
   rank: Rank;
-  ruling: Ruling | null;
-  onSubmit: (r: Ruling) => void;
+  rulings: { left: Ruling; right: Ruling };
   onEnterChamber: () => void;
   register: number;
 }
@@ -50,40 +53,62 @@ function Slider({
         <b>{value}{unit}</b>
       </span>
       <input
-        type="range"
-        min={min}
-        max={max}
-        value={value}
+        type="range" min={min} max={max} value={value}
         onChange={(e) => onChange(Number(e.target.value))}
       />
     </label>
   );
 }
 
-export function Bureau({
-  working, onChange, rank, ruling, onSubmit, onEnterChamber, register,
+export function Spellbook({
+  workings, onChange, rank, rulings, onEnterChamber, register,
 }: Props) {
-  const [reading, setReading] = useState(true);
+  /*
+   * Which hand is being edited. A single editor with a hand switch rather than
+   * two side by side: the panels carry twelve effects and three sliders each,
+   * and two of those on one screen is a control surface nobody reads.
+   */
+  const [hand, setHand] = useState<Hand>('right');
 
-  const assessment = useMemo(() => ({
-    cost: costOf(working),
-    grade: gradeOf(costOf(working)),
-    instability: instabilityOf(working),
-  }), [working]);
-
+  const working = workings[hand];
+  const ruling = rulings[hand];
   const effect = effectOf(working);
-  const misfire = misfireChance(assessment.instability);
-  const set = (patch: Partial<Working>) => onChange({ ...working, ...patch });
+  const cost = costOf(working);
+  const instability = instabilityOf(working);
+  const misfire = misfireChance(instability);
+
+  const set = (patch: Partial<Working>) =>
+    onChange({ ...workings, [hand]: { ...working, ...patch } });
 
   return (
     <div className="slay__bureau">
       <header className="slay__bureauHead">
         <p className="slay__eyebrow">Office of Thaumaturgical Licensing</p>
-        <h1>Submission of a Working</h1>
+        <h1>Your spellbook</h1>
         <p className="slay__rank">
-          Applicant: <b>{rank.name}</b> · licensed to <b>{rank.clearance}</b>
+          Carried by a <b>{rank.name}</b> · licensed to <b>{rank.clearance}</b>
         </p>
       </header>
+
+      {/* Which hand. Each tab carries its own spell's name and seal, so the one
+          you are not editing is still legible. */}
+      <div className="slay__hands">
+        {(['left', 'right'] as Hand[]).map((h) => (
+          <button
+            key={h}
+            type="button"
+            className={`slay__hand${h === hand ? ' is-on' : ''} is-${rulings[h].seal}`}
+            onClick={() => setHand(h)}
+            aria-pressed={h === hand}
+          >
+            <span className="slay__handWhich">{h === 'left' ? 'Left hand' : 'Right hand'}</span>
+            <span className="slay__handSpell">{effectOf(workings[h]).name}</span>
+            <span className="slay__handSeal">
+              {rulings[h].seal === 'refused' ? 'Unlicensed' : rulings[h].seal}
+            </span>
+          </button>
+        ))}
+      </div>
 
       <div className="slay__cols">
         <section className="slay__panel">
@@ -136,71 +161,48 @@ export function Bureau({
             onChange={(area) => set({ area })}
           />
 
-          <button
-            type="button"
-            className="slay__reveal"
-            onClick={() => setReading((r) => !r)}
-            aria-expanded={reading}
-          >
-            {reading ? 'Hide the assessment' : 'Show the assessment'}
-          </button>
-
-          {reading && (
-            <dl className="slay__reading">
-              <div>
-                <dt>Cost</dt>
-                <dd>{assessment.cost.toFixed(0)}</dd>
-              </div>
-              <div>
-                <dt>Grade</dt>
-                <dd>{assessment.grade}</dd>
-              </div>
-              <div>
-                <dt>Instability</dt>
-                <dd className={assessment.instability > 60 ? 'is-bad' : assessment.instability > 35 ? 'is-warn' : ''}>
-                  {assessment.instability.toFixed(0)}
-                </dd>
-              </div>
-              <div>
-                <dt>Misfire</dt>
-                <dd className={misfire > 0.25 ? 'is-bad' : misfire > 0.08 ? 'is-warn' : ''}>
-                  {(misfire * 100).toFixed(0)}%
-                </dd>
-              </div>
-            </dl>
-          )}
+          <dl className="slay__reading">
+            <div>
+              <dt>Cost</dt>
+              <dd>{cost.toFixed(0)}</dd>
+            </div>
+            <div>
+              <dt>Grade</dt>
+              <dd>{gradeOf(cost)}</dd>
+            </div>
+            <div>
+              <dt>Instability</dt>
+              <dd className={instability > 60 ? 'is-bad' : instability > 35 ? 'is-warn' : ''}>
+                {instability.toFixed(0)}
+              </dd>
+            </div>
+            <div>
+              <dt>Misfire</dt>
+              <dd className={misfire > 0.25 ? 'is-bad' : misfire > 0.08 ? 'is-warn' : ''}>
+                {(misfire * 100).toFixed(0)}%
+              </dd>
+            </div>
+          </dl>
         </section>
       </div>
 
-      <div className="slay__actions">
-        <button
-          type="button"
-          className="slay__submit"
-          onClick={() => onSubmit(ruleOn(working, rank))}
-        >
-          Submit for a ruling
-        </button>
-        {ruling && (
-          <button type="button" className="slay__enter" onClick={onEnterChamber}>
-            {ruling.seal === 'refused'
-              ? 'Carry it to the chamber anyway'
-              : 'Take it to the proving chamber'}
-          </button>
+      {/* The ruling, live. It advises; it does not admit or refuse entry. */}
+      <aside className={`slay__ruling slay__ruling--${ruling.seal}`} role="status">
+        <p className="slay__stamp">{ruling.title}</p>
+        <p className="slay__rulingBody">{ruling.body}</p>
+        {ruling.seal === 'refused' && (
+          <p className="slay__warn">
+            You may carry it regardless. Every cast of an unlicensed working is entered
+            in the Register of Interest.
+          </p>
         )}
-      </div>
+      </aside>
 
-      {ruling && (
-        <aside className={`slay__ruling slay__ruling--${ruling.seal}`} role="status">
-          <p className="slay__stamp">{ruling.title}</p>
-          <p className="slay__rulingBody">{ruling.body}</p>
-          {ruling.seal === 'refused' && (
-            <p className="slay__warn">
-              A refused working may still be carried. Every cast of one is entered in the
-              Register of Interest.
-            </p>
-          )}
-        </aside>
-      )}
+      <div className="slay__actions">
+        <button type="button" className="slay__submit" onClick={onEnterChamber}>
+          To the proving chamber
+        </button>
+      </div>
 
       {register > 0 && (
         <p className="slay__register">

@@ -373,3 +373,98 @@
 @media (max-width: 640px) {
   .slay__reading { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ── The chamber's own controls ──────────────────────────────────────────
+ *
+ * Escape is not discoverable, and a game with no visible way out is one people
+ * close the tab on rather than leave. Three chips, small enough to ignore while
+ * playing and impossible to miss when you want them.
+ */
+.slay__chamberBar {
+  position: absolute;
+  top: 0.7rem;
+  left: 0.7rem;
+  display: flex;
+  gap: 0.35rem;
+  z-index: 2;
+}
+
+.slay__chip {
+  appearance: none;
+  cursor: pointer;
+  padding: 0.35rem 0.7rem;
+  font-family: var(--display);
+  font-size: 0.58rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  border: 1px solid rgba(201, 162, 39, 0.28);
+  border-radius: 2px;
+  background: rgba(8, 6, 5, 0.6);
+  color: color-mix(in srgb, #e9dec4 70%, transparent);
+  backdrop-filter: blur(2px);
+  transition: color var(--dur-hand, 0.35s) var(--ease),
+    border-color var(--dur-hand, 0.35s) var(--ease);
+}
+
+.slay__chip:hover,
+.slay__chip:focus-visible {
+  border-color: rgba(201, 162, 39, 0.6);
+  color: var(--gold-bright);
+}
+
+/* The register bar shares the top edge with the chips, so it starts clear. */
+.slay__registerBar { padding-left: 14rem; }
+
+/* ── Which hand ──────────────────────────────────────────────────────── */
+
+.slay__hands {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 1.2rem;
+}
+
+.slay__hand {
+  appearance: none;
+  cursor: pointer;
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.7rem 0.9rem;
+  text-align: left;
+  border: 1px solid rgba(201, 162, 39, 0.2);
+  border-left-width: 3px;
+  background: rgba(0, 0, 0, 0.25);
+  color: #e9dec4;
+  border-radius: 2px;
+}
+
+.slay__hand:hover { border-color: rgba(201, 162, 39, 0.45); }
+.slay__hand.is-on { background: rgba(201, 162, 39, 0.14); border-color: var(--gold); }
+
+/* The seal shows on the tab, so the hand you are not editing stays legible. */
+.slay__hand.is-approved { border-left-color: rgba(120, 170, 110, 0.8); }
+.slay__hand.is-restricted { border-left-color: rgba(224, 169, 74, 0.8); }
+.slay__hand.is-refused { border-left-color: var(--rubric); }
+
+.slay__handWhich {
+  font-family: var(--display);
+  font-size: 0.54rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, #e9dec4 45%, transparent);
+}
+
+.slay__handSpell { font-size: 0.95rem; color: var(--gold-bright); }
+
+.slay__handSeal {
+  font-family: var(--display);
+  font-size: 0.52rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, #e9dec4 55%, transparent);
+}
+
+@media (max-width: 560px) {
+  .slay__hands { grid-template-columns: minmax(0, 1fr); }
+  .slay__registerBar { padding-left: 0.7rem; padding-top: 3rem; }
+}
