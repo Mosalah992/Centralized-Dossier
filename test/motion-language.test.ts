@@ -10,9 +10,9 @@ import { CURVES, D, STAGGER } from '../web/src/motion';
  * TypeScript may not write tokens onto `:root` either.
  *
  * Two copies of a number is a bug waiting for someone to change one of them.
- * This is the same answer test/middleware.test.ts gives for PUBLIC_PATHS: put
- * the shared fact somewhere a test can see both halves, and fail loudly when
- * they stop agreeing.
+ * The answer is to put the shared fact somewhere a test can see both halves and
+ * fail loudly when they stop agreeing. (test/middleware.test.ts did the same
+ * for the gate's PUBLIC_PATHS, until there was no longer a boundary to guard.)
  *
  * If you are here because one of these failed, you have changed a curve in one
  * file and not the other. Change both, in the same commit, or the book hover

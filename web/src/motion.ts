@@ -130,10 +130,12 @@ gsap.ticker.lagSmoothing(500, 33);
 // The obvious optimisation here is `gsap.ticker.sleep()` while the tab is
 // hidden and `wake()` on return. It was written, and it was removed, because a
 // slept ticker does not merely pause pictures — it stops timelines from ever
-// reaching `onComplete`, and this app sequences real consequences off that. The
-// gate navigates to Discord when the seal ceremony completes. A reader who
-// presses the seal and switches tabs would come back to a broken gate, which is
-// precisely the lockout this refactor exists partly to fix.
+// reaching `onComplete`, and code that sequences a real consequence off a
+// completion then never runs it. The case that proved it was the gate, whose
+// seal ceremony navigated onward from `onComplete`: press the seal, switch
+// tabs, and you came back to a door with nothing behind it. That gate is gone,
+// but the hazard is a property of the ticker rather than of that one timeline,
+// and it costs nothing to keep it impossible.
 //
 // The saving was never worth it either: browsers already throttle rAF in
 // background tabs to approximately nothing, so the ticker is close to idle
@@ -157,8 +159,8 @@ gsap.ticker.lagSmoothing(500, 33);
  * with the ScrollTriggers that would have cleared them already killed — an
  * invisible register. Each component makes its own; see `staged()` below.
  *
- * `wide` is the 900px breakpoint the gate background and the torches already
- * use, so a layout that drops an element can drop its animation in one branch.
+ * `wide` is the 900px breakpoint the torches already use, so a layout that
+ * drops an element can drop its animation in one branch.
  */
 export const STAGE = {
   moving: '(prefers-reduced-motion: no-preference)',

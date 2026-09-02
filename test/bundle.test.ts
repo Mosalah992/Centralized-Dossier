@@ -3,22 +3,25 @@ import { gzipSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
 
 /**
- * What a reader who has NOT signed in is made to download.
+ * What every reader is made to download before they see anything.
  *
  * `dist/assets/index-*.js` is the entry chunk: the only script `index.html`
- * loads, and therefore everything a sealed reader pays for before they can see
- * a seal to press. Every other chunk is fetched on demand from a `React.lazy`
- * boundary in App.tsx and costs them nothing.
+ * loads, and therefore the whole cost of arriving. Every other chunk is fetched
+ * on demand from a `React.lazy` boundary in App.tsx and costs nothing until it
+ * is asked for.
  *
- * CLAUDE.md's invariant 7 has always said this, and until now it said it in
- * prose with a `grep -c griffel` beside it that nobody runs. A static import of
- * Fluent from App.tsx, Gate.tsx, Shelf.tsx or main.tsx breaks nothing, fails
- * nothing, and silently adds ~90 KB gzip to that download. So does an animation
- * plugin. These tests are that grep, run automatically.
+ * This used to be measured against a reader stopped at the gate, who paid for
+ * all of it to see a seal. The gate is gone and the shelf is the first screen,
+ * which changes who is being protected but not the number: a static import of
+ * Fluent from App.tsx, Shelf.tsx or main.tsx breaks nothing, fails nothing, and
+ * silently adds ~90 KB gzip to that download. So does an animation plugin.
+ * CLAUDE.md's invariant 7 said this in prose with a `grep -c griffel` beside it
+ * that nobody runs. These tests are that grep, run automatically.
  *
- * IF YOU ARE HERE BECAUSE ONE OF THESE FAILED you have just put something at
- * the gate. Check that you meant to. If you did, move the ceiling in the same
- * commit and say in the message what you added and why a sealed reader needs it.
+ * IF YOU ARE HERE BECAUSE ONE OF THESE FAILED you have just put something in
+ * front of every reader. Check that you meant to. If you did, move the ceiling
+ * in the same commit and say in the message what you added and why it belongs
+ * on the first paint.
  */
 
 const DIST = new URL('../dist/assets/', import.meta.url);
@@ -40,7 +43,7 @@ const entry = entryChunk();
  * `npm run verify` builds and then tests, and is the command that guarantees
  * these actually run.
  */
-describe.skipIf(!entry)('the gate chunk', () => {
+describe.skipIf(!entry)('the entry chunk', () => {
   /*
    * Fluent styles with Griffel, which emits its own class-name prefix as a
    * literal string into the bundle — so the marker survives minification, which
@@ -62,12 +65,14 @@ describe.skipIf(!entry)('the gate chunk', () => {
   });
 
   /*
-   * GSAP core is here ON PURPOSE — the seal ceremony is the first thing a
-   * sealed reader sees and cannot wait for a lazy chunk. Asserted positively so
-   * that if someone lazily loads it and the gate silently stops animating,
-   * this says so rather than the change passing unnoticed.
+   * GSAP core is here ON PURPOSE — the shelf's books arrive on it, and that is
+   * the first thing anyone sees, so it cannot wait for a lazy chunk. It was the
+   * gate's seal ceremony that earned it this slot; the shelf inherited both the
+   * animation layer and the argument. Asserted positively so that if someone
+   * lazily loads it and the hall silently stops animating, this says so rather
+   * than the change passing unnoticed.
    */
-  it('carries GSAP core, which the seal ceremony needs', () => {
+  it('carries GSAP core, which the shelf needs on first paint', () => {
     expect(entry!.source).toContain('CustomEase');
   });
 
@@ -131,8 +136,8 @@ describe.skipIf(!existsSync(DIST))('the Archives Editor', () => {
  * the calendar's instruments, and it is roughly nineteen kilobytes gzipped. The
  * entry chunk had about twenty kilobytes of headroom under its ceiling when the
  * instrument was added, so importing it plainly from Shelf — which App.tsx
- * imports statically — would have spent nearly all of it on an ornament that a
- * reader stopped at the gate cannot even see.
+ * imports statically — would have spent nearly all of it on an ornament that
+ * nobody sees until they open one particular volume.
  *
  * It reaches readers inside the calendar's own already-lazy view. This is
  * invariant 7 again, and the Editor chunk proved that guarding a render is not
@@ -144,7 +149,7 @@ describe.skipIf(!entry)('anime.js', () => {
     ['its timer', 'createTimer'],
     ['the instruments it drives', 'firm-star'],
     ['and the wheel', 'wheel-arm'],
-  ])('is absent from the gate chunk: %s', (_what, needle) => {
+  ])('is absent from the entry chunk: %s', (_what, needle) => {
     expect(entry!.source.includes(needle), `${needle} found in ${entry!.name}`).toBe(false);
   });
 

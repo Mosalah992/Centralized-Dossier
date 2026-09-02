@@ -6,20 +6,25 @@ import { keysIn, setDevVar } from '../scripts/make-dev-vars.mjs';
 
 /**
  * The first draft of this script rewrote .dev.vars from scratch, deleting
- * GATE_PASSPHRASE and CHRONICLE_PASSPHRASE among others — values Cloudflare
- * will not read back, so losing them locally means replacing the live ones and
- * locking out everyone holding the old word.
+ * CHRONICLE_PASSPHRASE among others — a value Cloudflare will not read back, so
+ * losing it locally means replacing the live one and shutting the volume on
+ * everyone holding the old word.
+ *
+ * That blast radius is smaller than it was. GATE_PASSPHRASE and the Discord
+ * client secret used to sit in this file too, and the archive they opened is
+ * public now. One irreplaceable secret is still one too many to lose to a
+ * script the README lists as a routine step.
  *
  * These tests are here so that failure cannot come back.
  */
 const REAL = [
   'GOOGLE_SERVICE_ACCOUNT_JSON={"type":"service_account","private_key":"-----BEGIN..."}',
   'GATE_SECRET=abc',
-  'GATE_PASSPHRASE=a word',
   'GATE_EPOCH=1',
   'CHRONICLE_PASSPHRASE=another word',
-  'DISCORD_CLIENT_ID=123',
-  'DISCORD_GUILD_ID=456',
+  '# a comment the script has no business touching',
+  'SHEET_ID=1KS',
+  'SOMETHING_ELSE=kept',
 ].join('\n') + '\n';
 
 describe('writing the service-account key into .dev.vars', () => {
@@ -28,7 +33,7 @@ describe('writing the service-account key into .dev.vars', () => {
     for (const line of REAL.split('\n').slice(1).filter(Boolean)) {
       expect(after).toContain(line);
     }
-    expect(keysIn(after)).toHaveLength(7);
+    expect(keysIn(after)).toHaveLength(6);
   });
 
   it('replaces the key in place rather than appending a second one', () => {
@@ -38,7 +43,7 @@ describe('writing the service-account key into .dev.vars', () => {
     expect(after).not.toContain('private_key');
     // Order is preserved, so the file does not reshuffle on every run.
     expect(keysIn(after)[0]).toBe('GOOGLE_SERVICE_ACCOUNT_JSON');
-    expect(keysIn(after)[6]).toBe('DISCORD_GUILD_ID');
+    expect(keysIn(after)[5]).toBe('SOMETHING_ELSE');
   });
 
   it('is a no-op when run twice with the same key', () => {
@@ -50,14 +55,14 @@ describe('writing the service-account key into .dev.vars', () => {
     const value = '{"private_key":"a=b=c=","token_uri":"https://x/y?a=b"}';
     const after = setDevVar(REAL, 'GOOGLE_SERVICE_ACCOUNT_JSON', value);
     expect(after).toContain(`GOOGLE_SERVICE_ACCOUNT_JSON=${value}`);
-    expect(keysIn(after)).toHaveLength(7);
+    expect(keysIn(after)).toHaveLength(6);
   });
 
   it('appends when the key is absent, without disturbing what is there', () => {
-    const without = 'GATE_SECRET=abc\nGATE_PASSPHRASE=a word\n';
+    const without = 'GATE_SECRET=abc\nCHRONICLE_PASSPHRASE=a word\n';
     const after = setDevVar(without, 'GOOGLE_SERVICE_ACCOUNT_JSON', '{}');
     expect(keysIn(after)).toEqual([
-      'GATE_SECRET', 'GATE_PASSPHRASE', 'GOOGLE_SERVICE_ACCOUNT_JSON',
+      'GATE_SECRET', 'CHRONICLE_PASSPHRASE', 'GOOGLE_SERVICE_ACCOUNT_JSON',
     ]);
   });
 

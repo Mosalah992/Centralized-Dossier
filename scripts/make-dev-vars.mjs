@@ -8,12 +8,13 @@
 //
 // IT MERGES, AND THAT IS THE WHOLE POINT OF THIS FILE'S SECOND DRAFT. It used
 // to write .dev.vars from scratch with a single line, which silently deleted
-// every other value in it — GATE_SECRET, GATE_PASSPHRASE, GATE_EPOCH,
-// CHRONICLE_PASSPHRASE and the Discord ids. Two of those are passphrases that
-// CANNOT BE READ BACK OUT OF CLOUDFLARE: losing them locally means guessing, or
-// replacing the live ones and locking out everyone holding the old word. The
-// script is listed in the README as a routine step, so the only thing that had
-// ever protected them was nobody running it.
+// every other value in it — GATE_SECRET, GATE_EPOCH and CHRONICLE_PASSPHRASE.
+// The last of those CANNOT BE READ BACK OUT OF CLOUDFLARE: losing it locally
+// means guessing, or replacing the live one and shutting the Thalmor Chronicles
+// on everyone holding the old word. The script is listed in the README as a
+// routine step, so the only thing that had ever protected it was nobody running
+// it. (GATE_PASSPHRASE and the Discord client secret were on that list too,
+// until the archive's own gate was removed and the registers made public.)
 //
 // Everything not owned by this script is passed through untouched: other keys,
 // comments, blank lines, and the order they were written in.

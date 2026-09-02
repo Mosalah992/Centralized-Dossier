@@ -1,11 +1,9 @@
-import { Suspense, lazy, useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 
 import { useRoute } from './router';
 import { getTitle } from '../../shared/volumes';
 import { bindingVars } from './theme';
-import { GATE_SEALED_EVENT, RESEAL_GRACE_MS } from './api';
 import { Ambience } from './components/Ambience';
-import { Gate } from './components/Gate';
 import { Shelf } from './components/Shelf';
 import { Consulting, Notice } from './components/Notice';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -13,9 +11,14 @@ import type { VolumeSlug } from '../../shared/types';
 
 /*
  * Volumes load on demand. Everything below was previously in the first bundle,
- * which meant a reader stopped at the gate downloaded all seven registers'
- * code — including the chronicle, which is 24KB of prose before minification —
- * to render a passphrase box they might not answer.
+ * which meant every reader downloaded all seven registers' code — including the
+ * chronicle, which is 24KB of prose before minification — to render whichever
+ * one page they had actually come for.
+ *
+ * The saving used to be argued in terms of a reader stopped at the gate, who
+ * paid for all of it to see a seal. There is no gate now and the argument is
+ * simply the ordinary one: the shelf is the first screen, it needs none of
+ * this, and the reader who opens one volume should not fetch the other eight.
  *
  * Views are named exports, so each import is mapped to a default: React.lazy
  * takes a module whose `default` is the component, and re-exporting here keeps
@@ -36,11 +39,11 @@ const EnforcementView = lazy(() => import('./views/Enforcement').then((m) => ({ 
  * more so.
  *
  * THIS IMPORT MUST STAY LAZY. Fluent is the heaviest thing in the project, and
- * a static import here would put it in the index chunk, which is the chunk a
- * reader stopped at the gate downloads to render a seal they may never press.
- * Rendered where it is below — inside the volume branch, inside the Suspense
- * boundary the view was already waiting in — it costs the gate nothing and the
- * shelf nothing, and arrives with the first volume anyone opens.
+ * a static import here would put it in the index chunk — the one script
+ * index.html loads, and therefore the one every reader downloads before they
+ * see anything at all. Rendered where it is below — inside the volume branch,
+ * inside the Suspense boundary the view was already waiting in — it costs the
+ * shelf nothing and arrives with the first volume anyone opens.
  */
 /*
  * The Archives Editor.
@@ -118,37 +121,9 @@ const VOLUME_TRACKS: Partial<Record<VolumeSlug, Track>> = {
 export default function App() {
   const [route, navigate] = useRoute();
 
-  // Whether this browser holds a valid writ. Null until /api/gate answers,
-  // so the gate does not flash for members who are already through.
-  const [open, setOpen] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    fetch('/api/gate')
-      .then((res) => res.json() as Promise<{ open?: boolean }>)
-      .then((body) => setOpen(Boolean(body.open)))
-      .catch(() => setOpen(false));
-  }, []);
-
-  // A 401 from any volume mid-session (expired or rotated writ) reseals.
-  //
-  // Held for a beat rather than done on the spot. FluentShell raises a notice
-  // saying the writ has lapsed, and it is mounted inside the volume — so
-  // resealing immediately would unmount the sentence in the same tick it was
-  // written. The delay is what makes the message legible, not a race being
-  // papered over: nothing here depends on the two landing in a particular
-  // order, and if the shell never mounted the archive still reseals on time.
-  useEffect(() => {
-    let held: ReturnType<typeof setTimeout> | undefined;
-    const reseal = () => {
-      if (held) return;
-      held = setTimeout(() => setOpen(false), RESEAL_GRACE_MS);
-    };
-    window.addEventListener(GATE_SEALED_EVENT, reseal);
-    return () => {
-      window.removeEventListener(GATE_SEALED_EVENT, reseal);
-      if (held) clearTimeout(held);
-    };
-  }, []);
+  // The archive opens straight onto the shelf. There was a writ to check first
+  // and a null state to hold the first paint back while /api/gate answered it;
+  // both are gone with the gate, and the first render is the hall itself.
 
   // The tab title should say which volume is open.
   useEffect(() => {
@@ -160,100 +135,97 @@ export default function App() {
 
   const track = (route.name === 'volume' && VOLUME_TRACKS[route.slug]) || HALL_TRACK;
 
-  // Ambience holds the same slot in every state — waiting on the gate, sealed,
-  // and open. If it changed position React would remount it, and the track
-  // would be cut off the moment the seal breaks.
+  // Ambience sits outside the shell rather than inside it. It used to hold the
+  // same slot across the gate's three states so the track survived the seal
+  // breaking; there are no states left to survive, but a remount still cuts the
+  // audio, so it stays a sibling of everything that re-renders beneath it.
   return (
     <>
       <Ambience track={track.url} />
 
-      {open === null ? null : !open ? (
-        <Gate />
-      ) : (
-        <div className="shell">
-          <main>
-            {route.name === 'shelf' && <Shelf onOpen={navigate} />}
+      <div className="shell">
+        <main>
+          {route.name === 'shelf' && <Shelf onOpen={navigate} />}
 
-            {/* The editor sits inside the gate like everything else: it is a
-                local tool, but it edits the sealed volumes, and there is no
-                reason for it to be the one door that opens without a writ. */}
-            {import.meta.env.DEV && route.name === 'editor' && EditorView && (
-              <ErrorBoundary resetKey="editor">
+          {/* Dev-only, and that is now the whole of what keeps it from
+              readers — it used to sit behind the gate as well. The build
+              emits no chunk for it at all; test/bundle.test.ts checks. */}
+          {import.meta.env.DEV && route.name === 'editor' && EditorView && (
+            <ErrorBoundary resetKey="editor">
+              <Suspense fallback={<Consulting />}>
+                <EditorView />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+
+          {route.name === 'volume' && (
+            <div className={`volume volume--${route.slug}`} style={bindingVars(route.slug)}>
+              <button className="volume__back" type="button" onClick={() => navigate('/')}>
+                Return to the cabinet
+              </button>
+              {/* Remounting per slug restarts the page-opening animation and
+                  discards the previous volume's state. The boundary keeps a
+                  failure inside the volume instead of blanking the archive. */}
+              {/* Suspense sits inside the boundary so a chunk that fails to
+                  arrive is caught as an error rather than hanging on the
+                  fallback forever. The fallback is the same notice a volume
+                  shows while the archivist is consulted, so a slow network
+                  and a slow sheet look alike to the reader. */}
+              <ErrorBoundary resetKey={route.slug}>
                 <Suspense fallback={<Consulting />}>
-                  <EditorView />
+                  {/* The shell shares this boundary rather than bringing its
+                      own, so Fluent and the view arrive together under the
+                      one notice instead of the reader watching two
+                      consecutive loads. */}
+                  <FluentShell slug={route.slug}>
+                    {(() => {
+                      const View = VIEWS[route.slug];
+                      return <View key={route.slug} />;
+                    })()}
+                  </FluentShell>
                 </Suspense>
               </ErrorBoundary>
-            )}
+            </div>
+          )}
 
-            {route.name === 'volume' && (
-              <div className={`volume volume--${route.slug}`} style={bindingVars(route.slug)}>
+          {route.name === 'missing' && (
+            <>
+              <Notice
+                kind="error"
+                title="No such volume"
+                body="The archive holds no register under that name."
+              />
+              <p style={{ textAlign: 'center' }}>
                 <button className="volume__back" type="button" onClick={() => navigate('/')}>
                   Return to the cabinet
                 </button>
-                {/* Remounting per slug restarts the page-opening animation and
-                    discards the previous volume's state. The boundary keeps a
-                    failure inside the volume instead of blanking the archive. */}
-                {/* Suspense sits inside the boundary so a chunk that fails to
-                    arrive is caught as an error rather than hanging on the
-                    fallback forever. The fallback is the same notice a volume
-                    shows while the archivist is consulted, so a slow network
-                    and a slow sheet look alike to the reader. */}
-                <ErrorBoundary resetKey={route.slug}>
-                  <Suspense fallback={<Consulting />}>
-                    {/* The shell shares this boundary rather than bringing its
-                        own, so Fluent and the view arrive together under the
-                        one notice instead of the reader watching two
-                        consecutive loads. */}
-                    <FluentShell slug={route.slug}>
-                      {(() => {
-                        const View = VIEWS[route.slug];
-                        return <View key={route.slug} />;
-                      })()}
-                    </FluentShell>
-                  </Suspense>
-                </ErrorBoundary>
-              </div>
-            )}
+              </p>
+            </>
+          )}
+        </main>
 
-            {route.name === 'missing' && (
+        <footer className="site-footer">
+          <p className="site-footer__creed">For the Glory of the Third Aldmeri Dominion</p>
+          <p className="site-footer__warning">
+            Unauthorised perusal is a matter for the Justiciars.
+          </p>
+          {/* The credit names whichever tone is actually sounding, so a
+              reader in a volume with its own track is told the right title
+              rather than the hall's. A track with no named performer is
+              announced and nothing more. */}
+          <p className="site-footer__credit">
+            {track.by ? (
               <>
-                <Notice
-                  kind="error"
-                  title="No such volume"
-                  body="The archive holds no register under that name."
-                />
-                <p style={{ textAlign: 'center' }}>
-                  <button className="volume__back" type="button" onClick={() => navigate('/')}>
-                    Return to the cabinet
-                  </button>
-                </p>
+                <em>{track.title}</em>, played by <strong>{track.by}</strong> the bard.
+              </>
+            ) : (
+              <>
+                Playing: <em>{track.title}</em>
               </>
             )}
-          </main>
-
-          <footer className="site-footer">
-            <p className="site-footer__creed">For the Glory of the Third Aldmeri Dominion</p>
-            <p className="site-footer__warning">
-              Unauthorised perusal is a matter for the Justiciars.
-            </p>
-            {/* The credit names whichever tone is actually sounding, so a
-                reader in a volume with its own track is told the right title
-                rather than the hall's. A track with no named performer is
-                announced and nothing more. */}
-            <p className="site-footer__credit">
-              {track.by ? (
-                <>
-                  <em>{track.title}</em>, played by <strong>{track.by}</strong> the bard.
-                </>
-              ) : (
-                <>
-                  Playing: <em>{track.title}</em>
-                </>
-              )}
-            </p>
-          </footer>
-        </div>
-      )}
+          </p>
+        </footer>
+      </div>
     </>
   );
 }

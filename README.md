@@ -1,13 +1,14 @@
 # Thalmor Embassy Archives
 
-A gated, read-only web archive that renders a roleplay community's records as
+An open, read-only web archive that renders a roleplay community's records as
 in-world ceremonial registers — a shelf of bound volumes you open and read,
 rather than a spreadsheet with a theme on it.
 
 Live at **[thalmor-archives.pages.dev](https://thalmor-archives.pages.dev)**.
-It is deliberately `noindex, nofollow`: the registers carry about a hundred real
-people's handles and activity, so the archive is for members, not for search
-engines.
+It is `noindex, nofollow` and stays that way: the registers carry about a
+hundred real people's handles and activity. That keeps them out of search
+results — it does not keep them private, and is not meant to. Anyone with the
+link reads the archive.
 
 ---
 
@@ -15,9 +16,12 @@ engines.
 
 ### Getting in
 
-The archive opens to a wax seal and asks for a word. That word is handed out by
-the Embassy — it is not in this repository and never will be. One word admits
-you to the whole shelf and is remembered for a week.
+You don't. The archive opens straight onto the shelf, for anyone with the link.
+
+It was gated once — first by a shared word, then by a Discord login that checked
+your membership of the community's servers — and both have been removed. One
+volume is still shut: the Thalmor Chronicles keep a word of their own, handed
+out by the Embassy and not in this repository.
 
 ### The shelf
 
@@ -67,8 +71,7 @@ flowchart TB
     Discord([Discord]) -->|clock-in commands| Bot[Clock-in bot<br/>separate repo]
     Bot -->|writes| Sheet[(The spreadsheet<br/>authoritative)]
 
-    Reader([Reader]) --> Gate{{Passphrase gate}}
-    Gate -->|writ, one week| Pages[Cloudflare Pages<br/>site and functions]
+    Reader([Reader]) --> Pages[Cloudflare Pages<br/>site and functions]
     Pages -->|read only| Sheet
 
     Pages --> Shelf[The shelf]
@@ -79,13 +82,13 @@ flowchart TB
 
 Four things that shape everything else:
 
-- **The gate is the boundary, not the page.** Every data route is checked
-  server-side, and gated answers are marked so no shared cache can hand one
-  reader's roster to someone with no cookie.
+- **There is no boundary any more, and that is deliberate.** Every data route
+  answers anyone. What used to be checked server-side on every request is gone;
+  the one check left belongs to a single volume rather than to the archive.
 - **Three kinds of volume.** Most are read from the spreadsheet. One is written
   here and travels with the site. One is *sealed* — its text is served only
-  after a second word and is never compiled into the browser bundle, because
-  anything in the bundle is readable by anyone with the link.
+  after its own word, and is kept out of the browser bundle and out of this
+  repository so that neither a page source nor a `git clone` is a copy of it.
 - **One origin.** Site and data are deployed together, so there is no CORS and
   no second service to keep in step.
 - **Assets are built, not hand-cropped.** The covers are cut, re-bound and
@@ -101,7 +104,7 @@ Four things that shape everything else:
 | [`web/`](web/) | The archive itself — shelf, volumes, styling. |
 | [`shared/`](shared/) | The volume registry, parsers and reckoning. Pure, used by both halves. |
 | [`server/`](server/) | Reads the spreadsheet and parses it. |
-| [`functions/`](functions/) | The gate and the data routes. |
+| [`functions/`](functions/) | The data routes, and the sealed volume's door. |
 | [`scripts/`](scripts/) | Asset preparation. Committed script, committed output. |
 | [`test/`](test/) | Vitest — parsers, the calendar's reckoning, the statistics, the palette. |
 | [`docs/`](docs/) | Research notes and the transcribed press history. |

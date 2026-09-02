@@ -1,16 +1,21 @@
 // GET /api/chronicle — the Thalmor Chronicles.
 //
-// The only volume behind two locks. api/_middleware.ts has already established
-// that the caller holds an archive writ before this route runs at all; what is
-// checked here is the SECOND writ, minted by chronicle/gate.ts against the
-// volume's own passphrase. Holding one does not imply the other: the scope is
-// signed into each writ, so an archive writ moved into the chronicle's cookie
-// is rejected (see WritScope in functions/lib/session.ts).
+// THE ONLY SEALED VOLUME LEFT, AND THE CHECK BELOW IS THE WHOLE OF THE SEAL.
+// This route was the inner of two locks: api/_middleware.ts established that
+// the caller held an archive writ before it ran at all, and what happened here
+// was the second question. The archive's gate is gone — every other register is
+// public now — so nothing runs in front of this. The writ read below, minted by
+// chronicle/gate.ts against the volume's own passphrase, is the only thing
+// between this text and anyone with the link.
 //
-// The failure is 403 and deliberately not 401. The web app treats 401 from any
-// volume as "the archive has resealed" and drops the reader back to the main
-// gate — which would be wrong and disorienting here, since their writ for the
-// archive is perfectly good and it is only this volume that is shut to them.
+// The scope check in readWrit still matters for the same reason it always did,
+// and rather more: readers are holding week-long archive writs that are validly
+// signed, and a cookie's value can be moved. One replayed into this cookie is
+// refused because the scope is signed into the body. See session.ts.
+//
+// The failure is 403 and deliberately not 401 — 401 has no meaning here now
+// that there is no outer gate to fall back to, and this is a volume shut under
+// its own word rather than a reader who is not admitted.
 //
 // Its text sits in functions/lib/chronicle.ts and never enters the browser
 // bundle. See the note at the head of that file for why.
@@ -48,7 +53,6 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     env.GATE_SECRET,
     epoch,
     readCookie(request, CHRONICLE_COOKIE_NAME),
-    'chronicle',
   );
 
   if (!writ) {
@@ -85,9 +89,12 @@ function json(body: unknown, status = 200): Response {
     status,
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
-      // The middleware rewrites this on the way out for gated routes; it is set
-      // here so the answer is still right if this route is ever reached
-      // without passing through it.
+      // LOAD-BEARING, not a duplicate of something upstream. The middleware
+      // used to rewrite every gated response to this and no longer rewrites
+      // anything; these two headers are now the only reason a shared cache
+      // cannot hold a copy of the sealed volume. Do not remove them as
+      // redundant with the gate above — they are what makes the gate mean
+      // anything at the edge.
       'Cache-Control': 'private, no-store',
       Vary: 'Cookie',
     },
