@@ -1,22 +1,27 @@
 // Stale-while-revalidate over the Worker's own cache.
 //
-// WHY NOT `s-maxage` ON THE RESPONSE: because it would unseal the archive.
-// api/_middleware.ts rewrites every gated response to `private, no-store`
-// precisely so a shared edge cache cannot hand a cached roster — a hundred
-// real people's handles and activity — to a request carrying no writ.
-// `s-maxage` is the directive that invites exactly that.
+// THIS WAS BUILT TO CACHE BEHIND A GATE, AND THE GATE IS GONE. The original
+// reasoning was that `s-maxage` on the response would unseal the archive: a
+// shared edge cache holding a roster — a hundred real people's handles and
+// activity — could hand it to a request carrying no writ. So the caching was
+// moved to our side of the door, under a synthetic key no client can produce,
+// while the reader still received `private, no-store`.
 //
-// So the caching happens on OUR side of the gate. The key is a synthetic URL
-// no client can produce, the lookup runs only after the middleware has checked
-// the cookie, and the response the reader receives is still `private,
-// no-store`. What is cached is the answer from Google, not the answer to a
-// reader.
+// The registers are public now, so that hazard no longer exists and the edge is
+// welcome to cache them; the volumes' own `public, max-age=60` says so and the
+// middleware no longer overwrites it. This layer is kept anyway, because it was
+// never only about the gate.
 //
-// The win is latency. Sheets is slow — several hundred milliseconds is normal,
-// and the calendar asks for grid data with formatting — while the roster
-// changes a few times a day. Before this, one reader in every sixty-second
-// window paid full price for everyone. Now that reader is served the previous
-// answer immediately and the refresh happens behind them.
+// The win is latency, and it is upstream of the edge rather than behind it.
+// Sheets is slow — several hundred milliseconds is normal, and the calendar
+// asks for grid data with formatting — while the roster changes a few times a
+// day. Cloudflare's cache is per-colo and cold in most of them; this one is
+// warmed by whichever reader arrived first, anywhere. Before it, one reader in
+// every sixty-second window paid full price for everyone. Now that reader is
+// served the previous answer immediately and the refresh happens behind them.
+//
+// The synthetic key stays too. It costs nothing, and it keeps the entry from
+// colliding with a real request URL that the edge is now also caching.
 
 /** Records when an entry was produced, since the Cache API will not tell us. */
 const STAMP = 'x-archive-fetched-at';
@@ -35,8 +40,10 @@ const now = () => Math.floor(Date.now() / 1000);
 function stamped(response: Response): Response {
   const copy = new Response(response.clone().body, response);
   copy.headers.set(STAMP, String(now()));
-  // Governs retention in the Worker cache only; the middleware overwrites what
-  // the reader is sent. Without a cacheable directive here, cache.put drops it.
+  // Governs retention in the Worker cache. Without a cacheable directive here,
+  // cache.put drops the entry outright. It is not what the reader is sent —
+  // that is whatever the route itself set, which for the volumes is a much
+  // shorter `public, max-age=60`.
   copy.headers.set('Cache-Control', `public, max-age=${RETAIN_SECONDS}`);
   return copy;
 }

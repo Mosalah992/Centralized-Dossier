@@ -34,8 +34,9 @@ const STORAGE_KEY = 'archive:ambience';
  * Fired on the window whenever the reader silences or restores the archive.
  * The preference is stored here, but it is not only this component's business:
  * anything else that makes sound has to honour the same choice, and reading
- * localStorage would not tell it the moment the roundel was clicked. Same shape
- * as GATE_SEALED_EVENT in api.ts, and there for the same reason.
+ * localStorage would not tell it the moment the roundel was clicked. It is the
+ * last of these window events in the archive — GATE_SEALED_EVENT in api.ts was
+ * the other, and it went with the gate.
  */
 export const AMBIENCE_CHANGED_EVENT = 'archive:ambience-changed';
 

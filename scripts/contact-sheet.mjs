@@ -82,7 +82,8 @@ const page = await browser.newPage({ viewport: { width: 1440, height: 3200 }, de
 const slugs = [...fs.readFileSync(path.join(ROOT, 'shared', 'volumes.ts'), 'utf8')
   .matchAll(/^\s+slug: '([a-z]+)',$/gm)].map(([, slug]) => slug);
 
-await page.route('**/api/gate', (route) => route.fulfill({ json: { open: true } }));
+// No gate stub any more: the archive opens straight onto the shelf, so there is
+// nothing to answer `{ open: true }` to before the covers will render.
 await page.route('**/api/volumes', (route) => route.fulfill({
   json: {
     reachable: true,

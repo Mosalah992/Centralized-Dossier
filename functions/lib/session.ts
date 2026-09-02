@@ -1,93 +1,50 @@
-// Signed-cookie session for the archive gate.
+// Signed-cookie session for the one door the archive still keeps.
 // Web Crypto only — runs unchanged on Cloudflare Pages Functions.
+//
+// This module used to serve two gates and a Discord login. The archive's own
+// gate is gone — the registers are public — and with it went the identity writ,
+// the OAuth state nonce, and the `thalmor_writ` cookie itself. What remains is
+// the Thalmor Chronicles' own lock, which is a separate secret over a volume
+// that was never part of that decision.
+//
+// READERS STILL HOLD THE OLD COOKIE. `thalmor_writ` was set with a week's
+// Max-Age and nothing clears it; it simply expires. Nothing reads it any more,
+// which is fine — but it is a validly signed token, and a reader can move a
+// cookie's value wherever they like. That is the whole reason the scope check
+// below survives the simplification: an archive writ replayed into the
+// chronicle's cookie must still be refused.
 
 const enc = new TextEncoder();
 
-export const COOKIE_NAME = "thalmor_writ";
-
 /**
- * Thalmor Chronicles carries a second lock of its own, so it gets a
- * second cookie. Kept separate rather than adding a claim to the archive writ
- * because clearing one must not clear the other: a reader whose volume writ
- * expires should fall back to the volume's gate, not be thrown out of the
- * archive entirely.
+ * The Chronicles' cookie. Named for the volume rather than the archive because
+ * it is the volume's writ — it was always separate from the archive's, so that
+ * losing one did not cost the reader the other, and now it is the only one.
  */
 export const CHRONICLE_COOKIE_NAME = "thalmor_writ_chronicle";
 
 export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7; // one week
 
 /**
- * A writ issued by Discord login lives a single day, where one bought with the
- * passphrase lives a week.
+ * What a writ opens, written into the signed body and therefore covered by the
+ * MAC along with everything else.
  *
- * The roles on an identity writ are a SNAPSHOT taken at login — Discord is
- * asked once and never again for the life of the cookie. Nothing reads them
- * yet, but once something does, this number is exactly how long a role the
- * Embassy has taken away goes on working. A week of that is too long; a day is
- * the most staleness worth accepting for a re-login that costs one click.
+ * ONE VALUE, AND IT IS STILL CHECKED. With the archive's gate removed this is
+ * the only scope that exists, which makes the constant look like ceremony — it
+ * is not. Writs minted before the gate came down carry `s: "archive"`, or on
+ * the oldest of them no `s` at all, and readers are still holding them. Both
+ * must fail here, so the comparison is exact and a missing value is a refusal
+ * rather than a default. See readWrit.
  */
-export const OAUTH_TTL_SECONDS = 60 * 60 * 24; // one day
-
-/**
- * What a writ opens. Written into the signed body, so a writ minted for the
- * archive cannot be moved into the chronicle's cookie and honoured there —
- * the scope is covered by the MAC along with everything else.
- */
-export type WritScope = "archive" | "chronicle";
+const SCOPE = "chronicle";
 
 export interface Writ {
   /** Rotation epoch. Bump GATE_EPOCH to invalidate every issued cookie at once. */
   e: number;
   /** Expiry, seconds since epoch. */
   exp: number;
-  /**
-   * Scope. Absent on writs issued before the chronicle existed, which are
-   * archive writs by definition — so a missing value reads as "archive" and a
-   * week of already-issued cookies keeps working.
-   */
-  s?: WritScope;
-
-  // ── Identity ──────────────────────────────────────────────────────────────
-  //
-  // Present only on a writ bought with a Discord login. The passphrase issues
-  // writs without them and always will: the word is the fallback door, and a
-  // reader who comes through it is admitted anonymously, exactly as before.
-  //
-  // Every field here is covered by the MAC along with the rest of the body, so
-  // none of it can be edited by the bearer. That is worth stating because it is
-  // the whole reason these can be trusted later: a reader cannot award
-  // themselves a role by rewriting their own cookie.
-
-  /** Discord user id — the snowflake, which is stable across renames. */
-  u?: string;
-  /** Display name. For greeting the reader and nothing else. */
-  n?: string;
-  /**
-   * Guild role ids AS THEY STOOD AT LOGIN. Not a live check — see
-   * OAUTH_TTL_SECONDS for how long a stale one can survive. Nothing reads this
-   * yet; it is carried now so the data can be proven correct in production
-   * before anything is gated on it.
-   */
-  r?: string[];
-  /**
-   * The server that admitted them, and therefore the server `r` is scoped to.
-   *
-   * REQUIRED FOR THE ROLES TO MEAN ANYTHING. The Embassy admits from more than
-   * one Discord server, and a role id is only unique within its own — so a writ
-   * carrying roles without this carries a list of numbers that cannot safely be
-   * compared to anything. Absent on writs issued when there was only one server
-   * to be in, which is why it is optional and not why it is unimportant.
-   */
-  g?: string;
-}
-
-/** What a login knows about the reader, before it becomes a writ. */
-export interface Identity {
-  id: string;
-  name: string;
-  roles: string[];
-  /** The admitting server, which is the scope `roles` are read against. */
-  guild: string;
+  /** Scope. Always SCOPE on anything this module mints today. */
+  s?: string;
 }
 
 function b64urlEncode(bytes: Uint8Array): string {
@@ -140,69 +97,22 @@ export async function secretsMatch(
   return constantTimeEqual(a, b);
 }
 
-/**
- * Mint a writ. With an `identity` it is a Discord login and lives a day; without
- * one it came from the passphrase and lives a week.
- */
-export async function issueWrit(
-  secret: string,
-  epoch: number,
-  scope: WritScope = "archive",
-  identity?: Identity,
-): Promise<string> {
-  const ttl = identity ? OAUTH_TTL_SECONDS : SESSION_TTL_SECONDS;
+/** Mint a writ for the volume. One week, matching the cookie it rides in. */
+export async function issueWrit(secret: string, epoch: number): Promise<string> {
   const writ: Writ = {
     e: epoch,
-    exp: Math.floor(Date.now() / 1000) + ttl,
-    s: scope,
-    ...(identity && {
-      u: identity.id, n: identity.name, r: identity.roles, g: identity.guild,
-    }),
+    exp: Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS,
+    s: SCOPE,
   };
   const body = b64urlEncode(enc.encode(JSON.stringify(writ)));
   const sig = b64urlEncode(await mac(secret, body));
   return `${body}.${sig}`;
 }
 
-/**
- * Sign an arbitrary short value into a tamper-proof token, and read it back.
- *
- * Used for the OAuth `state` — the nonce that ties a callback to the login that
- * started it. It needs the same guarantee a writ does (the bearer must not be
- * able to forge one) but none of the structure, so it shares the MAC rather
- * than growing a second way to sign things.
- */
-export async function sign(secret: string, value: string): Promise<string> {
-  const body = b64urlEncode(enc.encode(value));
-  return `${body}.${b64urlEncode(await mac(secret, body))}`;
-}
-
-export async function unsign(secret: string, token: string | null): Promise<string | null> {
-  if (!token) return null;
-  const dot = token.indexOf(".");
-  if (dot < 1) return null;
-
-  const body = token.slice(0, dot);
-  let offered: Uint8Array;
-  try {
-    offered = b64urlDecode(token.slice(dot + 1));
-  } catch {
-    return null;
-  }
-
-  if (!constantTimeEqual(offered, await mac(secret, body))) return null;
-  try {
-    return new TextDecoder().decode(b64urlDecode(body));
-  } catch {
-    return null;
-  }
-}
-
 export async function readWrit(
   secret: string,
   epoch: number,
   token: string | null,
-  scope: WritScope = "archive",
 ): Promise<Writ | null> {
   if (!token) return null;
 
@@ -231,8 +141,10 @@ export async function readWrit(
 
   if (writ.e !== epoch) return null; // rotated out
   if (writ.exp < Math.floor(Date.now() / 1000)) return null;
-  // A writ minted for one door does not open another.
-  if ((writ.s ?? "archive") !== scope) return null;
+  // A writ minted for another door does not open this one, and an old archive
+  // writ moved into this cookie is exactly that. No default: `s` absent is a
+  // pre-scope archive writ and must fail here too.
+  if (writ.s !== SCOPE) return null;
 
   return writ;
 }
@@ -248,14 +160,13 @@ export function readCookie(request: Request, name: string): string | null {
 }
 
 /**
- * `maxAge` should match the life of the writ inside. They are separate numbers
- * — the cookie's is enforced by the browser, the writ's by us — and letting a
- * day-long writ sit in a week-long cookie only means the reader keeps handing
- * over something already refused.
+ * `maxAge` matches the life of the writ inside. They are separate numbers — the
+ * cookie's is enforced by the browser, the writ's by us — and letting them
+ * drift only means the reader keeps handing over something already refused.
  */
 export function writCookie(
   token: string,
-  name: string = COOKIE_NAME,
+  name: string = CHRONICLE_COOKIE_NAME,
   maxAge: number = SESSION_TTL_SECONDS,
 ): string {
   return [
@@ -268,30 +179,6 @@ export function writCookie(
   ].join("; ");
 }
 
-/** The OAuth nonce, held between the redirect out and the callback back. */
-export const STATE_COOKIE_NAME = "thalmor_oauth_state";
-const STATE_TTL_SECONDS = 600;
-
-/**
- * SameSite=Lax rather than Strict, and that is load-bearing: the callback
- * arrives as a top-level navigation FROM discord.com, and a Strict cookie would
- * not be sent with it — every login would fail its own state check.
- */
-export function stateCookie(token: string): string {
-  return [
-    `${STATE_COOKIE_NAME}=${token}`,
-    "Path=/api/auth",
-    "HttpOnly",
-    "Secure",
-    "SameSite=Lax",
-    `Max-Age=${STATE_TTL_SECONDS}`,
-  ].join("; ");
-}
-
-export function clearedStateCookie(): string {
-  return `${STATE_COOKIE_NAME}=; Path=/api/auth; HttpOnly; Secure; SameSite=Lax; Max-Age=0`;
-}
-
-export function clearedCookie(name: string = COOKIE_NAME): string {
+export function clearedCookie(name: string = CHRONICLE_COOKIE_NAME): string {
   return `${name}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`;
 }

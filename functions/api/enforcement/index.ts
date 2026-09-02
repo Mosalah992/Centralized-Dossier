@@ -1,28 +1,35 @@
 // GET /api/enforcement — the Ledger of Enforcement.
 //
-// Behind ONE lock, not two. api/_middleware.ts has already established that the
-// caller holds an archive writ before this route runs, and that is the whole of
-// the check: any member the Embassy admits may read what the Embassy did. The
-// Chronicles carry a second word because they are the Embassy's own reading of
-// its intelligence; this is the register of acts, and every member is entitled
-// to it.
+// BEHIND NO LOCK AT ALL, AND THAT IS DELIBERATE. This route had exactly one
+// check and never its own: api/_middleware.ts established that the caller held
+// an archive writ, and that was the whole of it, on the reasoning that any
+// member the Embassy admits may read what the Embassy did. The archive's gate
+// has been removed and the register is now served to anyone with the link.
 //
-// Its text sits in functions/lib/enforcement.ts and never enters the browser
-// bundle. That is the point of serving it rather than shipping it: static
-// assets are public, so a volume compiled into the bundle is readable by anyone
-// with the link whether or not they ever answered the gate.
+// SO THE REASON ITS TEXT IS NOT IN THE BUNDLE HAS CHANGED, AND IT IS WORTH
+// SAYING WHY IT STAYS THERE ANYWAY. functions/lib/enforcement.ts was kept out
+// of the browser build because a static asset is readable without a writ; there
+// is no writ now, so that argument is spent. What is left is the other half:
+// the file is gitignored, the public GitHub repository does not carry it, and
+// keeping it on the Worker's side of the build is what keeps a `git clone` from
+// being a copy of it. The site publishes this ledger. The repository still
+// does not, and that distinction is the only one this arrangement now buys.
 
 import { ENFORCEMENTS } from '../../lib/enforcement';
+
+/** The entries only change on deploy, so this is a floor, not a compromise. */
+const CACHE_SECONDS = 300;
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
       'content-type': 'application/json; charset=utf-8',
-      // The middleware rewrites these anyway; set here so the route is correct
-      // on its own terms and does not depend on being wrapped.
-      'cache-control': 'private, no-store',
-      vary: 'Cookie',
+      // Public and static — the entries are a compiled-in constant, not a read
+      // of anything — so this may be cached anywhere, by anyone, for as long as
+      // a deploy lasts. `Vary: Cookie` went with the gate: there is no cookie
+      // left that changes this answer.
+      'cache-control': `public, max-age=${CACHE_SECONDS}`,
     },
   });
 }

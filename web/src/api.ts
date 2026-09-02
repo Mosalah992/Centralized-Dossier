@@ -51,30 +51,19 @@ export type FetchableSlug = keyof VolumeData;
 
 class ApiError extends Error {}
 
-/** Fired when any volume answers 401 — the writ has expired or been rotated
- *  out, and the app should fall back to the gate. */
-export const GATE_SEALED_EVENT = 'gate:sealed';
-
-/**
- * How long the volume stays on screen after the event above, before the gate
- * replaces it.
- *
- * The archive used to reseal on the same tick, which meant the page a reader
- * was in became the seal with no explanation — indistinguishable from being
- * turned out for cause. Fluent's shell now raises a notice saying the writ has
- * lapsed, and this is the pause that lets it be read.
- *
- * It lives here rather than with the shell because App.tsx needs it too, and
- * App must not import from web/src/fluent — a static import there would pull
- * the whole library into the chunk the gate is served from. Both sides read the
- * same number from the module that already owns the event.
+/*
+ * There was a GATE_SEALED_EVENT here, and a RESEAL_GRACE_MS beside it. Any 401
+ * meant the reader's writ had expired or been rotated out, so every fetch in
+ * this file raised the event, App.tsx dropped back to the gate on it, and the
+ * shell announced why before the page went. None of that has anything left to
+ * fire it: the registers are public and answer no 401 at all, and the one
+ * remaining lock — the Chronicles' — answers 403 for its own volume without
+ * implying anything about the reader's standing anywhere else.
  */
-export const RESEAL_GRACE_MS = 2400;
 
 async function get<T>(path: string, signal: AbortSignal): Promise<T> {
   const res = await fetch(path, { signal, headers: { Accept: 'application/json' } });
   if (!res.ok) {
-    if (res.status === 401) window.dispatchEvent(new Event(GATE_SEALED_EVENT));
     const body = await res.json().catch(() => null) as { error?: string } | null;
     throw new ApiError(body?.error ?? `The archive returned ${res.status}`);
   }
@@ -156,11 +145,13 @@ export interface Chronicle {
 }
 
 /**
- * Thalmor Chronicles. Unlike History of the Realm this one is fetched
- * rather than bundled, because its text is the Embassy's own intelligence and
- * a static asset is readable without a writ. See SealedVolume in shared/types.
+ * Thalmor Chronicles. Unlike History of the Realm this one is fetched rather
+ * than bundled: its text is the Embassy's own intelligence, and a bundled
+ * volume is a static asset that the Worker never gets to refuse. That is now
+ * the only reason — with the archive open, everything else here is readable by
+ * anyone, and this volume's own word is what still separates it from them.
  *
- * Held back until the volume's own lock is open — see useChronicle's caller.
+ * Held back until that lock is open — see useChronicle's caller.
  */
 export const useChronicle = (unlocked: boolean) =>
   useAsync<Chronicle>(unlocked ? '/api/chronicle' : null);
@@ -184,9 +175,10 @@ export interface LedgerOfEnforcement {
 }
 
 /**
- * Ledger of Enforcement. Sealed in the same sense as the Chronicles — served
- * rather than bundled — but behind ONE lock, not two: the archive writ is the
- * whole of the check, so there is no `unlocked` argument to wait on.
+ * Ledger of Enforcement. Served rather than bundled, like the Chronicles, but
+ * behind NO lock: its one check was the archive writ, and that is gone. It is
+ * fetched this way now only to keep its text out of the repository — see the
+ * note at the head of functions/api/enforcement/index.ts.
  */
 export const useEnforcement = () => useAsync<LedgerOfEnforcement>('/api/enforcement');
 
@@ -194,11 +186,6 @@ export const useEnforcement = () => useAsync<LedgerOfEnforcement>('/api/enforcem
 export async function chronicleIsOpen(): Promise<boolean> {
   try {
     const res = await fetch('/api/chronicle/gate', { headers: { Accept: 'application/json' } });
-    if (res.status === 401) {
-      // The archive itself has resealed; that is the outer gate's business.
-      window.dispatchEvent(new Event(GATE_SEALED_EVENT));
-      return false;
-    }
     const body = (await res.json()) as { open?: boolean };
     return Boolean(body.open);
   } catch {
@@ -214,7 +201,6 @@ export async function openChronicle(passphrase: string): Promise<string | null> 
     body: JSON.stringify({ passphrase }),
   });
   if (res.ok) return null;
-  if (res.status === 401 && !passphrase) window.dispatchEvent(new Event(GATE_SEALED_EVENT));
   const body = (await res.json().catch(() => null)) as { error?: string } | null;
   return body?.error ?? `The volume returned ${res.status}`;
 }

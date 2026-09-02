@@ -1,16 +1,22 @@
-// Thalmor Chronicles keeps its own door.
+// Thalmor Chronicles keeps its own door, and it is now the only door in the
+// archive.
 //
 //   POST   /api/chronicle/gate  { passphrase }  -> sets the volume writ
 //   GET    /api/chronicle/gate                  -> { open: boolean }
 //   DELETE /api/chronicle/gate                  -> closes the volume again
 //
-// This route is NOT in the middleware's PUBLIC_PATHS, and that is the point:
-// unlike /api/gate, a caller must already hold an archive writ before the
-// volume will so much as consider a word. Two locks in series, not in parallel.
+// THIS USED TO BE THE SECOND OF TWO LOCKS IN SERIES. The archive's own gate ran
+// in api/_middleware.ts and had already established that the caller was a
+// member before this route would so much as consider a word. That gate is gone
+// — the registers are public — so this word is no longer the inner of two but
+// the whole of the check, standing on its own in front of the open internet.
 //
-// The writ it issues is scoped to 'chronicle' and lives in its own cookie, so
-// closing this volume does not put the reader back out on the street, and
-// holding a writ for the archive does not open the volume.
+// Two things follow, and both are why the throttle below is not optional
+// decoration any more. Every guess now comes from anyone at all rather than
+// from someone already admitted, and there is nothing in front of this route to
+// slow them down. GATE_ATTEMPTS still fails open when unbound (see
+// wrangler.toml), which was a defensible trade behind a gate and is a weaker
+// one here.
 
 import {
   CHRONICLE_COOKIE_NAME,
@@ -46,8 +52,9 @@ function json(body: unknown, status = 200, extra: HeadersInit = {}): Response {
   });
 }
 
-// Counted separately from the archive gate's attempts, so guessing at the
-// volume cannot lock a member out of the archive itself, nor the reverse.
+// Keyed `chronicle:` rather than bare, which is a leftover from when the
+// archive gate counted its own attempts under `gate:` in the same namespace.
+// Kept as it is: the prefix costs nothing and old keys age out on their own.
 async function throttled(env: Env, ip: string): Promise<boolean> {
   if (!env.GATE_ATTEMPTS) return false;
   const count = Number((await env.GATE_ATTEMPTS.get(`chronicle:${ip}`)) ?? '0');
@@ -74,7 +81,6 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       env.GATE_SECRET,
       epoch,
       readCookie(request, CHRONICLE_COOKIE_NAME),
-      'chronicle',
     );
     return json({ open: Boolean(writ) });
   }
@@ -105,7 +111,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     return json({ error: 'The wax holds. That word is not recorded.' }, 401);
   }
 
-  const token = await issueWrit(env.GATE_SECRET, epoch, 'chronicle');
+  const token = await issueWrit(env.GATE_SECRET, epoch);
   return json({ open: true }, 200, {
     'set-cookie': writCookie(token, CHRONICLE_COOKIE_NAME),
   });

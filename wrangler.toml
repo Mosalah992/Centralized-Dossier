@@ -7,11 +7,17 @@ compatibility_date = "2024-09-23"
 # alongside it as the /api/* routes on the same origin.
 pages_build_output_dir = "dist"
 
-# Gate throttling. functions/api/gate.ts counts failed passphrase attempts per
-# IP here — 8 per 10 minutes — and DISABLES ITSELF SILENTLY when the binding is
-# absent (`if (!env.GATE_ATTEMPTS) return false`). It was absent until now, so
-# the live gate accepted unlimited guesses at a word shared with ~100 people.
-# Deleting this binding does not break the site; it quietly unlocks the door.
+# Throttling for the ONE door the archive still keeps: the Thalmor Chronicles'
+# own word. functions/api/chronicle/gate.ts counts failed attempts per IP here —
+# 8 per 10 minutes — and DISABLES ITSELF SILENTLY when the binding is absent
+# (`if (!env.GATE_ATTEMPTS) return false`). Deleting this binding does not break
+# the site; it quietly unlocks the volume.
+#
+# IT MATTERS MORE THAN IT USED TO. This throttle once sat behind the archive's
+# own gate, so an attacker had to be an admitted member before they could spend
+# a guess. That gate has been removed and the registers are public, which leaves
+# the chronicle's word standing in front of the open internet with nothing but
+# this in front of it.
 [[kv_namespaces]]
 binding = "GATE_ATTEMPTS"
 id = "0b84bdb3c52141a08506032df9c004d1"
@@ -38,56 +44,20 @@ id = "e5d0df6b87984e46b38fc498bebb1b69"
 # site only ever reads.
 SHEET_ID = "1KS__WJoqI_o3esXxO3Ei3L6SlJwJnOXQrjEr-FCPEZ0"
 
-# Discord login — the second door beside the passphrase. Neither of these is a
-# secret: the client id is handed to every visitor in the authorize URL, and the
-# guild id is public to anyone in the guild. The third value, the client SECRET,
-# is set with `wrangler pages secret put DISCORD_CLIENT_SECRET`.
-#
-# ALL THREE MISSING IS A SUPPORTED STATE, and it is what ships today: the gate
-# hides the Discord button, /api/auth/login answers 503 for itself alone, and
-# the passphrase carries on. That is deliberately unlike GATE_SECRET, whose
-# absence seals the archive — an optional door being unconfigured must not lock
-# a hundred people out. See functions/api/auth/login.ts.
-#
-# THE GUILD IDS ARE THE COMMUNITIES' SERVERS, NOT THE APPLICATION'S. The first
-# was 1517187744840024204 from the day the door was built until 2026-08-21,
-# which is a server created seven weeks after the community's own and is not one
-# the members are in. Membership resolved 404 for every one of them and the gate
-# answered "that name is not on the Embassy's rolls" — so the door was shut to
-# precisely the people it was built for, and it read as ~100 individual account
-# problems rather than one wrong number. The first id below is the guild the
-# export scripts talk to (scripts/dump-informant-reports.mjs,
-# scripts/informant-access.mjs) and the one docs/skyrim-press-history.md was
-# transcribed from; check any replacement against those before trusting it.
-#
-# A COMMA-SEPARATED LIST, AND ORDER IS PRECEDENCE. Membership of ANY server here
-# admits a reader. A reader in more than one is admitted under the first, and it
-# is that server's roles the writ carries — role ids are only unique within
-# their own server — so the Embassy's own guild stays at the head of the list.
-# See functions/lib/guilds.ts; the parsing and the admission rules are tested in
-# test/guilds.test.ts, because neither can be exercised without a real account
-# in a real server.
-#
-# The second is the main Keizaal server. Adding it widened the archive's
-# readership from the Embassy's own members to everyone in Keizaal, which is a
-# deliberate decision and not a small one: this site carries ~100 real people's
-# Discord handles, ranks and activity, and is noindexed over exactly that.
-#
-# Redirect URIs to register on the Discord application:
-#   https://thalmor-archives.pages.dev/api/auth/callback
-#   http://localhost:8788/api/auth/callback
-#
-DISCORD_CLIENT_ID = "1524083694598623553"
-DISCORD_GUILD_ID  = "1498139135758831749,1350193670254497853"
 
-# Writ rotation. Every writ carries the epoch it was signed under, and one
-# signed under a different number is refused — so raising this invalidates every
-# cookie the archive has ever issued, at once, for everyone.
+# Writ rotation, and it now governs the chronicle's writ alone — it is the only
+# one left. Every writ carries the epoch it was signed under and one signed
+# under a different number is refused, so raising this shuts the volume on
+# everyone currently inside it, at once.
 #
-# Raised to 2 when Discord became the door. Members admitted by the old shared
-# word were still holding week-long writs and would never have seen the new gate
-# until those expired; this puts all of them back at the seal to be identified
-# by name. Raise it again to force the same thing.
+# DELIBERATELY NOT RAISED WHEN THE ARCHIVE'S GATE CAME DOWN. Raising it would
+# have closed the Chronicles on every reader holding a good volume writ, to no
+# purpose: what changed was that the registers around it became public, which
+# takes nothing away from a word that still opens exactly what it always did.
+# The stale archive writs the change did leave behind are refused on their
+# scope instead — see the note in functions/lib/session.ts.
+#
+# It was raised to 2 when Discord briefly became the door.
 GATE_EPOCH = "2"
 
 # Secret (set with `npx wrangler pages secret put GOOGLE_SERVICE_ACCOUNT_JSON`):
