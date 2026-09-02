@@ -3,9 +3,11 @@
 //
 // Browsers refuse to play sound before the reader has interacted with the
 // page, and a page that made noise the moment it loaded would deserve to be
-// refused. So: the track waits for the first deliberate gesture — breaking
-// the seal, or any click or key press for a member who already holds a writ —
-// and the roundel in the corner stops it for good if it is unwelcome.
+// refused. So the track waits for the first deliberate gesture — any click or
+// key press — and the roundel in the corner stops it for good if it is
+// unwelcome. That gesture used to be the seal breaking, which was reliable
+// because everybody arrived through it; with the archive open a reader can land
+// on the shelf and never click anything, and silence is the correct outcome.
 //
 // Which track plays depends on where the reader is standing: the hall has its
 // own tone, and History of the Realm its own. The component is mounted once for

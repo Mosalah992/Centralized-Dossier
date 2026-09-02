@@ -462,8 +462,8 @@ function VolumeSeal({ onOpen }: { onOpen: () => void }) {
       <p className="chron-lock__class">Sealed — Embassy Register</p>
       <h1 className="chron-lock__title">Thalmor Chronicles</h1>
       <p className="chron-lock__note">
-        This volume is kept under its own word. Your writ admits you to the
-        archive; it does not admit you here.
+        The rest of the archive is open. This volume is not: it is kept under a
+        word of its own, and nothing that opens the others opens it.
       </p>
 
       <label className="chron-lock__label" htmlFor="chron-word">
