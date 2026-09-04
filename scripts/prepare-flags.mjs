@@ -29,10 +29,11 @@
  * transparent margins on the extremes and is why the strip carries an alpha
  * channel. The cell stays a uniform 16x11 so the CSS can index it by row.
  *
- * THE SOURCE ART IS THE KEEPER'S TO SUPPLY. Everything under web/src/assets is
- * served from public URLs, so committing these publishes them — the same test
- * the game's sprites and the orrery's bodies had to pass before they were
- * pushed. See the note in CLAUDE.md.
+ * PROVENANCE WAS ASKED AND ANSWERED: the keeper supplied this set and confirms
+ * it is public domain. Worth recording rather than assuming — everything under
+ * web/src/assets is served from public URLs, so committing these publishes
+ * them, and the question was put before anything was deployed. The same test
+ * the game's sprites and the orrery's bodies had to pass.
  */
 
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';

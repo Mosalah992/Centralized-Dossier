@@ -200,9 +200,12 @@ is.
 because emoji regional indicators render as bare letters on Windows Chrome —
 the machine this is built on — and a sprite sheet off the internet would have
 been someone else's artwork published from `web/src/assets`, which is a
-licensing question rather than a design one. The keeper supplied the set
-instead (`Assets/w2560`, 254 flags), so the second objection is answered and
-`scripts/prepare-flags.mjs` cuts them to a single 16x11 strip.
+licensing question rather than a design one. The keeper supplied the set instead
+(`Assets/w2560`, 254 flags) and **confirmed it is public domain** — which is the
+answer the game's sprites and the orrery's bodies each had to give before they
+were pushed, and it was asked before anything was deployed. So the second
+objection is answered, and `scripts/prepare-flags.mjs` cuts them to a single
+16x11 strip.
 
 Three things about it are deliberate. **16x11 at 1x** is the size the counters
 of 1999 used, and the CSS renders it with `image-rendering: pixelated` so a
