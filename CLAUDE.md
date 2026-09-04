@@ -578,6 +578,11 @@ looked broken for the same few minutes.
   chaining altogether by passing `--config` instead of `cd`-ing into a subproject.
   Do **not** advise changing the execution policy — it is a machine-wide security setting
   and the workarounds cost nothing.
+  **`curl` is an alias for `Invoke-WebRequest` here**, so a copied `curl -s <url>`
+  does not fail cleanly — it prompts for `Uri` and then reports that a drive named
+  `https` does not exist, which reads like a broken URL rather than a wrong shell.
+  Write `curl.exe -s ...` (the real binary is at `C:\Windows\system32\curl.exe`) or
+  `Invoke-RestMethod <url>`, which parses the JSON on the way out.
 - **npm 11 gates native install scripts.** Approvals for `esbuild`, `sharp` and `workerd`
   are recorded in `package.json` under `allowScripts`. A fresh clone that skips them gets
   a broken dev server and image pipeline.
