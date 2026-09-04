@@ -72,8 +72,8 @@ describe('where a reader came from', () => {
   });
 
   it('calls anything it cannot place unrecorded', () => {
-    // Absent is the local-development case: request.cf is undefined under
-    // wrangler pages dev, and every local visit lands here.
+    // Absent is the case the override var exists for. It is NOT the ordinary
+    // local one — wrangler 3 resolves a real country under pages dev.
     expect(normalizeCountry(undefined)).toBe(UNRECORDED);
     expect(normalizeCountry(null)).toBe(UNRECORDED);
     expect(normalizeCountry('')).toBe(UNRECORDED);

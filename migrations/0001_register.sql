@@ -9,8 +9,8 @@
 --   wrangler d1 execute thalmor-register --remote --file=./migrations/0001_register.sql
 
 CREATE TABLE IF NOT EXISTS tally (
-  -- ISO-3166-1 alpha-2, uppercase. 'XX' is everything the edge could not place,
-  -- which includes local development, where request.cf does not exist at all.
+  -- ISO-3166-1 alpha-2, uppercase. 'XX' is everything the edge could not place:
+  -- Cloudflare's own non-country markers (T1, Tor) and anything unresolved.
   country TEXT PRIMARY KEY,
   visits  INTEGER NOT NULL DEFAULT 0
 );

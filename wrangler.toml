@@ -83,15 +83,19 @@ GATE_EPOCH = "2"
 # and both write 147. The lost update IS the product. D1 does `visits =
 # visits + 1` inside a transaction and the count is never read into JavaScript.
 #
-# THE ID BELOW IS A PLACEHOLDER. The database has to be created first, and only
-# the keeper can do it — it needs their Cloudflare account and prints an id that
-# does not exist yet:
+# THE ID BELOW IS WHERE d1 execute LOOKS. Not the database name beside it — the
+# name is a label and the id is the address, so running the migration while this
+# line still held a placeholder sent that literal string to the API as a uuid and
+# failed with "Invalid property: databaseId". Create, paste, then migrate.
 #
-#   node node_modules/wrangler/bin/wrangler.js d1 create thalmor-register
-#   # paste the printed database_id below, then apply the schema to BOTH stores:
+# --local AND --remote ARE DIFFERENT DATABASES. Neither implies the other, and a
+# schema applied to one is not applied to the other; the route catches the
+# missing table and answers as though the register were empty, so forgetting one
+# looks like nobody has visited rather than like an error:
+#
 #   node node_modules/wrangler/bin/wrangler.js d1 execute thalmor-register --local  --file=./migrations/0001_register.sql
 #   node node_modules/wrangler/bin/wrangler.js d1 execute thalmor-register --remote --file=./migrations/0001_register.sql
 [[d1_databases]]
 binding = "REGISTER"
 database_name = "thalmor-register"
-database_id = "PLACEHOLDER-run-wrangler-d1-create"
+database_id = "de644d7a-4862-48a8-85a0-36f568dc807d"
