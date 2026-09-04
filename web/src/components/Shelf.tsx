@@ -10,6 +10,7 @@ import { SHELF, isOwnWork } from '../../../shared/volumes';
 import { BINDINGS } from '../theme';
 import { Book } from './Book';
 import { Notice } from './Notice';
+import { Register } from './Register';
 
 interface Props {
   onOpen: (href: string) => void;
@@ -163,6 +164,11 @@ export function Shelf({ onOpen }: Props) {
         </div>
         <div className="archive-cabinet__base" aria-hidden />
       </section>
+
+      {/* Under the cabinet, and on the shelf only — the global footer renders
+          inside every volume too, and a register of readers belongs at the door
+          rather than at the foot of each book. */}
+      <Register />
 
     </div>
   );

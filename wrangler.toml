@@ -65,3 +65,33 @@ GATE_EPOCH = "2"
 #                                 with the spreadsheet. For local development
 #                                 put it in .dev.vars instead, which is
 #                                 git-ignored.
+
+# ── The Register of Consultation ────────────────────────────────────────────
+#
+# Counts of readers by province, and nothing else: one row per country, one
+# integer each. No addresses, no user agents, no row per visitor — see
+# functions/lib/register.ts for what is deliberately not stored.
+#
+# ABSENT IS A SUPPORTED STATE, exactly as it is for GATE_ATTEMPTS. With no
+# binding both routes answer as though the register were empty, the block does
+# not render, and nothing else on the shelf notices. An accessory must not be
+# able to take down the page it decorates.
+#
+# D1 RATHER THAN A THIRD KV NAMESPACE, and the reason is the one operation this
+# feature actually is. KV has no atomic increment, so counting means read, add
+# one, write back — and two readers arriving in different colos both read 146
+# and both write 147. The lost update IS the product. D1 does `visits =
+# visits + 1` inside a transaction and the count is never read into JavaScript.
+#
+# THE ID BELOW IS A PLACEHOLDER. The database has to be created first, and only
+# the keeper can do it — it needs their Cloudflare account and prints an id that
+# does not exist yet:
+#
+#   node node_modules/wrangler/bin/wrangler.js d1 create thalmor-register
+#   # paste the printed database_id below, then apply the schema to BOTH stores:
+#   node node_modules/wrangler/bin/wrangler.js d1 execute thalmor-register --local  --file=./migrations/0001_register.sql
+#   node node_modules/wrangler/bin/wrangler.js d1 execute thalmor-register --remote --file=./migrations/0001_register.sql
+[[d1_databases]]
+binding = "REGISTER"
+database_name = "thalmor-register"
+database_id = "PLACEHOLDER-run-wrangler-d1-create"

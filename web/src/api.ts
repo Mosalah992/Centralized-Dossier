@@ -182,6 +182,79 @@ export interface LedgerOfEnforcement {
  */
 export const useEnforcement = () => useAsync<LedgerOfEnforcement>('/api/enforcement');
 
+/* ── The Register of Consultation ────────────────────────────────────────── */
+
+export interface Register {
+  total: number;
+  /** This reader's own place in the register, when they were just entered. */
+  ordinal: number | null;
+  countries: { code: string; visits: number }[];
+}
+
+/**
+ * The register, and the reader's entry in it.
+ *
+ * DELIBERATELY NOT `Async<T>`. Every other hook here can fail visibly, because
+ * a volume that cannot be read is worth saying so about. This one resolves to
+ * `null` on every failure path — no binding, no table, a refused POST, a
+ * network error — because a counter that renders an error is worse than a
+ * counter that renders nothing. The component treats null as "say nothing".
+ *
+ * It POSTs first and falls back to the cached GET. The POST enters the reader
+ * and answers with the tally as of their own entry, so the number they see
+ * includes them; on a repeat visit within the day it answers 204 and the GET
+ * gives the same figures a minute stale, which is the right trade for a page
+ * that would otherwise ask the database on every load.
+ */
+export function useRegister(): Register | null {
+  const [register, setRegister] = useState<Register | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const read = async () => {
+      /*
+       * A moment's dwell, and only while the tab is actually being looked at.
+       *
+       * Prerenders, speculative loads and headless screenshotters mostly leave
+       * before this fires. It is not security — the route does its own checking
+       * — it is about not entering a reader who never saw the page.
+       */
+      await new Promise((r) => setTimeout(r, 1500));
+      if (controller.signal.aborted || document.visibilityState !== 'visible') return;
+
+      try {
+        const entered = await fetch('/api/register/entry', {
+          method: 'POST',
+          signal: controller.signal,
+          headers: { Accept: 'application/json' },
+        });
+
+        if (entered.status === 200) {
+          setRegister((await entered.json()) as Register);
+          return;
+        }
+
+        // 204: already entered today, or the register declined to say. Either
+        // way the tally is still worth showing.
+        const listed = await get<{ available: boolean } & Register>(
+          '/api/register',
+          controller.signal,
+        );
+        if (listed.available) setRegister({ ...listed, ordinal: null });
+      } catch {
+        // Includes the abort on unmount. Nothing renders, nothing is logged.
+      }
+    };
+
+    void read();
+    return () => controller.abort();
+  }, []);
+
+  return register;
+}
+
+
 /** Whether this browser already holds a writ for the volume itself. */
 export async function chronicleIsOpen(): Promise<boolean> {
   try {

@@ -1,0 +1,113 @@
+/* The Register of Consultation.
+ *
+ * Sits under the cabinet on the shelf and nowhere else. Widths match the cap and
+ * base — min(70rem, 100%) inside the cabinet's 74rem — so it reads as another
+ * fitting of the same piece of furniture rather than as a panel that arrived
+ * later.
+ */
+
+.consult {
+  width: min(70rem, 100%);
+  margin: clamp(1.6rem, 3vw, 2.6rem) auto 0;
+  padding: clamp(1rem, 2vw, 1.5rem) clamp(1rem, 2.4vw, 1.8rem) clamp(0.9rem, 2vw, 1.3rem);
+  border: 1px solid rgba(198, 168, 94, 0.18);
+  border-radius: 2px;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.34), rgba(0, 0, 0, 0.16)),
+    linear-gradient(180deg, #1b1410, #120d0a);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.consult__head {
+  margin: 0 0 0.9rem;
+  text-align: center;
+  font-family: var(--display);
+  font-size: 0.62rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--gold) 76%, transparent);
+}
+
+/* ── The provinces ────────────────────────────────────────────────────── */
+
+.consult__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  /* Columns rather than one long ledger: a hundred rows down the page would
+     out-weigh the nine volumes above it, which are the point of the screen. */
+  columns: 2;
+  column-gap: clamp(1.2rem, 4vw, 3rem);
+}
+
+.consult__row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  /* Keeps a row from being split across the column break mid-line. */
+  break-inside: avoid;
+  padding: 0.22rem 0;
+  font-size: 0.86rem;
+  color: color-mix(in srgb, #e9dec4 78%, transparent);
+}
+
+.consult__province { white-space: nowrap; }
+
+/* The leader between name and figure. A drawn rule rather than typed dots,
+   which would break at a different place in every column width. */
+.consult__rule {
+  flex: 1;
+  height: 1px;
+  min-width: 1rem;
+  background: linear-gradient(90deg, transparent, rgba(198, 168, 94, 0.28));
+}
+
+.consult__count {
+  font-variant-numeric: tabular-nums;
+  color: var(--gold-bright);
+}
+
+/* ── The odometer ─────────────────────────────────────────────────────── */
+
+.consult__total {
+  margin: 1.1rem 0 0;
+  padding-top: 0.9rem;
+  border-top: 1px solid rgba(198, 168, 94, 0.16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  font-family: var(--display);
+  font-size: 0.6rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, #e9dec4 55%, transparent);
+}
+
+/* The one place the 1999 joke is allowed to show: sunken digits, tabular, with
+   the spacing of a mechanical counter. */
+.consult__odometer {
+  padding: 0.25rem 0.55rem;
+  border: 1px solid rgba(198, 168, 94, 0.3);
+  border-radius: 2px;
+  background: linear-gradient(180deg, #0b0806, #171009);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.7);
+  font-family: var(--display);
+  font-size: 0.95rem;
+  letter-spacing: 0.22em;
+  font-variant-numeric: tabular-nums;
+  color: var(--gold-bright);
+}
+
+.consult__note {
+  margin: 0.8rem 0 0;
+  text-align: center;
+  font-size: 0.74rem;
+  font-style: italic;
+  line-height: 1.5;
+  color: color-mix(in srgb, #e9dec4 42%, transparent);
+}
+
+@media (max-width: 640px) {
+  .consult__list { columns: 1; }
+}

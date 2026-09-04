@@ -154,6 +154,57 @@ callers is looking at something parked, not something forgotten. Nothing was
 removed from the spreadsheet, and nothing here could: `server/` is readonly by
 invariant 2.
 
+### The Register of Consultation
+
+Counts of readers by province under the cabinet, plus an odometer total. The
+first thing on this site that answers back.
+
+**It stores integers and nothing else.** One row per country, one count each —
+no address, no user agent, no timestamp, no row per visitor. There is
+deliberately nothing that could answer "did this person come back", because the
+archive is a `noindex` page carrying about a hundred real handles and the last
+thing it should grow is a way to watch them. A third-party flag counter would
+have sent every reader's IP and that page's `Referer` to someone else's server;
+`img-src 'self' data:` would have blocked it anyway.
+
+**The dedupe cookie carries no identifier** — the literal `1`, so two visits from
+one browser are indistinguishable from two browsers. `Path=/api/register/entry`
+is the load-bearing attribute: scoped to that single URL, the cookie never rides
+along on `/api/volumes` or any asset, so **no cached route needs `Vary: Cookie`
+and no cache key changes**. Widening it to `Path=/` would break the caching of
+every public route quietly and at a distance. `test/register.test.ts` pins the
+literal string for that reason.
+
+**The count is incremented in SQL and never read into JavaScript.** That is why
+D1 rather than a third KV namespace: KV has no atomic increment, so `get` → `+1`
+→ `put` lets two readers in different colos both write 147, and the lost update
+IS the product. The read-modify-write refactor is the obvious-looking mistake
+here and it silently drops visits.
+
+**Counting is a POST from the page, not a route counting itself.** `/api/volumes`
+is `public, max-age=60` behind `lib/swr.ts`, so its Function usually never runs —
+and a `Set-Cookie` on a publicly cached response can be handed to the *next*
+reader, after which nobody is counted again. That is invariant 1's subject.
+Bot filtering, which the gate used to do for free, is now `POST` only plus
+`Sec-Fetch-Site`/`Sec-Fetch-Mode`/`Origin` — browser-set, unforgeable from page
+script, and none of it retained.
+
+**Every failure is silence.** No binding, no table, a refused POST: the GET
+answers `200 {available:false}` and the block does not render. It must never
+return a non-2xx — `get<T>()` in `web/src/api.ts` throws on any non-OK, and an
+error page because a vanity counter is down would be the tail wagging the
+archive. `wrangler.toml`'s stanza is absent-tolerant exactly as `GATE_ATTEMPTS`
+is.
+
+**No flags.** Emoji regional indicators render as bare letters on Windows Chrome,
+which is the machine this is built on; a sprite sheet would be new art with a new
+licensing question. Province names come from `Intl.DisplayNames`, so no country
+table ships — which matters because `Shelf.tsx` is statically imported and this
+lands in the entry chunk `test/bundle.test.ts` polices. It cost 525 bytes gzip.
+
+The database must be created before any of it works — see the comment on the
+`[[d1_databases]]` stanza in `wrangler.toml`.
+
 ### Slay the Heretic
 
 A spellcrafting game at `/Slaytheheretic`, reached by its own route rather than
