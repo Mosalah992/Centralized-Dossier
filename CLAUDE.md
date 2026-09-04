@@ -196,11 +196,42 @@ error page because a vanity counter is down would be the tail wagging the
 archive. `wrangler.toml`'s stanza is absent-tolerant exactly as `GATE_ATTEMPTS`
 is.
 
-**No flags.** Emoji regional indicators render as bare letters on Windows Chrome,
-which is the machine this is built on; a sprite sheet would be new art with a new
-licensing question. Province names come from `Intl.DisplayNames`, so no country
-table ships — which matters because `Shelf.tsx` is statically imported and this
-lands in the entry chunk `test/bundle.test.ts` polices. It cost 525 bytes gzip.
+**The flags are a sprite, and were once a "no".** The block shipped without them
+because emoji regional indicators render as bare letters on Windows Chrome —
+the machine this is built on — and a sprite sheet off the internet would have
+been someone else's artwork published from `web/src/assets`, which is a
+licensing question rather than a design one. The keeper supplied the set
+instead (`Assets/w2560`, 254 flags), so the second objection is answered and
+`scripts/prepare-flags.mjs` cuts them to a single 16x11 strip.
+
+Three things about it are deliberate. **16x11 at 1x** is the size the counters
+of 1999 used, and the CSS renders it with `image-rendering: pixelated` so a
+hi-dpi screen doubles each pixel into a hard block rather than smoothing it — a
+2x strip cost 29 kB against this one's 13 to have the browser blur away the
+effect being asked for. **Each flag keeps its own proportions** (`fit: contain`,
+centred in the cell), because the set runs from 0.82:1 to 2.55:1 and squashing
+everything into one box turns Switzerland into an oblong. And **the index is one
+concatenated run of codes, not a map** — a country's row is its position in it,
+and `{code: row}` cost 2.4 kB gzip of the entry chunk to store what the ordering
+already implies.
+
+That last economy has a trap, and `test/flags.test.ts` exists for it: two codes
+can spell a third across their boundary. BG followed by BH spells `GB`, so
+`indexOf` finds Britain inside Bulgaria at an odd offset before it finds the
+real entry — and a lookup that rejected that first hit instead of searching past
+it left the United Kingdom as the one row with no flag. The test sweeps every
+code in the strip rather than pinning that one pair.
+
+Province names still come from `Intl.DisplayNames`, so no country table ships —
+which matters because `Shelf.tsx` is statically imported and this lands in the
+entry chunk `test/bundle.test.ts` polices. The whole block, flags included,
+costs about 1.1 kB gzip there plus a 13 kB image the browser only fetches once
+the register actually renders.
+
+**The block is narrower than the cabinet on purpose.** It matched the cap and
+base at first, and at that width a tally of six countries read as a third
+fitting of the furniture, competing with the nine volumes that are the point of
+the screen. A counter is a small plate screwed to the bottom of the case.
 
 The database must be created before any of it works — see the comment on the
 `[[d1_databases]]` stanza in `wrangler.toml`. `--local` and `--remote` D1 are
@@ -531,6 +562,7 @@ node scripts/prepare-candles.mjs   # candle sprites
 node scripts/prepare-seal.mjs      # gate wax seal (ORPHANED — see below)
 node scripts/prepare-orrery.mjs    # the bodies of Mundus + the starfield
 node scripts/prepare-arcane.mjs    # the proving chamber's sprites + fingertip anchors
+node scripts/prepare-flags.mjs     # the register flag strip (from Assets/w2560)
 node scripts/prepare-music.mjs     # ambience tracks -> 96 kbps mono (needs FFMPEG=)
 node scripts/make-dev-vars.mjs     # .env -> .dev.vars for wrangler
 ```

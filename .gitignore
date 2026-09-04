@@ -72,3 +72,7 @@ Assets/hesperides.zip
 # travel with the repo like any other workflow. Only the launch config is local:
 # it points at a dev-server preview and means nothing on another machine.
 .claude/launch.json
+
+# Delivery archives. The extracted art is committed beside them, so a zip is
+# the same bytes twice — Assets/w2560.zip was 4.2 MB of duplicate.
+Assets/*.zip

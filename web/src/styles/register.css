@@ -1,15 +1,19 @@
 /* The Register of Consultation.
  *
- * Sits under the cabinet on the shelf and nowhere else. Widths match the cap and
- * base — min(70rem, 100%) inside the cabinet's 74rem — so it reads as another
- * fitting of the same piece of furniture rather than as a panel that arrived
- * later.
+ * Sits under the cabinet on the shelf and nowhere else.
+ *
+ * DELIBERATELY NARROWER THAN THE CABINET. It ran the full min(70rem) width at
+ * first, matching the cap and base, and at that size a tally of six countries
+ * read as a third fitting of the furniture — it competed with the nine volumes
+ * above it, which are the point of the screen. A counter should be a small
+ * plate screwed to the bottom of the case, so it is now sized to its contents
+ * rather than to the case.
  */
 
 .consult {
-  width: min(70rem, 100%);
-  margin: clamp(1.6rem, 3vw, 2.6rem) auto 0;
-  padding: clamp(1rem, 2vw, 1.5rem) clamp(1rem, 2.4vw, 1.8rem) clamp(0.9rem, 2vw, 1.3rem);
+  width: min(38rem, 100%);
+  margin: clamp(1.4rem, 2.6vw, 2.2rem) auto 0;
+  padding: 0.75rem 1rem 0.65rem;
   border: 1px solid rgba(198, 168, 94, 0.18);
   border-radius: 2px;
   background:
@@ -19,13 +23,13 @@
 }
 
 .consult__head {
-  margin: 0 0 0.9rem;
+  margin: 0 0 0.6rem;
   text-align: center;
   font-family: var(--display);
-  font-size: 0.62rem;
-  letter-spacing: 0.3em;
+  font-size: 0.54rem;
+  letter-spacing: 0.28em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--gold) 76%, transparent);
+  color: color-mix(in srgb, var(--gold) 74%, transparent);
 }
 
 /* ── The provinces ────────────────────────────────────────────────────── */
@@ -35,30 +39,58 @@
   padding: 0;
   list-style: none;
   /* Columns rather than one long ledger: a hundred rows down the page would
-     out-weigh the nine volumes above it, which are the point of the screen. */
+     out-weigh the nine volumes above it. */
   columns: 2;
-  column-gap: clamp(1.2rem, 4vw, 3rem);
+  column-gap: 1.6rem;
 }
 
 .consult__row {
   display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 0.4rem;
   /* Keeps a row from being split across the column break mid-line. */
   break-inside: avoid;
-  padding: 0.22rem 0;
-  font-size: 0.86rem;
+  padding: 0.13rem 0;
+  font-size: 0.72rem;
   color: color-mix(in srgb, #e9dec4 78%, transparent);
 }
 
-.consult__province { white-space: nowrap; }
+/* One cell of the sprite: 16x11, the size the 1999 counters used.
+ *
+ * `pixelated` is the point rather than a compromise. The strip is cut at 1x, so
+ * on a hi-dpi screen each pixel doubles into a hard block — which is what an old
+ * counter GIF looked like. Smoothing it would spend twice the bytes to blur away
+ * the exact quality being asked for.
+ *
+ * The hairline is load-bearing at this size: Japan and Switzerland are mostly
+ * white, and without an edge they bleed into a dark panel and stop reading as
+ * flags at all. */
+.consult__flag {
+  flex: none;
+  width: 16px;
+  height: 11px;
+  background-image: url('../assets/flags/flags.png');
+  background-repeat: no-repeat;
+  background-position: 0 calc(var(--row) * -11px);
+  image-rendering: pixelated;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.55);
+}
+
+.consult__province {
+  white-space: nowrap;
+  overflow: hidden;
+  /* Some province names are long enough to push the figure off a narrow column
+     — "Bosnia and Herzegovina" in half of 38rem. Clipping the name keeps the
+     count visible, which is the part being read. */
+  text-overflow: ellipsis;
+}
 
 /* The leader between name and figure. A drawn rule rather than typed dots,
    which would break at a different place in every column width. */
 .consult__rule {
   flex: 1;
   height: 1px;
-  min-width: 1rem;
+  min-width: 0.6rem;
   background: linear-gradient(90deg, transparent, rgba(198, 168, 94, 0.28));
 }
 
@@ -70,44 +102,59 @@
 /* ── The odometer ─────────────────────────────────────────────────────── */
 
 .consult__total {
-  margin: 1.1rem 0 0;
-  padding-top: 0.9rem;
+  margin: 0.7rem 0 0;
+  padding-top: 0.6rem;
   border-top: 1px solid rgba(198, 168, 94, 0.16);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.7rem;
+  gap: 0.55rem;
+}
+
+.consult__label {
   font-family: var(--display);
-  font-size: 0.6rem;
-  letter-spacing: 0.24em;
+  font-size: 0.52rem;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   color: color-mix(in srgb, #e9dec4 55%, transparent);
 }
 
-/* The one place the 1999 joke is allowed to show: sunken digits, tabular, with
-   the spacing of a mechanical counter. */
+/* The one place the 1999 joke is allowed to show. Each digit is its own bevelled
+   cell, because a single number in a sunken box is a number — it is the row of
+   separate cells that reads as a mechanical counter. */
 .consult__odometer {
-  padding: 0.25rem 0.55rem;
-  border: 1px solid rgba(198, 168, 94, 0.3);
+  display: inline-flex;
+  gap: 1px;
+  padding: 1px;
+  border: 1px solid rgba(198, 168, 94, 0.28);
   border-radius: 2px;
-  background: linear-gradient(180deg, #0b0806, #171009);
-  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.65);
+}
+
+.consult__digit {
+  min-width: 0.72rem;
+  padding: 0.1rem 0.1rem 0.08rem;
+  text-align: center;
+  background: linear-gradient(180deg, #241a10, #0b0806);
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.07),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.8);
   font-family: var(--display);
-  font-size: 0.95rem;
-  letter-spacing: 0.22em;
+  font-size: 0.78rem;
+  line-height: 1.15;
   font-variant-numeric: tabular-nums;
   color: var(--gold-bright);
 }
 
 .consult__note {
-  margin: 0.8rem 0 0;
+  margin: 0.55rem 0 0;
   text-align: center;
-  font-size: 0.74rem;
+  font-size: 0.63rem;
   font-style: italic;
-  line-height: 1.5;
-  color: color-mix(in srgb, #e9dec4 42%, transparent);
+  line-height: 1.45;
+  color: color-mix(in srgb, #e9dec4 40%, transparent);
 }
 
-@media (max-width: 640px) {
+@media (max-width: 560px) {
   .consult__list { columns: 1; }
 }

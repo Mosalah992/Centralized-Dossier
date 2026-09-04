@@ -3,16 +3,19 @@
 // A Thalmor archive keeping a note of who has come to read its records is not a
 // widget bolted onto the fiction — it is the sort of thing this office would do
 // anyway. So it is written as a register rather than as a hit counter, and the
-// odometer total underneath is the only place the 1999 joke shows.
+// odometer underneath is the only place the 1999 joke shows.
 //
-// NO FLAGS, and that is two decisions rather than one. Emoji regional-indicator
-// pairs render as bare letters on Windows Chrome — which is the machine this
-// archive is built on, so the keeper would see the broken version every day. And
-// a flag sprite would be new art with a new licensing question attached, for a
-// block that reads better in the archive's own hand anyway: ruled rows, small
-// capitals, province names rather than pictures.
+// THE FLAGS ARE A SPRITE, NOT EMOJI. Regional-indicator pairs render as bare
+// letters on Windows Chrome, which is the machine this archive is built on, so
+// the keeper would see the broken version every day. `scripts/prepare-flags.mjs`
+// cuts the supplied set down to one 16x11 strip instead — the size the counters
+// of 1999 used — and this file moves a background-position down it. A country
+// the strip does not carry simply shows no flag and keeps its name.
+
+import type { CSSProperties } from 'react';
 
 import { useRegister } from '../api';
+import { flagRow } from '../flags';
 
 /**
  * The province's name, from the runtime's own table.
@@ -40,6 +43,10 @@ export function Register() {
 
   const { total, ordinal, countries } = register;
 
+  // The reader is shown their own entry, so the odometer is not one behind the
+  // person reading it. Five digits is optimism.
+  const reading = String(ordinal ?? total).padStart(5, '0');
+
   return (
     <aside className="consult" aria-label="Register of Consultation">
       <p className="consult__head">Register of Consultation</p>
@@ -47,6 +54,16 @@ export function Register() {
       <ol className="consult__list">
         {countries.map((c) => (
           <li className="consult__row" key={c.code}>
+            {flagRow(c.code) !== null && (
+              /* Decorative: the province is named in the text beside it, so a
+                 screen reader gains nothing from the flag and would only hear
+                 the same country twice. */
+              <span
+                className="consult__flag"
+                style={{ '--row': flagRow(c.code) } as CSSProperties}
+                aria-hidden
+              />
+            )}
             <span className="consult__province">{provinceOf(c.code)}</span>
             {/* The rule between name and figure is drawn, not typed: a row of
                 dots would break differently at every width. */}
@@ -57,15 +74,20 @@ export function Register() {
       </ol>
 
       {/*
-        * The odometer. Padded to five, which is optimism, and the number a
-        * reader is shown includes their own entry — the POST answers with the
-        * tally as committed, so the count is not one behind the person reading
-        * it.
+        * The odometer, digit by boxed digit — which is the one flourish the
+        * period actually earns. A single number in a sunken box is a number; a
+        * row of separately bevelled cells is a mechanical counter.
         */}
       <p className="consult__total">
-        {ordinal === null ? 'Readers recorded' : 'You are reader'}
+        <span className="consult__label">
+          {ordinal === null ? 'Readers recorded' : 'You are reader'}
+        </span>
         <span className="consult__odometer">
-          {ordinal === null ? String(total).padStart(5, '0') : `#${String(ordinal).padStart(5, '0')}`}
+          {reading.split('').map((digit, i) => (
+            // Fixed-length string, so the index is a stable key.
+            // eslint-disable-next-line react/no-array-index-key
+            <span className="consult__digit" key={i}>{digit}</span>
+          ))}
         </span>
       </p>
 
