@@ -203,7 +203,16 @@ table ships — which matters because `Shelf.tsx` is statically imported and thi
 lands in the entry chunk `test/bundle.test.ts` polices. It cost 525 bytes gzip.
 
 The database must be created before any of it works — see the comment on the
-`[[d1_databases]]` stanza in `wrangler.toml`.
+`[[d1_databases]]` stanza in `wrangler.toml`. `--local` and `--remote` D1 are
+different databases and neither implies the other; a schema applied to only one
+reads as an empty register rather than as an error, because the route catches
+the missing table on purpose.
+
+Country comes from `request.cf.country` and never from an inbound `CF-IPCountry`
+header, which is spoofable precisely when `request.cf` is missing. `wrangler
+pages dev` DOES resolve a real country locally, so `CF_COUNTRY_OVERRIDE` is an
+escape hatch for when it does not rather than the ordinary local path; it does
+not exist in production.
 
 ### Slay the Heretic
 
@@ -295,8 +304,10 @@ functions/        Cloudflare Pages Functions -> /api/*
   api/_middleware.ts    NOT a gate any more — strips swr bookkeeping headers
   api/chronicle/        The one door left: gate.ts (word -> writ) · index.ts
   api/volumes/          index.ts (shelf) · [slug].ts (one volume)
+  api/register/         index.ts (read the tally) · entry.ts (the one writer)
   lib/session.ts        HMAC writ signing/verification, for that one door
   lib/swr.ts            Stale-while-revalidate over the Worker's own cache
+  lib/register.ts       The register's pure half: cookie, country, SQL
 
 server/           gsheets.ts (readonly Sheets client) · archive.ts (load + parse)
 web/src/game/     Slay the Heretic — the spellcrafting game at /Slaytheheretic
@@ -306,6 +317,7 @@ web/src/game/     Slay the Heretic — the spellcrafting game at /Slaytheheretic
 shared/           volumes.ts (THE registry) · types.ts · text.ts · parsers/
                   mundus.ts (the moons' reckoned courses, and what is NOT known)
                   events.ts (WHAT THE REALM ACTUALLY HOLDS — see below)
+migrations/       D1 schema for the Register of Consultation
 scripts/          Asset prep + sheet tooling (all committed, outputs committed)
 Assets/           Source art in, as delivered
 public/           Served verbatim: music/, seal.webp, _redirects, robots.txt
@@ -535,6 +547,22 @@ nothing on its own:
 npm.cmd run build
 node node_modules/wrangler/bin/wrangler.js pages deploy dist --project-name thalmor-archives
 ```
+
+**A deploy is live before it is live, and the gap has fooled me.** The hostname
+can go on serving the PREVIOUS deployment for several minutes after wrangler
+prints `Deployment complete`, and in that window the new deployment's own
+`<hash>.thalmor-archives.pages.dev` alias serves its assets while every `/api/*`
+path on it answers with Cloudflare's own "Nothing is here yet" 404. Both
+symptoms are propagation and neither is a broken build — but read that way they
+look exactly like a Functions bundle that failed to start, which is a tempting
+thing to go and "fix". The authority on what is actually serving is the
+project's `canonical_deployment`; the deployment list is not, since every deploy
+from `main` is labelled Production whether or not it is live.
+
+So verify by POLLING the real hostname until the served bundle hash matches
+`dist/index.html`, and judge the routes only after it does. None of this is a
+reason to redeploy in a loop: three deploys in a row all succeeded and all
+looked broken for the same few minutes.
 
 ---
 
