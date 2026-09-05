@@ -188,10 +188,6 @@ export const MIDYEAR: Entry[] = [
  */
 export const RECALL: Entry[] = [
   {
-    date: 'Heartfire 21',
-    text: 'The Embassy answers a letter circulated by Nyssara Velrith of Northkeep, formerly of the Dominion’s service. Canonreeve Ancarion declares her dishonourable and an enemy of the Thalmor and of the Third Aldmeri Dominion — not for leaving, which mer may do, but for recruiting from the Embassy’s own in its most uncertain hour, and for demanding that they denounce the Dominion to earn her shelter. He accepts her rule that Dominion issue may not be carried out of the service, and holds her house to it first: the late First Emissary Malen Velrith kept his issued glass, his weapons and coin of the faction to his deathbed, never returned nor accounted, and the Embassy demands them back before any relocation. He closes that the Dominion is not silent because it has abandoned Skyrim, but because it is deciding what Skyrim is worth.',
-  },
-  {
     date: 'Heartfire 21, by night',
     text: 'Battlereeve Annatar confines all personnel to Embassy grounds until further notice, the Imperial forces having been expelled from a united Skyrim. No patrols, escorts, investigations or operations beyond the walls, under any circumstances. He thanks the Embassy’s people for what they have given through difficult months, and states plainly that neither the length of the restriction nor the next course of action is known.',
   },
