@@ -105,3 +105,10 @@ REPORTS_EPOCH = "1"
 binding = "REGISTER"
 database_name = "thalmor-register"
 database_id = "de644d7a-4862-48a8-85a0-36f568dc807d"
+
+# Private, structured Discord reports. The Reports API only reads it after a
+# Reports-only writ; the scheduled collector is its only writer.
+[[d1_databases]]
+binding = "REPORTS"
+database_name = "thalmor-reports"
+database_id = "edbd9716-5154-4e93-84bd-4768f8d23ce8"

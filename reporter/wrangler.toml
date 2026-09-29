@@ -1,0 +1,16 @@
+name = "thalmor-reporter"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+
+[triggers]
+crons = ["17 */6 * * *"]
+
+[vars]
+DISCORD_GUILD_ID = "1498139135758831749"
+
+[[d1_databases]]
+binding = "REPORTS"
+database_name = "thalmor-reports"
+database_id = "edbd9716-5154-4e93-84bd-4768f8d23ce8"
+
+# Set only in Cloudflare: wrangler secret put DISCORD_BOT_TOKEN --name thalmor-reporter

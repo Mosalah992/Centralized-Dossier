@@ -16,6 +16,12 @@ The `chronicler` Worker runs nightly at 04:00 UTC. It reads Discord Informants c
 
 `REPORTS_EPOCH` revokes Reports sessions without touching Chronicle sessions. Failed attempts use the existing `GATE_ATTEMPTS` binding under the `reports:` key prefix, so the two doors cannot exhaust each other’s throttle. Both routes answer `private, no-store` and `Vary: Cookie`; absent Reports secrets fail closed.
 
+## Reports ingestion and storage
+
+`reporter/` is the dedicated scheduled Worker. Its category IDs live in `reporter/src/config.ts`; the collector resolves each one as a category, text channel, or forum rather than assuming its Discord type. `shared/reports.ts` drops bots, system messages, embeds, attachment-only content, URLs (including bare domains), and reports shorter than 300 characters before any D1 write.
+
+`REPORTS` binds the dedicated `thalmor-reports` D1 database in both Pages and the collector. `migrations/0002_reports.sql` is applied locally and remotely. The `reports` table uses the Discord message id for idempotent upserts and contains no Discord handle; `author_name` is nullable until an in-world-name source is defined.
+
 ## Consultation register
 
 `POST /api/register/entry` may increment a country aggregate in D1 after the constrained per-day cookie check. `GET /api/register` returns only aggregate totals. Preserve atomic SQL increments and the narrowly scoped cookie path.
