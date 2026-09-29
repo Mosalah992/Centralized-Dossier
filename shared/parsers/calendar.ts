@@ -72,6 +72,36 @@ function parseLegend(grid: FormattedGrid): { color: string; label: string }[] {
   return legend;
 }
 
+/**
+ * A printed legend is authoritative, but an omitted audit swatch must not turn
+ * the four audit days into unclassified blanks. The sheet's audit cells name
+ * themselves in their notes, so recover only that missing category from the
+ * sheet's own evidence — never from a remembered hex value. When the keeper
+ * restores the swatch this adds nothing and the richer printed label wins.
+ */
+function recoverAuditLegend(
+  grid: FormattedGrid,
+  legend: readonly { color: string; label: string }[],
+): { color: string; label: string }[] {
+  const known = new Set(legend.map((entry) => entry.color));
+  const recovered: { color: string; label: string }[] = [];
+
+  for (const row of grid) {
+    for (const cell of row ?? []) {
+      const color = cell.background?.toLowerCase();
+      if (!color || known.has(color) || !isDayNumber(cell.value)) continue;
+
+      const event = parseEvent(cell.note);
+      if (event && /\baudit\b/i.test(`${event.name} ${event.caution}`)) {
+        known.add(color);
+        recovered.push({ color, label: 'Audit' });
+      }
+    }
+  }
+
+  return [...legend, ...recovered];
+}
+
 /** Note text -> event. Line 1 is the name, line 2 the in-world date. */
 function parseEvent(note: string | undefined): CalendarEvent | null {
   if (!note) return null;
@@ -148,7 +178,7 @@ function readMonth(
 }
 
 export function parseCalendar(grid: FormattedGrid): CalendarYear {
-  const legend = parseLegend(grid);
+  const legend = recoverAuditLegend(grid, parseLegend(grid));
   const byColor = new Map(legend.map((l) => [l.color, l.label]));
   const kindOf = (bg: string | undefined) =>
     (bg ? byColor.get(bg.toLowerCase()) : undefined) ?? '';

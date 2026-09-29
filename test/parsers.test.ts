@@ -243,6 +243,27 @@ describe('calendar', () => {
       .toMatch(/^Audit/);
   });
 
+  it('recovers an audit colour from its own notes when the printed swatch is absent', () => {
+    const withoutAuditSwatch = calendarGrid.map((row) => row.map((cell) => ({ ...cell })));
+    const auditRow = withoutAuditSwatch.findIndex(
+      (row) => row[2]?.value.trim().startsWith('Audit'),
+    );
+    expect(auditRow).toBeGreaterThanOrEqual(0);
+    withoutAuditSwatch[auditRow]![1] = { value: '', background: '#ffffff' };
+    withoutAuditSwatch[auditRow]![2] = { value: '', background: '#ffffff' };
+    for (const row of withoutAuditSwatch) {
+      for (const cell of row) {
+        if (cell.background === CALENDAR_COLORS.AUDIT) {
+          cell.note = '❖ First quarter audit\nMorning Star 1, 4E 226';
+        }
+      }
+    }
+
+    const recovered = parseCalendar(withoutAuditSwatch);
+    expect(recovered.legend.find((entry) => entry.color === CALENDAR_COLORS.AUDIT)?.label)
+      .toBe('Audit');
+  });
+
   it('finds each month block from its weekday header', () => {
     expect(year.months.map((m) => m.name)).toEqual(['Morning Star', "Sun's Dawn"]);
   });

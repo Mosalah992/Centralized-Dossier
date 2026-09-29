@@ -110,9 +110,10 @@ wrote and does not reconcile it, so no parser or test may assume
 
 ## Hall of Honor — `B4:C`
 
-`Name | Citation`. Six entries, honorifics included in the name
-(`First Emissary Indumoril Lourinien`). Free text, no dates. Trailing blank rows
-to row 22 are padding.
+`Name | Citation`. Honorifics are part of the name (`First Emissary Indumoril
+Lourinien`). Free text, no dates. The register may be empty — awards are entered
+by the keepers and must not be inferred from another tab. Trailing blank rows to
+row 22 are padding.
 
 ## Tamrielic Calendar — needs grid formatting, not values
 
@@ -126,11 +127,11 @@ Layout: 12 months in a 3 × 4 arrangement. Month title rows 4/14/24, weekday
 header rows 5/15/25 (`Sundas … Loredas`), day grids beneath. Months sit in
 column groups of 7 separated by one blank column.
 
-365 day cells verified against this legend (rows 35–38, swatch in column B):
+365 day cells are decoded against the legend the sheet currently prints (rows
+35–37, swatch in column B):
 
 | Colour | Meaning | Count |
 |---|---|---|
-| `#e7cb74` | Audit — every seal verified against the ledger | 4 |
 | `#e3ede8` | Tamrielic festival — watch for unlawful observance | 12 |
 | `#faf0d6` | Morndas — weekly reconciliation of the ledger | 50 |
 | `#eae4d3` | Ordinary day | 299 |
@@ -144,5 +145,8 @@ Watch for unlawful observance.
 ```
 
 Line 1 is the event name, line 2 the in-world date, line 3 optional. Read the
-legend swatches at runtime rather than hard-coding the four hex values — the
-colours are the sheet's, and re-theming it should not break the parser.
+legend swatches at runtime rather than hard-coding the hex values — the colours
+and number of categories are the sheet's, and re-theming it should not break the
+parser. The current sheet omits its audit swatch while retaining audit-coloured
+days and audit notes; the parser recovers that one category from those notes so
+the days remain classified. A restored swatch takes precedence.
