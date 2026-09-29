@@ -99,16 +99,17 @@ a {
 }
 
 /* A fixed room-scale frame, inspired by Arcanaeum's terminal rails but kept in
-   the Embassy's own gold-and-green palette. The glyphs are local Ayleid assets;
-   the frame never takes pointer input or introduces a focusable control. */
+   the Embassy's own gold-and-green palette. The runes are self-hosted font
+   glyphs; the frame never takes pointer input or introduces a focusable control. */
 .archive-chrome {
   position: fixed;
-  inset: 0;
+  top: 0.5rem;
+  right: max(0.5rem, calc((100vw - 1280px) / 2));
+  bottom: 0.5rem;
+  left: max(0.5rem, calc((100vw - 1280px) / 2));
   z-index: 20;
-  width: min(1280px, calc(100vw - 1rem));
-  height: calc(100vh - 1rem);
-  margin: auto;
   pointer-events: none;
+  transform: translateZ(0);
   border: 1px solid color-mix(in srgb, var(--gold) 56%, transparent);
   box-shadow:
     0 0 0 1px color-mix(in srgb, #567044 52%, transparent),
@@ -194,8 +195,10 @@ a {
   :root { --shell: 92vw; }
 
   .archive-chrome {
-    width: 100vw;
-    height: calc(100vh - 0.4rem);
+    top: 0.2rem;
+    right: 0;
+    bottom: 0.2rem;
+    left: 0;
     border-inline: 0;
   }
 
