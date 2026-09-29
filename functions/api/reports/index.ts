@@ -8,6 +8,7 @@ import { hasReportsWrit } from '../../lib/reports';
 interface Env {
   REPORTS_COOKIE_SECRET: string;
   REPORTS_EPOCH?: string;
+  REPORTS?: D1Database;
 }
 
 function json(body: unknown, status = 200): Response {
@@ -33,5 +34,24 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   );
   if (!writ) return json({ error: 'Reports are sealed under their own word.' }, 401);
 
-  return json({ reports: [] });
+  const category = new URL(request.url).searchParams.get('category');
+  try {
+    const statement = category
+      ? env.REPORTS?.prepare(`SELECT id, category, subcategory, title, body, timestamp, author_name FROM reports WHERE category = ? ORDER BY timestamp DESC, id DESC LIMIT 100`).bind(category)
+      : env.REPORTS?.prepare(`SELECT id, category, subcategory, title, body, timestamp, author_name FROM reports ORDER BY timestamp DESC, id DESC LIMIT 100`);
+    const { results = [] } = await statement?.all<Record<string, unknown>>() ?? {};
+    return json({ reports: results.map((row) => ({
+      id: row.id,
+      category: row.category,
+      subcategory: row.subcategory,
+      title: row.title,
+      body: row.body,
+      timestamp: row.timestamp,
+      authorName: row.author_name,
+    })) });
+  } catch {
+    // Optional infrastructure must not turn a sealed, authenticated route into
+    // an error page while D1 is being migrated or restored.
+    return json({ reports: [] });
+  }
 };

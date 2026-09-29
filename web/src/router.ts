@@ -8,6 +8,7 @@ import { ALL_SLUGS } from '../../shared/volumes';
 
 export type Route =
   | { name: 'shelf' }
+  | { name: 'reports' }
   | { name: 'volume'; slug: VolumeSlug }
   | { name: 'editor' }
   | { name: 'game' }
@@ -16,6 +17,7 @@ export type Route =
 export function parse(pathname: string): Route {
   const path = pathname.replace(/\/+$/, '');
   if (path === '' || path === '/') return { name: 'shelf' };
+  if (path === '/reports') return { name: 'reports' };
 
   /*
    * The Archives Editor, and ONLY while the dev server is running.
