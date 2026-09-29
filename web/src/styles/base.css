@@ -93,23 +93,29 @@ a {
   border-radius: 2px;
 }
 
+#root {
+  position: relative;
+  min-height: 100vh;
+}
+
 .shell {
   width: var(--shell);
   margin-inline: auto;
+  position: relative;
+  z-index: 1;
 }
 
-/* A fixed room-scale frame, inspired by Arcanaeum's terminal rails but kept in
-   the Embassy's own gold-and-green palette. The runes are self-hosted font
-   glyphs; the frame never takes pointer input or introduces a focusable control. */
+/* The document's illuminated outline. It is sized by #root, not the viewport:
+   the full archive has one continuous border and the whole ornament scrolls
+   naturally with the page. */
 .archive-chrome {
-  position: fixed;
+  position: absolute;
   top: 0.5rem;
   right: max(0.5rem, calc((100vw - 1280px) / 2));
   bottom: 0.5rem;
   left: max(0.5rem, calc((100vw - 1280px) / 2));
-  z-index: 20;
+  z-index: 2;
   pointer-events: none;
-  transform: translateZ(0);
   border: 1px solid color-mix(in srgb, var(--gold) 56%, transparent);
   box-shadow:
     0 0 0 1px color-mix(in srgb, #567044 52%, transparent),

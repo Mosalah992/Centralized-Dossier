@@ -155,9 +155,8 @@ export default function App() {
     <>
       <Ambience track={track.url} />
 
-      {/* The archive's border belongs to the room, not an individual sheet. It
-          stays around the shelf and every volume, but never catches a click or
-          creates a focus stop of its own. */}
+      {/* One document outline for the whole archive, rather than decoration on
+          individual sheets. It is pointer-inert and never becomes a focus stop. */}
       <div className="archive-chrome" aria-hidden="true">
         <span className="archive-chrome__band archive-chrome__band--top" />
         <span className="archive-chrome__band archive-chrome__band--bottom" />
