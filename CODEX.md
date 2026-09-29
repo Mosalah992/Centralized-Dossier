@@ -23,6 +23,8 @@ flowchart TB
   Pages --> Chronicle[/api/chronicle + gate]
   Chronicle --> Writs[Scoped signed cookie]
   Chronicle --> FilingsKV[(CHRONICLE_FILINGS KV)]
+  Pages --> Reports[/api/reports + gate]
+  Reports --> ReportsWrit[Reports-only signed cookie]
 
   Worker[thalmor-chronicler Worker\nnightly scheduled()] -->|read + redact| Discord[Discord Informants]
   Worker -->|write filings| FilingsKV
@@ -44,7 +46,7 @@ This is the implementation-grounded counterpart to the supplied dossier diagram.
 
 - `shared/` is pure cross-runtime domain logic: volume registry, parsers, types, calendar/reckoning, and filing redaction.
 - `web/` is the browser-only presentation layer. `App.tsx` lazy-loads views; `router.ts` owns URLs; `api.ts` owns request hooks and client contracts.
-- `functions/` is the same-origin Pages API. It fetches Google Sheets read-only, serves public records, owns the Chronicle gate, and reads optional filings.
+- `functions/` is the same-origin Pages API. It fetches Google Sheets read-only, serves public records, owns the sealed Chronicle and Reports gates, and reads optional filings.
 - `server/` contains server-only Sheets access. It must never gain a write helper.
 - `chronicler/` is a separate Worker because scheduled events cannot run in Pages Functions. It reads Discord nightly and writes redacted, bounded filings to KV.
 - `scripts/` creates committed derived assets. `Assets/` is source art; never replace reproducible preparation with one-off exports.

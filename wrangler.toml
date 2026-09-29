@@ -60,11 +60,17 @@ SHEET_ID = "1KS__WJoqI_o3esXxO3Ei3L6SlJwJnOXQrjEr-FCPEZ0"
 # It was raised to 2 when Discord briefly became the door.
 GATE_EPOCH = "2"
 
+# Reports has an entirely separate session epoch. Raising this value revokes
+# only Reports sessions, never the Chronicle writs.
+REPORTS_EPOCH = "1"
+
 # Secret (set with `npx wrangler pages secret put GOOGLE_SERVICE_ACCOUNT_JSON`):
 #   GOOGLE_SERVICE_ACCOUNT_JSON - contents of the service-account key shared
 #                                 with the spreadsheet. For local development
 #                                 put it in .dev.vars instead, which is
 #                                 git-ignored.
+#   REPORTS_PASSPHRASE          - word required to open the Reports gate.
+#   REPORTS_COOKIE_SECRET       - signing secret for Reports-only writs.
 
 # ── The Register of Consultation ────────────────────────────────────────────
 #

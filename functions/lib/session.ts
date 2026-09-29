@@ -22,6 +22,8 @@ const enc = new TextEncoder();
  * losing one did not cost the reader the other, and now it is the only one.
  */
 export const CHRONICLE_COOKIE_NAME = "thalmor_writ_chronicle";
+/** A separate writ means a Chronicle cookie can never open Reports. */
+export const REPORTS_COOKIE_NAME = "thalmor_writ_reports";
 
 export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7; // one week
 
@@ -36,7 +38,9 @@ export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7; // one week
  * must fail here, so the comparison is exact and a missing value is a refusal
  * rather than a default. See readWrit.
  */
-const SCOPE = "chronicle";
+const CHRONICLE_SCOPE = "chronicle";
+export const REPORTS_SCOPE = "reports";
+type WritScope = typeof CHRONICLE_SCOPE | typeof REPORTS_SCOPE;
 
 export interface Writ {
   /** Rotation epoch. Bump GATE_EPOCH to invalidate every issued cookie at once. */
@@ -98,11 +102,15 @@ export async function secretsMatch(
 }
 
 /** Mint a writ for the volume. One week, matching the cookie it rides in. */
-export async function issueWrit(secret: string, epoch: number): Promise<string> {
+export async function issueWrit(
+  secret: string,
+  epoch: number,
+  scope: WritScope = CHRONICLE_SCOPE,
+): Promise<string> {
   const writ: Writ = {
     e: epoch,
     exp: Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS,
-    s: SCOPE,
+    s: scope,
   };
   const body = b64urlEncode(enc.encode(JSON.stringify(writ)));
   const sig = b64urlEncode(await mac(secret, body));
@@ -113,6 +121,7 @@ export async function readWrit(
   secret: string,
   epoch: number,
   token: string | null,
+  scope: WritScope = CHRONICLE_SCOPE,
 ): Promise<Writ | null> {
   if (!token) return null;
 
@@ -144,7 +153,7 @@ export async function readWrit(
   // A writ minted for another door does not open this one, and an old archive
   // writ moved into this cookie is exactly that. No default: `s` absent is a
   // pre-scope archive writ and must fail here too.
-  if (writ.s !== SCOPE) return null;
+  if (writ.s !== scope) return null;
 
   return writ;
 }

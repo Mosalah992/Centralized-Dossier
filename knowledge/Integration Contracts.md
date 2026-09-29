@@ -10,6 +10,12 @@ The spreadsheet is authoritative and is queried read-only. Use title-based tab r
 
 The `chronicler` Worker runs nightly at 04:00 UTC. It reads Discord Informants channels, redacts identifiers using `shared/filings.ts`, stores at most 60 filings, and protects itself from Worker subrequest limits with a 40-channel fetch budget.
 
+## Reports gate (gate-only phase)
+
+`POST /api/reports/gate` validates `REPORTS_PASSPHRASE` in constant time using `REPORTS_COOKIE_SECRET`, then issues an HttpOnly Reports-only writ. `GET /api/reports` verifies that writ on every call and currently returns only an authenticated empty placeholder; its data, D1 schema, collector, and UI are separate follow-on slices.
+
+`REPORTS_EPOCH` revokes Reports sessions without touching Chronicle sessions. Failed attempts use the existing `GATE_ATTEMPTS` binding under the `reports:` key prefix, so the two doors cannot exhaust each other’s throttle. Both routes answer `private, no-store` and `Vary: Cookie`; absent Reports secrets fail closed.
+
 ## Consultation register
 
 `POST /api/register/entry` may increment a country aggregate in D1 after the constrained per-day cookie check. `GET /api/register` returns only aggregate totals. Preserve atomic SQL increments and the narrowly scoped cookie path.

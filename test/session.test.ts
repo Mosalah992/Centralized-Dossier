@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  CHRONICLE_COOKIE_NAME, SESSION_TTL_SECONDS,
+  CHRONICLE_COOKIE_NAME, REPORTS_SCOPE, SESSION_TTL_SECONDS,
   clearedCookie, issueWrit, readWrit, writCookie,
 } from '../functions/lib/session';
 
@@ -122,6 +122,13 @@ describe('an old archive writ does not open the volume', () => {
     // accepted, so the scope is what did the work above.
     expect(await readWrit(SECRET, EPOCH, await stale({ e: EPOCH, exp, s: 'chronicle' })))
       .not.toBeNull();
+  });
+});
+
+describe('separate volume scopes', () => {
+  it('does not let a Reports writ open the Chronicle', async () => {
+    const reports = await issueWrit(SECRET, EPOCH, REPORTS_SCOPE);
+    expect(await readWrit(SECRET, EPOCH, reports)).toBeNull();
   });
 });
 
