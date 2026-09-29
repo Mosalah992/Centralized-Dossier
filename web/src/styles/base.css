@@ -29,7 +29,7 @@
      strokes; this was tried with Hesperides and was unreadable at label size. */
   --display: 'Cinzel', 'Trajan Pro', var(--serif);
 
-  --shell: min(1180px, 92vw);
+  --shell: min(1180px, calc(100vw - 6rem));
 
   /* The four curves the archive moves on. Everything here is heavy and hinged —
      wax, leather boards, vellum — and heavy hinged things never overshoot, so
@@ -95,6 +95,127 @@ a {
 .shell {
   width: var(--shell);
   margin-inline: auto;
+}
+
+/* A fixed room-scale frame, inspired by Arcanaeum's terminal rails but kept in
+   the Embassy's own gold-and-green palette. The glyphs are local Ayleid assets;
+   the frame never takes pointer input or introduces a focusable control. */
+.archive-chrome {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  width: min(1280px, calc(100vw - 1rem));
+  height: calc(100vh - 1rem);
+  margin: auto;
+  pointer-events: none;
+  border: 1px solid color-mix(in srgb, var(--gold) 56%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, #567044 52%, transparent),
+    inset 0 0 18px rgba(201, 162, 39, 0.09),
+    0 0 22px rgba(82, 114, 59, 0.13);
+}
+
+.archive-chrome::before,
+.archive-chrome::after {
+  content: '';
+  position: absolute;
+  inset: 0.3rem;
+  border: 1px solid color-mix(in srgb, var(--gold) 30%, transparent);
+}
+
+.archive-chrome::after {
+  inset: 0.52rem;
+  border-color: color-mix(in srgb, #567044 52%, transparent);
+}
+
+.archive-chrome__band,
+.archive-chrome__rail {
+  position: absolute;
+  display: block;
+  opacity: 0.82;
+}
+
+.archive-chrome__band {
+  right: 3rem;
+  left: 3rem;
+  height: 1.5rem;
+  border-block: 1px solid color-mix(in srgb, var(--gold) 46%, transparent);
+}
+
+.archive-chrome__band--top { top: 0.15rem; }
+
+.archive-chrome__band--bottom {
+  bottom: 0.15rem;
+  transform: rotate(180deg);
+}
+
+.archive-chrome__rail {
+  top: 2.8rem;
+  bottom: 2.8rem;
+  width: 1.45rem;
+  border-inline: 1px solid color-mix(in srgb, var(--gold) 46%, transparent);
+}
+
+.archive-chrome__rail--left { left: 0.12rem; }
+
+.archive-chrome__rail--right {
+  right: 0.12rem;
+  transform: rotate(180deg);
+}
+
+.archive-chrome__glyphs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.16rem, 0.55vw, 0.42rem);
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.archive-chrome__glyph {
+  display: block;
+  width: 0.78rem;
+  height: 1.12rem;
+  flex: 0 0 auto;
+  object-fit: contain;
+  /* UESP's archival GIFs are black ink on an opaque white canvas. Inverting
+     first makes that canvas black; screen blending then makes it disappear
+     against the archive, while the former ink is colourised into gold. */
+  mix-blend-mode: screen;
+  filter: invert(70%) sepia(37%) saturate(664%) hue-rotate(4deg) brightness(89%) contrast(88%) drop-shadow(0 0 3px rgba(101, 140, 69, 0.6));
+}
+
+.archive-chrome__rail .archive-chrome__glyphs {
+  flex-direction: column;
+  justify-content: space-around;
+  gap: 0.08rem;
+}
+
+.archive-chrome__rail .archive-chrome__glyph {
+  width: 0.82rem;
+  height: 1.15rem;
+}
+
+@media (max-width: 700px) {
+  :root { --shell: 92vw; }
+
+  .archive-chrome {
+    width: 100vw;
+    height: calc(100vh - 0.4rem);
+    border-inline: 0;
+  }
+
+  .archive-chrome::before,
+  .archive-chrome::after { border-inline: 0; }
+
+  .archive-chrome__band {
+    right: 0.5rem;
+    left: 0.5rem;
+    height: 1.35rem;
+  }
+
+  .archive-chrome__rail { display: none; }
 }
 
 /* ── Ornaments ───────────────────────────────────────────────────────────── */

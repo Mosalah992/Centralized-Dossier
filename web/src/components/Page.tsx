@@ -97,14 +97,6 @@ export function Page({ title, subtitle, tab, fetchedAtUtc, source, children }: P
 
   return (
     <article className="page" ref={board}>
-      {/* The frame borrows the illuminated-manuscript placement from Arcanaeum,
-          but keeps this archive's sharp Altmer geometry. Its glyphs are the
-          documented Ayleid alphabet rather than a painted dragon or a pretend
-          font; the band is decoration, never a label or a source of meaning. */}
-      <span className="page__rune-frame" aria-hidden="true">
-        <span className="page__rune-band page__rune-band--top" />
-        <span className="page__rune-band page__rune-band--bottom" />
-      </span>
       <header className="page__head">
         <p className="page__classification">Thalmor Embassy</p>
         <h1 className="page__title">{title}</h1>

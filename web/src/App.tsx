@@ -130,6 +130,28 @@ const VOLUME_TRACKS: Partial<Record<VolumeSlug, Track>> = {
   },
 };
 
+/* Direct image elements are deliberate. A CSS background SVG cannot reliably
+   render its nested <image> references, while these same-origin glyphs render
+   in every target browser and remain independently cacheable. */
+const FRAME_RUNES = ['T', 'H', 'A', 'L', 'M', 'O', 'R', 'E', 'M', 'B', 'A', 'S', 'S', 'Y'];
+
+function RuneSequence({ rail = false }: { rail?: boolean }) {
+  const runes = rail ? [...FRAME_RUNES, ...FRAME_RUNES, ...FRAME_RUNES] : FRAME_RUNES;
+  return (
+    <span className="archive-chrome__glyphs">
+      {runes.map((rune, index) => (
+        <img
+          alt=""
+          aria-hidden="true"
+          className="archive-chrome__glyph"
+          key={`${rune}-${index}`}
+          src={`/runes/ayleid/${rune}.gif`}
+        />
+      ))}
+    </span>
+  );
+}
+
 export default function App() {
   const [route, navigate] = useRoute();
 
@@ -154,6 +176,16 @@ export default function App() {
   return (
     <>
       <Ambience track={track.url} />
+
+      {/* The archive's border belongs to the room, not an individual sheet. It
+          stays around the shelf and every volume, but never catches a click or
+          creates a focus stop of its own. */}
+      <div className="archive-chrome" aria-hidden="true">
+        <span className="archive-chrome__band archive-chrome__band--top"><RuneSequence /></span>
+        <span className="archive-chrome__band archive-chrome__band--bottom"><RuneSequence /></span>
+        <span className="archive-chrome__rail archive-chrome__rail--left"><RuneSequence rail /></span>
+        <span className="archive-chrome__rail archive-chrome__rail--right"><RuneSequence rail /></span>
+      </div>
 
       <div className="shell">
         <main>
