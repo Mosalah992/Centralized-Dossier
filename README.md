@@ -4,7 +4,9 @@ An open, read-only web archive that renders a roleplay community's records as
 in-world ceremonial registers — a shelf of bound volumes you open and read,
 rather than a spreadsheet with a theme on it.
 
-Live at **[thalmor-archives.pages.dev](https://thalmor-archives.pages.dev)**.
+Live at **[thalmor-archives.com](https://thalmor-archives.com)**. The legacy
+`thalmor-archives.pages.dev` hostname permanently redirects there; preview
+deployment hostnames remain available for feature validation.
 It is `noindex, nofollow` and stays that way: the registers carry about a
 hundred real people's handles and activity. That keeps them out of search
 results — it does not keep them private, and is not meant to. Anyone with the
