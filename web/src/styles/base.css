@@ -162,8 +162,7 @@ a {
   transform: rotate(180deg);
 }
 
-.archive-chrome__band::before {
-  content: var(--rune-row) var(--rune-row) var(--rune-row) var(--rune-row) var(--rune-row);
+.archive-chrome__runes {
   position: absolute;
   inset: 0 0.45rem;
   display: flex;
@@ -187,12 +186,9 @@ a {
   transform: rotate(180deg);
 }
 
-.archive-chrome__rail::before {
-  content: var(--rune-row) var(--rune-row) var(--rune-row) var(--rune-row) var(--rune-row);
-  position: absolute;
+.archive-chrome__rail .archive-chrome__runes {
   inset: 0.4rem 0;
   writing-mode: vertical-rl;
-  white-space: nowrap;
   font-size: 0.85rem;
   letter-spacing: 0.25em;
 }
