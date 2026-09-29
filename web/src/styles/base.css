@@ -30,6 +30,7 @@
   --display: 'Cinzel', 'Trajan Pro', var(--serif);
 
   --shell: min(1180px, calc(100vw - 6rem));
+  --rune-row: "ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃᛇᛈᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟ ";
 
   /* The four curves the archive moves on. Everything here is heavy and hinged —
      wax, leather boards, vellum — and heavy hinged things never overshoot, so
@@ -133,6 +134,11 @@ a {
   position: absolute;
   display: block;
   opacity: 0.82;
+  overflow: hidden;
+  color: var(--gold-bright);
+  font-family: 'Noto Sans Runic', serif;
+  text-shadow: 0 0 4px rgba(201, 162, 39, 0.78), 0 0 10px rgba(82, 114, 59, 0.58);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--night-2) 82%, transparent), color-mix(in srgb, var(--night) 88%, transparent));
 }
 
 .archive-chrome__band {
@@ -149,6 +155,17 @@ a {
   transform: rotate(180deg);
 }
 
+.archive-chrome__band::before {
+  content: var(--rune-row) var(--rune-row) var(--rune-row) var(--rune-row) var(--rune-row);
+  position: absolute;
+  inset: 0 0.45rem;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  letter-spacing: 0.28em;
+}
+
 .archive-chrome__rail {
   top: 2.8rem;
   bottom: 2.8rem;
@@ -163,38 +180,14 @@ a {
   transform: rotate(180deg);
 }
 
-.archive-chrome__glyphs {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(0.16rem, 0.55vw, 0.42rem);
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-}
-
-.archive-chrome__glyph {
-  display: block;
-  width: 0.78rem;
-  height: 1.12rem;
-  flex: 0 0 auto;
-  object-fit: contain;
-  /* UESP's archival GIFs are black ink on an opaque white canvas. Inverting
-     first makes that canvas black; screen blending then makes it disappear
-     against the archive, while the former ink is colourised into gold. */
-  mix-blend-mode: screen;
-  filter: invert(70%) sepia(37%) saturate(664%) hue-rotate(4deg) brightness(89%) contrast(88%) drop-shadow(0 0 3px rgba(101, 140, 69, 0.6));
-}
-
-.archive-chrome__rail .archive-chrome__glyphs {
-  flex-direction: column;
-  justify-content: space-around;
-  gap: 0.08rem;
-}
-
-.archive-chrome__rail .archive-chrome__glyph {
-  width: 0.82rem;
-  height: 1.15rem;
+.archive-chrome__rail::before {
+  content: var(--rune-row) var(--rune-row) var(--rune-row) var(--rune-row) var(--rune-row);
+  position: absolute;
+  inset: 0.4rem 0;
+  writing-mode: vertical-rl;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  letter-spacing: 0.25em;
 }
 
 @media (max-width: 700px) {
