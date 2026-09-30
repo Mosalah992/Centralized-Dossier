@@ -3,6 +3,10 @@
 // once and applied identically by every scheduled run.
 
 export const REPORT_MINIMUM_LENGTH = 300;
+export const REPORT_SEVERITIES = [
+  'informational', 'low', 'medium', 'high', 'critical', 'unassessed',
+] as const;
+export type ReportSeverity = typeof REPORT_SEVERITIES[number];
 /** Public labels only; Discord IDs remain server-side collector configuration. */
 export const REPORT_CATEGORY_NAMES = [
   'Logistics', 'Administration', 'Mining', 'Supply', 'Military', 'Informants',
@@ -22,7 +26,7 @@ export interface DiscordReportMessage {
 export type ReportDropReason = 'bot' | 'system' | 'attachment' | 'embed' | 'url' | 'short' | 'empty';
 
 export type ReportFilterResult =
-  | { included: true; text: string; title: string }
+  | { included: true; text: string; title: string; severity: ReportSeverity }
   | { included: false; reason: ReportDropReason };
 
 // URLs are excluded before cleaning, rather than redacted, because a linked
@@ -31,6 +35,22 @@ export type ReportFilterResult =
 const URL = /https?:\/\/|discord\.gg(?:\/|\b)|(?:^|[\s(])(?:[a-z0-9-]+\.)+(?:com|net|org|gg|io|co|dev|app|info|me|tv|uk|de|fr|ca|au)(?=$|[\s/:?#])/i;
 
 export const containsReportUrl = (text: string): boolean => URL.test(text);
+
+/** Reads the report-format header only when it opens the report. This avoids
+ * mistaking a quoted or narrative "Severity:" line for a classification. */
+export function extractReportSeverity(value: string): { severity: ReportSeverity; body: string } {
+  const lines = value.split(/\r?\n/);
+  const first = lines.findIndex((line) => line.trim().length > 0);
+  if (first < 0) return { severity: 'unassessed', body: value };
+  const match = /^\s*severity\s*:\s*(.*?)\s*$/i.exec(lines[first] ?? '');
+  if (!match) return { severity: 'unassessed', body: value };
+  lines.splice(first, 1);
+  const offered = (match[1] ?? '').toLowerCase();
+  const severity = (REPORT_SEVERITIES as readonly string[]).includes(offered)
+    ? offered as ReportSeverity
+    : 'unassessed';
+  return { severity, body: lines.join('\n').trim() };
+}
 
 /** Converts Discord-only markup to readable, identity-safe plain text. */
 export function cleanReportText(value: string): string {
@@ -66,20 +86,22 @@ export function filterReportMessage(
   }
   if ((message.embeds?.length ?? 0) > 0) return { included: false, reason: 'embed' };
 
-  const source = message.content?.trim() ?? '';
+  const classified = extractReportSeverity(message.content?.trim() ?? '');
+  const source = classified.body;
   if (!source) return { included: false, reason: 'empty' };
   if (containsReportUrl(source)) return { included: false, reason: 'url' };
   if (source.length < minimumLength) return { included: false, reason: 'short' };
 
   const text = cleanReportText(source);
   if (!text) return { included: false, reason: 'empty' };
-  return { included: true, text, title: titleFor(text) };
+  return { included: true, text, title: titleFor(text), severity: classified.severity };
 }
 
 export interface StoredReport {
   id: string;
   category: string;
   subcategory: string | null;
+  severity: ReportSeverity;
   title: string;
   body: string;
   timestamp: string;

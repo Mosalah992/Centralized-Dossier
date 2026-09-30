@@ -7,6 +7,7 @@ import {
   readWrit,
   secretsMatch,
 } from './session';
+import { REPORT_SEVERITIES, type ReportSeverity } from '../../shared/reports';
 
 export interface AttemptStore {
   get(key: string): Promise<string | null>;
@@ -37,17 +38,22 @@ export const hasReportsWrit = (secret: string, epoch: number, token: string | nu
 
 export interface ReportsQuery {
   category: string | null;
+  severity: ReportSeverity | null;
   cursor: { timestamp: string; id: string } | null;
 }
 
 /** Parses the opaque, time-and-id cursor used by the D1 reader. */
 export function parseReportsQuery(url: URL): ReportsQuery {
   const category = url.searchParams.get('category');
+  const rawSeverity = url.searchParams.get('severity');
+  const severity = (REPORT_SEVERITIES as readonly string[]).includes(rawSeverity ?? '')
+    ? rawSeverity as ReportSeverity
+    : null;
   const raw = url.searchParams.get('cursor');
-  if (!raw) return { category, cursor: null };
+  if (!raw) return { category, severity, cursor: null };
   const at = raw.lastIndexOf('|');
   const timestamp = raw.slice(0, at);
   const id = raw.slice(at + 1);
-  if (at < 1 || !timestamp || !/^\d+$/.test(id)) return { category, cursor: null };
-  return { category, cursor: { timestamp, id } };
+  if (at < 1 || !timestamp || !/^\d+$/.test(id)) return { category, severity, cursor: null };
+  return { category, severity, cursor: { timestamp, id } };
 }

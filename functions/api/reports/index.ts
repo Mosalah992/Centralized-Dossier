@@ -35,25 +35,27 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   );
   if (!writ) return json({ error: 'Reports are sealed under their own word.' }, 401);
 
-  const { category, cursor } = parseReportsQuery(new URL(request.url));
+  const { category, severity, cursor } = parseReportsQuery(new URL(request.url));
   const limit = 30;
   try {
     const clauses: string[] = [];
     const values: string[] = [];
     if (category) { clauses.push('category = ?'); values.push(category); }
+    if (severity) { clauses.push('severity = ?'); values.push(severity); }
     if (cursor) {
       clauses.push('(timestamp < ? OR (timestamp = ? AND id < ?))');
       values.push(cursor.timestamp, cursor.timestamp, cursor.id);
     }
     const where = clauses.length ? ` WHERE ${clauses.join(' AND ')}` : '';
     const statement = env.REPORTS?.prepare(
-      `SELECT id, category, subcategory, title, body, timestamp, author_name FROM reports${where} ORDER BY timestamp DESC, id DESC LIMIT ${limit}`,
+      `SELECT id, category, subcategory, severity, title, body, timestamp, author_name FROM reports${where} ORDER BY timestamp DESC, id DESC LIMIT ${limit}`,
     ).bind(...values);
     const { results = [] } = await statement?.all<Record<string, unknown>>() ?? {};
     const reports = results.map((row) => ({
       id: String(row.id),
       category: row.category,
       subcategory: row.subcategory,
+      severity: row.severity,
       title: row.title,
       body: row.body,
       timestamp: row.timestamp,

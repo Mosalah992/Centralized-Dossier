@@ -51,12 +51,13 @@ async function messagesFor(token: string, channel: Channel): Promise<DiscordRepo
 function upsert(database: D1Database, report: StoredReport): D1PreparedStatement {
   return database.prepare(`
     INSERT INTO reports (
-      id, category, subcategory, title, body, timestamp,
+      id, category, subcategory, severity, title, body, timestamp,
       source_message_id, source_channel_id, author_name, edited_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
       category = excluded.category,
       subcategory = excluded.subcategory,
+      severity = excluded.severity,
       title = excluded.title,
       body = excluded.body,
       timestamp = excluded.timestamp,
@@ -64,7 +65,7 @@ function upsert(database: D1Database, report: StoredReport): D1PreparedStatement
       author_name = excluded.author_name,
       edited_at = excluded.edited_at
   `).bind(
-    report.id, report.category, report.subcategory, report.title, report.body,
+    report.id, report.category, report.subcategory, report.severity, report.title, report.body,
     report.timestamp, report.sourceMessageId, report.sourceChannelId,
     report.authorName, null,
   );
@@ -108,6 +109,7 @@ export async function collectReports(env: Env): Promise<CollectResult> {
           id: message.id,
           category: category.name,
           subcategory: subcategory(source, children.length ? root : undefined),
+          severity: filtered.severity,
           title: filtered.title,
           body: filtered.text,
           timestamp: message.timestamp,
