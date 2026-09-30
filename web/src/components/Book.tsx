@@ -11,10 +11,10 @@
 // reading TOP SECRET for as long as it did because nobody was going to repaint
 // a book to change a name.
 //
-// The name is therefore real text, and it is the ONLY place the name is given:
-// the img is alt="" and the anchor carries no aria-label, so the link's
-// accessible name comes from the title and subtitle a sighted reader is
-// looking at. The aria-label it used to carry would now say everything twice.
+// The name remains real text. The anchor now carries a concise aria-label as
+// well because its unfolding docket adds three more text nodes; leaving the
+// accessible name implicit would announce the title, subtitle and every
+// revealed label as one unpunctuated run.
 
 import type { VolumeSlug } from '../../../shared/types';
 import { hrefFor } from '../router';
@@ -25,15 +25,21 @@ interface Props {
   slug: VolumeSlug;
   title: string;
   subtitle: string;
+  category: string;
   /** The live tab this volume is bound to; null when it has gone missing. */
   tab: string | null;
   onOpen: (href: string) => void;
 }
 
-export function Book({ slug, title, subtitle, tab, onOpen }: Props) {
+export function Book({ slug, title, subtitle, category, tab, onOpen }: Props) {
   const href = hrefFor(slug);
   const missing = tab === null;
   const panel = LABELS[slug];
+  const custody = slug === 'informants'
+    ? 'Word-sealed volume'
+    : slug === 'enforcement'
+      ? 'Embassy-held record'
+      : 'Archive register';
 
   return (
     <a
@@ -41,6 +47,7 @@ export function Book({ slug, title, subtitle, tab, onOpen }: Props) {
       href={href}
       style={bindingVars(slug)}
       aria-disabled={missing || undefined}
+      aria-label={`${title}. ${subtitle}. ${category}. ${missing ? 'Volume withdrawn' : `${custody}. Open complete record`}.`}
       onClick={(event) => {
         // Let the browser handle new-tab and modified clicks.
         if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
@@ -85,6 +92,13 @@ export function Book({ slug, title, subtitle, tab, onOpen }: Props) {
           <span className="book__subtitle">{subtitle}</span>
         </span>
         {missing && <span className="book__withdrawn">Volume withdrawn</span>}
+        {!missing && (
+          <span className="book__dossier" aria-hidden="true">
+            <span className="book__dossier-class">{custody}</span>
+            <span className="book__dossier-category">{category}</span>
+            <span className="book__dossier-action">Open complete record <span>→</span></span>
+          </span>
+        )}
       </span>
     </a>
   );

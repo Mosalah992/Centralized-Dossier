@@ -145,6 +145,7 @@ export function Shelf({ onOpen }: Props) {
                     slug={volume.slug}
                     title={volume.title}
                     subtitle={BINDINGS[volume.slug].subtitle}
+                    category={section.category}
                     tab={
                       // A kept volume is written here, not read from the sheet,
                       // so nothing the archivist says can withdraw it.

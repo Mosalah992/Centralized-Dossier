@@ -31,3 +31,7 @@ Reports use the dedicated `thalmor-reports` D1 database and `thalmor-reporter` s
 ## 2026-09-30 - Reports severity is explicit and separate from category
 
 Reports use a six-level, deterministic severity field: informational, low, medium, high, critical, and unassessed. The collector reads a leading Discord `Severity:` metadata line and defaults missing or invalid values to unassessed; it never guesses a threat level. Severity communicates required attention, while category remains the subject of the report. Incident status is deliberately deferred.
+
+## 2026-09-30 - Archive interactions stay registry-driven and CSS-led
+
+The collapsible archive navigation is generated from the existing shelf registry, and its search filters destinations rather than unloaded record contents. Volume and Reports disclosures retain their original links and server contracts. The circular Archive Seal is confined to the Reports gate and uses CSS geometry with the established GSAP motion layer; Three.js is not added because it would increase bundle and lifecycle complexity without improving the navigation function.

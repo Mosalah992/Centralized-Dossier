@@ -48,7 +48,7 @@ This is the implementation-grounded counterpart to the supplied dossier diagram.
 ## Ownership and data flow
 
 - `shared/` is pure cross-runtime domain logic: volume registry, parsers, types, calendar/reckoning, and filing redaction.
-- `web/` is the browser-only presentation layer. `App.tsx` lazy-loads views; `router.ts` owns URLs; `api.ts` owns request hooks and client contracts.
+- `web/` is the browser-only presentation layer. `App.tsx` lazy-loads views and hosts the registry-driven `ArchiveSidebar`; `router.ts` owns URLs; `api.ts` owns request hooks and client contracts. The interactive `ArchiveSeal` belongs only to the Reports gate.
 - `functions/` is the same-origin Pages API. It fetches Google Sheets read-only, serves public records, owns the sealed Chronicle and Reports gates, and reads optional filings.
 - `server/` contains server-only Sheets access. It must never gain a write helper.
 - `chronicler/` is a separate Worker because scheduled events cannot run in Pages Functions. It reads Discord nightly and writes redacted, bounded filings to KV.

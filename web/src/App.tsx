@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 
 import { useRoute } from './router';
 import { getTitle } from '../../shared/volumes';
@@ -7,6 +7,7 @@ import { Ambience } from './components/Ambience';
 import { Shelf } from './components/Shelf';
 import { Consulting, Notice } from './components/Notice';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { ArchiveSidebar } from './components/ArchiveSidebar';
 import type { VolumeSlug } from '../../shared/types';
 
 /*
@@ -133,6 +134,22 @@ const VOLUME_TRACKS: Partial<Record<VolumeSlug, Track>> = {
 
 export default function App() {
   const [route, navigate] = useRoute();
+  const [sidebarExpanded, setSidebarExpanded] = useState(() => {
+    try {
+      return window.localStorage.getItem('thalmor.sidebar.expanded') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const setNavigationExpanded = (expanded: boolean) => {
+    setSidebarExpanded(expanded);
+    try {
+      window.localStorage.setItem('thalmor.sidebar.expanded', String(expanded));
+    } catch {
+      // A blocked storage API changes persistence, not navigation.
+    }
+  };
 
   // The archive opens straight onto the shelf. There was a writ to check first
   // and a null state to hold the first paint back while /api/gate answered it;
@@ -152,11 +169,26 @@ export default function App() {
   // same slot across the gate's three states so the track survived the seal
   // breaking; there are no states left to survive, but a remount still cuts the
   // audio, so it stays a sibling of everything that re-renders beneath it.
+  const boundToArchive = route.name !== 'game' && route.name !== 'editor';
+
   return (
     <>
       <Ambience track={track.url} />
 
-      <div className="shell">
+      <div
+        className={`archive-app${boundToArchive ? '' : ' archive-app--unbound'}`}
+        data-sidebar-expanded={boundToArchive && sidebarExpanded}
+      >
+        {boundToArchive && (
+          <ArchiveSidebar
+            route={route}
+            expanded={sidebarExpanded}
+            onExpandedChange={setNavigationExpanded}
+            onNavigate={navigate}
+          />
+        )}
+
+        <div className="shell">
         <main>
           {route.name === 'shelf' && <Shelf onOpen={navigate} />}
 
@@ -257,6 +289,7 @@ export default function App() {
             )}
           </p>
         </footer>
+        </div>
       </div>
     </>
   );

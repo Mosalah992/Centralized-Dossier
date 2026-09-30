@@ -39,6 +39,8 @@ import './styles/firmament.css';
 import './styles/register.css';
 import './styles/reports.css';
 import './styles/slay.css';
+import './styles/archive-navigation.css';
+import './styles/archive-seal.css';
 
 const container = document.getElementById('root');
 if (!container) throw new Error('#root is missing from index.html');

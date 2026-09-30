@@ -6,6 +6,8 @@
 
 `web/src/main.tsx` starts the SPA. `web/src/App.tsx` chooses the shelf, a lazy volume view, the dev-only editor, or the game. `web/src/router.ts` maps `/archives/:slug`, `/slaytheheretic`, and development-only `/editor`.
 
+The archive shell also owns a collapsible navigation rail generated from `shared/volumes.ts`, so it cannot drift into invented destinations. On mobile the same navigation becomes an off-canvas drawer. The circular `ArchiveSeal` is local to the `/reports` gate: it reveals the existing server-verified passphrase form and is not a second authentication mechanism.
+
 Production is served from `https://thalmor-archives.com`. The root Pages middleware permanently redirects only `thalmor-archives.pages.dev`, preserving the path and query; branch-preview hostnames remain reachable so each feature can be tested before release.
 
 ## Runtime boundaries
