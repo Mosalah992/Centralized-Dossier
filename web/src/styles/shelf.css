@@ -236,6 +236,52 @@
   border-radius: 0 0 5px 5px;
 }
 
+/* A guarded doorway, not another volume: High Command's seal is held below
+   the cabinet so the public registers remain the archive's primary action. */
+.hall__command {
+  display: grid;
+  justify-items: center;
+  margin: clamp(2.3rem, 4vw, 3.5rem) auto 0;
+  text-align: center;
+}
+
+.hall__command-label {
+  margin: 0 0 .2rem;
+  font-family: var(--display);
+  font-size: .58rem;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--gold) 72%, var(--stone));
+}
+
+.hall__command-seal {
+  display: grid;
+  justify-items: center;
+  gap: .15rem;
+  padding: 0;
+  color: var(--gold-bright);
+  font-family: var(--display);
+  font-size: .62rem;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.hall__command-seal img {
+  width: clamp(5.5rem, 10vw, 8.25rem);
+  height: auto;
+  filter: drop-shadow(0 .5rem .7rem rgb(0 0 0 / .55));
+  transition: transform .2s var(--ease), filter .2s var(--ease);
+}
+
+.hall__command-seal:hover img,
+.hall__command-seal:focus-visible img {
+  transform: translateY(-.18rem) scale(1.035);
+  filter: drop-shadow(0 .8rem .9rem rgb(0 0 0 / .66));
+}
+
 .section {
   min-width: 0;
   display: grid;
