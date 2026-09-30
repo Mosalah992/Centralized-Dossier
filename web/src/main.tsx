@@ -38,6 +38,7 @@ import './styles/enforcement.css';
 import './styles/orrery.css';
 import './styles/firmament.css';
 import './styles/register.css';
+import './styles/reports.css';
 import './styles/slay.css';
 
 const container = document.getElementById('root');

@@ -60,11 +60,17 @@ SHEET_ID = "1KS__WJoqI_o3esXxO3Ei3L6SlJwJnOXQrjEr-FCPEZ0"
 # It was raised to 2 when Discord briefly became the door.
 GATE_EPOCH = "2"
 
+# Reports has an entirely separate session epoch. Raising this value revokes
+# only Reports sessions, never the Chronicle writs.
+REPORTS_EPOCH = "1"
+
 # Secret (set with `npx wrangler pages secret put GOOGLE_SERVICE_ACCOUNT_JSON`):
 #   GOOGLE_SERVICE_ACCOUNT_JSON - contents of the service-account key shared
 #                                 with the spreadsheet. For local development
 #                                 put it in .dev.vars instead, which is
 #                                 git-ignored.
+#   REPORTS_PASSPHRASE          - word required to open the Reports gate.
+#   REPORTS_COOKIE_SECRET       - signing secret for Reports-only writs.
 
 # ── The Register of Consultation ────────────────────────────────────────────
 #
@@ -99,3 +105,10 @@ GATE_EPOCH = "2"
 binding = "REGISTER"
 database_name = "thalmor-register"
 database_id = "de644d7a-4862-48a8-85a0-36f568dc807d"
+
+# Private, structured Discord reports. The Reports API only reads it after a
+# Reports-only writ; the scheduled collector is its only writer.
+[[d1_databases]]
+binding = "REPORTS"
+database_name = "thalmor-reports"
+database_id = "edbd9716-5154-4e93-84bd-4768f8d23ce8"

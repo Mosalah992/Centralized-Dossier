@@ -1,0 +1,19 @@
+.reports-lock, .reports-reader { width: min(92vw, 52rem); margin: 4rem auto; padding: clamp(1.5rem, 5vw, 3.5rem); color: var(--ink); background: linear-gradient(135deg, var(--parchment), var(--parchment-2)); border: 1px solid color-mix(in srgb, var(--gold) 55%, transparent); box-shadow: 0 12px 42px rgba(0,0,0,.36), inset 0 0 0 .35rem rgb(90 70 35 / .08); }
+.reports-lock { max-width: 34rem; text-align: center; }
+.reports-lock__class, .reports-reader__class, .report__meta { margin: 0 0 .5rem; font-family: var(--display); font-size: .65rem; letter-spacing: .2em; text-transform: uppercase; color: color-mix(in srgb, var(--ink-soft) 75%, var(--gold)); }
+.reports-lock h1, .reports-reader h1 { font-size: clamp(1.5rem, 5vw, 2.25rem); }
+.reports-lock label { display:block; margin-top: 1.5rem; font-family: var(--display); font-size:.7rem; letter-spacing:.16em; text-transform:uppercase; }
+.reports-lock input { width:100%; margin-top:.5rem; padding:.65rem; font:inherit; color:var(--ink); background:rgb(255 255 255 / .4); border:1px solid var(--rule); }
+.reports-lock button, .reports-reader__categories button { padding:.55rem .85rem; color:var(--ink); font:inherit; background:transparent; border:1px solid color-mix(in srgb, var(--ink-soft) 35%, transparent); cursor:pointer; }
+.reports-lock button:disabled { opacity:.55; cursor:wait; }
+.reports-lock__error { min-height:1.5rem; color:var(--crimson); }
+.reports-reader__categories { display:flex; gap:.5rem; flex-wrap:wrap; margin:1.5rem 0; }
+.reports-reader__categories .is-active { color:var(--parchment); background:var(--ink-soft); }
+.reports-reader__empty { color:var(--ink-soft); font-style:italic; }
+.report { padding:1.25rem 0; border-top:1px solid rgb(90 70 35 / .25); }
+.report h2 { font-size:1.05rem; }
+.report p { white-space:pre-wrap; }
+.report__meta { display:flex; gap:.7rem; }
+.report__meta time { margin-left:auto; letter-spacing:.08em; }
+.report__author { font-style:italic; }
+.reports-reader__more { margin-top:1rem; padding:.55rem .85rem; color:var(--ink); font:inherit; background:transparent; border:1px solid color-mix(in srgb, var(--ink-soft) 35%, transparent); cursor:pointer; }

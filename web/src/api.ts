@@ -182,6 +182,43 @@ export interface LedgerOfEnforcement {
  */
 export const useEnforcement = () => useAsync<LedgerOfEnforcement>('/api/enforcement');
 
+export interface Report {
+  id: string;
+  category: string;
+  subcategory: string | null;
+  title: string;
+  body: string;
+  timestamp: string;
+  authorName: string | null;
+}
+
+export interface ReportsResponse { reports: Report[]; nextCursor: string | null; }
+
+export const useReports = (unlocked: boolean, category: string | null, cursor: string | null) => {
+  const query = new URLSearchParams();
+  if (category) query.set('category', category);
+  if (cursor) query.set('cursor', cursor);
+  return useAsync<ReportsResponse>(unlocked ? `/api/reports${query.size ? `?${query}` : ''}` : null);
+};
+
+export async function reportsIsOpen(): Promise<boolean> {
+  try {
+    const response = await fetch('/api/reports/gate', { headers: { Accept: 'application/json' } });
+    return Boolean(((await response.json()) as { open?: boolean }).open);
+  } catch { return false; }
+}
+
+export async function openReports(passphrase: string): Promise<string | null> {
+  const response = await fetch('/api/reports/gate', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ passphrase }),
+  });
+  if (response.ok) return null;
+  const body = (await response.json().catch(() => null)) as { error?: string } | null;
+  return body?.error ?? `Reports returned ${response.status}`;
+}
+
 /* ── The Register of Consultation ────────────────────────────────────────── */
 
 export interface Register {

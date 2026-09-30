@@ -33,6 +33,7 @@ const CalendarView = lazy(() => import('./views/Honors').then((m) => ({ default:
 const HistoryView = lazy(() => import('./views/History').then((m) => ({ default: m.HistoryView })));
 const InformantsView = lazy(() => import('./views/Informants').then((m) => ({ default: m.InformantsView })));
 const EnforcementView = lazy(() => import('./views/Enforcement').then((m) => ({ default: m.EnforcementView })));
+const ReportsView = lazy(() => import('./views/Reports').then((m) => ({ default: m.ReportsView })));
 
 /*
  * Fluent's provider, and it is lazy for the same reason the views are — only
@@ -180,6 +181,14 @@ export default function App() {
       <div className="shell">
         <main>
           {route.name === 'shelf' && <Shelf onOpen={navigate} />}
+
+          {route.name === 'reports' && (
+            <ErrorBoundary resetKey="reports">
+              <Suspense fallback={<Consulting />}>
+                <ReportsView />
+              </Suspense>
+            </ErrorBoundary>
+          )}
 
           {/* The game takes the whole viewport and sits outside the archive's
               page furniture, so it renders as a sibling of the shelf rather
