@@ -20,7 +20,7 @@ function Seal({ onOpen }: { onOpen: () => void }) {
   }}>
     <p className="reports-lock__class">Sealed — Embassy Register</p>
     <h1>Reports</h1>
-    <p>Filed intelligence is held under its own word. Access is verified by the archive, never by the browser alone.</p>
+    <p>Reserved for the Eyes of the High Command</p>
     <label htmlFor="reports-word">The word</label>
     <input id="reports-word" type="password" value={word} autoComplete="off" spellCheck={false} onChange={(event) => setWord(event.target.value)} disabled={pending} />
     <p className="reports-lock__error" role="alert">{error ?? ' '}</p>
