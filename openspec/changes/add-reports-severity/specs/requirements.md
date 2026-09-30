@@ -2,10 +2,13 @@
 
 ## Deterministic classification
 
-The collector SHALL accept only a leading `Severity:` metadata line, normalize
-the six supported severity values, and remove the accepted metadata line before
-storing and serving the report body. A missing or invalid value SHALL be
-`unassessed`.
+The collector SHALL accept only a standalone `Severity:` metadata field in the
+official Military or Informants template. The label MAY use Discord bold
+Markdown, and a supported value MAY appear inline or on the following non-empty
+line. The collector SHALL normalize the six supported values and remove the
+field, plus a consumed following-line value, before storing and serving the
+report body. A blank, missing, or invalid value SHALL be `unassessed`.
+Narrative mentions of severity SHALL NOT classify a report.
 
 ## Protected filtering
 

@@ -2,8 +2,8 @@
 
 ## Outcome
 
-Reports gain a deterministic severity classification from an explicit leading
-Discord metadata line. Readers can filter by severity and see a restrained
+Reports gain a deterministic severity classification from an explicit
+standalone field in the official Discord report templates. Readers can filter by severity and see a restrained
 archive-style classification stamp on each filing.
 
 ## Scope and boundaries

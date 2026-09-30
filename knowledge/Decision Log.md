@@ -30,7 +30,7 @@ Reports use the dedicated `thalmor-reports` D1 database and `thalmor-reporter` s
 
 ## 2026-09-30 - Reports severity is explicit and separate from category
 
-Reports use a six-level, deterministic severity field: informational, low, medium, high, critical, and unassessed. The collector reads a leading Discord `Severity:` metadata line and defaults missing or invalid values to unassessed; it never guesses a threat level. Severity communicates required attention, while category remains the subject of the report. Incident status is deliberately deferred.
+Reports use a six-level, deterministic severity field: informational, low, medium, high, critical, and unassessed. The collector reads an explicit standalone Discord `Severity:` metadata field from the official report template and defaults blank, missing, or invalid values to unassessed; it never guesses a threat level. Severity communicates required attention, while category remains the subject of the report. Incident status is deliberately deferred.
 
 ## 2026-09-30 - Archive interactions stay registry-driven and CSS-led
 
@@ -46,4 +46,4 @@ Military and Informants use one child channel per in-world subject rather than `
 
 ## 2026-09-30 - Report severity remains explicit
 
-Severity is conveyed through a written label plus a restrained color family on filters and report cards, so color is never the sole classification signal. The collector continues to accept only a leading `Severity: <level>` field and does not infer danger from prose; legacy or unmarked reports remain Unassessed. The Reports liquid marker fills the selected control's rectangular bounds while its internal ink gradient supplies the movement.
+Severity is conveyed through a written label plus a restrained color family on filters and report cards, so color is never the sole classification signal. The collector accepts only an explicit standalone `Severity: <level>` template field and does not infer danger from prose; legacy or unmarked reports remain Unassessed. The Reports liquid marker fills the selected control's rectangular bounds while its internal ink gradient supplies the movement.

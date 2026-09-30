@@ -24,7 +24,7 @@ The `chronicler` Worker runs nightly at 04:00 UTC. It reads Discord Informants c
 
 Category collection policy remains explicit in `reporter/src/config.ts`. Military and Informants treat every readable text or forum child as a report source because their child channels use in-world names; the channel name becomes the report subcategory. Other category roots retain the narrower `*-report` / `*-reports` child-name rule. Category IDs are therefore sufficient configuration, provided the bot has View Channel and Read Message History on each inherited or explicitly permitted child.
 
-`migrations/0003_reports_severity.sql` adds the constrained `severity` field and its timestamp index. The collector accepts a leading `Severity: <level>` line only, removes it before storing the report body, and uses `unassessed` for a missing or invalid value. `/api/reports` may filter by a valid severity alongside category before its cursor pagination; it retains the sealed response headers.
+`migrations/0003_reports_severity.sql` adds the constrained `severity` field and its timestamp index. The collector accepts a standalone `Severity: <level>` field anywhere in the official Military or Informants template, including Discord-bold labels and a valid value on the following line. It removes the field before storage and uses `unassessed` for a blank, missing, or invalid value; it never infers severity from narrative prose. `/api/reports` may filter by a valid severity alongside category before its cursor pagination; it retains the sealed response headers.
 
 ## Consultation register
 

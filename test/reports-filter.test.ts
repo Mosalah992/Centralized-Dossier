@@ -44,8 +44,55 @@ describe('Reports ingestion filtering', () => {
     expect(result.text).not.toContain('Severity:');
   });
 
+  it('classifies the bold Severity field inside the Informants dossier template', () => {
+    const content = [
+      '**New Informant Dossier Received**',
+      '**The folder lists as follows:**',
+      '',
+      '**Agent Name:** Haldir',
+      '**Race:** Thalmor',
+      '**Severity:** Critical',
+      '**Key Issues:** Bruma',
+      '**Filled Report:**',
+      body,
+    ].join('\n');
+    const result = filterReportMessage(message({ content }));
+    expect(result).toMatchObject({ included: true, severity: 'critical' });
+    if (!result.included) return;
+    expect(result.text).not.toMatch(/severity\s*:/i);
+    expect(result.text).toContain('New Informant Dossier Received');
+  });
+
+  it('classifies a following-line Severity value inside the Military template', () => {
+    const content = [
+      'Incident Report',
+      'Date of Report: 30th of Hearthfire',
+      'Name: Ainz Armas',
+      'Report Details:',
+      '**Severity:**',
+      '**Medium**',
+      'Date: 30th of Hearthfire',
+      'Time: 20:00',
+      'Location: Fort Pale Pass',
+      'Describe:',
+      body,
+    ].join('\n');
+    const result = filterReportMessage(message({ content }));
+    expect(result).toMatchObject({ included: true, severity: 'medium' });
+    if (!result.included) return;
+    expect(result.text).not.toMatch(/severity\s*:/i);
+    expect(result.text).not.toMatch(/^medium$/im);
+  });
+
+  it('does not infer severity from narrative prose', () => {
+    const narrative = `The officer described the severity: high during testimony. ${body}`;
+    expect(extractReportSeverity(narrative)).toEqual({ severity: 'unassessed', body: narrative });
+  });
+
   it('uses unassessed for missing or invalid severity metadata', () => {
     expect(extractReportSeverity(body).severity).toBe('unassessed');
     expect(extractReportSeverity(`Severity: Urgent\n${body}`)).toMatchObject({ severity: 'unassessed', body: body.trim() });
+    expect(extractReportSeverity(`Incident Report\nSeverity:\n\nReport Details:\n${body}`))
+      .toMatchObject({ severity: 'unassessed' });
   });
 });

@@ -6,3 +6,4 @@
 - [x] Update durable architecture and integration documentation.
 - [x] Verify the Pages preview and run the live collector safely with an in-memory D1 adapter.
 - [x] Apply the D1 migration and deploy the Pages site and reporter Worker to production.
+- [x] Align parsing with the Military and Informants template field positions and Discord Markdown.

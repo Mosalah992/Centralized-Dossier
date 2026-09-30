@@ -36,20 +36,40 @@ const URL = /https?:\/\/|discord\.gg(?:\/|\b)|(?:^|[\s(])(?:[a-z0-9-]+\.)+(?:com
 
 export const containsReportUrl = (text: string): boolean => URL.test(text);
 
-/** Reads the report-format header only when it opens the report. This avoids
- * mistaking a quoted or narrative "Severity:" line for a classification. */
+const normalizedSeverityField = (line: string): RegExpExecArray | null =>
+  /^severity\s*:\s*(.*?)\s*$/i.exec(line.replace(/\*\*/g, '').trim());
+
+const isReportSeverity = (value: string): value is ReportSeverity =>
+  (REPORT_SEVERITIES as readonly string[]).includes(value);
+
+/** Reads an explicit standalone field anywhere in an official report template.
+ * The anchored field syntax avoids interpreting narrative uses of "severity". */
 export function extractReportSeverity(value: string): { severity: ReportSeverity; body: string } {
   const lines = value.split(/\r?\n/);
-  const first = lines.findIndex((line) => line.trim().length > 0);
-  if (first < 0) return { severity: 'unassessed', body: value };
-  const match = /^\s*severity\s*:\s*(.*?)\s*$/i.exec(lines[first] ?? '');
-  if (!match) return { severity: 'unassessed', body: value };
-  lines.splice(first, 1);
-  const offered = (match[1] ?? '').toLowerCase();
-  const severity = (REPORT_SEVERITIES as readonly string[]).includes(offered)
-    ? offered as ReportSeverity
-    : 'unassessed';
-  return { severity, body: lines.join('\n').trim() };
+  for (let index = 0; index < lines.length; index++) {
+    const match = normalizedSeverityField(lines[index] ?? '');
+    if (!match) continue;
+
+    let offered = (match[1] ?? '').trim().toLowerCase();
+    let valueIndex = -1;
+    if (!offered) {
+      valueIndex = lines.findIndex((line, candidate) =>
+        candidate > index && line.trim().length > 0,
+      );
+      const following = (lines[valueIndex] ?? '').replace(/\*\*/g, '').trim().toLowerCase();
+      if (isReportSeverity(following)) offered = following;
+      else valueIndex = -1;
+    }
+
+    if (valueIndex >= 0) lines.splice(valueIndex, 1);
+    lines.splice(index, 1);
+    return {
+      severity: isReportSeverity(offered) ? offered : 'unassessed',
+      body: lines.join('\n').trim(),
+    };
+  }
+
+  return { severity: 'unassessed', body: value };
 }
 
 /** Converts Discord-only markup to readable, identity-safe plain text. */
