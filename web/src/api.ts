@@ -192,10 +192,14 @@ export interface Report {
   authorName: string | null;
 }
 
-export interface ReportsResponse { reports: Report[]; }
+export interface ReportsResponse { reports: Report[]; nextCursor: string | null; }
 
-export const useReports = (unlocked: boolean, category: string | null) =>
-  useAsync<ReportsResponse>(unlocked ? `/api/reports${category ? `?category=${encodeURIComponent(category)}` : ''}` : null);
+export const useReports = (unlocked: boolean, category: string | null, cursor: string | null) => {
+  const query = new URLSearchParams();
+  if (category) query.set('category', category);
+  if (cursor) query.set('cursor', cursor);
+  return useAsync<ReportsResponse>(unlocked ? `/api/reports${query.size ? `?${query}` : ''}` : null);
+};
 
 export async function reportsIsOpen(): Promise<boolean> {
   try {

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { openReports, reportsIsOpen, useReports } from '../api';
 import { Consulting, Notice } from '../components/Notice';
+import { REPORT_CATEGORY_NAMES } from '../../../shared/reports';
 
 function Seal({ onOpen }: { onOpen: () => void }) {
   const [word, setWord] = useState('');
@@ -28,10 +29,10 @@ function Seal({ onOpen }: { onOpen: () => void }) {
 export function ReportsView() {
   const [open, setOpen] = useState<boolean | null>(null);
   const [category, setCategory] = useState<string | null>(null);
+  const [cursor, setCursor] = useState<string | null>(null);
   useEffect(() => { void reportsIsOpen().then(setOpen); }, []);
-  const state = useReports(open === true, category);
-  const categories = useMemo(() => state.state === 'ready'
-    ? [...new Set(state.value.reports.map((report) => report.category))].sort() : [], [state]);
+  const state = useReports(open === true, category, cursor);
+  const categories = useMemo(() => REPORT_CATEGORY_NAMES, []);
   if (open === null) return <Consulting />;
   if (!open) return <Seal onOpen={() => setOpen(true)} />;
   if (state.state === 'loading') return <Consulting />;
@@ -39,13 +40,15 @@ export function ReportsView() {
   return <section className="reports-reader">
     <header><p className="reports-reader__class">Sealed — Reports Register</p><h1>Reports</h1></header>
     <nav className="reports-reader__categories" aria-label="Report categories">
-      <button className={category === null ? 'is-active' : ''} onClick={() => setCategory(null)}>All</button>
-      {categories.map((name) => <button key={name} className={category === name ? 'is-active' : ''} onClick={() => setCategory(name)}>{name}</button>)}
+      <button className={category === null ? 'is-active' : ''} onClick={() => { setCategory(null); setCursor(null); }}>All</button>
+      {categories.map((name) => <button key={name} className={category === name ? 'is-active' : ''} onClick={() => { setCategory(name); setCursor(null); }}>{name}</button>)}
     </nav>
     {state.value.reports.length === 0 ? <p className="reports-reader__empty">No reports have been filed in this register.</p> : state.value.reports.map((report) => <article className="report" key={report.id}>
       <p className="report__meta">{report.category}{report.subcategory ? ` · ${report.subcategory}` : ''}<time dateTime={report.timestamp}>{report.timestamp.slice(0, 10)}</time></p>
       <h2>{report.title}</h2><p>{report.body}</p>
       {report.authorName && <p className="report__author">Filed by {report.authorName}</p>}
     </article>)}
+    {state.value.nextCursor && <button className="reports-reader__more" onClick={() => setCursor(state.value.nextCursor)}>Older reports</button>}
+    {cursor && <button className="reports-reader__more" onClick={() => setCursor(null)}>Newest reports</button>}
   </section>;
 }

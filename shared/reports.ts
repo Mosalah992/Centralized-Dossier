@@ -3,6 +3,10 @@
 // once and applied identically by every scheduled run.
 
 export const REPORT_MINIMUM_LENGTH = 300;
+/** Public labels only; Discord IDs remain server-side collector configuration. */
+export const REPORT_CATEGORY_NAMES = [
+  'Logistics', 'Administration', 'Mining', 'Supply', 'Military', 'Informants',
+] as const;
 
 export interface DiscordReportMessage {
   id: string;

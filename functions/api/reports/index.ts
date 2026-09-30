@@ -4,6 +4,7 @@
 
 import { REPORTS_COOKIE_NAME, readCookie } from '../../lib/session';
 import { hasReportsWrit } from '../../lib/reports';
+import { parseReportsQuery } from '../../lib/reports';
 
 interface Env {
   REPORTS_COOKIE_SECRET: string;
@@ -34,24 +35,35 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   );
   if (!writ) return json({ error: 'Reports are sealed under their own word.' }, 401);
 
-  const category = new URL(request.url).searchParams.get('category');
+  const { category, cursor } = parseReportsQuery(new URL(request.url));
+  const limit = 30;
   try {
-    const statement = category
-      ? env.REPORTS?.prepare(`SELECT id, category, subcategory, title, body, timestamp, author_name FROM reports WHERE category = ? ORDER BY timestamp DESC, id DESC LIMIT 100`).bind(category)
-      : env.REPORTS?.prepare(`SELECT id, category, subcategory, title, body, timestamp, author_name FROM reports ORDER BY timestamp DESC, id DESC LIMIT 100`);
+    const clauses: string[] = [];
+    const values: string[] = [];
+    if (category) { clauses.push('category = ?'); values.push(category); }
+    if (cursor) {
+      clauses.push('(timestamp < ? OR (timestamp = ? AND id < ?))');
+      values.push(cursor.timestamp, cursor.timestamp, cursor.id);
+    }
+    const where = clauses.length ? ` WHERE ${clauses.join(' AND ')}` : '';
+    const statement = env.REPORTS?.prepare(
+      `SELECT id, category, subcategory, title, body, timestamp, author_name FROM reports${where} ORDER BY timestamp DESC, id DESC LIMIT ${limit}`,
+    ).bind(...values);
     const { results = [] } = await statement?.all<Record<string, unknown>>() ?? {};
-    return json({ reports: results.map((row) => ({
-      id: row.id,
+    const reports = results.map((row) => ({
+      id: String(row.id),
       category: row.category,
       subcategory: row.subcategory,
       title: row.title,
       body: row.body,
       timestamp: row.timestamp,
       authorName: row.author_name,
-    })) });
+    }));
+    const last = reports[reports.length - 1];
+    return json({ reports, nextCursor: reports.length === limit && last ? `${last.timestamp}|${last.id}` : null });
   } catch {
     // Optional infrastructure must not turn a sealed, authenticated route into
     // an error page while D1 is being migrated or restored.
-    return json({ reports: [] });
+    return json({ reports: [], nextCursor: null });
   }
 };

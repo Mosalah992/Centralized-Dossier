@@ -16,3 +16,4 @@
 .report__meta { display:flex; gap:.7rem; }
 .report__meta time { margin-left:auto; letter-spacing:.08em; }
 .report__author { font-style:italic; }
+.reports-reader__more { margin-top:1rem; padding:.55rem .85rem; color:var(--ink); font:inherit; background:transparent; border:1px solid color-mix(in srgb, var(--ink-soft) 35%, transparent); cursor:pointer; }

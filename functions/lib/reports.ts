@@ -34,3 +34,20 @@ export const reportsPassphraseMatches = (secret: string, offered: string, expect
 
 export const hasReportsWrit = (secret: string, epoch: number, token: string | null) =>
   readWrit(secret, epoch, token, REPORTS_SCOPE);
+
+export interface ReportsQuery {
+  category: string | null;
+  cursor: { timestamp: string; id: string } | null;
+}
+
+/** Parses the opaque, time-and-id cursor used by the D1 reader. */
+export function parseReportsQuery(url: URL): ReportsQuery {
+  const category = url.searchParams.get('category');
+  const raw = url.searchParams.get('cursor');
+  if (!raw) return { category, cursor: null };
+  const at = raw.lastIndexOf('|');
+  const timestamp = raw.slice(0, at);
+  const id = raw.slice(at + 1);
+  if (at < 1 || !timestamp || !/^\d+$/.test(id)) return { category, cursor: null };
+  return { category, cursor: { timestamp, id } };
+}

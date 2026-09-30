@@ -14,6 +14,7 @@ import {
   reportsThrottled,
   hasReportsWrit,
 } from '../functions/lib/reports';
+import { parseReportsQuery } from '../functions/lib/reports';
 
 const SECRET = 'reports-cookie-secret';
 const PASSPHRASE = 'the right report word';
@@ -56,5 +57,14 @@ describe('the Reports gate', () => {
   it('invalidates Reports writs when the Reports epoch changes', async () => {
     const token = await issueWrit(SECRET, 1, REPORTS_SCOPE);
     await expect(hasReportsWrit(SECRET, 2, token)).resolves.toBeNull();
+  });
+});
+
+describe('Reports query cursor', () => {
+  it('keeps category and accepts only a well-formed time-and-id cursor', () => {
+    expect(parseReportsQuery(new URL('https://example.test/api/reports?category=Military&cursor=2026-09-30T12%3A00%3A00.000Z%7C123')))
+      .toEqual({ category: 'Military', cursor: { timestamp: '2026-09-30T12:00:00.000Z', id: '123' } });
+    expect(parseReportsQuery(new URL('https://example.test/api/reports?cursor=broken')))
+      .toEqual({ category: null, cursor: null });
   });
 });
