@@ -30,6 +30,11 @@
   flex-direction: column;
   width: var(--archive-nav-width);
   overflow: hidden auto;
+  /* The rail must still scroll on short displays, but a native bright scrollbar
+     reads as browser chrome laid over the cabinet. Wheel, touch, keyboard and
+     programmatic scrolling remain available with the track visually absent. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   color: var(--stone);
   background:
     linear-gradient(180deg, rgb(38 31 22 / 0.42), transparent 14rem),
@@ -37,6 +42,11 @@
   border-right: 1px solid color-mix(in srgb, var(--gold) 36%, transparent);
   box-shadow: 0.8rem 0 2rem rgb(0 0 0 / 0.26);
   transition: width 0.3s var(--ease), transform 0.3s var(--ease);
+}
+
+.archive-sidebar::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 .archive-sidebar::after {

@@ -63,4 +63,11 @@ describe('interaction boundaries', () => {
     expect(sidebar).toContain('archive-sidebar__backdrop');
     expect(sidebar).toContain("document.body.style.overflow = 'hidden'");
   });
+
+  it('keeps the sidebar scrollable without exposing a native scrollbar track', () => {
+    const navigationCss = read('web/src/styles/archive-navigation.css');
+    expect(navigationCss).toContain('overflow: hidden auto');
+    expect(navigationCss).toContain('scrollbar-width: none');
+    expect(navigationCss).toContain('.archive-sidebar::-webkit-scrollbar');
+  });
 });
