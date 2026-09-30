@@ -27,7 +27,6 @@ import '@fontsource/eb-garamond/latin-600.css';
 import '@fontsource/eb-garamond/latin-ext-600.css';
 import '@fontsource/eb-garamond/latin-400-italic.css';
 import '@fontsource/eb-garamond/latin-ext-400-italic.css';
-import '@fontsource/noto-sans-runic/400.css';
 
 import App from './App';
 import './styles/base.css';
