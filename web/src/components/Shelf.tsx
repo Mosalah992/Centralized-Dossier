@@ -11,6 +11,7 @@ import { BINDINGS } from '../theme';
 import { Book } from './Book';
 import { Notice } from './Notice';
 import { Register } from './Register';
+import reportsSealUrl from '../assets/gate-seal.webp';
 
 interface Props {
   onOpen: (href: string) => void;
@@ -168,6 +169,14 @@ export function Shelf({ onOpen }: Props) {
       {/* Under the cabinet, and on the shelf only — the global footer renders
           inside every volume too, and a register of readers belongs at the door
           rather than at the foot of each book. */}
+      <section className="hall__command" aria-label="High Command reports">
+        <p className="hall__command-label">For the Eyes of High Command</p>
+        <button className="hall__command-seal" type="button" onClick={() => onOpen('/reports')}>
+          <img src={reportsSealUrl} alt="" width={132} height={132} />
+          <span>Reports</span>
+        </button>
+      </section>
+
       <Register />
 
     </div>

@@ -243,6 +243,7 @@ a {
 
 .site-footer {
   margin: 5rem 0 3rem;
+  padding-bottom: 3rem;
   text-align: center;
   color: var(--stone-dim);
 }
