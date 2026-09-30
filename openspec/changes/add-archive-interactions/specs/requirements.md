@@ -19,3 +19,8 @@
 - Its front shall open to the existing Reports passphrase form through an accessible button and a CSS 3D flip.
 - CSS shall own geometry and faces; centralized GSAP motion may own entrance and irregular glyph illumination.
 - The seal shall remain fully usable with reduced motion and without JavaScript animation completion.
+
+## Reports navigation motion
+
+- Category and severity filters shall share a restrained liquid-ink active marker in the archive's gold, parchment, and dark-ink palette.
+- The marker shall follow wrapped controls without a continuous JavaScript animation loop and shall become static under reduced motion.

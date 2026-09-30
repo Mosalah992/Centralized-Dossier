@@ -55,6 +55,16 @@ describe('interaction boundaries', () => {
     expect(read('web/src/styles/archive-seal.css')).toContain('prefers-reduced-motion: reduce');
   });
 
+  it('moves a CSS-driven Dominion ink marker between Reports filters', () => {
+    const reports = read('web/src/views/Reports.tsx');
+    const reportsCss = read('web/src/styles/reports.css');
+    expect(reports).toContain('function LiquidNav');
+    expect(reports).toContain('ResizeObserver');
+    expect(reports).toContain('aria-pressed={category === name}');
+    expect(reportsCss).toContain('.reports-liquid-nav::before');
+    expect(reportsCss).toContain('@keyframes reports-liquid-settle');
+  });
+
   it('retains the requested sidebar preference key and mobile dismissal controls', () => {
     const app = read('web/src/App.tsx');
     const sidebar = read('web/src/components/ArchiveSidebar.tsx');
