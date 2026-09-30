@@ -6,4 +6,4 @@
 - [x] Suspend calendar render loops offscreen and for reduced motion.
 - [x] Harden CSP and response security headers without changing sealed caching.
 - [x] Run security/dependency scans and `npm run verify`.
-- [ ] Deploy and validate a branch preview before production.
+- [x] Deploy and validate a branch preview before production.
