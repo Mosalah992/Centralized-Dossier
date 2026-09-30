@@ -43,3 +43,7 @@ The collapsible archive navigation is generated from the existing shelf registry
 ## 2026-09-30 - Named report channels are category-scoped
 
 Military and Informants use one child channel per in-world subject rather than `*-reports` names. Their configured Discord category ID is the allowlist boundary, so the collector discovers every readable text/forum child and records its normalized channel name as the subcategory. Other categories retain report-name filtering to avoid ingesting ordinary operational chat; individual child IDs are intentionally not duplicated in configuration.
+
+## 2026-09-30 - Report severity remains explicit
+
+Severity is conveyed through a written label plus a restrained color family on filters and report cards, so color is never the sole classification signal. The collector continues to accept only a leading `Severity: <level>` field and does not infer danger from prose; legacy or unmarked reports remain Unassessed. The Reports liquid marker fills the selected control's rectangular bounds while its internal ink gradient supplies the movement.

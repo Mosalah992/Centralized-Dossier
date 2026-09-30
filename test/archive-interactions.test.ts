@@ -63,6 +63,20 @@ describe('interaction boundaries', () => {
     expect(reports).toContain('aria-pressed={category === name}');
     expect(reportsCss).toContain('.reports-liquid-nav::before');
     expect(reportsCss).toContain('@keyframes reports-liquid-settle');
+    expect(reportsCss).toContain('border-radius: 2px');
+    expect(reportsCss).toContain(".reports-liquid-nav[data-tone='critical']");
+    expect(reportsCss).not.toContain('border-radius: 46% 54%');
+  });
+
+  it('color-codes report cards without making color the only severity label', () => {
+    const reports = read('web/src/views/Reports.tsx');
+    const reportsCss = read('web/src/styles/reports.css');
+    expect(reports).toContain('report report--${report.severity}');
+    expect(reports).toContain('severity severity--${report.severity}');
+    for (const level of ['critical', 'high', 'medium', 'low', 'informational', 'unassessed']) {
+      expect(reportsCss).toContain(`.report--${level}`);
+      expect(reportsCss).toContain(`.severity--${level}`);
+    }
   });
 
   it('retains the requested sidebar preference key and mobile dismissal controls', () => {

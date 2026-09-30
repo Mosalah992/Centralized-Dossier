@@ -27,9 +27,10 @@ interface LiquidNavProps {
   ariaLabel: string;
   children: ReactNode;
   className: string;
+  tone?: ReportSeverity;
 }
 
-function LiquidNav({ activeKey, ariaLabel, children, className }: LiquidNavProps) {
+function LiquidNav({ activeKey, ariaLabel, children, className, tone }: LiquidNavProps) {
   const nav = useRef<HTMLElement>(null);
   const previous = useRef(activeKey);
 
@@ -77,7 +78,12 @@ function LiquidNav({ activeKey, ariaLabel, children, className }: LiquidNavProps
   }, [activeKey]);
 
   return (
-    <nav ref={nav} className={`${className} reports-liquid-nav`} aria-label={ariaLabel}>
+    <nav
+      ref={nav}
+      className={`${className} reports-liquid-nav`}
+      aria-label={ariaLabel}
+      data-tone={tone}
+    >
       {children}
     </nav>
   );
@@ -166,6 +172,7 @@ export function ReportsView() {
       <details className="reports-reader__standard">
         <summary>Saelthar Classification Standard</summary>
         <p>Reports are classified according to the danger presented to Dominion personnel, assets, intelligence, supply, or continued operations. Classification denotes required attention, not the prestige of the reporting officer.</p>
+        <p className="reports-reader__severity-note"><strong>Filing format:</strong> classification is assigned only when the report begins with <code>Severity: High</code> (or another listed level). Reports without that line remain Unassessed; the archive never guesses from the report text.</p>
         <dl>
           <div><dt>Critical</dt><dd>Immediate threat to Dominion personnel or operations.</dd></div>
           <div><dt>High</dt><dd>Serious operational concern requiring urgent attention.</dd></div>
@@ -181,7 +188,7 @@ export function ReportsView() {
           <button key={name} aria-pressed={category === name} className={category === name ? 'is-active' : ''} onClick={() => { setCategory(name); setCursor(null); }}>{name}</button>
         ))}
       </LiquidNav>
-      <LiquidNav className="reports-reader__severities" ariaLabel="Report severity" activeKey={severity ?? 'all'}>
+      <LiquidNav className="reports-reader__severities" ariaLabel="Report severity" activeKey={severity ?? 'all'} tone={severity ?? undefined}>
         <span>Severity:</span>
         <button aria-pressed={severity === null} className={severity === null ? 'is-active' : ''} onClick={() => { setSeverity(null); setCursor(null); }}>All</button>
         {REPORT_SEVERITIES.slice(0, -1).reverse().map((level) => (
