@@ -131,19 +131,6 @@ const VOLUME_TRACKS: Partial<Record<VolumeSlug, Track>> = {
   },
 };
 
-/* A rail can be as tall as the entire archive document. Repeating the full
-   runic alphabet here (rather than a short CSS `content` value) keeps both
-   sides continuous even when a long register or the footer extends the page. */
-const RUNE_TRIM = 'ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃᛇᛈᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟ '.repeat(80);
-
-function ChromeTrim({ className }: { className: string }) {
-  return (
-    <span className={className}>
-      <span className="archive-chrome__runes">{RUNE_TRIM}</span>
-    </span>
-  );
-}
-
 export default function App() {
   const [route, navigate] = useRoute();
 
@@ -168,15 +155,6 @@ export default function App() {
   return (
     <>
       <Ambience track={track.url} />
-
-      {/* One document outline for the whole archive, rather than decoration on
-          individual sheets. It is pointer-inert and never becomes a focus stop. */}
-      <div className="archive-chrome" aria-hidden="true">
-        <ChromeTrim className="archive-chrome__band archive-chrome__band--top" />
-        <ChromeTrim className="archive-chrome__band archive-chrome__band--bottom" />
-        <ChromeTrim className="archive-chrome__rail archive-chrome__rail--left" />
-        <ChromeTrim className="archive-chrome__rail archive-chrome__rail--right" />
-      </div>
 
       <div className="shell">
         <main>
