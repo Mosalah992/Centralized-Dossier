@@ -27,10 +27,11 @@ Start every task with [CODEX.md](CODEX.md), then open only the linked note(s) in
 ## Working protocol
 
 1. Read `CODEX.md` and the narrowest linked knowledge notes before editing. Search before asking where a behavior lives.
-2. State whether the task touches member data, Sheets scope, the Chronicle gate, KV/D1, or public assets. If it does, cite the relevant invariant in the implementation note or PR.
-3. Make the smallest coherent change. Comments explain irreversible reasoning and tradeoffs, not line-by-line mechanics.
-4. Run `npm run typecheck` and `npm test`; use `npm run build` for browser-bundle or routing work. For deploys, validate the served site/API, not only a successful upload.
-5. Update `CODEX.md` when a system boundary, public endpoint, deployment topology, or invariant changes. Update the relevant `knowledge/` note when a decision, contract, or dependency changes. Add a dated entry to `knowledge/Decision Log.md` for non-obvious choices.
+2. Use [OpenSpec](openspec/config.yaml) for a new capability or any change crossing a runtime, public endpoint, data contract, gate, Worker, or D1/KV boundary. Its proposal must state scope, affected invariants, whether member data/Sheets/gates are touched, and live verification. Focused copy, styling, and isolated bug fixes may proceed without an OpenSpec proposal.
+3. State whether the task touches member data, Sheets scope, the Chronicle gate, KV/D1, or public assets. If it does, cite the relevant invariant in the implementation note or PR.
+4. Make the smallest coherent change. Comments explain irreversible reasoning and tradeoffs, not line-by-line mechanics.
+5. Run `npm run typecheck` and `npm test`; use `npm run build` for browser-bundle or routing work. For deploys, validate the served site/API, not only a successful upload.
+6. Update `CODEX.md` when a system boundary, public endpoint, deployment topology, or invariant changes. Update the relevant `knowledge/` note when a decision, contract, or dependency changes. Add a dated entry to `knowledge/Decision Log.md` for non-obvious choices. OpenSpec artifacts aid review; they do not replace these durable records.
 
 ## Documentation ownership
 
