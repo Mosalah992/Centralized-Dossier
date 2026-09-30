@@ -76,7 +76,7 @@ const page = await browser.newPage({ viewport: { width: 1440, height: 3200 }, de
 // Read off the registry rather than listed here, so a volume added to
 // shared/volumes.ts turns up on the contact sheet bound rather than withdrawn.
 // A regex and not an import: the registry is TypeScript and this is a plain
-// .mjs run under the pinned Node 18, which cannot load it. The shelf only ever
+// .mjs run under the pinned Node runtime, which does not load TypeScript directly. The shelf only ever
 // asks this payload one question — which slugs have a live tab — so the slug
 // is the only field that has to be right.
 const slugs = [...fs.readFileSync(path.join(ROOT, 'shared', 'volumes.ts'), 'utf8')

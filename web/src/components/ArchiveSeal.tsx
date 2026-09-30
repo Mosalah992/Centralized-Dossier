@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { useGSAP } from '@gsap/react';
 
 import { D, failsafe, gsap, staged, suspendOffScreen } from '../motion';
+import '../styles/archive-seal.css';
 
 interface Props {
   eyebrow: string;

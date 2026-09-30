@@ -3,9 +3,12 @@
 // while leaving preview hostnames available for feature validation.
 
 import { canonicalRedirect } from './lib/canonical';
+import { withSecurityHeaders } from './lib/security';
 
 export const onRequest: PagesFunction = async (context) => {
   const destination = canonicalRedirect(context.request);
-  if (destination) return Response.redirect(destination, 308);
-  return context.next();
+  const response = destination
+    ? Response.redirect(destination, 308)
+    : await context.next();
+  return withSecurityHeaders(response);
 };

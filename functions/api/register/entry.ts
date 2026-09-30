@@ -35,7 +35,7 @@ interface Env {
    * Local development only, and absent in production.
    *
    * Kept as an escape hatch rather than a necessity: `wrangler pages dev` was
-   * expected not to populate `request.cf` at all, and in wrangler 3 it does —
+   * expected not to populate `request.cf` at all, and in local Wrangler it does —
    * a local visit is resolved to a real country. This exists for the cases
    * where it is not, and to let a specific code be forced while testing the
    * province list. Never a fallback for a real request — see below.

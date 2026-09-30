@@ -12,7 +12,7 @@ flowchart TB
   Legacy[thalmor-archives.pages.dev] -->|308 preserves path + query| Canonical
   Canonical --> App[React archive: web/src/App.tsx]
   App --> Router[router.ts]
-  App --> Views[Lazy volume views + shelf + game]
+  App --> Views[Lazy volume views + shelf]
   App --> Client[web/src/api.ts]
 
   Client --> Pages[Cloudflare Pages Functions]
@@ -41,7 +41,7 @@ This is the implementation-grounded counterpart to the supplied dossier diagram.
 
 | Diagram region | Repository implementation |
 |---|---|
-| Archive experience | `web/src/`: App, router, shelf, views, components, game, CSS, and API client |
+| Archive experience | `web/src/`: App, router, shelf, views, components, CSS, and API client |
 | Data services / registers | `functions/api/volumes/`, `server/gsheets.ts`, `shared/volumes.ts`, `shared/parsers/` |
 | Chronicle collection | `functions/api/chronicle/`, `functions/lib/session.ts`, `chronicler/`, and shared `CHRONICLE_FILINGS` KV |
 
@@ -74,11 +74,13 @@ All new volumes must be explicitly classified before implementation. Do not add 
 5. Shared KV IDs in root and `chronicler/wrangler.toml` must match.
 6. No broad CSS/design-system migration: custom CSS remains authoritative; Fluent v9 is limited to interactive controls through `web/src/fluent/`.
 7. Motion uses GSAP via `web/src/motion.ts`; anime.js is only for the calendar instruments and must stay out of the entry chunk.
+8. Browser security headers are applied by root middleware from `functions/lib/security.ts` and mirrored in `public/_headers`; neither layer may overwrite route-owned cache or `Vary` headers.
 
 ## Operations
 
-- Toolchain: Node `18.20.7`, Vite 5, React 18, TypeScript, Cloudflare Pages/Workers.
+- Toolchain: Node `24.18.0`, Vite 7, React 18, TypeScript, Cloudflare Pages/Workers.
 - OpenSpec: [`openspec/config.yaml`](openspec/config.yaml) is the repository's spec-driven change guide. Use it before a new capability or a cross-boundary change; record scope, invariants, data/gate impact, and live verification. It supplements the versioned `knowledge/` vault rather than replacing it.
+- Security: [`SECURITY.md`](SECURITY.md) records the trust boundaries, OWASP control map, and repeatable dependency audit. Keep it aligned with `functions/lib/security.ts` and the sealed-route invariants.
 - Checks: `npm run typecheck`, `npm test`, and `npm run build` where applicable.
 - Deployment is manual. A Pages upload is not success: verify the live bundle and appropriate public/sealed API behavior after deployment.
 - `https://thalmor-archives.com` is the canonical production host. The production Pages hostname redirects there at the root Pages middleware; preview hostnames stay reachable for feature validation.

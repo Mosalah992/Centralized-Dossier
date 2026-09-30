@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Thalmor Embassy Archives — public web archive over the Corps roster sheet",
   "engines": {
-    "node": ">=18.18.0"
+    "node": ">=24.0.0"
   },
   "scripts": {
     "dev": "vite",
@@ -13,6 +13,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "verify": "npm run build && npm test",
+    "security:audit": "npm audit --audit-level=moderate",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.functions.json",
     "dump": "node scripts/dump-tabs.mjs",
@@ -34,21 +35,21 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20250109.0",
-    "@types/node": "^18.19.130",
+    "@cloudflare/workers-types": "^5.20260930.2",
+    "@types/node": "^24.0.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react": "^4.7.0",
-    "sharp": "^0.33.5",
+    "@vitejs/plugin-react": "^5.1.4",
+    "sharp": "^0.35.5",
     "typescript": "^5.9.3",
-    "vite": "^5.4.21",
-    "vitest": "^2.1.9",
-    "wrangler": "^3.114.17"
+    "vite": "^7.2.2",
+    "vitest": "^4.1.11",
+    "wrangler": "^4.144.0"
   },
   "allowScripts": {
-    "esbuild@0.21.5": true,
-    "esbuild@0.17.19": true,
-    "sharp@0.33.5": true,
-    "workerd@1.20250718.0": true
+    "esbuild@0.28.1": true,
+    "esbuild@0.28.2": true,
+    "sharp@0.35.5": true,
+    "workerd@1.20260926.1": true
   }
 }

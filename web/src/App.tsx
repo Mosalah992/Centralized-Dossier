@@ -65,18 +65,6 @@ const EditorView = import.meta.env.DEV
   ? lazy(() => import('./editor/Editor').then((m) => ({ default: m.EditorView })))
   : null;
 
-/*
- * The game, behind React.lazy like every view.
- *
- * It carries five sprites and a canvas engine, none of which a reader at the
- * seal has any business downloading — invariant 7's shape again. Rollup gives
- * it a chunk of its own and test/bundle.test.ts fails if any of it turns up in
- * index-*.js.
- */
-const SlayTheHeretic = lazy(() =>
-  import('./game/SlayTheHeretic').then((m) => ({ default: m.SlayTheHeretic })),
-);
-
 const FluentShell = lazy(() =>
   import('./fluent/Shell').then((m) => ({ default: m.FluentShell })),
 );
@@ -169,7 +157,7 @@ export default function App() {
   // same slot across the gate's three states so the track survived the seal
   // breaking; there are no states left to survive, but a remount still cuts the
   // audio, so it stays a sibling of everything that re-renders beneath it.
-  const boundToArchive = route.name !== 'game' && route.name !== 'editor';
+  const boundToArchive = route.name !== 'editor';
 
   return (
     <>
@@ -179,6 +167,17 @@ export default function App() {
         className={`archive-app${boundToArchive ? '' : ' archive-app--unbound'}`}
         data-sidebar-expanded={boundToArchive && sidebarExpanded}
       >
+        <a
+          className="support-seal"
+          href="https://ko-fi.com/N1B0279SRR"
+          target="_blank"
+          rel="noopener noreferrer external"
+          aria-label="Support the Thalmor Archives on Ko-fi (opens in a new tab)"
+        >
+          <span aria-hidden="true">☕</span>
+          <span>Support the Archives</span>
+        </a>
+
         {boundToArchive && (
           <ArchiveSidebar
             route={route}
@@ -196,17 +195,6 @@ export default function App() {
             <ErrorBoundary resetKey="reports">
               <Suspense fallback={<Consulting />}>
                 <ReportsView />
-              </Suspense>
-            </ErrorBoundary>
-          )}
-
-          {/* The game takes the whole viewport and sits outside the archive's
-              page furniture, so it renders as a sibling of the shelf rather
-              than inside a volume's binding. */}
-          {route.name === 'game' && (
-            <ErrorBoundary>
-              <Suspense fallback={<Consulting />}>
-                <SlayTheHeretic onLeave={() => navigate('/')} />
               </Suspense>
             </ErrorBoundary>
           )}

@@ -20,6 +20,7 @@ import { D, STAGGER, gsap, revealOnEnter, staged } from '../motion';
 import { Consulting, Notice } from '../components/Notice';
 import { Page, Registers } from '../components/Page';
 import { Sieve } from '../fluent/Sieve';
+import '../styles/enforcement.css';
 
 /**
  * What each rung is called on the page, and how grave it is.

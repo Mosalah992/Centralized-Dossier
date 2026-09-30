@@ -16,6 +16,7 @@
 
 import { Fragment, cloneElement, isValidElement, useEffect, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
+import './styles/chronicle.css';
 
 /** Where the preference is kept. One key: a reader who wants this wants it everywhere. */
 const KEY = 'archive:guided';

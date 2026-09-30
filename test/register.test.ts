@@ -73,7 +73,7 @@ describe('where a reader came from', () => {
 
   it('calls anything it cannot place unrecorded', () => {
     // Absent is the case the override var exists for. It is NOT the ordinary
-    // local one — wrangler 3 resolves a real country under pages dev.
+    // local one — Wrangler resolves a real country under pages dev.
     expect(normalizeCountry(undefined)).toBe(UNRECORDED);
     expect(normalizeCountry(null)).toBe(UNRECORDED);
     expect(normalizeCountry('')).toBe(UNRECORDED);

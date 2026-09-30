@@ -15,11 +15,54 @@
 }
 
 .archive-app--unbound {
+  --archive-nav-width: 0px;
   padding-inline-start: 0;
 }
 
 .archive-app--unbound > .shell {
   width: var(--shell);
+}
+
+.support-seal {
+  position: fixed;
+  inset-inline-start: calc(var(--archive-nav-width) + clamp(0.75rem, 2vw, 1.4rem));
+  bottom: clamp(0.75rem, 2vw, 1.4rem);
+  z-index: 35;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.6rem;
+  padding: 0.45rem 0.8rem;
+  color: var(--gold);
+  font-family: var(--display);
+  font-size: 0.56rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background:
+    radial-gradient(circle at 18% 18%, rgb(232 205 122 / 0.08), transparent 48%),
+    linear-gradient(180deg, #241f19, #16130f);
+  border: 1px solid rgb(201 162 39 / 0.45);
+  border-radius: 999px;
+  box-shadow: 0 0.35rem 0.9rem rgb(0 0 0 / 0.42);
+  transition:
+    inset-inline-start 0.3s var(--ease),
+    color 0.22s var(--ease),
+    border-color 0.22s var(--ease),
+    transform 0.22s var(--ease);
+}
+
+.support-seal:hover,
+.support-seal:focus-visible {
+  color: var(--gold-bright);
+  border-color: rgb(232 205 122 / 0.72);
+  transform: translateY(-1px);
+}
+
+.support-seal > span:first-child {
+  font-family: var(--serif);
+  font-size: 0.9rem;
+  line-height: 1;
 }
 
 .archive-sidebar {
@@ -298,6 +341,10 @@
     margin-inline: auto;
   }
 
+  .support-seal {
+    inset-inline-start: clamp(0.75rem, 2vw, 1.4rem);
+  }
+
   .archive-menu {
     position: fixed;
     top: 0.75rem;
@@ -365,6 +412,7 @@
   .archive-sidebar,
   .archive-sidebar__identity > span,
   .archive-sidebar__label,
+  .support-seal,
   .archive-sidebar__group h2,
   .archive-sidebar__group a,
   .archive-sidebar__group a::before {

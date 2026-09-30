@@ -38,6 +38,7 @@ import { reckon } from '../../../shared/reckoning';
 
 import { Orrery } from './Orrery';
 import skyUrl from '../assets/mundus/starfield.webp';
+import '../styles/firmament.css';
 
 /** Focal length for the perspective divide. Larger is a flatter, longer lens. */
 const FOCAL = 260;
@@ -142,9 +143,7 @@ export function Firmament() {
       return { x: 50 + x1 * scale, y: 50 + y1 * scale, scale };
     };
 
-    const timer = createTimer({
-      duration: Infinity,
-      onUpdate: () => {
+    const render = () => {
         /*
          * The view drifts, and the reader can push it.
          *
@@ -218,10 +217,24 @@ export function Firmament() {
           node.setAttribute('x2', b.x.toFixed(2));
           node.setAttribute('y2', b.y.toFixed(2));
         }
-      },
+    };
+
+    // Establish a complete static chart before the observer's first callback.
+    // Reduced-motion readers keep that frame and do not pay for a 60fps loop.
+    render();
+    if (still) {
+      return () => utils.remove([...stars, ...joins]);
+    }
+
+    const timer = createTimer({ duration: Infinity, autoplay: false, onUpdate: render });
+    const visibility = new IntersectionObserver(([entry]) => {
+      if (entry?.isIntersecting) timer.play();
+      else timer.pause();
     });
+    visibility.observe(el);
 
     return () => {
+      visibility.disconnect();
       timer.pause();
       utils.remove([...stars, ...joins]);
     };

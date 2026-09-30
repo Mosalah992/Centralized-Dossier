@@ -4,11 +4,13 @@
 
 ## Entry path
 
-`web/src/main.tsx` starts the SPA. `web/src/App.tsx` chooses the shelf, a lazy volume view, the dev-only editor, or the game. `web/src/router.ts` maps `/archives/:slug`, `/slaytheheretic`, and development-only `/editor`.
+`web/src/main.tsx` starts the SPA. `web/src/App.tsx` chooses the shelf, Reports, a lazy volume view, or the dev-only editor. `web/src/router.ts` maps `/archives/:slug`, `/reports`, and development-only `/editor`. The retired mini-game and its route are intentionally absent from production and source.
 
 The archive shell also owns a collapsible navigation rail generated from `shared/volumes.ts`, so it cannot drift into invented destinations. On mobile the same navigation becomes an off-canvas drawer. The circular `ArchiveSeal` is local to the `/reports` gate: it reveals the existing server-verified passphrase form and is not a second authentication mechanism.
 
 Production is served from `https://thalmor-archives.com`. The root Pages middleware permanently redirects only `thalmor-archives.pages.dev`, preserving the path and query; branch-preview hostnames remain reachable so each feature can be tested before release.
+
+The same root middleware applies the browser-security header set in `functions/lib/security.ts` to static, API, and redirect responses. `public/_headers` mirrors that policy for Pages static handling and gives immutable caching only to Vite-fingerprinted `/assets/*` files. Route-owned cache headers are never replaced.
 
 ## Runtime boundaries
 

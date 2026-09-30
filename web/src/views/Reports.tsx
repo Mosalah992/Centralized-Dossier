@@ -15,6 +15,7 @@ import {
   REPORT_SEVERITIES,
   type ReportSeverity,
 } from '../../../shared/reports';
+import '../styles/reports.css';
 
 function excerpt(body: string): string {
   const plain = body.replace(/\s+/g, ' ').trim();

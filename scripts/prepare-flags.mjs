@@ -33,7 +33,7 @@
  * it is public domain. Worth recording rather than assuming — everything under
  * web/src/assets is served from public URLs, so committing these publishes
  * them, and the question was put before anything was deployed. The same test
- * the game's sprites and the orrery's bodies had to pass.
+ * the archive's raster assets and the orrery's bodies had to pass.
  */
 
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';

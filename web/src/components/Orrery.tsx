@@ -27,6 +27,7 @@ import { animate, createTimer, stagger, utils } from 'animejs';
 import { constellationOf } from '../../../shared/constellations';
 import { DIVINE_PLANETS, conjunction, divineTurns, phases, wheelTurns } from '../../../shared/mundus';
 import { MONTH_LENGTHS, reckon } from '../../../shared/reckoning';
+import '../styles/orrery.css';
 
 import amberUrl from '../assets/mundus/amber.webp';
 import ashUrl from '../assets/mundus/ash.webp';
@@ -246,26 +247,35 @@ export function Orrery({ bare = false }: Props) {
      * half so that something moved while a reader was looking. The wheel has a
      * tempo of its own now (shared/mundus.ts), so the motion is simply there.
      */
-    const timer = createTimer({
-      duration: Infinity,
-      onUpdate: () => {
-        const turn = wheelTurns();
-        place(masser, R_MASSER, turn.masser);
-        place(secunda, R_SECUNDA, turn.secunda);
-        place(magnus, R_MAGNUS, turn.magnus);
+    const render = () => {
+      const turn = wheelTurns();
+      place(masser, R_MASSER, turn.masser);
+      place(secunda, R_SECUNDA, turn.secunda);
+      place(magnus, R_MAGNUS, turn.magnus);
 
-        const eight = divineTurns();
-        for (let i = 0; i < divines.length; i++) {
-          const node = divines[i];
-          const t = eight[i];
-          if (!node || t === undefined) continue;
-          place(node, Number(node.dataset.ring ?? 0), t);
-        }
+      const eight = divineTurns();
+      for (let i = 0; i < divines.length; i++) {
+        const node = divines[i];
+        const t = eight[i];
+        if (!node || t === undefined) continue;
+        place(node, Number(node.dataset.ring ?? 0), t);
+      }
+    };
 
-      },
+    render();
+    if (still) {
+      return () => utils.remove(el.querySelectorAll('*'));
+    }
+
+    const timer = createTimer({ duration: Infinity, autoplay: false, onUpdate: render });
+    const visibility = new IntersectionObserver(([entry]) => {
+      if (entry?.isIntersecting) timer.play();
+      else timer.pause();
     });
+    visibility.observe(el);
 
     return () => {
+      visibility.disconnect();
       timer.pause();
       utils.remove(el.querySelectorAll('*'));
     };

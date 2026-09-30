@@ -35,3 +35,7 @@ Reports use a six-level, deterministic severity field: informational, low, mediu
 ## 2026-09-30 - Archive interactions stay registry-driven and CSS-led
 
 The collapsible archive navigation is generated from the existing shelf registry, and its search filters destinations rather than unloaded record contents. Volume and Reports disclosures retain their original links and server contracts. The circular Archive Seal is confined to the Reports gate and uses CSS geometry with the established GSAP motion layer; Three.js is not added because it would increase bundle and lifecycle complexity without improving the navigation function.
+
+## 2026-09-30 - Browser policy is enforced at both Pages boundaries
+
+`functions/lib/security.ts` is the executable header policy for static, Function, and redirect responses; `public/_headers` mirrors it for Pages static handling. The CSP defaults to denial and permits no inline script, eval, frames, workers, plugins, or cross-origin connections. Inline style remains allowed because Fluent/Griffel and record-specific CSS variables emit runtime styles. Only fingerprinted `/assets/*` files receive immutable caching, and middleware preserves sealed routes' private/no-store and `Vary: Cookie` headers.

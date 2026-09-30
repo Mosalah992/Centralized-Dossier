@@ -9,7 +9,7 @@ context: |
   community. Public URL, shared passphrase, deliberately noindex: it carries
   about a hundred real people's Discord handles, ranks and activity.
 
-  Stack: Vite 5, React 18, TypeScript, Cloudflare Pages + Pages Functions.
+  Stack: Vite 7, React 18, TypeScript, Cloudflare Pages + Pages Functions.
   No CSS framework — the styling is hand-written and deliberately bespoke.
   web/src = SPA, functions/ = /api/* routes, server/ = Sheets client and
   parsers, shared/ = registry and types used by both halves, scripts/ = asset
