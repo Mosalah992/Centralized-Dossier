@@ -5,4 +5,4 @@
 - [x] Add the CSS/GSAP Archive Seal to the Reports gate only.
 - [x] Complete responsive, keyboard, focus, and reduced-motion behavior.
 - [x] Add regression coverage and run `npm run verify`.
-- [ ] Deploy and verify a branch preview before production.
+- [x] Deploy and verify a branch preview before production.
