@@ -4,22 +4,18 @@
 
 import { filterReportMessage, type DiscordReportMessage, type StoredReport } from '../../shared/reports';
 import { REPORT_CATEGORIES } from './config';
+import {
+  DISCORD_FORUM_CHANNEL_TYPE,
+  DISCORD_TEXT_CHANNEL_TYPES,
+  resolveReportSources,
+  type DiscordChannel,
+} from './sources';
 
 interface Env {
   REPORTS: D1Database;
   DISCORD_BOT_TOKEN?: string;
   DISCORD_GUILD_ID: string;
 }
-
-interface Channel {
-  id: string;
-  name: string;
-  type: number;
-  parent_id: string | null;
-}
-
-const TEXT = new Set([0, 5]);
-const FORUM = 15;
 
 async function discord<T>(token: string, path: string): Promise<T | null> {
   const response = await fetch(`https://discord.com/api/v10${path}`, {
@@ -29,18 +25,18 @@ async function discord<T>(token: string, path: string): Promise<T | null> {
   return response.json() as Promise<T>;
 }
 
-const subcategory = (channel: Channel, parent: Channel | undefined): string | null =>
+const subcategory = (channel: DiscordChannel, parent: DiscordChannel | undefined): string | null =>
   parent?.id === channel.parent_id ? channel.name.replace(/[-_]+/g, ' ') : null;
 
-async function messagesFor(token: string, channel: Channel): Promise<DiscordReportMessage[]> {
-  if (TEXT.has(channel.type)) {
+async function messagesFor(token: string, channel: DiscordChannel): Promise<DiscordReportMessage[]> {
+  if (DISCORD_TEXT_CHANNEL_TYPES.has(channel.type)) {
     return (await discord<DiscordReportMessage[]>(token, `/channels/${channel.id}/messages?limit=100`)) ?? [];
   }
-  if (channel.type !== FORUM) return [];
+  if (channel.type !== DISCORD_FORUM_CHANNEL_TYPE) return [];
 
   // Forum reports live in threads. Active threads are the bounded, reliable
   // v1 source; archived-thread pagination can be added without changing D1.
-  const active = await discord<{ threads?: Channel[] }>(token, `/channels/${channel.id}/threads/active`);
+  const active = await discord<{ threads?: DiscordChannel[] }>(token, `/channels/${channel.id}/threads/active`);
   const threads = active?.threads ?? [];
   const pages = await Promise.all(threads.map((thread) =>
     discord<DiscordReportMessage[]>(token, `/channels/${thread.id}/messages?limit=100`),
@@ -77,27 +73,15 @@ export async function collectReports(env: Env): Promise<CollectResult> {
   const token = env.DISCORD_BOT_TOKEN;
   if (!token) return { scanned: 0, stored: 0, dropped: 0, unavailable: true };
 
-  const channels = await discord<Channel[]>(token, `/guilds/${env.DISCORD_GUILD_ID}/channels`);
+  const channels = await discord<DiscordChannel[]>(token, `/guilds/${env.DISCORD_GUILD_ID}/channels`);
   if (!channels) return { scanned: 0, stored: 0, dropped: 0, unavailable: true };
   const pending: StoredReport[] = [];
   let scanned = 0;
   let dropped = 0;
 
   for (const category of REPORT_CATEGORIES) {
-    const root = channels.find((channel) => channel.id === category.id);
+    const { root, sources } = resolveReportSources(channels, category);
     if (!root) continue;
-    const children = channels.filter((channel) =>
-      channel.parent_id === root.id
-      && (TEXT.has(channel.type) || channel.type === FORUM)
-      // A direct mapping owns its category even when it sits inside another
-      // configured category. This avoids a Supply report first being filed as
-      // Logistics and then rewritten by an implementation-order accident.
-      && !REPORT_CATEGORIES.some((configured) => configured.id === channel.id)
-      // Categories may contain ordinary operational chat alongside reports.
-      // Only report-named text channels (or forum posts) are candidates here.
-      && (channel.type === FORUM || /(?:^|-)reports?$/.test(channel.name)),
-    );
-    const sources = children.length ? children : [root];
 
     for (const source of sources) {
       const messages = await messagesFor(token, source);
@@ -108,7 +92,7 @@ export async function collectReports(env: Env): Promise<CollectResult> {
         pending.push({
           id: message.id,
           category: category.name,
-          subcategory: subcategory(source, children.length ? root : undefined),
+          subcategory: subcategory(source, source.parent_id === root.id ? root : undefined),
           severity: filtered.severity,
           title: filtered.title,
           body: filtered.text,

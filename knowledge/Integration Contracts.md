@@ -22,6 +22,8 @@ The `chronicler` Worker runs nightly at 04:00 UTC. It reads Discord Informants c
 
 `REPORTS` binds the dedicated `thalmor-reports` D1 database in both Pages and the collector. `migrations/0002_reports.sql` is applied locally and remotely. The `reports` table uses the Discord message id for idempotent upserts and contains no Discord handle; `author_name` is nullable until an in-world-name source is defined.
 
+Category collection policy remains explicit in `reporter/src/config.ts`. Military and Informants treat every readable text or forum child as a report source because their child channels use in-world names; the channel name becomes the report subcategory. Other category roots retain the narrower `*-report` / `*-reports` child-name rule. Category IDs are therefore sufficient configuration, provided the bot has View Channel and Read Message History on each inherited or explicitly permitted child.
+
 `migrations/0003_reports_severity.sql` adds the constrained `severity` field and its timestamp index. The collector accepts a leading `Severity: <level>` line only, removes it before storing the report body, and uses `unassessed` for a missing or invalid value. `/api/reports` may filter by a valid severity alongside category before its cursor pagination; it retains the sealed response headers.
 
 ## Consultation register
