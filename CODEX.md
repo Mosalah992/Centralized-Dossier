@@ -78,6 +78,7 @@ All new volumes must be explicitly classified before implementation. Do not add 
 ## Operations
 
 - Toolchain: Node `18.20.7`, Vite 5, React 18, TypeScript, Cloudflare Pages/Workers.
+- OpenSpec: [`openspec/config.yaml`](openspec/config.yaml) is the repository's spec-driven change guide. Use it before a new capability or a cross-boundary change; record scope, invariants, data/gate impact, and live verification. It supplements the versioned `knowledge/` vault rather than replacing it.
 - Checks: `npm run typecheck`, `npm test`, and `npm run build` where applicable.
 - Deployment is manual. A Pages upload is not success: verify the live bundle and appropriate public/sealed API behavior after deployment.
 - `https://thalmor-archives.com` is the canonical production host. The production Pages hostname redirects there at the root Pages middleware; preview hostnames stay reachable for feature validation.

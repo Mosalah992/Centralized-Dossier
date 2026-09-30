@@ -23,3 +23,7 @@ Reports use the dedicated `thalmor-reports` D1 database and `thalmor-reporter` s
 ## 2026-09-29 — Canonical archive domain
 
 `thalmor-archives.com` is the public archive address. The production Pages hostname permanently redirects there with a 308 response; preview deployment hostnames remain live for isolated feature testing. Host-only session cookies and same-origin request checks migrate naturally with the reader to the canonical host.
+
+## 2026-09-30 - OpenSpec directs cross-boundary changes
+
+`openspec/config.yaml` is the project-specific guide for proposals affecting a new capability, runtime boundary, public endpoint, data contract, gate, Worker, or KV/D1 binding. It complements the Markdown memory rather than becoming a second source of truth: accepted decisions and changed contracts still belong in `CODEX.md` and `knowledge/`.
