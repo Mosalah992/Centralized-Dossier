@@ -27,3 +27,7 @@ Reports use the dedicated `thalmor-reports` D1 database and `thalmor-reporter` s
 ## 2026-09-30 - OpenSpec directs cross-boundary changes
 
 `openspec/config.yaml` is the project-specific guide for proposals affecting a new capability, runtime boundary, public endpoint, data contract, gate, Worker, or KV/D1 binding. It complements the Markdown memory rather than becoming a second source of truth: accepted decisions and changed contracts still belong in `CODEX.md` and `knowledge/`.
+
+## 2026-09-30 - Reports severity is explicit and separate from category
+
+Reports use a six-level, deterministic severity field: informational, low, medium, high, critical, and unassessed. The collector reads a leading Discord `Severity:` metadata line and defaults missing or invalid values to unassessed; it never guesses a threat level. Severity communicates required attention, while category remains the subject of the report. Incident status is deliberately deferred.

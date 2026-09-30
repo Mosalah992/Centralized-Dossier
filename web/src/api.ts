@@ -7,6 +7,7 @@ import type {
   CalendarYear, HonorEntry, Ledger, Member, Precedence, Stipends,
   VolumeCategory, VolumeEnvelope, VolumeSlug,
 } from '../../shared/types';
+import type { ReportSeverity } from '../../shared/reports';
 
 export interface ShelfEntry {
   slug: VolumeSlug;
@@ -186,6 +187,7 @@ export interface Report {
   id: string;
   category: string;
   subcategory: string | null;
+  severity: ReportSeverity;
   title: string;
   body: string;
   timestamp: string;
@@ -194,9 +196,10 @@ export interface Report {
 
 export interface ReportsResponse { reports: Report[]; nextCursor: string | null; }
 
-export const useReports = (unlocked: boolean, category: string | null, cursor: string | null) => {
+export const useReports = (unlocked: boolean, category: string | null, severity: ReportSeverity | null, cursor: string | null) => {
   const query = new URLSearchParams();
   if (category) query.set('category', category);
+  if (severity) query.set('severity', severity);
   if (cursor) query.set('cursor', cursor);
   return useAsync<ReportsResponse>(unlocked ? `/api/reports${query.size ? `?${query}` : ''}` : null);
 };

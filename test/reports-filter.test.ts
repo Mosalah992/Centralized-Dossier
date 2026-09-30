@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { filterReportMessage } from '../shared/reports';
+import { extractReportSeverity, filterReportMessage } from '../shared/reports';
 
 const body = 'The patrol completed its survey without incident. '.repeat(8);
 const message = (over: Record<string, unknown> = {}) => ({
@@ -35,5 +35,17 @@ describe('Reports ingestion filtering', () => {
   it('drops bare domains before text can be persisted', () => {
     expect(filterReportMessage(message({ content: `${body} evidence.example.org/path` })))
       .toEqual({ included: false, reason: 'url' });
+  });
+
+  it('classifies a leading severity field and excludes it from the stored text', () => {
+    const result = filterReportMessage(message({ content: `Severity: High\n${body}` }));
+    expect(result).toMatchObject({ included: true, severity: 'high' });
+    if (!result.included) return;
+    expect(result.text).not.toContain('Severity:');
+  });
+
+  it('uses unassessed for missing or invalid severity metadata', () => {
+    expect(extractReportSeverity(body).severity).toBe('unassessed');
+    expect(extractReportSeverity(`Severity: Urgent\n${body}`)).toMatchObject({ severity: 'unassessed', body: body.trim() });
   });
 });

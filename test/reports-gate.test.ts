@@ -61,10 +61,10 @@ describe('the Reports gate', () => {
 });
 
 describe('Reports query cursor', () => {
-  it('keeps category and accepts only a well-formed time-and-id cursor', () => {
-    expect(parseReportsQuery(new URL('https://example.test/api/reports?category=Military&cursor=2026-09-30T12%3A00%3A00.000Z%7C123')))
-      .toEqual({ category: 'Military', cursor: { timestamp: '2026-09-30T12:00:00.000Z', id: '123' } });
+  it('keeps category and severity, and accepts only a well-formed time-and-id cursor', () => {
+    expect(parseReportsQuery(new URL('https://example.test/api/reports?category=Military&severity=high&cursor=2026-09-30T12%3A00%3A00.000Z%7C123')))
+      .toEqual({ category: 'Military', severity: 'high', cursor: { timestamp: '2026-09-30T12:00:00.000Z', id: '123' } });
     expect(parseReportsQuery(new URL('https://example.test/api/reports?cursor=broken')))
-      .toEqual({ category: null, cursor: null });
+      .toEqual({ category: null, severity: null, cursor: null });
   });
 });
