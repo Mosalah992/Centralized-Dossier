@@ -6,9 +6,12 @@
 // are kept. Edges are feathered from luminance so the rim stays antialiased.
 
 import sharp from 'sharp';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
 
-const SRC = 'd:/Centralized Dossier/Assets/wax seal.png';
-const OUT = 'd:/Centralized Dossier/web/src/assets/gate-seal.webp';
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const SRC = resolve(ROOT, 'Assets/wax seal.png');
+const OUT = resolve(ROOT, 'web/src/assets/gate-seal.webp');
 
 const { data, info } = await sharp(SRC).raw().toBuffer({ resolveWithObject: true });
 const { width: W, height: H, channels: C } = info;

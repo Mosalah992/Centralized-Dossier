@@ -3,12 +3,14 @@ import { useEffect, useMemo, useState } from 'react';
 import { openReports, reportsIsOpen, useReports } from '../api';
 import { Consulting, Notice } from '../components/Notice';
 import { REPORT_CATEGORY_NAMES } from '../../../shared/reports';
+import sealUrl from '../assets/gate-seal.webp';
 
 function Seal({ onOpen }: { onOpen: () => void }) {
   const [word, setWord] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  return <form className="reports-lock" onSubmit={(event) => {
+  return <section className="reports-stage">
+    <form className="reports-lock" onSubmit={(event) => {
     event.preventDefault();
     if (!word || pending) return;
     setPending(true); setError(null);
@@ -22,8 +24,12 @@ function Seal({ onOpen }: { onOpen: () => void }) {
     <label htmlFor="reports-word">The word</label>
     <input id="reports-word" type="password" value={word} autoComplete="off" spellCheck={false} onChange={(event) => setWord(event.target.value)} disabled={pending} />
     <p className="reports-lock__error" role="alert">{error ?? ' '}</p>
-    <button type="submit" disabled={!word || pending}>{pending ? 'Testing the seal' : 'Open reports'}</button>
-  </form>;
+      <button className="reports-lock__seal" type="submit" disabled={!word || pending}>
+        <img src={sealUrl} alt="" width={192} height={192} />
+        <span>{pending ? 'Testing the seal' : 'Break the seal'}</span>
+      </button>
+    </form>
+  </section>;
 }
 
 export function ReportsView() {
