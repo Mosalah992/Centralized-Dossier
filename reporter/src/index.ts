@@ -85,7 +85,17 @@ export async function collectReports(env: Env): Promise<CollectResult> {
   for (const category of REPORT_CATEGORIES) {
     const root = channels.find((channel) => channel.id === category.id);
     if (!root) continue;
-    const children = channels.filter((channel) => channel.parent_id === root.id && (TEXT.has(channel.type) || channel.type === FORUM));
+    const children = channels.filter((channel) =>
+      channel.parent_id === root.id
+      && (TEXT.has(channel.type) || channel.type === FORUM)
+      // A direct mapping owns its category even when it sits inside another
+      // configured category. This avoids a Supply report first being filed as
+      // Logistics and then rewritten by an implementation-order accident.
+      && !REPORT_CATEGORIES.some((configured) => configured.id === channel.id)
+      // Categories may contain ordinary operational chat alongside reports.
+      // Only report-named text channels (or forum posts) are candidates here.
+      && (channel.type === FORUM || /(?:^|-)reports?$/.test(channel.name)),
+    );
     const sources = children.length ? children : [root];
 
     for (const source of sources) {
