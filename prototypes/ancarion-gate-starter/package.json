@@ -1,0 +1,9 @@
+{
+  "name": "ancarion-portrait-gate-starter",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {"dev": "node dev-server.mjs", "check": "node --check src/portrait-gate.js && node --check src/http-verifier.js && node --check demo/demo.js"},
+  "dependencies": {},
+  "devDependencies": {}
+}

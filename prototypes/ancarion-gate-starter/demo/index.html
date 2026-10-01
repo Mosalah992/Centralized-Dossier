@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ancarion portrait gate — local demo</title><link rel="stylesheet" href="../src/portrait-gate.css"><style>body{margin:0;background:#0b100d;color:#e4d9ba;font:15px/1.6 system-ui,sans-serif}.demo-tools{max-width:1000px;margin:24px auto;padding:0 24px}.demo-tools label{display:block;margin:12px 0}.demo-tools input,.demo-tools select,.demo-tools button{font:inherit;max-width:100%}.demo-tools button{padding:8px 14px}.demo-tools p{color:#c3b99f}#result{padding:0 24px}#result:empty{display:none}</style></head><body>
+<div class="demo-tools"><h2>Ancarion gate demo</h2><p>This is a UI demo. The public test phrase is <strong>Auri-El</strong>. It protects no content.</p>
+<label>Ancarion portrait (stays in your browser): <input id="portrait-file" type="file" accept="image/*"></label>
+<label><input id="has-frame" type="checkbox"> The portrait already contains a frame</label>
+<details><summary>Optional real animation clips</summary><p>Use matching crops and a fixed background. Leave empty for the static portrait.</p>
+<label>Idle <input type="file" id="idle-file" accept="video/mp4,video/webm"></label>
+<label>Listening <input type="file" id="listening-file" accept="video/mp4,video/webm"></label>
+<label>Denied <input type="file" id="denied-file" accept="video/mp4,video/webm"></label>
+<label>Accepted <input type="file" id="accepted-file" accept="video/mp4,video/webm"></label></details>
+<label>Demo service response <select id="response-mode"><option value="normal">Check test phrase</option><option value="offline">Service unavailable</option><option value="limited">Rate limited</option></select></label>
+<button id="replay" type="button">Reset demo</button></div>
+<main id="gate"></main><p id="result" role="status"></p><script type="module" src="./demo.js"></script></body></html>
