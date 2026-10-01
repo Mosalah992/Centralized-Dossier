@@ -36,23 +36,32 @@ describe('archive navigation', () => {
 });
 
 describe('interaction boundaries', () => {
-  it('places ArchiveSeal on Reports and not in the cabinet', () => {
-    expect(read('web/src/views/Reports.tsx')).toContain('<ArchiveSeal');
-    expect(read('web/src/components/Shelf.tsx')).not.toContain('ArchiveSeal');
+  it('uses one PortraitGate for both sealed routes', () => {
+    expect(read('web/src/views/Reports.tsx')).toContain('<PortraitGate');
+    expect(read('web/src/views/Informants.tsx')).toContain('<PortraitGate');
+    expect(read('web/src/views/Reports.tsx')).not.toContain('ArchiveSeal');
   });
 
-  it('keeps the Reports gate server-backed and the hidden face inert', () => {
+  it('keeps the two gates server-backed and separately adapted', () => {
     const reports = read('web/src/views/Reports.tsx');
-    const seal = read('web/src/components/ArchiveSeal.tsx');
-    expect(reports).toContain('openReports(word)');
-    expect(seal).toContain('backFace.current.inert = !flipped');
+    const chronicle = read('web/src/views/Informants.tsx');
+    expect(reports).toContain('openReports(passphrase, signal)');
+    expect(chronicle).toContain('openChronicle(passphrase, signal)');
   });
 
   it('uses the existing motion system and ships no Three.js dependency', () => {
     const manifest = JSON.parse(read('package.json')) as { dependencies?: Record<string, string> };
     expect(manifest.dependencies?.three).toBeUndefined();
-    expect(read('web/src/components/ArchiveSeal.tsx')).toContain("from '../motion'");
-    expect(read('web/src/styles/archive-seal.css')).toContain('prefers-reduced-motion: reduce');
+    const gateCss = read('web/src/styles/portrait-gate.css');
+    expect(gateCss).toContain('prefers-reduced-motion: reduce');
+    expect(gateCss).toContain('@keyframes portrait-gate-attention-cue');
+    expect(gateCss).toContain('.portrait-gate__form input, .portrait-gate__status { animation: none; }');
+    const gate = read('web/src/components/PortraitGate.tsx');
+    expect(gate).toContain('clips?: Partial<Record');
+    expect(gate).toContain("ancarion-living-portrait.mp4");
+    expect(gate).toContain('void element.play().catch(() => setActiveClip(null))');
+    expect(gate).toContain('const passphrase = phrase;');
+    expect(gate).not.toContain('const passphrase = phrase.trim();');
   });
 
   it('moves a CSS-driven Dominion ink marker between Reports filters', () => {

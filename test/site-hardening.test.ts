@@ -75,11 +75,11 @@ describe('browser security policy', () => {
 describe('initial-load ownership', () => {
   it('keeps route-only styles out of the entry module', () => {
     const entry = read('web/src/main.tsx');
-    for (const sheet of ['chronicle.css', 'enforcement.css', 'orrery.css', 'firmament.css', 'reports.css', 'archive-seal.css']) {
+    for (const sheet of ['chronicle.css', 'enforcement.css', 'orrery.css', 'firmament.css', 'reports.css', 'portrait-gate.css']) {
       expect(entry, `${sheet} should load with its route`).not.toContain(sheet);
     }
     expect(read('web/src/views/Reports.tsx')).toContain("../styles/reports.css");
-    expect(read('web/src/components/ArchiveSeal.tsx')).toContain("../styles/archive-seal.css");
+    expect(read('web/src/components/PortraitGate.tsx')).toContain("../styles/portrait-gate.css");
   });
 
   it('pauses continuous calendar rendering offscreen and under reduced motion', () => {
