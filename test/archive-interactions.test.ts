@@ -57,11 +57,32 @@ describe('interaction boundaries', () => {
     expect(gateCss).toContain('@keyframes portrait-gate-attention-cue');
     expect(gateCss).toContain('.portrait-gate__form input, .portrait-gate__status { animation: none; }');
     const gate = read('web/src/components/PortraitGate.tsx');
-    expect(gate).toContain('clips?: Partial<Record');
-    expect(gate).toContain("ancarion-living-portrait.mp4");
-    expect(gate).toContain('void element.play().catch(() => setActiveClip(null))');
+    expect(gate).toContain('clips?: Partial<');
+    expect(gate).toContain("ancarion-idle.mp4");
+    expect(gate).toContain("ancarion-refusal.webm");
+    expect(gate).toContain("ancarion-sigh.webm");
+    expect(gate).toContain("import { D, gsap, staged } from '../motion'");
+    expect(gate).toContain('export type PortraitState =');
+    expect(gate).toContain('className="portrait-gate__media-stage"');
+    expect(gate).toContain('preload="auto"');
+    expect(gate).toContain('autoPlay');
+    expect(gate).toContain('const IDLE_REPLAY_PAUSE_MS = 2_000');
+    expect(gate).toContain('onEnded={pauseBeforeIdleReplay}');
+    expect(gate).toContain('onEnded={() => onComplete(state)}');
+    expect(gate).toContain('void element.play().catch(() => setIdleUnavailable(true))');
+    const idleVideo = gate.match(/<video\s+ref=\{idleVideo\}[\s\S]*?\/>/)?.[0] ?? '';
+    expect(idleVideo).not.toContain('loop');
+    expect(gate).toContain("setPortraitState('accepted')");
+    expect(gate).toContain('onFocus={notice}');
     expect(gate).toContain('const passphrase = phrase;');
     expect(gate).not.toContain('const passphrase = phrase.trim();');
+  });
+
+  it('prepares the supplied portrait performances without transcoding them', () => {
+    const preparation = read('scripts/prepare-portrait-video.mjs');
+    expect(preparation).toContain("['blink.mp4', 'ancarion-idle.mp4']");
+    expect(preparation).toContain("['ancarion-shake.webm', 'ancarion-refusal.webm']");
+    expect(preparation).toContain("['ancarion-sigh.webm', 'ancarion-sigh.webm']");
   });
 
   it('moves a CSS-driven Dominion ink marker between Reports filters', () => {

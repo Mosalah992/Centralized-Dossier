@@ -1,16 +1,26 @@
-// Promote the supplied Ancarion performance from Assets/ into the Vite graph.
-// It is already a short web-ready MP4, so recompression would only risk a
-// visible mismatch with the static portrait used when playback is unavailable.
+// Promote the supplied Ancarion performances into the Vite graph without
+// transcoding them. The source files remain the reproducible asset inputs.
 
 import { createHash } from 'node:crypto';
-import { copyFile, readFile } from 'node:fs/promises';
+import { copyFile, mkdir, readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const source = resolve(ROOT, 'Assets/ancarion-living-portrait.mp4');
-const output = resolve(ROOT, 'web/src/assets/ancarion-living-portrait.mp4');
+const sourceDirectory = resolve(ROOT, 'Assets/Ancarion live portrait assets');
+const assets = [
+  ['blink.mp4', 'ancarion-idle.mp4'],
+  ['ancarion-shake.webm', 'ancarion-refusal.webm'],
+  ['ancarion-sigh.webm', 'ancarion-sigh.webm'],
+  ['accept.png', 'ancarion-accept.png'],
+];
 
-await copyFile(source, output);
-const digest = createHash('sha256').update(await readFile(output)).digest('hex');
-console.log(`wrote ${output} (${digest})`);
+for (const [sourceName, outputName] of assets) {
+  const source = resolve(sourceDirectory, sourceName);
+  const output = resolve(ROOT, 'web/src/assets', outputName);
+
+  await mkdir(dirname(output), { recursive: true });
+  await copyFile(source, output);
+  const digest = createHash('sha256').update(await readFile(output)).digest('hex');
+  console.log(`wrote ${output} (${digest})`);
+}
