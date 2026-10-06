@@ -5,6 +5,7 @@ import {
   filterArchiveNavigation,
   navigationItemIsActive,
 } from '../archive-navigation';
+import { COVERS, COVER_H, COVER_W } from '../covers';
 import type { Route } from '../router';
 
 interface Props {
@@ -205,7 +206,19 @@ export function ArchiveSidebar({ route, onNavigate }: Props) {
                         title={!expanded ? item.label : undefined}
                         onClick={(event) => follow(event, item.href)}
                       >
-                        <span className="archive-sidebar__mark" aria-hidden>{item.mark}</span>
+                        <span className="archive-sidebar__mark" aria-hidden>
+                          {item.slug ? (
+                            <img
+                              className="archive-sidebar__cover"
+                              src={COVERS[item.slug]}
+                              alt=""
+                              width={COVER_W}
+                              height={COVER_H}
+                              decoding="async"
+                              draggable={false}
+                            />
+                          ) : item.mark}
+                        </span>
                         <span className="archive-sidebar__label">{item.label}</span>
                       </a>
                     </li>

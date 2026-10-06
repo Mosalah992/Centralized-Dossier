@@ -286,10 +286,24 @@
   flex: 0 0 2.75rem;
   place-items: center;
   width: 2.75rem;
-  height: 2rem;
+  height: 2.4rem;
   color: var(--gold);
   font-family: var(--display);
   font-size: 0.82rem;
+}
+
+/* The volume's own cover, small. Distinct at a glance where letter marks
+   collided once the volumes took their painted names. */
+.archive-sidebar__cover {
+  width: auto;
+  height: 2.35rem;
+  filter: drop-shadow(0 0.15rem 0.2rem rgb(0 0 0 / 0.55));
+  transition: transform 0.22s var(--ease);
+}
+
+.archive-sidebar__group a:hover .archive-sidebar__cover,
+.archive-sidebar__group a[aria-current='page'] .archive-sidebar__cover {
+  transform: translateY(-1px) scale(1.06);
 }
 
 .archive-sidebar__label {
@@ -402,6 +416,7 @@
   .archive-sidebar,
   .archive-sidebar__identity > span,
   .archive-sidebar__label,
+  .archive-sidebar__cover,
   .support-seal,
   .archive-sidebar__group h2,
   .archive-sidebar__group a,
