@@ -4,7 +4,7 @@
 
 ## Entry path
 
-`web/src/main.tsx` starts the SPA. `web/src/App.tsx` chooses the shelf, Reports, a lazy volume view, or the dev-only editor. `web/src/router.ts` maps `/archives/:slug`, `/reports`, and development-only `/editor`. The retired mini-game and its route are intentionally absent from production and source.
+`web/src/main.tsx` starts the SPA. `web/src/App.tsx` chooses the shelf, Reports, a lazy volume view, or the dev-only editor. `web/src/router.ts` maps `/archives/:slug`, `/reports` (with its filters held in the query string), `/reports/:id` for a single filing, and development-only `/editor`. The retired mini-game and its route are intentionally absent from production and source.
 
 The archive shell also owns a slim navigation rail generated from `shared/volumes.ts`, so it cannot drift into invented destinations. On desktop it slides open over the page on hover or keyboard focus; it never reflows the page and has no pinned state. Each volume is shown by its own painted cover, and the home page is a hero (seal, title, motto) rather than a second cabinet of the same books. On mobile the same navigation becomes an off-canvas drawer. `PortraitGate` is a shared lazy presentation layer for `/archives/informants` and `/reports`; it submits only to the respective existing server-verified gate and is not a second authentication mechanism.
 

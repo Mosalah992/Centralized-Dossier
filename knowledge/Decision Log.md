@@ -77,3 +77,7 @@ The home hero now carries the Dominion's mission statement under the title and t
 ## 2026-10-06 - Missing /assets/* files return an uncacheable 404
 
 Pages serves `index.html` for any path it does not have, and `public/_headers` marks `/assets/*` immutable for a year. During a deploy, readers whose HTML switched a moment before its assets were served the previous deployment's `index.html` as the new entry script, and kept it: a blank page that neither a reload nor a CDN purge could fix. The root middleware now converts any HTML answer under `/assets/` into a `404` with `Cache-Control: no-store` (`functions/lib/assets.ts`). It changes no route-owned cache header. After deploying, verify on the `*.pages.dev` deployment URL first and request custom-domain assets only once its HTML references them.
+
+## 2026-10-06 - Reports become a searchable, signed dossier
+
+`overhaul-reports-dossier`: the Reports reader is bound like the Chronicles book, with month-grouped filings, template fields laid out as records and an "Awaiting assessment" view. Search uses parameterised, escaped `LIKE` rather than FTS5, which is unnecessary at a few hundred filings. Filings gain addresses (`/reports/:id`) and a counts-only summary that also names desks filing without a classification — shown to High Command on the page, because the collectors never post to Discord. Filers are signed with their in-world roster name, resolved in the collector's memory from the public roster; resolving at read time was rejected because it would require storing a Discord identity in D1.

@@ -30,4 +30,4 @@
 
 ## Records
 
-- [ ] Update `CODEX.md`, `knowledge/Architecture.md`, `knowledge/Integration Contracts.md` and the Decision Log (attribution rule, search approach, new routes).
+- [x] Update `CODEX.md`, `knowledge/Architecture.md`, `knowledge/Integration Contracts.md` and the Decision Log (attribution rule, search approach, new routes).
