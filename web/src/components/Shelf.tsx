@@ -233,7 +233,7 @@ export function Shelf({ onOpen }: Props) {
           loop
           playsInline
           preload="none"
-          aria-label="Film of the Thalmor Embassy on campaign in Skyrim."
+          aria-label="Film of the Thalmor Embassy at work in Skyrim."
         />
       </figure>
 
