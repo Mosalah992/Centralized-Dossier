@@ -7,6 +7,7 @@ import {
 } from '../archive-navigation';
 import { COVERS, COVER_H, COVER_W } from '../covers';
 import type { Route } from '../router';
+import reportsSealUrl from '../assets/gate-seal.webp';
 
 interface Props {
   route: Route;
@@ -214,6 +215,17 @@ export function ArchiveSidebar({ route, onNavigate }: Props) {
                               alt=""
                               width={COVER_W}
                               height={COVER_H}
+                              decoding="async"
+                              draggable={false}
+                            />
+                          ) : item.href === '/reports' ? (
+                            // High Command's own golden seal, as on the hall.
+                            <img
+                              className="archive-sidebar__seal"
+                              src={reportsSealUrl}
+                              alt=""
+                              width={512}
+                              height={512}
                               decoding="async"
                               draggable={false}
                             />

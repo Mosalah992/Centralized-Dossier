@@ -1,76 +1,155 @@
-// The archive index. The cabinet is the primary object on this page; the
-// heading stays ceremonial but compact so the six physical volumes dominate.
+// The archive's front door, read as one document from the top down: the
+// Embassy's seal and name, the Dominion's statement of why the archive exists,
+// the Embassy itself assembled, and then the way on into the records.
+//
+// The volumes stand in the navigation rail, each on its own painted cover, so
+// the hall does not repeat them.
 
 import { useRef } from 'react';
 import { useGSAP } from '@gsap/react';
 
-import { useShelf } from '../api';
-import { D, STAGGER, failsafe, gsap, staged, suspendOffScreen } from '../motion';
-import { SHELF, isOwnWork } from '../../../shared/volumes';
-import { BINDINGS } from '../theme';
-import { Book } from './Book';
-import { Notice } from './Notice';
+import { D, failsafe, gsap, revealOnEnter, staged, suspendOffScreen } from '../motion';
 import { Register } from './Register';
 import reportsSealUrl from '../assets/gate-seal.webp';
+import portrait1280 from '../assets/hero/portrait-1280.webp';
+import portrait1920 from '../assets/hero/portrait-1920.webp';
+import filmUrl from '../assets/hero/film.mp4';
+import gallery1 from '../assets/hero/gallery-1.webp';
+import gallery2 from '../assets/hero/gallery-2.webp';
+import gallery3 from '../assets/hero/gallery-3.webp';
+import gallery4 from '../assets/hero/gallery-4.webp';
+import gallery5 from '../assets/hero/gallery-5.webp';
+import gallery6 from '../assets/hero/gallery-6.webp';
+import gallery7 from '../assets/hero/gallery-7.webp';
+import gallery8 from '../assets/hero/gallery-8.webp';
+
+// In the order scripts/prepare-hero.mjs hangs them.
+const GALLERY = [
+  { src: gallery1, alt: 'Embassy soldiers ranked in the snow before a hold’s timbered halls, under a low winter sun.' },
+  { src: gallery2, alt: 'The Embassy lined up shoulder to shoulder in the snow, blades and banners at rest.' },
+  { src: gallery3, alt: 'A lone figure enthroned in a stone hall between two Dominion banners.' },
+  { src: gallery4, alt: 'Officers gathered about a long war table in a timbered great hall.' },
+  { src: gallery5, alt: 'A column of soldiers marching down a stone stair in warm afternoon light.' },
+  { src: gallery6, alt: 'A cloaked Thalmor officer overseeing a formation in a cobbled courtyard.' },
+  { src: gallery7, alt: 'Black-armoured agents standing in formation in a mossy courtyard.' },
+  { src: gallery8, alt: 'Hooded agents filing up a snow-dusted stair.' },
+];
 
 interface Props {
   onOpen: (href: string) => void;
 }
 
 export function Shelf({ onOpen }: Props) {
-  const shelf = useShelf();
+  const hall = useRef<HTMLDivElement>(null);
   const dust = useRef<HTMLSpanElement>(null);
-  const cabinet = useRef<HTMLDivElement>(null);
+  const portrait = useRef<HTMLElement>(null);
+  const film = useRef<HTMLVideoElement>(null);
+  const gallery = useRef<HTMLUListElement>(null);
 
-  /*
-   * The volumes muster.
-   *
-   * Outward from the centre of the cabinet rather than left to right, so the
-   * shelf fills the way ranks fall in rather than the way a list renders.
-   *
-   * ON `.book`, NOT `.book__body`. The body owns the hover lift — a CSS
-   * transition on `transform` — and a tween writing inline transform to that
-   * element would be chased by its own transition, which is the surest way to
-   * get motion that looks broken rather than wrong.
-   *
-   * RUNS ONCE, ON MOUNT, AND THE EMPTY DEPENDENCY LIST IS THE POINT. It was
-   * keyed on `shelf.state` first, which made the volumes muster TWICE: once
-   * when the component mounted and again when the archivist answered and the
-   * state went from loading to ready. The books do not come from that fetch —
-   * they are the static SHELF registry, and the fetch only says which tab each
-   * one is bound to — so there was never anything for a second run to add
-   * except a second entrance on top of the first.
-   */
+  // The hall comes up out of the dark, seal first. Once, on mount.
   useGSAP(() => staged(({ moving }) => {
-    const shelfEl = cabinet.current;
-    if (!moving || !shelfEl) return;
+    const root = hall.current;
+    if (!moving || !root) return;
 
-    const books = gsap.utils.toArray<HTMLElement>('.book', shelfEl);
-    if (!books.length) return;
+    const parts = gsap.utils.toArray<HTMLElement>('[data-rise]', root);
+    if (!parts.length) return;
 
-    const arrive = gsap.fromTo(books,
-      { opacity: 0, y: 18 },
-      // `page`, not `board`: a board is a hinged cover swinging open, and this
-      // is one object arriving on a shelf. It is also 300ms less of it.
-      { opacity: 1, y: 0, duration: D.page, ease: 'draw',
-        stagger: STAGGER.muster, clearProps: 'opacity,transform' });
-    // Nine volumes blanked and never un-blanked is a shelf nobody can read.
-    const rescue = failsafe(arrive);
+    const rise = gsap.fromTo(parts,
+      { opacity: 0, y: 14 },
+      { opacity: 1, y: 0, duration: D.page, ease: 'draw', stagger: 0.12,
+        clearProps: 'opacity,transform' });
+    // A hero blanked and never un-blanked is a door nobody can find.
+    const rescue = failsafe(rise);
 
     return () => {
       rescue();
-      arrive.kill();
-      gsap.set(books, { clearProps: 'opacity,transform' });
+      rise.kill();
+      gsap.set(parts, { clearProps: 'opacity,transform' });
     };
   }), []);
 
   /*
-   * Motes drifting through the torchlight.
+   * The portrait is come upon, not loaded.
    *
-   * Suspended when the shelf is scrolled out of view, which is the one thing
-   * the CSS keyframes could not do: `animation-play-state` cannot be driven
-   * from intersection, so the old loop ran for as long as the tab was visible
-   * whether or not anybody could see it.
+   * Dimmed, a little low and a little small until the reader scrolls to it,
+   * then drawn up into place slowly — a picture being uncovered, not a banner
+   * arriving. Skipped if the page opens already scrolled onto it: blanking
+   * something the reader is looking at only to bring it back is the one
+   * entrance worse than none.
+   */
+  useGSAP(() => staged(({ moving }) => {
+    const el = portrait.current;
+    if (!moving || !el) return;
+    if (el.getBoundingClientRect().top < window.innerHeight * 0.88) return;
+
+    return revealOnEnter(
+      [el],
+      (batch) => {
+        gsap.to(batch, {
+          opacity: 1, y: 0, scale: 1,
+          duration: D.ceremony + 0.6, ease: 'draw',
+          clearProps: 'opacity,transform',
+        });
+      },
+      { opacity: 0.35, y: 36, scale: 0.98 },
+    );
+  }), []);
+
+  // The rest of the Embassy, each picture uncovered the same way as the
+  // portrait but quicker and lighter, since there are eight of them.
+  useGSAP(() => staged(({ moving }) => {
+    const list = gallery.current;
+    if (!moving || !list) return;
+    const items = gsap.utils.toArray<HTMLElement>('li', list)
+      .filter((el) => el.getBoundingClientRect().top >= window.innerHeight * 0.88);
+
+    return revealOnEnter(
+      items,
+      (batch) => {
+        gsap.to(batch, {
+          opacity: 1, y: 0, scale: 1,
+          duration: D.ceremony, ease: 'draw', stagger: 0.15,
+          clearProps: 'opacity,transform',
+        });
+      },
+      { opacity: 0.35, y: 24, scale: 0.985 },
+    );
+  }), []);
+
+  /*
+   * The film plays only while it can be seen, and only for readers who have
+   * not asked for less motion — they get the player's own controls instead.
+   * Nothing is fetched until the reader is nearly there (`preload="none"`):
+   * it is the heaviest thing on the page and most visits never reach it.
+   */
+  useGSAP(() => staged(({ moving }) => {
+    const video = film.current;
+    if (!video) return;
+    if (!moving) {
+      video.controls = true;
+      return () => { video.controls = false; };
+    }
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry) return;
+      if (entry.isIntersecting) {
+        video.preload = 'auto';
+        // Autoplay of a muted video is allowed, but a browser may still
+        // decline; the still frame is an acceptable thing to be left with.
+        video.play().catch(() => {});
+      } else {
+        video.pause();
+      }
+    }, { rootMargin: '200px 0px' });
+    observer.observe(video);
+
+    return () => { observer.disconnect(); video.pause(); };
+  }), []);
+
+  /*
+   * Motes drifting through the torchlight, suspended once the hall is
+   * scrolled out of view — which CSS keyframes cannot do, since
+   * `animation-play-state` cannot be driven from intersection.
    */
   useGSAP(() => staged(({ moving }) => {
     const motes = dust.current;
@@ -84,92 +163,90 @@ export function Shelf({ onOpen }: Props) {
     return () => { watch(); drift.kill(); };
   }), []);
 
-  // Which tab each volume is bound to, once the archivist has answered.
-  const tabs = new Map<string, string | null>(
-    shelf.state === 'ready' ? shelf.value.volumes.map((v) => [v.slug, v.tab]) : [],
-  );
-
   return (
-    <div className="hall" ref={cabinet}>
+    <div className="hall" ref={hall}>
       <span className="hall__torch hall__torch--left" aria-hidden />
       <span className="hall__torch hall__torch--right" aria-hidden />
       <span className="hall__dust" ref={dust} aria-hidden />
 
-      <header className="hall__head">
+      <header className="hall__hero">
         {/* The Dominion insignia. Decorative — the heading beneath it already
-            names the archive, so it is not announced a second time. Served
-            from public/ as ledger.css serves the same file for its watermark. */}
-        <img className="hall__seal" src="/seal.webp" alt="" width={250} height={250} decoding="async" />
-        <h1 className="hall__title">
+            names the archive, so it is not announced a second time. */}
+        <img
+          className="hall__seal"
+          src="/seal.webp"
+          alt=""
+          width={250}
+          height={250}
+          decoding="async"
+          data-rise
+        />
+        <h1 className="hall__title" data-rise>
           Thalmor Embassy
           <br />
           Archives
         </h1>
-        <p className="hall__subtitle">Official Administrative Registers</p>
+        <p className="hall__subtitle" data-rise>Official Administrative Registers</p>
+        <p className="hall__motto" data-rise>By Order of the Third Aldmeri Dominion</p>
+
+        <div className="hall__mission" data-rise>
+          <p className="hall__mission-lead">
+            The Dominion does not merely govern the present. It preserves the
+            record by which the future shall understand it.
+          </p>
+          <p>
+            These archives serve as the official repository of Thalmor activity
+            throughout Tamriel, documenting our personnel, operations, hierarchy,
+            judgments, honors, and the events that shape the Dominion’s continued
+            mission.
+          </p>
+          <p className="hall__maxims">
+            <span>Order is maintained through knowledge.</span>
+            <span>Authority is preserved through record.</span>
+            <span>History belongs to those disciplined enough to keep it.</span>
+          </p>
+        </div>
       </header>
 
-      {shelf.state === 'error' && (
-        <Notice
-          kind="error"
-          title="The archive cannot be reached"
-          body={shelf.message}
+      <figure className="hall__portrait" ref={portrait}>
+        <img
+          src={portrait1920}
+          srcSet={`${portrait1280} 1280w, ${portrait1920} 1920w`}
+          sizes="(max-width: 900px) 92vw, min(1180px, calc(100vw - 10rem))"
+          alt="The Thalmor Embassy assembled in its black and gold, ranked in the snow before the timbered halls of a Skyrim hold."
+          width={1920}
+          height={1080}
+          loading="lazy"
+          decoding="async"
         />
-      )}
+      </figure>
 
-      {shelf.state === 'ready' && !shelf.value.reachable && (
-        <Notice
-          kind="error"
-          title="The registers are sealed"
-          body="The archivist cannot reach the master ledger. The volumes below are listed but cannot be opened."
+      <figure className="hall__film">
+        <video
+          ref={film}
+          src={filmUrl}
+          muted
+          loop
+          playsInline
+          preload="none"
+          aria-label="Film of the Thalmor Embassy on campaign in Skyrim."
         />
-      )}
+      </figure>
 
-      <section className="archive-cabinet" aria-label="Archive cabinet">
-        <div className="archive-cabinet__cap">
-          <span className="archive-cabinet__title">Archive Cabinet</span>
-        </div>
+      <ul className="hall__gallery" ref={gallery}>
+        {GALLERY.map(({ src, alt }) => (
+          <li key={src}>
+            <img src={src} alt={alt} width={1200} height={675} loading="lazy" decoding="async" />
+          </li>
+        ))}
+      </ul>
 
-        <div className="archive-cabinet__interior">
-          {SHELF.map((section) => (
-            <section
-              className={`section section--${section.category.toLowerCase().replace(/\W+/g, '-')}`}
-              key={section.category}
-            >
-              <h2 className="section__plate">
-                <span className="section__name">{section.category}</span>
-              </h2>
-              <div className="shelf">
-                {section.volumes.map((volume) => (
-                  <Book
-                    key={volume.slug}
-                    slug={volume.slug}
-                    title={volume.title}
-                    subtitle={BINDINGS[volume.slug].subtitle}
-                    category={section.category}
-                    tab={
-                      // A kept volume is written here, not read from the sheet,
-                      // so nothing the archivist says can withdraw it.
-                      isOwnWork(volume.slug)
-                        ? volume.title
-                        // Treat an unanswered shelf as present; a volume is only
-                        // shown withdrawn once the archivist has actually said so.
-                        : shelf.state === 'ready'
-                          ? tabs.get(volume.slug) ?? null
-                          : volume.title
-                    }
-                    onOpen={onOpen}
-                  />
-                ))}
-              </div>
-            </section>
-          ))}
-        </div>
-        <div className="archive-cabinet__base" aria-hidden />
-      </section>
+      <div className="hall__divider" aria-hidden>
+        <span />
+      </div>
 
-      {/* Under the cabinet, and on the shelf only — the global footer renders
-          inside every volume too, and a register of readers belongs at the door
-          rather than at the foot of each book. */}
+      {/* A guarded doorway, not another volume: High Command's seal is held
+          below the hall so the public registers remain the primary action. */}
       <section className="hall__command" aria-label="High Command reports">
         <p className="hall__command-label">For the Eyes of High Command</p>
         <button className="hall__command-seal" type="button" onClick={() => onOpen('/reports')}>
@@ -179,7 +256,6 @@ export function Shelf({ onOpen }: Props) {
       </section>
 
       <Register />
-
     </div>
   );
 }

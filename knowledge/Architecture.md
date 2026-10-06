@@ -6,7 +6,7 @@
 
 `web/src/main.tsx` starts the SPA. `web/src/App.tsx` chooses the shelf, Reports, a lazy volume view, or the dev-only editor. `web/src/router.ts` maps `/archives/:slug`, `/reports`, and development-only `/editor`. The retired mini-game and its route are intentionally absent from production and source.
 
-The archive shell also owns a slim navigation rail generated from `shared/volumes.ts`, so it cannot drift into invented destinations. On desktop it slides open over the page on hover or keyboard focus; it never reflows the page and has no pinned state. On mobile the same navigation becomes an off-canvas drawer. The circular `ArchiveSeal` is local to the `/reports` gate: it reveals the existing server-verified passphrase form and is not a second authentication mechanism.
+The archive shell also owns a slim navigation rail generated from `shared/volumes.ts`, so it cannot drift into invented destinations. On desktop it slides open over the page on hover or keyboard focus; it never reflows the page and has no pinned state. Each volume is shown by its own painted cover, and the home page is a hero (seal, title, motto) rather than a second cabinet of the same books. On mobile the same navigation becomes an off-canvas drawer. The circular `ArchiveSeal` is local to the `/reports` gate: it reveals the existing server-verified passphrase form and is not a second authentication mechanism.
 
 Production is served from `https://thalmor-archives.com`. The root Pages middleware permanently redirects only `thalmor-archives.pages.dev`, preserving the path and query; branch-preview hostnames remain reachable so each feature can be tested before release.
 

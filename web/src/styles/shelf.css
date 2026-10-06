@@ -1,5 +1,6 @@
-/* The shelf page is staged as a Thalmor administrative chamber. The cabinet is
-   the main object; the environment exists to give it weight and light. */
+/* The home page is staged as a Thalmor administrative chamber: the Embassy's
+   seal and name held in torchlight. The volumes themselves stand in the
+   navigation rail. */
 
 .hall {
   min-height: calc(100vh - 10rem);
@@ -50,42 +51,213 @@
   opacity: 0.9;
 }
 
-.hall__head {
-  text-align: center;
+.hall__hero {
   position: relative;
-  padding-bottom: clamp(1.1rem, 2.2vw, 1.8rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* The first screen, near enough: the portrait's top edge shows at the
+     foot, which is all the invitation to scroll the page needs. */
+  min-height: calc(100svh - 9rem);
+  padding-block: clamp(1rem, 3vw, 2rem);
+  text-align: center;
 }
 
 /* The insignia is dark pewter and carries its own painted halo, so it needs
-   room to read — below about 4rem the eagle collapses into a smudge — and only
-   a light shadow on top of the glow it already has. */
+   room to read and only a light shadow on top of the glow it already has. */
 .hall__seal {
   display: block;
-  width: clamp(4.5rem, 7vw, 6.5rem);
+  width: clamp(7rem, 12vw, 10.5rem);
   height: auto;
-  margin-inline: auto;
-  opacity: 0.94;
-  filter: drop-shadow(0 4px 9px rgba(0, 0, 0, 0.5));
+  opacity: 0.96;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.55));
 }
 
 .hall__title {
-  margin-top: 0.45rem;
-  font-size: clamp(1.25rem, 2.5vw, 2.05rem);
-  line-height: 1.1;
+  margin-top: clamp(0.8rem, 1.6vw, 1.3rem);
+  font-size: clamp(2rem, 5vw, 3.7rem);
+  line-height: 1.06;
   color: var(--parchment);
-  letter-spacing: 0.18em;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.65);
+  letter-spacing: 0.16em;
+  text-shadow: 0 3px 18px rgba(0, 0, 0, 0.7);
 }
 
 .hall__subtitle {
-  margin: 0.65rem 0 0;
+  margin: clamp(0.8rem, 1.5vw, 1.1rem) 0 0;
   font-family: var(--display);
-  font-size: 0.68rem;
-  letter-spacing: 0.32em;
-  color: color-mix(in srgb, var(--stone) 72%, #1c1915);
+  font-size: clamp(0.66rem, 1vw, 0.8rem);
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--stone) 78%, #1c1915);
 }
 
-/* Torches flanking the cabinet: footage of a real flame, cut down to one
+/* Set between two gilt rules, the way the registers' own title pages are. */
+.hall__motto {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: min(34rem, 100%);
+  margin: clamp(1.1rem, 2.2vw, 1.6rem) 0 0;
+  font-family: var(--serif);
+  font-size: clamp(0.9rem, 1.3vw, 1.05rem);
+  font-style: italic;
+  color: color-mix(in srgb, var(--gold) 70%, var(--parchment));
+}
+
+.hall__motto::before,
+.hall__motto::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--gold) 60%, transparent));
+}
+
+.hall__motto::after {
+  transform: scaleX(-1);
+}
+
+/* The Dominion's statement. A measure a reader can hold — this is prose, and a
+   line run the full width of the hall would be a banner instead. */
+.hall__mission {
+  width: min(40rem, 100%);
+  margin: clamp(1.8rem, 3.5vw, 2.6rem) auto 0;
+  font-family: var(--serif);
+  font-size: clamp(1rem, 1.25vw, 1.12rem);
+  line-height: 1.75;
+  color: color-mix(in srgb, var(--parchment) 84%, var(--stone));
+  text-wrap: pretty;
+}
+
+.hall__mission p {
+  margin: 0;
+}
+
+.hall__mission p + p {
+  margin-top: 1.1em;
+}
+
+.hall__mission-lead {
+  font-size: 1.14em;
+  line-height: 1.6;
+  color: var(--parchment);
+}
+
+/* Three maxims, set as an inscription: one to a line, in the display face,
+   closing the statement rather than continuing it. */
+.hall__maxims {
+  display: grid;
+  gap: 0.5rem;
+  padding-top: 1.3rem;
+  font-family: var(--display);
+  font-size: clamp(0.66rem, 0.95vw, 0.76rem);
+  line-height: 1.5;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--gold) 82%, var(--parchment));
+}
+
+/* The Embassy assembled. Shown whole and at its own proportions — every figure
+   in it is somebody — with the archive's gilt hairline rather than a new
+   frame, and the same lift a volume takes off the shelf. */
+.hall__portrait,
+.hall__film {
+  width: min(72rem, 100%);
+  margin: 0 auto;
+}
+
+.hall__portrait {
+  margin-top: clamp(1.5rem, 4vw, 3rem);
+  transform-origin: 50% 100%;
+}
+
+.hall__portrait img,
+.hall__film video {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  background: #0d0b09;
+  border: 1px solid color-mix(in srgb, var(--gold) 38%, transparent);
+  box-shadow:
+    0 0 0 0.4rem rgb(16 14 12 / 0.9),
+    0 0 0 calc(0.4rem + 1px) color-mix(in srgb, var(--gold) 18%, transparent),
+    0 1.8rem 3rem rgb(0 0 0 / 0.6);
+}
+
+.hall__film {
+  margin-top: clamp(2.5rem, 5vw, 4rem);
+}
+
+/* The rest of the Embassy, two to a row beneath the portrait. An odd one out
+   at the end takes the full row rather than standing alone in half of it. */
+.hall__gallery {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(1.2rem, 2.5vw, 2rem);
+  width: min(72rem, 100%);
+  margin: clamp(2.5rem, 5vw, 4rem) auto 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hall__gallery li:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+.hall__gallery img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  background: #0d0b09;
+  border: 1px solid color-mix(in srgb, var(--gold) 32%, transparent);
+  box-shadow:
+    0 0 0 0.3rem rgb(16 14 12 / 0.9),
+    0 0 0 calc(0.3rem + 1px) color-mix(in srgb, var(--gold) 14%, transparent),
+    0 1.2rem 2rem rgb(0 0 0 / 0.55);
+}
+
+@media (max-width: 720px) {
+  .hall__gallery {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.hall__film video {
+  object-fit: cover;
+}
+
+/* A gilt rule with a lozenge, the way the registers part their own sections,
+   so the portrait and film close into the archive below rather than stop. */
+.hall__divider {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  width: min(30rem, 80%);
+  margin: clamp(3rem, 6vw, 4.5rem) auto 0;
+}
+
+.hall__divider::before,
+.hall__divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--gold) 55%, transparent));
+}
+
+.hall__divider::after {
+  transform: scaleX(-1);
+}
+
+.hall__divider span {
+  width: 0.45rem;
+  height: 0.45rem;
+  border: 1px solid var(--gold);
+  transform: rotate(45deg);
+}
+
+/* Torches flanking the hall: footage of a real flame, cut down to one
    44-frame loop and stripped of its captions by scripts/prepare-torches.mjs,
    which also keys it to an alpha channel so the plate's black ground does not
    box the torch in. Nothing here animates the flame — it animates itself, and
@@ -98,15 +270,8 @@
   --torch-height: calc(var(--torch-width) * 270 / 240);
 
   position: absolute;
-  /* A torch is a taller object than the sconce that used to stand here, and a
-     box is anchored by its top: keeping the old `top` pushed the plinth down
-     behind the cabinet, which paints over it, leaving a pole cut off in
-     mid-air. So the two terms below are the old sconce's own top and height —
-     its base line — and the torch hangs from that up into the empty header
-     band. The pair keeps the place it has always had, at every width. */
-  top: calc(
-    clamp(8rem, 16vw, 13rem) + clamp(3.75rem, 5.5vw, 6rem) - var(--torch-height)
-  );
+  /* Level with the title, just below the insignia. */
+  top: calc(clamp(7rem, 12vw, 10.5rem) + 3rem);
   width: var(--torch-width);
   height: var(--torch-height);
   background-repeat: no-repeat;
@@ -123,7 +288,7 @@
 .hall__torch--right {
   right: max(1rem, calc(50% - 37rem));
   background-image: url('../assets/torch-right.webp');
-  /* Mirrored so the pair leans outward from the cabinet rather than both
+  /* Mirrored so the pair leans outward from the hall rather than both
      the same way. */
   transform: scaleX(-1);
 }
@@ -153,91 +318,8 @@
      decides it. The keyframes are gone; this is only the rest state. */
 }
 
-/* Cabinet */
-
-.archive-cabinet {
-  width: min(74rem, 100%);
-  margin: clamp(1rem, 2vw, 1.8rem) auto 0;
-  position: relative;
-  padding: 0 clamp(0.7rem, 1.6vw, 1.25rem);
-}
-
-.archive-cabinet__cap,
-.archive-cabinet__base {
-  width: min(70rem, 100%);
-  margin-inline: auto;
-  background:
-    linear-gradient(90deg, rgba(0, 0, 0, 0.35), transparent 18% 82%, rgba(0, 0, 0, 0.35)),
-    linear-gradient(180deg, #5a3c1f, #2b1b10 58%, #140d09);
-  border: 1px solid rgba(198, 168, 94, 0.2);
-  box-shadow:
-    inset 0 1px rgba(255, 255, 255, 0.06),
-    inset 0 -10px 18px rgba(0, 0, 0, 0.45),
-    0 18px 28px rgba(0, 0, 0, 0.45);
-}
-
-.archive-cabinet__cap {
-  min-height: 3.1rem;
-  display: grid;
-  place-items: center;
-  border-radius: 3px 3px 0 0;
-}
-
-.archive-cabinet__title {
-  font-family: var(--display);
-  font-size: 0.65rem;
-  letter-spacing: 0.34em;
-  color: color-mix(in srgb, var(--gold) 78%, #544027);
-  text-transform: uppercase;
-}
-
-.archive-cabinet__interior {
-  width: min(70rem, 100%);
-  margin-inline: auto;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(1.05rem, 1.8vw, 1.6rem);
-  padding: clamp(1.2rem, 2.2vw, 1.8rem);
-  /*
-   * THE BACKBOARD IS A REAL BOARD NOW — scripts/make-cabinet-wood.mjs, which
-   * generates it rather than downloading it, so nothing here carries a licence
-   * to check. It replaces a repeating-linear-gradient that put a white hairline
-   * every ten pixels forever: evenly spaced, dead straight, and identical from
-   * one end of the cabinet to the other, which reads as corduroy rather than
-   * as timber.
-   *
-   * ORDER MATTERS AND THE IMAGE IS OPAQUE, so it goes at the bottom. Layered
-   * anywhere higher it would paint over the glow and the vertical falloff
-   * beneath it and flatten the whole cabinet. The lighting that used to live in
-   * the base gradient is therefore expressed as a translucent shade ABOVE the
-   * board, and the old flat gradient stays underneath as the fallback for a
-   * reader whose image never arrives.
-   */
-  background:
-    linear-gradient(90deg,
-      rgba(0, 0, 0, 0.42),
-      transparent 5% 95%,
-      rgba(0, 0, 0, 0.42)),
-    radial-gradient(55rem 20rem at 50% 0%, rgba(202, 141, 63, 0.12), transparent 72%),
-    linear-gradient(180deg,
-      rgba(18, 13, 10, 0) 0%,
-      rgba(18, 13, 10, 0.5) 62%,
-      rgba(11, 8, 7, 0.86) 100%),
-    url('../assets/cabinet-wood.webp') 0 0 / auto repeat,
-    linear-gradient(180deg, #211711, #120d0a 65%, #0b0807);
-  border-inline: 1px solid rgba(198, 168, 94, 0.18);
-  box-shadow:
-    inset 0 0 0 1px rgba(0, 0, 0, 0.45),
-    inset 0 30px 48px rgba(0, 0, 0, 0.45);
-}
-
-.archive-cabinet__base {
-  height: 3.8rem;
-  border-radius: 0 0 5px 5px;
-}
-
 /* A guarded doorway, not another volume: High Command's seal is held below
-   the cabinet so the public registers remain the archive's primary action. */
+   the hall so the public registers remain the archive's primary action. */
 .hall__command {
   display: grid;
   justify-items: center;
@@ -282,269 +364,6 @@
   filter: drop-shadow(0 .8rem .9rem rgb(0 0 0 / .66));
 }
 
-.section {
-  min-width: 0;
-  display: grid;
-  grid-template-rows: auto 1fr;
-}
-
-.section__plate {
-  justify-self: center;
-  margin: 0 0 1.1rem;
-  padding: 0.32rem 0.7rem;
-  min-width: min(12rem, 100%);
-  text-align: center;
-  border: 1px solid rgba(198, 168, 94, 0.42);
-  background:
-    linear-gradient(180deg, rgba(198, 168, 94, 0.16), rgba(54, 39, 21, 0.68)),
-    linear-gradient(90deg, rgba(0, 0, 0, 0.3), transparent 28% 72%, rgba(0, 0, 0, 0.3));
-  box-shadow:
-    inset 0 1px rgba(255, 255, 255, 0.07),
-    inset 0 -4px 10px rgba(0, 0, 0, 0.45),
-    0 6px 10px rgba(0, 0, 0, 0.35);
-}
-
-.section__name {
-  font-family: var(--display);
-  font-size: 0.6rem;
-  letter-spacing: 0.22em;
-  color: color-mix(in srgb, var(--gold) 74%, var(--parchment));
-  text-transform: uppercase;
-}
-
-.shelf {
-  display: grid;
-  grid-template-rows: repeat(2, auto);
-  justify-items: center;
-  align-content: end;
-  gap: clamp(1.2rem, 2.2vw, 1.9rem);
-  position: relative;
-}
-
-.shelf::after {
-  content: '';
-  position: absolute;
-  left: -0.5rem;
-  right: -0.5rem;
-  bottom: -0.65rem;
-  height: 1.5rem;
-  background:
-    linear-gradient(180deg, rgba(120, 77, 36, 0.9), rgba(36, 22, 12, 0.95));
-  box-shadow:
-    inset 0 1px rgba(255, 255, 255, 0.06),
-    0 16px 24px rgba(0, 0, 0, 0.52);
-}
-
-/* Book
-
-   The covers are painted art (web/src/assets/volumes/), cut from one sheet by
-   scripts/prepare-volumes.mjs. Each is 271x404 with the book standing on 95% of
-   the height, so the nine line up on the shelf.
-
-   The old CSS book rotated in 3D on hover. The art has its own perspective and
-   lighting baked in, so it is lifted straight off the shelf instead — rotating
-   it would skew highlights that are painted, not computed.
-
-   The titles are painted too, and the volumes are named to match them. The
-   book is still a container: the docket below sizes off the cover. */
-
-.book {
-  display: block;
-  width: clamp(12.5rem, 15vw, 16.25rem);
-  max-width: 100%;
-  cursor: pointer;
-  color: inherit;
-  container-type: inline-size;
-}
-
-.book__body {
-  display: block;
-  position: relative;
-  /* Pivot near the base, so growing on hover reads as the volume being drawn
-     up off the shelf rather than floating toward the reader. */
-  transform-origin: 50% 95%;
-  transition: transform 0.5s var(--ease), filter 0.5s var(--ease);
-  filter: drop-shadow(0 16px 18px rgba(0, 0, 0, 0.55));
-}
-
-.book__cover {
-  display: block;
-  width: 100%;
-  height: auto;
-  -webkit-user-drag: none;
-}
-
-.book:hover .book__body,
-.book:focus-visible .book__body {
-  transform: translateY(-14px) scale(1.045);
-  filter: drop-shadow(0 30px 28px rgba(0, 0, 0, 0.66));
-}
-
-.book:active .book__body {
-  transform: translateY(-5px) scale(1.02);
-}
-
-/* A narrow docket drawn from the foot of the binding. It carries only facts
-   the registry actually knows; a book is not made to pretend it knows an
-   officer, date or classification that belongs to records inside it. */
-.book__dossier {
-  position: absolute;
-  left: 8%;
-  right: 8%;
-  bottom: 7%;
-  display: grid;
-  gap: 0.2rem;
-  padding: 0.58rem 0.7rem 0.54rem;
-  overflow: hidden;
-  color: color-mix(in srgb, var(--parchment) 88%, var(--foil));
-  background: linear-gradient(90deg, rgb(8 7 5 / 0.94), rgb(27 22 15 / 0.95));
-  border: 1px solid color-mix(in srgb, var(--foil) 54%, transparent);
-  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.45), 0 0.4rem 0.8rem rgb(0 0 0 / 0.42);
-  opacity: 0;
-  clip-path: inset(100% 0 0);
-  transform: translateY(0.55rem);
-  transition:
-    opacity 0.28s var(--ease),
-    clip-path 0.36s var(--ease),
-    transform 0.36s var(--ease);
-  pointer-events: none;
-}
-
-.book__dossier::before {
-  content: '';
-  position: absolute;
-  inset: 0 12% auto;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--foil), transparent);
-  box-shadow: 0 0 0.45rem color-mix(in srgb, var(--foil) 52%, transparent);
-}
-
-.book:hover .book__dossier,
-.book:focus-visible .book__dossier,
-.book:focus-within .book__dossier {
-  opacity: 1;
-  clip-path: inset(0);
-  transform: none;
-}
-
-.book__dossier-class,
-.book__dossier-category,
-.book__dossier-action {
-  font-family: var(--display);
-  text-transform: uppercase;
-}
-
-.book__dossier-class {
-  color: var(--foil);
-  font-size: 0.48rem;
-  letter-spacing: 0.15em;
-}
-
-.book__dossier-category {
-  font-size: 0.46rem;
-  letter-spacing: 0.11em;
-  opacity: 0.74;
-}
-
-.book__dossier-action {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 0.16rem;
-  padding-top: 0.3rem;
-  color: var(--parchment);
-  font-size: 0.5rem;
-  letter-spacing: 0.09em;
-  border-top: 1px solid color-mix(in srgb, var(--foil) 28%, transparent);
-}
-
-.book__dossier-action span {
-  color: var(--foil);
-  transition: transform 0.22s var(--ease);
-}
-
-.book:hover .book__dossier-action span,
-.book:focus-visible .book__dossier-action span {
-  transform: translateX(0.18rem);
-}
-
-/* Withdrawn: the volume is listed but its tab is gone from the sheet. The
-   greyscale takes the cover, painted lettering and all, but not the band,
-   which has to stay legible over it. */
-
-.book[aria-disabled='true'] {
-  cursor: not-allowed;
-}
-
-.book[aria-disabled='true'] .book__cover {
-  filter: grayscale(0.88) brightness(0.5);
-}
-
-/* After the hover rules, which it has to beat at equal specificity. */
-.book[aria-disabled='true'] .book__body {
-  transform: none;
-  filter: drop-shadow(0 12px 14px rgba(0, 0, 0, 0.5));
-}
-
-.book__withdrawn {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 45%;
-  padding: 0.32rem 0;
-  text-align: center;
-  font-family: var(--display);
-  font-size: 0.56rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: #f2dede;
-  background: linear-gradient(90deg, transparent, rgba(88, 18, 20, 0.94) 10% 90%, transparent);
-  border-block: 1px solid rgba(242, 222, 222, 0.32);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
-}
-
-/* Chronicles takes a shelf of its own across the full cabinet rather than
-   sitting lopsided at the end of a three-column row. It began as one volume,
-   and is three. */
-.section--chronicles {
-  grid-column: 1 / -1;
-}
-
-/* AND IT TURNS ITS SHELF ON ITS SIDE. Every other section is one column of the
-   cabinet, so `.shelf` stacks its volumes downward — correct there, and wrong
-   the moment a section spans the whole cabinet: the three Chronicles ran in a
-   single file down the middle with the width of two empty columns either side
-   of them. Flowing by column instead stands them in a row, which is what a
-   shelf is.
-
-   `align-items: end` is what puts them on the shelf. The books differ in height
-   by a percent or two — six volumes bound by hand are not the same height, see
-   scripts/prepare-volumes.mjs — so aligning them any other way floats the
-   shorter ones above the board.
-
-   AND THE COLUMNS ARE THE CABINET'S OWN. `1fr` rather than `auto`, and the
-   cabinet's gap rather than the shelf's, so this row divides the cabinet on
-   exactly the lines the three sections above it do and the volumes stand in
-   the same three places. Centring content-width columns instead puts the
-   middle book right and both outer ones a few dozen pixels in from the
-   registers above them, which reads as a shelf that missed. */
-.section--chronicles .shelf {
-  grid-template-rows: auto;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(0, 1fr);
-  column-gap: clamp(1.05rem, 1.8vw, 1.6rem);
-  align-items: end;
-}
-
-@media (max-width: 1050px) {
-  .archive-cabinet__interior {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .book {
-    width: clamp(13rem, 24vw, 16rem);
-  }
-}
-
 @media (max-width: 720px) {
   .hall {
     padding-top: 1rem;
@@ -556,64 +375,9 @@
     display: none;
   }
 
-  .archive-cabinet {
-    padding-inline: 0;
-  }
-
-  .archive-cabinet__interior {
-    grid-template-columns: minmax(0, 1fr);
-    padding: 1rem;
-  }
-
-  .section {
-    padding-block: 0.35rem 1.1rem;
-  }
-
-  .section__plate {
-    margin-bottom: 0.9rem;
-  }
-
-  .shelf {
-    gap: 1.35rem;
-  }
-
-  /* Height follows the cover's aspect ratio now, so only the width is set. */
-  .book {
-    width: min(16.25rem, 82vw);
-  }
-
-  /* Back to a single file. The cabinet is one column wide here and a book is
-     82vw, so a row of three would be a row of three slivers. */
-  .section--chronicles .shelf {
-    grid-auto-flow: row;
-  }
-}
-
-/* THE CABINET CARRIES NO INSTRUMENT, and that is a decision rather than an
-   omission. An astrolabe was hung here, first in the corner and then stamped
-   into the backboard as a watermark; both readings were the same verdict from
-   the person it was built for — a clock in a room of ledgers is out of place,
-   and at watermark weight it was not even a good one. The instrument belongs
-   on the calendar's plate, where the archive is already saying what time it
-   is. See web/src/components/Astrolabe.tsx. */
-
-@media (hover: none) {
-  .book__dossier {
-    opacity: 0.92;
-    clip-path: inset(calc(100% - 1.7rem) 0 0);
-    transform: none;
-  }
-
-  .book:active .book__dossier,
-  .book:focus-visible .book__dossier {
-    opacity: 1;
-    clip-path: inset(0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .book__dossier,
-  .book__dossier-action span {
-    transition-duration: 0.01ms !important;
+  /* No tall blank band on a phone: the statement is long enough to carry
+     the first screen on its own. */
+  .hall__hero {
+    min-height: 0;
   }
 }

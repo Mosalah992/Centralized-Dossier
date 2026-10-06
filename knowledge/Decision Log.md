@@ -55,3 +55,11 @@ The desktop navigation rail stays at its slim width and slides open over the pag
 ## 2026-10-06 - Painted covers, volumes renamed to match
 
 The shelf moved to a new nine-book cover sheet (`Assets/new volume assets.png`) with titles and colours painted in. Rather than erase the lettering and set live titles over it, the volumes were renamed to the painted names (Troops Roster, Chain of Command, Ledger, Registry, Hall of Honors, Calendar, Realm History, Arrests, Chronicles) in `shared/volumes.ts` and the page headings. `scripts/prepare-volumes.mjs` now only finds, scales (to the shortest body height, never upscaling) and baseline-aligns the books; the leather re-dye and title-erase passes were removed. The tradeoff: renaming a volume again needs new art. Sheet tab names are unchanged. The Chronicles gate seal is still cut from the retired Top Secret cover in `Assets/retired/`.
+
+## 2026-10-06 - Home page is a hero; the rail carries the books
+
+With every volume's cover shown in the navigation rail, the home page's cabinet repeated the same nine books. It was replaced by a full-height hero (insignia, title, motto, a pointer to the rail) with the torches, the High Command seal and the consultation register kept. `Book.tsx` and the cabinet/book styles were removed rather than kept dormant; git history holds them if a shelf view returns. High Command Reports uses the golden gate seal in the rail as well.
+
+## 2026-10-06 - Hero states the archive's purpose, then shows the Embassy
+
+The home hero now carries the Dominion's mission statement under the title and the motto "By Order of the Third Aldmeri Dominion", followed by a full-frame portrait of the Embassy (`Assets/portraits/portrait 4.JPG`), a muted looping film, and a two-column gallery of eight more screenshots (`troops 4.jpg` and `troops.png` excluded for their game-text overlays) (`Assets/portraits/My movie 4.mp4`), both prepared by `scripts/prepare-hero.mjs`. The portrait's reveal uses the existing IntersectionObserver helper (`revealOnEnter`), not ScrollTrigger, consistent with motion.ts; scroll-scrubbed parallax was not added for the same reason. The film is `preload="none"`, plays only on screen, and gives reduced-motion readers controls instead of autoplay. It is copied unencoded until ffmpeg is available.

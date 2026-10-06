@@ -5,6 +5,9 @@
   --archive-nav-open: 17rem;
   min-height: 100vh;
   padding-inline-start: var(--archive-nav-width);
+  /* The hall's full-bleed glow is centred on the shell, not the viewport, so
+     it runs past the right edge by half the rail's width. */
+  overflow-x: clip;
 }
 
 .archive-app > .shell {
@@ -301,8 +304,17 @@
   transition: transform 0.22s var(--ease);
 }
 
+.archive-sidebar__seal {
+  width: 2.15rem;
+  height: 2.15rem;
+  filter: drop-shadow(0 0.15rem 0.2rem rgb(0 0 0 / 0.55));
+  transition: transform 0.22s var(--ease);
+}
+
 .archive-sidebar__group a:hover .archive-sidebar__cover,
-.archive-sidebar__group a[aria-current='page'] .archive-sidebar__cover {
+.archive-sidebar__group a[aria-current='page'] .archive-sidebar__cover,
+.archive-sidebar__group a:hover .archive-sidebar__seal,
+.archive-sidebar__group a[aria-current='page'] .archive-sidebar__seal {
   transform: translateY(-1px) scale(1.06);
 }
 
@@ -417,6 +429,7 @@
   .archive-sidebar__identity > span,
   .archive-sidebar__label,
   .archive-sidebar__cover,
+  .archive-sidebar__seal,
   .support-seal,
   .archive-sidebar__group h2,
   .archive-sidebar__group a,
