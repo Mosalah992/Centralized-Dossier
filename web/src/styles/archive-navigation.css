@@ -14,6 +14,12 @@
   width: min(1180px, calc(100vw - var(--archive-nav-width) - 6rem));
 }
 
+/* The home page only. A wide screen otherwise leaves the hall standing in a
+   1180px column with a third of the display dark on either side. */
+.archive-app > .shell.shell--hall {
+  width: min(1600px, calc(100vw - var(--archive-nav-width) - 6rem));
+}
+
 .archive-app--unbound {
   --archive-nav-width: 0px;
   padding-inline-start: 0;

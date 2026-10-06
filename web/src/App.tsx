@@ -167,7 +167,9 @@ export default function App() {
           />
         )}
 
-        <div className="shell">
+        {/* The hall alone may run wider than the reading column: it is a
+            title page and a gallery, not a register to be read across. */}
+        <div className={`shell${route.name === 'shelf' ? ' shell--hall' : ''}`}>
         <main>
           {route.name === 'shelf' && <Shelf onOpen={navigate} />}
 

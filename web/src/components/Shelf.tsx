@@ -165,8 +165,6 @@ export function Shelf({ onOpen }: Props) {
 
   return (
     <div className="hall" ref={hall}>
-      <span className="hall__torch hall__torch--left" aria-hidden />
-      <span className="hall__torch hall__torch--right" aria-hidden />
       <span className="hall__dust" ref={dust} aria-hidden />
 
       <header className="hall__hero">
@@ -181,11 +179,17 @@ export function Shelf({ onOpen }: Props) {
           decoding="async"
           data-rise
         />
-        <h1 className="hall__title" data-rise>
-          Thalmor Embassy
-          <br />
-          Archives
-        </h1>
+        {/* The torches flank the title itself, so they stay level with it
+            however the title scales or the hero is laid out. */}
+        <div className="hall__crest">
+          <span className="hall__torch hall__torch--left" aria-hidden />
+          <h1 className="hall__title" data-rise>
+            Thalmor Embassy
+            <br />
+            Archives
+          </h1>
+          <span className="hall__torch hall__torch--right" aria-hidden />
+        </div>
         <p className="hall__subtitle" data-rise>Official Administrative Registers</p>
         <p className="hall__motto" data-rise>By Order of the Third Aldmeri Dominion</p>
 
@@ -212,7 +216,7 @@ export function Shelf({ onOpen }: Props) {
         <img
           src={portrait1920}
           srcSet={`${portrait1280} 1280w, ${portrait1920} 1920w`}
-          sizes="(max-width: 900px) 92vw, min(1180px, calc(100vw - 10rem))"
+          sizes="(max-width: 900px) 92vw, min(1440px, calc(100vw - 10rem))"
           alt="The Thalmor Embassy assembled in its black and gold, ranked in the snow before the timbered halls of a Skyrim hold."
           width={1920}
           height={1080}

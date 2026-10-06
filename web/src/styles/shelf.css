@@ -21,16 +21,6 @@
 
 .hall::before {
   background:
-    linear-gradient(90deg,
-      transparent 0 7%,
-      rgba(198, 168, 94, 0.13) 7% calc(7% + 1px),
-      transparent calc(7% + 1px) 15%,
-      rgba(225, 214, 189, 0.05) 15% calc(15% + 1px),
-      transparent calc(15% + 1px) 85%,
-      rgba(225, 214, 189, 0.05) 85% calc(85% + 1px),
-      transparent calc(85% + 1px) 93%,
-      rgba(198, 168, 94, 0.13) 93% calc(93% + 1px),
-      transparent calc(93% + 1px) 100%),
     radial-gradient(60rem 26rem at 50% 12%, rgba(218, 178, 95, 0.16), transparent 70%),
     radial-gradient(54rem 38rem at 50% 16%, rgba(230, 220, 198, 0.08), transparent 64%),
     linear-gradient(180deg, rgba(50, 40, 30, 0.5), transparent 78%);
@@ -41,12 +31,6 @@
 .hall::after {
   z-index: -1;
   background:
-    linear-gradient(90deg,
-      transparent 0 22%,
-      rgba(201, 162, 39, 0.16) 22% calc(22% + 1px),
-      transparent calc(22% + 1px) 78%,
-      rgba(201, 162, 39, 0.16) 78% calc(78% + 1px),
-      transparent calc(78% + 1px) 100%),
     radial-gradient(18rem 18rem at 50% 7rem, rgba(201, 162, 39, 0.08), transparent 68%);
   opacity: 0.9;
 }
@@ -66,9 +50,14 @@
 
 /* The insignia is dark pewter and carries its own painted halo, so it needs
    room to read and only a light shadow on top of the glow it already has. */
+.hall__crest {
+  position: relative;
+  align-self: stretch;
+}
+
 .hall__seal {
   display: block;
-  width: clamp(7rem, 12vw, 10.5rem);
+  width: clamp(7rem, 11vw, 12.5rem);
   height: auto;
   opacity: 0.96;
   filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.55));
@@ -76,7 +65,7 @@
 
 .hall__title {
   margin-top: clamp(0.8rem, 1.6vw, 1.3rem);
-  font-size: clamp(2rem, 5vw, 3.7rem);
+  font-size: clamp(2rem, 5.4vw, 6.6rem);
   line-height: 1.06;
   color: var(--parchment);
   letter-spacing: 0.16em;
@@ -86,7 +75,7 @@
 .hall__subtitle {
   margin: clamp(0.8rem, 1.5vw, 1.1rem) 0 0;
   font-family: var(--display);
-  font-size: clamp(0.66rem, 1vw, 0.8rem);
+  font-size: clamp(0.66rem, 0.9vw, 0.95rem);
   letter-spacing: 0.34em;
   text-transform: uppercase;
   color: color-mix(in srgb, var(--stone) 78%, #1c1915);
@@ -120,10 +109,10 @@
 /* The Dominion's statement. A measure a reader can hold — this is prose, and a
    line run the full width of the hall would be a banner instead. */
 .hall__mission {
-  width: min(40rem, 100%);
+  width: min(44rem, 100%);
   margin: clamp(1.8rem, 3.5vw, 2.6rem) auto 0;
   font-family: var(--serif);
-  font-size: clamp(1rem, 1.25vw, 1.12rem);
+  font-size: clamp(1rem, 1.2vw, 1.3rem);
   line-height: 1.75;
   color: color-mix(in srgb, var(--parchment) 84%, var(--stone));
   text-wrap: pretty;
@@ -162,7 +151,7 @@
    frame, and the same lift a volume takes off the shelf. */
 .hall__portrait,
 .hall__film {
-  width: min(72rem, 100%);
+  width: min(90rem, 100%);
   margin: 0 auto;
 }
 
@@ -186,6 +175,9 @@
 }
 
 .hall__film {
+  /* Narrower than the portrait: the footage is 858px wide, and stretched to
+     the hall's full width it would only show how soft it is. */
+  width: min(64rem, 100%);
   margin-top: clamp(2.5rem, 5vw, 4rem);
 }
 
@@ -195,7 +187,7 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: clamp(1.2rem, 2.5vw, 2rem);
-  width: min(72rem, 100%);
+  width: min(90rem, 100%);
   margin: clamp(2.5rem, 5vw, 4rem) auto 0;
   padding: 0;
   list-style: none;
@@ -266,12 +258,13 @@
    they never gutter in lockstep. */
 
 .hall__torch {
-  --torch-width: clamp(4.5rem, 7vw, 7.5rem);
+  --torch-width: clamp(5.5rem, 9vw, 12rem);
   --torch-height: calc(var(--torch-width) * 270 / 240);
 
   position: absolute;
-  /* Level with the title, just below the insignia. */
-  top: calc(clamp(7rem, 12vw, 10.5rem) + 3rem);
+  /* Centred on the title, whose band it is placed in. */
+  top: 50%;
+  translate: 0 -50%;
   width: var(--torch-width);
   height: var(--torch-height);
   background-repeat: no-repeat;
@@ -281,12 +274,12 @@
 }
 
 .hall__torch--left {
-  left: max(1rem, calc(50% - 37rem));
+  left: -1.5rem;
   background-image: url('../assets/torch-left.webp');
 }
 
 .hall__torch--right {
-  right: max(1rem, calc(50% - 37rem));
+  right: -1.5rem;
   background-image: url('../assets/torch-right.webp');
   /* Mirrored so the pair leans outward from the hall rather than both
      the same way. */
