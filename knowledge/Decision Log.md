@@ -1,5 +1,19 @@
 # Decision Log
 
+## 2026-10-06 - Three.js admitted for the Reports sky only
+
+The Reports portrait gate gains a live Nirn sky (Nirn, Masser, Secunda) beside
+the portrait. This reverses the earlier "no Three.js" stance for one surface
+only: three is imported dynamically from `NirnSky`, ships in its own chunk
+(~140 KB gzip), and never reaches the entry chunk (`test/bundle.test.ts`).
+The planet surface is procedural, adapted from a getlayers.ai layer with none
+of its assets; Masser and Secunda reuse the calendar's mundus art. Phones,
+reduced-motion readers and browsers without WebGL2 get a still plate; the
+single-column layout draws no sky. Presentation only: the gate's adapter,
+endpoint and writ are untouched. Informants (Chronicles) keeps the plain gate.
+
+As built, the gate itself was simplified at the same time: both gates now show Ancarion's portrait centred with only the passphrase field, button and status line beneath it; the title, description and spoken line remain for screen readers only. Behind the Reports gate, Masser and Secunda orbit Nirn (passing behind it), Magnus and the eight Divine planets from the calendar's orrery sit on the left with the Divines slowly orbiting Magnus, and the starfield is denser and mostly faint.
+
 ## 2026-10-01 - Ancarion is a shared gate presentation, never a shared writ
 
 Chronicles and Reports use the same lazy portrait gate so accessibility,

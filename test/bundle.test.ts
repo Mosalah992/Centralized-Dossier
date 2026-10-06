@@ -72,6 +72,15 @@ describe.skipIf(!entry)('the entry chunk', () => {
    * lazily loads it and the hall silently stops animating, this says so rather
    * than the change passing unnoticed.
    */
+  /*
+   * Three.js (~140 KB gzip) exists for the Nirn sky behind the Reports gate and
+   * is only reached through NirnSky's dynamic import. `__THREE__` is the global
+   * three registers by string, so it survives minification.
+   */
+  it('carries no Three.js', () => {
+    expect(entry!.source).not.toContain('__THREE__');
+  });
+
   it('carries GSAP core, which the shelf needs on first paint', () => {
     expect(entry!.source).toContain('CustomEase');
   });

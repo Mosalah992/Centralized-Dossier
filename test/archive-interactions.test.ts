@@ -49,9 +49,15 @@ describe('interaction boundaries', () => {
     expect(chronicle).toContain('openChronicle(passphrase, signal)');
   });
 
-  it('uses the existing motion system and ships no Three.js dependency', () => {
-    const manifest = JSON.parse(read('package.json')) as { dependencies?: Record<string, string> };
-    expect(manifest.dependencies?.three).toBeUndefined();
+  it('uses the existing motion system and keeps Three.js behind the Reports sky', () => {
+    // Three.js is allowed for one thing only: the Nirn sky behind the Reports
+    // gate, loaded through a dynamic import (Decision Log, 2026-10-06). Nothing
+    // else may import it statically; the bundle test checks the entry chunk.
+    const sky = read('web/src/components/NirnSky.tsx');
+    expect(sky).toContain("import('../sky/nirnScene')");
+    expect(sky).not.toMatch(/from 'three/);
+    expect(read('web/src/views/Reports.tsx')).toMatch(/<PortraitGate[\s\S]*\bsky\b/);
+    expect(read('web/src/views/Informants.tsx')).not.toMatch(/<PortraitGate[^>]*\bsky\b/);
     const gateCss = read('web/src/styles/portrait-gate.css');
     expect(gateCss).toContain('prefers-reduced-motion: reduce');
     expect(gateCss).toContain('@keyframes portrait-gate-attention-cue');

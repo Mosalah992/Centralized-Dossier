@@ -317,6 +317,7 @@ export function ReportsView({ filingId, onNavigate }: { filingId: string | null;
       verify={(passphrase, signal) => openReports(passphrase, signal)}
       onAuthorized={() => setOpen(true)}
       onGranted={() => setRevealed(true)}
+      sky
     />
   );
 

@@ -7,6 +7,7 @@ import ancarionAnnoyed from '../assets/ancarion-sigh.webm';
 import ancarionIdle from '../assets/ancarion-idle.mp4';
 import ancarion from '../assets/canonreeve.webp';
 import frame from '../assets/portrait-frame.png';
+import { NirnSky } from './NirnSky';
 import { D, gsap, staged } from '../motion';
 import '../styles/portrait-gate.css';
 
@@ -25,6 +26,8 @@ export interface PortraitGateProps {
   /** Starts the already-authorized route's data request behind the opening. */
   onAuthorized?: () => void;
   onGranted: () => void;
+  /** Draws Nirn, Masser and Secunda behind the gate. Opt-in per volume. */
+  sky?: boolean;
 }
 
 type AuthState = 'locked' | 'checking' | 'denied' | 'error' | 'authorized';
@@ -131,6 +134,7 @@ export function PortraitGate({
   verify,
   onAuthorized,
   onGranted,
+  sky = false,
 }: PortraitGateProps) {
   const root = useRef<HTMLElement>(null);
   const inputId = useId();
@@ -401,8 +405,10 @@ export function PortraitGate({
       ref={root}
       className="portrait-gate"
       data-state={portraitState}
+      data-sky={sky ? 'true' : undefined}
       aria-busy={authState === 'checking'}
     >
+      {sky && <NirnSky />}
       <div className="portrait-gate__stage" aria-hidden="true">
         <div className="portrait-gate__threshold">
           <p>The seal is lifted</p>
@@ -449,19 +455,24 @@ export function PortraitGate({
         </div>
       </div>
 
+      {/* The portrait stands alone, with only the field beneath it. The words
+          that used to sit beside it are still here for anyone reading the
+          gate with assistive technology: the collection as the page heading,
+          its description, and Ancarion's spoken line as a live region. */}
       <div className="portrait-gate__copy">
-        <p className="portrait-gate__eyebrow">{eyebrow} · Keeper of the threshold</p>
-        <h1>{collection}</h1>
-        <p className="portrait-gate__description">{description}</p>
-        <p className="portrait-gate__dialogue" aria-live="polite">
+        <p className="portrait-gate__eyebrow sr-only">{eyebrow} · Keeper of the threshold</p>
+        <h1 className="sr-only">{collection}</h1>
+        <p className="portrait-gate__description sr-only">{description}</p>
+        <p className="portrait-gate__dialogue sr-only" aria-live="polite">
           {dialogue}
         </p>
         <form className="portrait-gate__form" onSubmit={submit}>
-          <label htmlFor={inputId}>Passphrase</label>
+          <label className="sr-only" htmlFor={inputId}>Passphrase</label>
           <input
             ref={input}
             id={inputId}
             type="password"
+            placeholder="Passphrase"
             value={phrase}
             autoComplete="off"
             spellCheck={false}

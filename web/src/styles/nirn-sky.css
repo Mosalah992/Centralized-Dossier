@@ -1,0 +1,41 @@
+/* Nirn sky behind the portrait gate. The gate opts in with data-sky="true". */
+
+.portrait-gate[data-sky='true'] {
+  position: relative;
+  isolation: isolate;
+  background: #05070d;
+  /* Most of the screen, so the sky has somewhere to be. */
+  min-height: min(52rem, calc(100svh - 7rem));
+}
+.portrait-gate[data-sky='true'] > :not(.nirn-sky) { position: relative; z-index: 1; }
+
+.nirn-sky { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.nirn-sky__canvas { display: block; width: 100%; height: 100%; opacity: 0; transition: opacity .9s ease; }
+.nirn-sky[data-ready='true'] .nirn-sky__canvas { opacity: 1; }
+
+/* Still plate: the calendar's art at (near) native size, so it stays sharp. */
+.nirn-sky__still {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 84% 58%, rgb(74 111 208 / .28), transparent 22%),
+    radial-gradient(ellipse at 0% 0%, rgb(184 134 46 / .12), transparent 40%),
+    url('../assets/mundus/starfield.webp') center / cover,
+    #05070d;
+}
+.nirn-sky__still img { position: absolute; display: block; height: auto; }
+.nirn-sky__nirn { width: 168px; right: calc(16% - 84px); top: calc(58% - 84px); filter: drop-shadow(0 0 1.6rem rgb(74 111 208 / .45)); }
+.nirn-sky__masser { width: 72px; left: 12%; top: 12%; }
+.nirn-sky__secunda { width: 40px; right: 18%; top: 10%; }
+
+
+/* The rest of Mundus, far off to the left: Magnus, then the eight Divines. */
+.nirn-sky__far { opacity: .9; }
+.nirn-sky__far--0 { width: 64px; left: 4%; top: 8%; filter: drop-shadow(0 0 1.2rem rgb(255 214 140 / .55)); }
+.nirn-sky__far--1 { width: 24px; left: 20%; top: 6%; }
+.nirn-sky__far--2 { width: 28px; left: 8%; top: 36%; }
+.nirn-sky__far--3 { width: 18px; left: 24%; top: 26%; }
+.nirn-sky__far--4 { width: 22px; left: 15%; top: 52%; }
+.nirn-sky__far--5 { width: 26px; left: 3%; top: 58%; }
+.nirn-sky__far--6 { width: 30px; left: 21%; top: 74%; }
+.nirn-sky__far--7 { width: 16px; left: 9%; top: 84%; }
+.nirn-sky__far--8 { width: 24px; left: 2%; top: 74%; }
