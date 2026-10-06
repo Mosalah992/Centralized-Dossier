@@ -9,20 +9,51 @@ import type { Route } from '../router';
 
 interface Props {
   route: Route;
-  expanded: boolean;
-  onExpandedChange: (expanded: boolean) => void;
   onNavigate: (href: string) => void;
 }
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled])';
 
-export function ArchiveSidebar({ route, expanded, onExpandedChange, onNavigate }: Props) {
+// The rail opens on intent, not on contact: a cursor crossing the left edge on
+// its way to the page should not throw a panel over the shelf, and one slipping
+// off the panel for a moment should not snap it shut under the reader's hand.
+const OPEN_DELAY = 90;
+const CLOSE_DELAY = 220;
+
+export function ArchiveSidebar({ route, onNavigate }: Props) {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
   const [query, setQuery] = useState('');
+  const hoverTimer = useRef<number>();
   const menuButton = useRef<HTMLButtonElement>(null);
   const drawer = useRef<HTMLElement>(null);
   const search = useRef<HTMLInputElement>(null);
   const visibleItems = useMemo(() => filterArchiveNavigation(query), [query]);
+  // The rail slides over the page rather than pushing it, so there is no pinned
+  // state to remember. Keyboard readers open it simply by tabbing into it.
+  const expanded = hovered || focused;
+
+  useEffect(() => () => window.clearTimeout(hoverTimer.current), []);
+
+  // A filter left behind in a collapsed rail would hide registers behind bare
+  // marks for no visible reason, so the search clears as the rail closes.
+  useEffect(() => {
+    if (!expanded && !drawerOpen) setQuery('');
+  }, [expanded, drawerOpen]);
+
+  const hover = (next: boolean) => {
+    window.clearTimeout(hoverTimer.current);
+    hoverTimer.current = window.setTimeout(() => setHovered(next), next ? OPEN_DELAY : CLOSE_DELAY);
+  };
+
+  const collapse = () => {
+    window.clearTimeout(hoverTimer.current);
+    setHovered(false);
+    setFocused(false);
+    const active = document.activeElement;
+    if (active instanceof HTMLElement && drawer.current?.contains(active)) active.blur();
+  };
 
   useEffect(() => {
     setDrawerOpen(false);
@@ -68,6 +99,7 @@ export function ArchiveSidebar({ route, expanded, onExpandedChange, onNavigate }
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
     event.preventDefault();
     setDrawerOpen(false);
+    collapse();
     onNavigate(href);
   };
 
@@ -110,6 +142,18 @@ export function ArchiveSidebar({ route, expanded, onExpandedChange, onNavigate }
         data-expanded={expanded}
         data-open={drawerOpen}
         aria-label="Archive navigation panel"
+        onMouseEnter={() => hover(true)}
+        onMouseLeave={() => hover(false)}
+        onFocus={() => setFocused(true)}
+        onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false);
+        }}
+        onKeyDown={(event) => {
+          if (event.key === 'Escape' && !drawerOpen && expanded) {
+            event.preventDefault();
+            collapse();
+          }
+        }}
       >
         <div className="archive-sidebar__head">
           <a
@@ -121,17 +165,6 @@ export function ArchiveSidebar({ route, expanded, onExpandedChange, onNavigate }
             <img src="/seal.webp" alt="" width={42} height={42} />
             <span>Thalmor Archives</span>
           </a>
-          <button
-            className="archive-sidebar__toggle"
-            type="button"
-            aria-expanded={expanded}
-            aria-controls="archive-sidebar-navigation"
-            aria-label={expanded ? 'Collapse archive navigation' : 'Expand archive navigation'}
-            title={expanded ? 'Collapse navigation' : 'Expand navigation'}
-            onClick={() => onExpandedChange(!expanded)}
-          >
-            <span aria-hidden>{expanded ? '‹' : '›'}</span>
-          </button>
         </div>
 
         <div className="archive-sidebar__search">
@@ -139,10 +172,7 @@ export function ArchiveSidebar({ route, expanded, onExpandedChange, onNavigate }
             type="button"
             aria-label="Expand and find a register"
             title="Find a register"
-            onClick={() => {
-              onExpandedChange(true);
-              window.setTimeout(() => search.current?.focus(), 0);
-            }}
+            onClick={() => search.current?.focus()}
           >
             <span aria-hidden>⌕</span>
           </button>

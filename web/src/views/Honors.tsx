@@ -153,7 +153,7 @@ export function HonorView() {
 
   return (
     <Page
-      title="Hall of Honor"
+      title="Hall of Honors"
       subtitle="Those Remembered by the Dominion"
       tab={volume.value.tab}
       fetchedAtUtc={volume.value.fetchedAtUtc}
@@ -741,7 +741,7 @@ export function CalendarView() {
 
   return (
     <Page
-      title={year.title || 'Tamrielic Calendar'}
+      title={year.title || 'Calendar'}
       subtitle="Observances & Reckonings"
       tab={volume.value.tab}
       fetchedAtUtc={volume.value.fetchedAtUtc}

@@ -219,7 +219,7 @@ export function EnforcementView() {
 
   return (
     <Page
-      title="Ledger of Enforcement"
+      title="Arrests"
       subtitle="Acts of the White-Gold Concordat"
       source={
         <p className="page__source">

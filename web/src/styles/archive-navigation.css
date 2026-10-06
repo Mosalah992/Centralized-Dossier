@@ -1,17 +1,14 @@
+/* The page reserves only the slim rail. The open panel slides OVER the page
+   rather than pushing it, so hovering the edge never reflows the shelf. */
 .archive-app {
   --archive-nav-width: 4.75rem;
+  --archive-nav-open: 17rem;
   min-height: 100vh;
   padding-inline-start: var(--archive-nav-width);
-  transition: padding-inline-start 0.3s var(--ease);
-}
-
-.archive-app[data-sidebar-expanded='true'] {
-  --archive-nav-width: 16.5rem;
 }
 
 .archive-app > .shell {
   width: min(1180px, calc(100vw - var(--archive-nav-width) - 6rem));
-  transition: width 0.3s var(--ease);
 }
 
 .archive-app--unbound {
@@ -84,7 +81,17 @@
     #100e0c;
   border-right: 1px solid color-mix(in srgb, var(--gold) 36%, transparent);
   box-shadow: 0.8rem 0 2rem rgb(0 0 0 / 0.26);
-  transition: width 0.3s var(--ease), transform 0.3s var(--ease);
+  transition:
+    width 0.32s var(--ease),
+    transform 0.3s var(--ease),
+    box-shadow 0.32s var(--ease);
+}
+
+@media (min-width: 901px) {
+  .archive-sidebar[data-expanded='true'] {
+    width: var(--archive-nav-open);
+    box-shadow: 1.6rem 0 3.2rem rgb(0 0 0 / 0.62);
+  }
 }
 
 .archive-sidebar::-webkit-scrollbar {
@@ -147,7 +154,6 @@
   transform: none;
 }
 
-.archive-sidebar__toggle,
 .archive-sidebar__search button {
   display: grid;
   flex: 0 0 2.5rem;
@@ -161,17 +167,6 @@
   cursor: pointer;
 }
 
-.archive-sidebar__toggle {
-  position: absolute;
-  top: 4rem;
-  right: -0.72rem;
-  width: 1.45rem;
-  height: 1.9rem;
-  background: #17130f;
-  border-color: var(--rule);
-}
-
-.archive-sidebar__toggle:hover,
 .archive-sidebar__search button:hover {
   color: var(--gold-bright);
   border-color: var(--rule);
@@ -328,8 +323,7 @@
 }
 
 @media (max-width: 900px) {
-  .archive-app.archive-app,
-  .archive-app.archive-app[data-sidebar-expanded='true'] {
+  .archive-app.archive-app {
     --archive-nav-width: 0px;
     padding-inline-start: 0;
     overflow-x: clip;
@@ -378,10 +372,6 @@
   .archive-sidebar[data-open='true'] .archive-sidebar__group h2 {
     opacity: 1;
     transform: none;
-  }
-
-  .archive-sidebar__toggle {
-    display: none;
   }
 
   .archive-sidebar__search button {

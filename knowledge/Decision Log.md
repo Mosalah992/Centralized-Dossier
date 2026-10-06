@@ -47,3 +47,11 @@ Military and Informants use one child channel per in-world subject rather than `
 ## 2026-09-30 - Report severity remains explicit
 
 Severity is conveyed through a written label plus a restrained color family on filters and report cards, so color is never the sole classification signal. The collector accepts only an explicit standalone `Severity: <level>` template field and does not infer danger from prose; legacy or unmarked reports remain Unassessed. The Reports liquid marker fills the selected control's rectangular bounds while its internal ink gradient supplies the movement.
+
+## 2026-10-06 - Navigation rail opens on hover, not by toggle
+
+The desktop navigation rail stays at its slim width and slides open over the page while the cursor or keyboard focus is inside it, with short open/close delays so passing the edge does not trigger it. The pinned expand toggle and its `thalmor.sidebar.expanded` preference were removed: an overlay that never pushes the shelf has no layout state worth remembering. Touch layouts keep the existing off-canvas drawer.
+
+## 2026-10-06 - Painted covers, volumes renamed to match
+
+The shelf moved to a new nine-book cover sheet (`Assets/new volume assets.png`) with titles and colours painted in. Rather than erase the lettering and set live titles over it, the volumes were renamed to the painted names (Troops Roster, Chain of Command, Ledger, Registry, Hall of Honors, Calendar, Realm History, Arrests, Chronicles) in `shared/volumes.ts` and the page headings. `scripts/prepare-volumes.mjs` now only finds, scales (to the shortest body height, never upscaling) and baseline-aligns the books; the leather re-dye and title-erase passes were removed. The tradeoff: renaming a volume again needs new art. Sheet tab names are unchanged. The Chronicles gate seal is still cut from the retired Top Secret cover in `Assets/retired/`.

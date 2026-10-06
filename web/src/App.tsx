@@ -122,22 +122,6 @@ const VOLUME_TRACKS: Partial<Record<VolumeSlug, Track>> = {
 
 export default function App() {
   const [route, navigate] = useRoute();
-  const [sidebarExpanded, setSidebarExpanded] = useState(() => {
-    try {
-      return window.localStorage.getItem('thalmor.sidebar.expanded') === 'true';
-    } catch {
-      return false;
-    }
-  });
-
-  const setNavigationExpanded = (expanded: boolean) => {
-    setSidebarExpanded(expanded);
-    try {
-      window.localStorage.setItem('thalmor.sidebar.expanded', String(expanded));
-    } catch {
-      // A blocked storage API changes persistence, not navigation.
-    }
-  };
 
   // The archive opens straight onto the shelf. There was a writ to check first
   // and a null state to hold the first paint back while /api/gate answered it;
@@ -164,9 +148,7 @@ export default function App() {
       <Ambience track={track.url} />
 
       <div
-        className={`archive-app${boundToArchive ? '' : ' archive-app--unbound'}`}
-        data-sidebar-expanded={boundToArchive && sidebarExpanded}
-      >
+        className={`archive-app${boundToArchive ? '' : ' archive-app--unbound'}`}      >
         <a
           className="support-seal"
           href="https://ko-fi.com/N1B0279SRR"
@@ -181,8 +163,6 @@ export default function App() {
         {boundToArchive && (
           <ArchiveSidebar
             route={route}
-            expanded={sidebarExpanded}
-            onExpandedChange={setNavigationExpanded}
             onNavigate={navigate}
           />
         )}

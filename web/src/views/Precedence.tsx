@@ -290,8 +290,8 @@ export function PrecedenceView() {
 
   return (
     <Page
-      title="Order of Precedence"
-      subtitle="The Chain of Command"
+      title="Chain of Command"
+      subtitle="The Order of Precedence"
       tab={volume.value.tab}
       fetchedAtUtc={volume.value.fetchedAtUtc}
     >

@@ -76,7 +76,7 @@ export function HistoryView() {
 
   return (
     <Page
-      title="History of the Realm"
+      title="Realm History"
       subtitle="As Recorded by the Free Presses of Skyrim, and by the Embassy’s Own Hand"
     >
       {/* This volume keeps its account as written prose rather than as data, so

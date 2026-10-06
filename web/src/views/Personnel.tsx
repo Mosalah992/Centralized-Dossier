@@ -68,7 +68,7 @@ export function RosterView() {
 
   return (
     <Page
-      title="Personnel Register"
+      title="Troops Roster"
       subtitle="Embassy of the Province of Skyrim"
       tab={volume.value.tab}
       fetchedAtUtc={volume.value.fetchedAtUtc}

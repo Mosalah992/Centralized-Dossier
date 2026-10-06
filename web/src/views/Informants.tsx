@@ -148,7 +148,7 @@ function buildLeaves(chronicle: Chronicle, term: string, guided: boolean): Leaf[
     body: (
       <div className="chron-title">
         <p className="chron-title__class">Sealed — Embassy Register</p>
-        <h1 className="chron-title__name">Thalmor Chronicles</h1>
+        <h1 className="chron-title__name">Chronicles</h1>
         <p className="chron-title__rule" aria-hidden />
         <p className="chron-title__by">
           Assembled from the field reports of seven-and-forty informants of the
@@ -460,7 +460,7 @@ function VolumeSeal({ onOpen }: { onOpen: () => void }) {
       <img className="chron-lock__seal" src={sealUrl} alt="" width={186} height={186} />
 
       <p className="chron-lock__class">Sealed — Embassy Register</p>
-      <h1 className="chron-lock__title">Thalmor Chronicles</h1>
+      <h1 className="chron-lock__title">Chronicles</h1>
       <p className="chron-lock__note">
         The rest of the archive is open. This volume is not: it is kept under a
         word of its own, and nothing that opens the others opens it.

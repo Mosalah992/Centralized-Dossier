@@ -1,20 +1,22 @@
-// Slice the six volume covers out of the single sheet the art arrived on.
+// Slice the nine volume covers out of the single sheet the art arrived on.
 //
-// `Assets/Book volumes UI assets.png` is a 3x2 sheet, already keyed to
-// transparency, laid out in shelf order: roster, statistics, ledger on the top
-// row; stipends, honor, calendar on the bottom. Each book is drawn to the same
-// template but lands a few pixels off its neighbours, so cropping to a fixed
-// grid would leave them standing at different heights once they are side by
-// side on a shelf.
+// `Assets/new volume assets.png` is keyed to transparency and laid out in two
+// rows: four books on top, five below. The books carry their titles and
+// colours painted in, and both are kept as drawn — the volumes were renamed to
+// match the lettering (shared/volumes.ts), so nothing is erased or re-dyed.
 //
-// So the books are found rather than assumed: read each one's true bounds from
-// the alpha channel, scale it to a common width, and align it on the line where
-// its BODY ends — not where its art ends. The ribbon hangs below that line and
-// is allowed to overhang the shelf edge, which is what a bookmark does.
+// Each book is drawn a few pixels off its neighbours and the bottom row is
+// drawn smaller than the top, so cropping to a fixed grid would leave them
+// standing at different heights once they share a shelf. The books are found
+// rather than assumed: read each one's bounds from the alpha channel, scale it
+// to a common BODY height, and stand it on the line where its body ends.
 //
-// Body heights differ by ~1.5% between books. That is left alone: six volumes
-// bound by hand are not the same height, and forcing them to be looks worse
-// than the variation does.
+// Height, not width, because three of the books have clasps standing proud of
+// the fore-edge. Normalising on width would shrink exactly those three.
+//
+// The common height is the SHORTEST body on the sheet, so nothing is ever
+// upscaled: the sheet is all the detail there is, and resampling it larger
+// would only make bigger files of the same softness.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -22,56 +24,26 @@ import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const SRC = path.join(ROOT, 'Assets', 'Book volumes UI assets.png');
+const SRC = path.join(ROOT, 'Assets', 'new volume assets.png');
 const OUT_DIR = path.join(ROOT, 'web', 'src', 'assets', 'volumes');
 
-// Shelf order, row-major — the order the sheet is drawn in.
+// Row-major, in the order the sheet is drawn.
 const SLUGS = [
-  ['roster', 'statistics', 'ledger'],
-  ['stipends', 'honor', 'calendar'],
+  ['roster', 'ledger', 'honor', 'statistics'],
+  ['stipends', 'history', 'enforcement', 'informants', 'calendar'],
 ];
 
-// Covers that arrived on their own rather than on the sheet. They are measured
-// and placed by exactly the same rules, and share the others' baseline, so a
-// later addition still stands level with the original six. This one is drawn to
-// the same proportions by luck rather than design — its body is 0.842 wide for
-// every unit tall against the sheet's 0.844 — so normalising on width lands its
-// height within a few pixels of its neighbours. A cover drawn to some other
-// shape would need normalising on height instead, and a wider canvas.
-const STANDALONE = [
-  { slug: 'history', file: 'Volume History of the realm.png' },
-  // Arrived flat on white rather than keyed, so it is cut from its background
-  // here. Everything downstream measures books by their alpha, and a cover with
-  // none would be read as a full-canvas rectangle and cropped to the paper.
-  { slug: 'informants', file: 'Top Secret Volume.png', keyWhite: true },
-  // THE SAME SOURCE ART AS THE VOLUME ABOVE, RE-GRADED — a placeholder, and
-  // knowingly so. The Embassy has eight painted covers and nine volumes, and
-  // shipping the ninth with no cover at all is worse than shipping it with a
-  // sibling's silhouette. The two are pulled as far apart as the grade can pull
-  // them (see STOCK): this one is oxblood, dark and hard-worked, where the
-  // sealed volume is black and barely touched. They still stand next to each
-  // other on the Chronicles shelf, and they still share a filigree. Replace it
-  // when there is art.
-  { slug: 'enforcement', file: 'Top Secret Volume.png', keyWhite: true },
-];
-
-// Background threshold for keyWhite. The book is black leather and gold; its
-// lightest leaf sits far below this, so nothing on the cover is at risk.
-const WHITE = 200;
-
-// The six sheet books are normalised to this width. It is close to their native
-// ~380px, so the resample stays under 2% and the gold filigree keeps its edges.
-// The standalone covers are normalised on HEIGHT instead — see the note where
-// the scales are chosen — so the canvas is derived rather than fixed.
-const BODY_W = 384;
-const PAD_X = 8;
+const PAD_X = 6;
 const PAD_TOP = 4;
 
 // A pixel counts as art only well clear of the feathered edge, so the faint
-// halo around each book does not merge the columns into one run.
-const SOLID = 16;
+// halo around each book does not merge neighbouring columns into one run.
+const SOLID = 64;
+// Bounds are taken at a lower threshold than separation, so the halo the
+// separation ignored is still inside the crop rather than clipped off it.
+const EDGE = 16;
 
-/** Opaque-pixel runs along an axis, used to find the gaps between books. */
+/** Runs of non-zero entries along an axis. */
 function runs(counts) {
   const out = [];
   let start = -1;
@@ -83,850 +55,120 @@ function runs(counts) {
   return out;
 }
 
+const { data, info } = await sharp(SRC).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+const W = info.width;
+const H = info.height;
+const alphaAt = (x, y) => data[(y * W + x) * 4 + 3];
+
+const rowCounts = new Array(H).fill(0);
+for (let y = 0; y < H; y++) {
+  for (let x = 0; x < W; x++) if (alphaAt(x, y) > SOLID) rowCounts[y]++;
+}
+const rows = runs(rowCounts).filter(([a, b]) => b - a > 20);
+if (rows.length !== SLUGS.length) {
+  throw new Error(`expected ${SLUGS.length} rows of books, found ${rows.length}`);
+}
+
 /**
- * Cut a cover off its white paper.
+ * Columns of one row, one per book.
  *
- * Threshold alone would eat the drop shadow's lighter half and leave its darker
- * half as a grey skirt, so background is decided by REACHABILITY: near-white
- * pixels connected to the border are paper, and near-white pixels enclosed by
- * the art (a gold highlight, the pale of an engraved wing) are not. The mask is
- * then blurred a little, which is what gives the rim its antialiasing back —
- * a hard mask on a resized cover shows every stair-step.
+ * On the top row the books stand apart and the gaps are found directly. On the
+ * bottom row two pairs touch — a clasp reaches over its neighbour's spine — so
+ * the widest run is split at its thinnest column until there is one run per
+ * book. The thinnest column is where the overlap is shallowest, which is the
+ * least art either book can lose to the cut.
  */
-function keyWhiteBackground(src) {
-  const { data, W, H, C } = src;
-  const isPaper = (i) => data[i * C] > WHITE && data[i * C + 1] > WHITE && data[i * C + 2] > WHITE;
-
-  const background = new Uint8Array(W * H);
-  const queue = [];
-  for (let x = 0; x < W; x++) queue.push(x, (H - 1) * W + x);
-  for (let y = 0; y < H; y++) queue.push(y * W, y * W + W - 1);
-
-  while (queue.length) {
-    const i = queue.pop();
-    if (background[i] || !isPaper(i)) continue;
-    background[i] = 1;
-    const x = i % W;
-    const y = (i - x) / W;
-    if (x > 0) queue.push(i - 1);
-    if (x < W - 1) queue.push(i + 1);
-    if (y > 0) queue.push(i - W);
-    if (y < H - 1) queue.push(i + W);
+function columnsOf([y0, y1], count) {
+  const cols = new Array(W).fill(0);
+  for (let y = y0; y <= y1; y++) {
+    for (let x = 0; x < W; x++) if (alphaAt(x, y) > SOLID) cols[x]++;
   }
-
-  for (let i = 0; i < W * H; i++) data[i * C + 3] = background[i] ? 0 : 255;
-  return src;
+  const found = runs(cols).filter(([a, b]) => b - a > 20);
+  while (found.length < count) {
+    const i = found.reduce((best, r, k) => (r[1] - r[0] > found[best][1] - found[best][0] ? k : best), 0);
+    const [a, b] = found[i];
+    // Only the middle of the run: a book's own shoulders are thin too.
+    const lo = Math.round(a + (b - a) * 0.2);
+    const hi = Math.round(b - (b - a) * 0.2);
+    let cut = lo;
+    for (let x = lo; x <= hi; x++) if (cols[x] < cols[cut]) cut = x;
+    found.splice(i, 1, [a, cut - 1], [cut, b]);
+  }
+  if (found.length !== count) throw new Error(`expected ${count} books in a row, found ${found.length}`);
+  return found;
 }
 
-/** Decode an image to raw RGBA once; every measurement reads from this. */
-async function loadRaw(file, { keyWhite = false } = {}) {
-  const { data, info } = await sharp(file).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-  const src = { data, W: info.width, H: info.height, C: info.channels };
-  if (keyWhite) keyWhiteBackground(src);
-  src.alphaAt = (x, y) => data[(y * src.W + x) * src.C + 3];
-  return src;
-}
-
-/**
- * Measure one book inside `region` of `src`: its true bounds, the scale that
- * normalises it to BODY_W, and where its body ends — the line it stands on,
- * which is not where its art ends because the ribbon hangs below.
- */
-function measureBook(src, region, slug) {
-  const { x: rx0, y: ry0, w: rw, h: rh } = region;
-  let x0 = Infinity, x1 = -1, y0 = Infinity, y1 = -1;
-  for (let y = ry0; y < ry0 + rh; y++) {
-    for (let x = rx0; x < rx0 + rw; x++) {
-      if (src.alphaAt(x, y) <= SOLID) continue;
-      if (x < x0) x0 = x;
-      if (x > x1) x1 = x;
-      if (y < y0) y0 = y;
-      if (y > y1) y1 = y;
+/** One book's bounds inside its cell, and where its body ends. */
+function measure(slug, [x0, x1], [y0, y1]) {
+  let bx0 = Infinity, bx1 = -1, by0 = Infinity, by1 = -1;
+  for (let y = y0; y <= y1; y++) {
+    for (let x = x0; x <= x1; x++) {
+      if (alphaAt(x, y) <= EDGE) continue;
+      if (x < bx0) bx0 = x;
+      if (x > bx1) bx1 = x;
+      if (y < by0) by0 = y;
+      if (y > by1) by1 = y;
     }
   }
-
   const widths = [];
-  for (let y = y0; y <= y1; y++) {
+  for (let y = by0; y <= by1; y++) {
     let n = 0;
-    for (let x = x0; x <= x1; x++) if (src.alphaAt(x, y) > SOLID) n++;
+    for (let x = bx0; x <= bx1; x++) if (alphaAt(x, y) > EDGE) n++;
     widths.push(n);
   }
   const widest = Math.max(...widths);
-  const bodyRows = widths.map((n, i) => (n > widest * 0.5 ? i : -1)).filter((i) => i >= 0);
-
+  const body = widths.map((n, i) => (n > widest * 0.5 ? i : -1)).filter((i) => i >= 0);
   return {
-    slug, src,
-    x0, y0,
-    w: x1 - x0 + 1,
-    h: y1 - y0 + 1,
-    // Raw, in SOURCE pixels. The scale is chosen after every book has been
-    // measured — see `fit` — because one of them depends on the others.
-    rawBodyTop: bodyRows[0],
-    rawBodyBottom: bodyRows[bodyRows.length - 1] + 1,
+    slug,
+    x0: bx0, y0: by0,
+    w: bx1 - bx0 + 1,
+    h: by1 - by0 + 1,
+    rawBodyTop: body[0],
+    rawBodyBottom: body[body.length - 1] + 1,
   };
 }
 
-/**
- * Fix a book's scale, and everything that follows from it.
- *
- * Split out of measureBook because the standalone covers cannot be scaled until
- * the sheet's own body height is known, and that is not known until every book
- * on the sheet has been measured.
- */
-function fit(book, scale) {
-  book.scale = scale;
-  book.scaledW = Math.round(book.w * scale);
-  book.scaledH = Math.round(book.h * scale);
-  // Both relative to the top of the crop, already in output pixels.
-  book.bodyTop = Math.round(book.rawBodyTop * scale);
-  book.bodyBottom = Math.round(book.rawBodyBottom * scale);
-  book.bodyH = book.bodyBottom - book.bodyTop;
-  return book;
-}
+const books = rows.flatMap((row, r) =>
+  columnsOf(row, SLUGS[r].length).map((cell, c) => measure(SLUGS[r][c], cell, row)));
 
-const sheet = await loadRaw(SRC);
-
-const colCounts = new Array(sheet.W).fill(0);
-const rowCounts = new Array(sheet.H).fill(0);
-for (let y = 0; y < sheet.H; y++) {
-  for (let x = 0; x < sheet.W; x++) {
-    if (sheet.alphaAt(x, y) > SOLID) { colCounts[x]++; rowCounts[y]++; }
-  }
-}
-
-const columns = runs(colCounts);
-const rows = runs(rowCounts);
-if (columns.length !== 3 || rows.length !== 2) {
-  throw new Error(`expected a 3x2 sheet, found ${columns.length} columns x ${rows.length} rows`);
-}
-
-// ── Pass 1: measure every book, so the shared baseline can be derived ──────
-
-const books = [];
-for (let r = 0; r < rows.length; r++) {
-  for (let c = 0; c < columns.length; c++) {
-    const [cx0, cx1] = columns[c];
-    const [ry0, ry1] = rows[r];
-    books.push(measureBook(
-      sheet,
-      { x: cx0, y: ry0, w: cx1 - cx0 + 1, h: ry1 - ry0 + 1 },
-      SLUGS[r][c],
-    ));
-  }
-}
-
-for (const { slug, file, keyWhite } of STANDALONE) {
-  const src = await loadRaw(path.join(ROOT, 'Assets', file), { keyWhite });
-  books.push({
-    ...measureBook(src, { x: 0, y: 0, w: src.W, h: src.H }, slug),
-    keyed: Boolean(keyWhite),
-    standalone: true,
-  });
-}
-
-// ── Choosing each book's scale ─────────────────────────────────────────────
-//
-// THE SIX SHEET COVERS ARE NORMALISED ON WIDTH, and their body heights are left
-// to differ by the couple of percent they differ by. That variation is the
-// point: six volumes bound by hand are not the same height, and forcing them to
-// be looks worse than the variation does.
-//
-// THE STANDALONE COVERS ARE NORMALISED ON HEIGHT INSTEAD, and that is a repair.
-// Width normalisation assumed every book was drawn to roughly the sheet's
-// proportions — the comment on STANDALONE said as much — and for the Top Secret
-// volume it is not true: it is a squatter book, 0.857 wide for every unit tall
-// against the sheet's 0.828. Normalised on width it came out 448 tall where the
-// sheet's are 459 to 468, and standing it beside History of the Realm in the
-// Chronicles row put a three-and-a-half percent difference side by side. It did
-// not read as hand-bound variation. It read as one volume sitting wrong.
-//
-// So they are scaled to the sheet's median body height and come out WIDER,
-// which is honest: a squat, wide volume standing the same height as its
-// neighbours is a real thing on a real shelf. A ragged top edge is not.
+const targetBodyH = Math.min(...books.map((b) => b.rawBodyBottom - b.rawBodyTop));
 for (const book of books) {
-  if (!book.standalone) fit(book, BODY_W / book.w);
+  book.scale = targetBodyH / (book.rawBodyBottom - book.rawBodyTop);
+  book.scaledW = Math.round(book.w * book.scale);
+  book.scaledH = Math.round(book.h * book.scale);
+  book.bodyBottom = Math.round(book.rawBodyBottom * book.scale);
 }
 
-const sheetHeights = books
-  .filter((b) => !b.standalone)
-  .map((b) => b.bodyH)
-  .sort((a, b) => a - b);
-const targetBodyH = sheetHeights[Math.floor(sheetHeights.length / 2)];
-
-for (const book of books) {
-  if (book.standalone) {
-    fit(book, targetBodyH / (book.rawBodyBottom - book.rawBodyTop));
-  }
-}
-
-// One baseline for all of them: deep enough that the tallest body still clears
-// the top padding, and a canvas tall enough for the longest ribbon below it.
-// Derived across every cover, so adding one can only ever grow the canvas —
-// never leave a newcomer floating above the shelf or clipped at the foot.
+// One baseline for all of them, deep enough for the tallest art above its body
+// line (the clip on Realm History) and a canvas deep enough for anything below.
 const baseline = PAD_TOP + Math.max(...books.map((b) => b.bodyBottom));
 const canvasH = baseline + Math.max(...books.map((b) => b.scaledH - b.bodyBottom)) + PAD_TOP;
-// Wide enough for the widest book, which is no longer always BODY_W now that
-// the standalone covers are scaled to a height rather than to a width.
 const canvasW = Math.max(...books.map((b) => b.scaledW)) + PAD_X * 2;
-
-// ── Pass 2: cut, place, encode ────────────────────────────────────────────
-
-// ── The Embassy's binding ──────────────────────────────────────────────────
-//
-// The art arrived colour-coded: navy, forest, crimson and violet, one saturated
-// dye per category. That is a chart legend applied to leather, and it was the
-// main reason the shelf read as generated rather than bound. An embassy binds
-// its registers in its own stock and tells them apart by the label.
-//
-// Measured against the supplied art: the four coded covers ran 40–55% mean
-// saturation against 15–31% for the amber ones, and the Financial Ledger
-// reached 100% at the 95th percentile — a fully saturated red that no dye, no
-// hide and no photograph of a real object ever produces. The violet was worse
-// than loud: purple was the costliest dye in the pre-modern world, so the
-// petty-cash book carried the most expensive binding in the building.
-//
-// `hue` is the volume's place in one tanned range; the spread across the eight
-// is the variation of a single hide. `sat` caps the field. `light` re-tones a
-// cover that printed too bright — Hall of Honor and History sat at mean
-// lightness 52 and 42 against 11–20 for the rest, so two books glowed and six
-// receded. `wear` is how hard the Embassy works the volume, and drives edge
-// scuffing, grain, and how far the gilt has dulled.
-const STOCK = {
-  roster: { hue: 24, sat: 30, light: 1.0, wear: 1.0 },
-  statistics: { hue: 30, sat: 28, light: 1.0, wear: 0.95 },
-  ledger: { hue: 14, sat: 34, light: 1.0, wear: 1.0 },
-  stipends: { hue: 27, sat: 29, light: 1.0, wear: 0.9 },
-  calendar: { hue: 29, sat: 26, light: 1.05, wear: 0.45 },
-  history: { hue: 31, sat: 26, light: 0.82, wear: 0.4 },
-  // Vellum, and left so. A citations book in vellum is a real distinction
-  // rather than a colour-code, and --cover already takes its dark from the
-  // bronze of the clasps for exactly this reason.
-  honor: { hue: 36, sat: 22, light: 0.74, wear: 0.12 },
-  // Black leather. Barely worked, because it is sealed rather than consulted.
-  informants: { hue: 20, sat: 22, light: 1.0, wear: 0.15 },
-  // The opposite of the volume it is cut from, on every axis the grade has.
-  // This is a working register — an agent opens it to enter an arrest and the
-  // next one opens it an hour later — so it is the hardest-worked book on the
-  // shelf, and the gilt has gone accordingly. Oxblood sits at the bottom of the
-  // tanned range the other eight occupy; it is not a colour code, it is the
-  // darkest end of the same hide.
-  enforcement: { hue: 9, sat: 34, light: 1.38, wear: 1.0, tint: 0.24 },
-};
-
-const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
-
-function rgbToHsl(r, g, b) {
-  r /= 255; g /= 255; b /= 255;
-  const mx = Math.max(r, g, b);
-  const mn = Math.min(r, g, b);
-  const l = (mx + mn) / 2;
-  const d = mx - mn;
-  if (!d) return [0, 0, l];
-  const s = l > 0.5 ? d / (2 - mx - mn) : d / (mx + mn);
-  let h;
-  if (mx === r) h = (g - b) / d + (g < b ? 6 : 0);
-  else if (mx === g) h = (b - r) / d + 2;
-  else h = (r - g) / d + 4;
-  return [h * 60, s, l];
-}
-
-function hslToRgb(h, s, l) {
-  const c = (1 - Math.abs(2 * l - 1)) * s;
-  const hp = (((h % 360) + 360) % 360) / 60;
-  const x = c * (1 - Math.abs((hp % 2) - 1));
-  let t;
-  if (hp < 1) t = [c, x, 0];
-  else if (hp < 2) t = [x, c, 0];
-  else if (hp < 3) t = [0, c, x];
-  else if (hp < 4) t = [0, x, c];
-  else if (hp < 5) t = [x, 0, c];
-  else t = [c, 0, x];
-  const m = l - c / 2;
-  return t.map((v) => clamp(Math.round((v + m) * 255), 0, 255));
-}
-
-/** Signed shortest way round the wheel, -180..180. */
-const deltaHue = (a, b) => (((a - b) % 360) + 540) % 360 - 180;
-
-/**
- * Value noise from the pixel's own coordinates. Deterministic on purpose: the
- * committed covers have to be reproducible, and a random grain would put a
- * different hide in the diff on every run of this script.
- */
-function noiseAt(x, y, seed) {
-  const n = Math.sin(x * 12.9898 + y * 78.233 + seed * 43.7) * 43758.5453;
-  return n - Math.floor(n);
-}
-
-/** Re-bind one cover in the Embassy's stock. Operates on RGBA in place. */
-function bind(data, width, height, cfg) {
-  const cx = width / 2;
-  const cy = height / 2;
-
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      const i = (y * width + x) * 4;
-      if (data[i + 3] === 0) continue;
-
-      let [h, s, l] = rgbToHsl(data[i], data[i + 1], data[i + 2]);
-
-      // Near-neutrals are the silver medallion, the shadows and the page
-      // whites. Nothing there is dyed, and re-hueing it would only tint the
-      // relief that makes the cover read as an object rather than a rectangle.
-      // Gilt is decided before anything else, because the re-dye below has to
-      // leave it alone and the test depends on the ORIGINAL hue.
-      const gilded = h >= 33 && h <= 68 && l > 0.42 && s > 0.22;
-
-      // Re-dye. Only a cover cut from another volume's art asks for this: the
-      // grade above can only push a hue that is already there, and the sealed
-      // volume's leather is so near neutral that the `s >= 0.1` guard skips
-      // almost all of it. Darkening it further just makes a second black book.
-      // So the field is dyed outright, at a saturation floor, and lifted until
-      // the dye is actually visible in it.
-      //
-      // This tints the medallion as well as the leather, and that is intended:
-      // a book bound in a different stock had its furniture struck in a
-      // different metal, and a silver eagle on an oxblood board would read as
-      // the same book photographed twice.
-      if (cfg.tint && !gilded) {
-        h = cfg.hue;
-        s = Math.max(s, cfg.tint * (0.35 + l));
-      } else if (s >= 0.1) {
-        // Gilt: bright, and already amber. It stays gold — the fault was never
-        // the gold but the dye beneath it — and dulls with how hard the book is
-        // worked, since handling takes the leaf off first.
-        if (gilded) {
-          h = 46 + deltaHue(h, 46) * 0.55;
-          s = clamp(s * (1 - 0.3 * cfg.wear), 0.1, 0.62);
-        } else {
-          // The field, pulled almost the whole way onto the stock and then
-          // capped. The 100% red and the violet both die here.
-          h = cfg.hue + deltaHue(h, cfg.hue) * 0.12;
-          s = Math.min(s * 0.5, cfg.sat / 100);
-        }
-      }
-
-      l = clamp(l * cfg.light, 0, 1);
-
-      // Wear. Edges go first and corners hardest, which is where a shelved book
-      // is actually handled; the grain is the hide coming through the finish.
-      if (cfg.wear > 0) {
-        const ex = Math.abs(x - cx) / cx;
-        const ey = Math.abs(y - cy) / cy;
-        const edge = Math.pow(Math.max(ex, ey), 3.2) * 0.3 + Math.pow(ex * ey, 1.6) * 0.34;
-        l *= 1 - edge * cfg.wear;
-        l *= 1 + (noiseAt(x, y, 7) - 0.5) * 0.05 * cfg.wear;
-        l = clamp(l, 0, 1);
-      }
-
-      const [r, g, b] = hslToRgb(h, s, l);
-      data[i] = r;
-      data[i + 1] = g;
-      data[i + 2] = b;
-    }
-  }
-
-  return data;
-}
-
-// ── The title panel ────────────────────────────────────────────────────────
-//
-// Every cover arrived with its title and subtitle PAINTED INTO the art, which
-// made two problems the grade above could not touch. A rename needed new art —
-// the eighth volume shipped reading "TOP SECRET" long after the register was
-// retitled Thalmor Chronicles — and the letterforms are irregular in the way
-// generated lettering is: uneven counters, baselines drifting one to two
-// degrees, spacing that no punch would give twice.
-//
-// So the lettering comes off here and the app sets it live over the cover in
-// Cinzel (web/src/components/Book.tsx). What this leaves behind has to read as
-// binding rather than as a patch, which is the whole difficulty: a blur or a
-// flat rectangle would be worse than the painted title it replaced.
-//
-// The panel is therefore ERASED rather than covered. For each column the
-// leather is carried across the panel by interpolating between a band of clean
-// rows above it and a band below it, so the cover's own vignette and lighting
-// gradient continue through the gap instead of being averaged away. Grain goes
-// back on top, and the six sheet covers then take a blind-stamped fillet — an
-// impressed line, no gilt, the way a binder marks out a lettering panel. The
-// slight loss of the leather's mid-scale mottling inside the panel is not a
-// defect to hide: a stamped panel is compressed leather, and compressed
-// leather is smoother than the field around it.
-//
-// Bounds are per cover and MEASURED, not assumed. The painted block sits at a
-// different height on almost every volume — 141 on Roster against 112 on the
-// sealed volume — and the clasp on the fore-edge comes within a few pixels of
-// the subtitle's last letter. They were read off the covers by profiling each
-// row's horizontal gradient energy across the board's field: the type block is
-// the run of high energy, and the quiet rows on either side of it are both the
-// clearance and the donor bands the erase samples from.
-//
-// `tooled: false` says the volume already has a lettering panel of its own and
-// must not be given a second one. History of the Realm is lettered on an
-// inlaid black plaque with an ogee frame; the sealed volume's title stands
-// between two painted rules. In both cases the frame is kept and only the
-// field inside it is cleared.
-// NO COVER IS TOOLED, and that is a decision taken after looking at all nine.
-//
-// The blind stamp was written to make the cleared panel read as an intentional
-// lettering panel rather than a patch — a fillet impressed into the leather, no
-// gilt, the way a binder marks one out. On the vellum volume it plainly failed:
-// a pale ground shows every bit of the line and it read as a border drawn
-// around a rectangle, which its own comment names as the one thing to avoid.
-//
-// Dropping it there and leaving it on the other five turned out to be the wrong
-// half of the lesson. The rectangle was visible on the dark covers too, just
-// less: a sharp-edged box a shade off the board it sits in, on every register.
-// What actually makes the repair disappear is not a frame around it, it is the
-// erase reaching full strength across the lettering with the ramp landing on
-// clean board outside — which is what the grown erase and a four-pixel fade
-// now do. The stamp was compensating for a join that no longer needs it.
-//
-// The machinery stays in relabel(), because `tooled` is a per-cover choice and
-// a future cover on a heavier hide may well want it back.
-const LABEL = {
-  roster:     { x: 0.27604, y: 0.28066, w: 0.56771, h: 0.18729, tooled: false, feather: 4 },
-  statistics: { x: 0.27604, y: 0.26457, w: 0.56771, h: 0.19411, tooled: false, feather: 4 },
-  ledger:     { x: 0.27604, y: 0.26950, w: 0.56771, h: 0.18472, tooled: false, feather: 4 },
-  stipends:   { x: 0.27604, y: 0.24835, w: 0.56771, h: 0.20440, tooled: false, feather: 4 },
-  honor:      { x: 0.27604, y: 0.26856, w: 0.56771, h: 0.18559, tooled: false, feather: 4 },
-  calendar:   { x: 0.27604, y: 0.27940, w: 0.56771, h: 0.18835, tooled: false, feather: 4 },
-  // The plaque's field, inside its gold ogee. The lettering runs to within two
-  // pixels of the frame at both ends — "OF THE REALM" is set wider than the
-  // plaque's straight runs are long — so this one is cut close and given a
-  // narrower fade than the rest. It can afford one: the field is flat black, so
-  // there is no texture either side of the join for a seam to show up in.
-  history:    { x: 0.36458, y: 0.36022, w: 0.47135, h: 0.12439, tooled: false, feather: 1.2 },
-  // Between the two painted rules that already frame the title. They are the
-  // volume's own cartouche and are left exactly where they are.
-  informants:  { x: 0.28646, y: 0.18708, w: 0.55729, h: 0.23740, tooled: false },
-  // Same source art, so the same panel — and now genuinely the same, rather
-  // than the same numbers happening to land in the same place.
-  enforcement: { x: 0.28646, y: 0.18708, w: 0.55729, h: 0.23740, tooled: false },
-};
-
-/**
- * Turn a book's fractional label panel into pixels on its own canvas.
- *
- * FRACTIONS OF THE BODY BOX, NOT CANVAS PIXELS, and that is a repair. The table
- * above held absolute pixel rectangles measured against one particular canvas
- * size and one particular scale. The moment a book was rescaled — which is what
- * normalising the standalone covers on height does — the panel stayed put while
- * the artwork moved out from under it, and the erased "TOP SECRET" it exists to
- * cover came back through on two of the volumes.
- *
- * Anchored to the BODY rather than to the whole crop because the body is the
- * thing the lettering is painted on; the ribbon hanging below it is not part of
- * the coordinate system the panel lives in.
- */
-function panelFor(book, canvasWidth, baselineY) {
-  const f = LABEL[book.slug];
-  const bodyH = book.bodyH;
-  return {
-    x: Math.round(Math.round((canvasWidth - book.scaledW) / 2) + f.x * book.scaledW),
-    y: Math.round(baselineY - bodyH * (1 - f.y)),
-    w: Math.round(f.w * book.scaledW),
-    h: Math.round(f.h * bodyH),
-    tooled: f.tooled,
-    feather: f.feather,
-  };
-}
-
-/** Rows sampled on each side of the panel to carry the leather across it. */
-const DONOR = 5;
-
-/** How far the erase fades at the panel's own edge, in pixels. */
-const FEATHER = 2.5;
-
-/**
- * Signed distance to a rounded rectangle centred on the origin, negative
- * inside. The fillet and the panel's recess are both drawn off this, which is
- * what keeps the impressed line an even depth around the corners — a stamp is
- * one tool pressed once, not four sides drawn separately.
- */
-function roundedRectSD(dx, dy, hw, hh, r) {
-  const qx = Math.abs(dx) - (hw - r);
-  const qy = Math.abs(dy) - (hh - r);
-  const ox = Math.max(qx, 0);
-  const oy = Math.max(qy, 0);
-  return Math.hypot(ox, oy) + Math.min(Math.max(qx, qy), 0) - r;
-}
-
-/** Smooth 0..1 ramp; the erase and the bevel both want eased edges, not steps. */
-const smoothstep = (a, b, v) => {
-  const t = clamp((v - a) / (b - a), 0, 1);
-  return t * t * (3 - 2 * t);
-};
-
-/**
- * Two octaves of the same deterministic value noise, bilinear-sampled, so the
- * cleared panel keeps a hide's mottle as well as its grain. Without the coarse
- * octave the interpolation leaves a field that is smooth in exactly the way a
- * gradient is and no leather ever is.
- */
-function mottleAt(x, y, scale, seed) {
-  const u = x / scale;
-  const v = y / scale;
-  const x0 = Math.floor(u);
-  const y0 = Math.floor(v);
-  const fx = u - x0;
-  const fy = v - y0;
-  const ex = fx * fx * (3 - 2 * fx);
-  const ey = fy * fy * (3 - 2 * fy);
-  const n00 = noiseAt(x0, y0, seed);
-  const n10 = noiseAt(x0 + 1, y0, seed);
-  const n01 = noiseAt(x0, y0 + 1, seed);
-  const n11 = noiseAt(x0 + 1, y0 + 1, seed);
-  return (n00 * (1 - ex) + n10 * ex) * (1 - ey) + (n01 * (1 - ex) + n11 * ex) * ey;
-}
-
-/**
- * Fit a quadratic to a donor profile, rejecting outliers as it goes.
- *
- * A plain average will not do here. The clearance above the type block is only
- * four or five rows on most covers, which puts the donor band right under the
- * laurel and sword tips, and gilt is far brighter than leather: one contaminated
- * column, carried the height of the panel, becomes a vertical smear straight
- * down the cover. Reweighting drops those columns, and a quadratic is all the
- * shape a lit leather field has across two hundred pixels anyway — so what
- * survives is the lighting, never a fragment of the ornament above it.
- */
-function robustProfileFit(profile) {
-  const n = profile.length;
-  const weights = new Array(n).fill(1);
-
-  let coefficients = [0, 0, 0];
-  for (let pass = 0; pass < 3; pass++) {
-    // Normal equations for y = a + b·u + c·u², u centred on the panel so the
-    // powers stay small and the 3x3 solve stays well conditioned.
-    const m = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
-    const rhs = [0, 0, 0];
-    for (let i = 0; i < n; i++) {
-      const u = (i / (n - 1)) * 2 - 1;
-      const basis = [1, u, u * u];
-      for (let a = 0; a < 3; a++) {
-        for (let b = 0; b < 3; b++) m[a][b] += weights[i] * basis[a] * basis[b];
-        rhs[a] += weights[i] * basis[a] * profile[i];
-      }
-    }
-    coefficients = solve3(m, rhs);
-
-    const residuals = profile.map((v, i) => {
-      const u = (i / (n - 1)) * 2 - 1;
-      return v - (coefficients[0] + coefficients[1] * u + coefficients[2] * u * u);
-    });
-    const spread = residuals.map(Math.abs).sort((a, b) => a - b)[n >> 1] || 1;
-    for (let i = 0; i < n; i++) {
-      // Tukey: a column two spreads off the fit contributes nothing at all.
-      const r = residuals[i] / (2.2 * spread + 1e-6);
-      weights[i] = Math.abs(r) < 1 ? (1 - r * r) ** 2 : 0;
-    }
-  }
-
-  return profile.map((_, i) => {
-    const u = (i / (n - 1)) * 2 - 1;
-    return coefficients[0] + coefficients[1] * u + coefficients[2] * u * u;
-  });
-}
-
-/** Gaussian elimination on a 3x3; enough for the fit above and nothing more. */
-function solve3(m, rhs) {
-  const a = m.map((row, i) => [...row, rhs[i]]);
-  for (let col = 0; col < 3; col++) {
-    let pivot = col;
-    for (let r = col + 1; r < 3; r++) if (Math.abs(a[r][col]) > Math.abs(a[pivot][col])) pivot = r;
-    [a[col], a[pivot]] = [a[pivot], a[col]];
-    if (Math.abs(a[col][col]) < 1e-9) continue;
-    for (let r = 0; r < 3; r++) {
-      if (r === col) continue;
-      const f = a[r][col] / a[col][col];
-      for (let c = col; c < 4; c++) a[r][c] -= f * a[col][c];
-    }
-  }
-  return [0, 1, 2].map((i) => (Math.abs(a[i][i]) < 1e-9 ? 0 : a[i][3] / a[i][i]));
-}
-
-/**
- * Take the painted title off one cover and leave a lettering panel behind.
- * Operates on RGBA in place, BEFORE `bind`, so the cleared leather is dyed,
- * worked and vignetted by exactly the same pass as the leather it came from —
- * a panel graded separately would sit a shade off its own cover.
- */
-function relabel(data, width, height, panel, seed) {
-  const feather = panel.feather ?? FEATHER;
-
-  // THE ERASE IS WIDER THAN THE PANEL, BY EXACTLY THE FEATHER.
-  //
-  // `panel` is the LETTERING area — where the painted title sits and where the
-  // app will set its own type. The fade has to happen somewhere, and if it
-  // happens inside that rectangle then its outer band is only partly erased,
-  // which leaves the painted letters showing through as ghosts. On the five
-  // dark covers nobody could see that; on the vellum one, widening the fade to
-  // soften the join brought "HALL OF" and "CEREMONIAL CITATIONS" back up out of
-  // the board.
-  //
-  // So the erase is grown by the feather on every side and runs at full
-  // strength across the whole lettering area, with the ramp landing on plain
-  // board outside it. The fillet below still uses the original rectangle: it is
-  // marking where the lettering goes, not where the repair reached.
-  // WHOLE PIXELS, AND THIS IS NOT A TIDINESS POINT. These bounds index a raw
-  // RGBA buffer directly, and a fractional index into a typed array is not an
-  // error — it is silently undefined on read and silently DROPPED on write. The
-  // default feather is 2.5, so growing the panel by it put every edge on a half
-  // pixel, every write went nowhere, and the painted titles came straight back:
-  // "TOP SECRET" whole on two covers, and the live type sitting on top of the
-  // old lettering on the rest. Only Hall of Honor survived, because its feather
-  // happens to be 4.
-  //
-  // Out on both sides — floor the near edge, ceil the far one — so rounding can
-  // only ever cover MORE of the lettering, never less.
-  const x = Math.floor(panel.x - feather);
-  const y = Math.floor(panel.y - feather);
-  const x1 = Math.ceil(panel.x + panel.w + feather);
-  const y1 = Math.ceil(panel.y + panel.h + feather);
-  const w = x1 - x;
-  const h = y1 - y;
-
-  const at = (px, py, c) => data[(py * width + px) * 4 + c];
-
-  // The donor bands, one above the panel and one below. Median down the depth
-  // rather than mean, so a single row that clips an ornament does not lift the
-  // column; the robust fit along the panel's length then throws out whichever
-  // columns the ornament reached anyway.
-  const top = [[], [], []];
-  const bottom = [[], [], []];
-  const median = (values) => values.sort((a, b) => a - b)[values.length >> 1];
-  for (let px = x; px < x1; px++) {
-    for (let c = 0; c < 3; c++) {
-      const above = [];
-      const below = [];
-      for (let k = 1; k <= DONOR; k++) {
-        above.push(at(px, y - k, c));
-        below.push(at(px, y1 - 1 + k, c));
-      }
-      top[c].push(median(above));
-      bottom[c].push(median(below));
-    }
-  }
-  const topFit = top.map(robustProfileFit);
-  const bottomFit = bottom.map(robustProfileFit);
-
-  // How coarse this hide actually is, read off the donor bands themselves
-  // rather than guessed: the residual against the fit, as a fraction of the
-  // level, is the grain. Hand-picking an amplitude would have been wrong on
-  // two covers whatever number was picked — the vellum is nearly smooth and
-  // the worked leather is not — and a panel grained unlike its own cover is
-  // exactly the flat rectangle this is meant to avoid.
-  let sum = 0;
-  let sumSquares = 0;
-  let count = 0;
-  for (let i = 0; i < w; i++) {
-    for (const [fit, edge, step] of [[topFit, y - 1, -1], [bottomFit, y1, 1]]) {
-      for (let k = 0; k < DONOR; k++) {
-        for (let c = 0; c < 3; c++) {
-          const level = fit[c][i];
-          if (level < 4) continue;
-          const r = (at(x + i, edge + k * step, c) - level) / level;
-          // Anything this far off is ornament the fit already threw out, not grain.
-          if (Math.abs(r) > 0.3) continue;
-          sum += r;
-          sumSquares += r * r;
-          count++;
-        }
-      }
-    }
-  }
-  const grainSigma = clamp(
-    count > 20 ? Math.sqrt(Math.max(0, sumSquares / count - (sum / count) ** 2)) : 0.03,
-    // Wide, because it is a measurement and not a preference: a black cover
-    // measures three times the relative grain of the vellum one purely because
-    // its leather is dark. The bounds are only there to stop a degenerate
-    // reading — an all-ornament donor band — from sanding or blizzarding a
-    // panel.
-    0.008, 0.25,
-  );
-
-  // Three octaves, weighted so most of the power sits at pixel scale. That
-  // proportion is not a matter of taste: leather's own spectrum is dominated by
-  // pore, and a texture built mostly of blotch measures the same overall but
-  // still reads as a smooth patch beside the real thing.
-  const texture = (px, py) => (noiseAt(px, py, seed) - 0.5)
-    + (mottleAt(px, py, 4, seed + 3) - 0.5) * 0.42
-    + (mottleAt(px, py, 13, seed + 11) - 0.5) * 0.34;
-
-  // Normalised against its own spread over this panel rather than a constant,
-  // so `grainSigma` lands as measured however the octaves are reweighted.
-  let textureSum = 0;
-  let textureSquares = 0;
-  for (let py = y; py < y1; py++) {
-    for (let px = x; px < x1; px++) {
-      const v = texture(px, py);
-      textureSum += v;
-      textureSquares += v * v;
-    }
-  }
-  const samples = w * h;
-  const textureSigma = Math.sqrt(
-    Math.max(1e-6, textureSquares / samples - (textureSum / samples) ** 2),
-  );
-
-  // Interpolate between the CENTRES of the two donor bands rather than the
-  // panel's own edges, so the ramp arrives at the sampled value exactly where
-  // it was sampled and the join carries no step.
-  const yTop = y - (DONOR + 1) / 2;
-  const yBottom = y1 - 1 + (DONOR + 1) / 2;
-
-  for (let py = y; py < y1; py++) {
-    const t = (py - yTop) / (yBottom - yTop);
-    for (let px = x; px < x1; px++) {
-      const i = (py * width + px) * 4;
-      if (data[i + 3] === 0) continue;
-
-      // Full erase across the panel, easing out over the last pixels so the
-      // reconstructed field meets the painted one without a seam to catch.
-      const fade = Math.min(
-        smoothstep(0, feather, px - x), smoothstep(0, feather, x1 - 1 - px),
-        smoothstep(0, feather, py - y), smoothstep(0, feather, y1 - 1 - py),
-      );
-
-      const grain = 1 + (grainSigma / textureSigma) * texture(px, py);
-
-      const k = px - x;
-      for (let c = 0; c < 3; c++) {
-        const field = (topFit[c][k] * (1 - t) + bottomFit[c][k] * t) * grain;
-        data[i + c] = clamp(Math.round(data[i + c] * (1 - fade) + field * fade), 0, 255);
-      }
-    }
-  }
-
-  if (!panel.tooled) return grainSigma;
-
-  // ── The blind stamp ──────────────────────────────────────────────────────
-  //
-  // A fillet impressed into the panel's edge: no gilt, only relief, which is
-  // what "blind" means and what keeps this from competing with the gold frame
-  // it sits inside. Light comes from the upper left, as it does everywhere in
-  // this art, so a groove's upper wall catches and its lower wall loses.
-  // The ORIGINAL panel, not the grown erase — see the note at the top.
-  const cx = panel.x + panel.w / 2;
-  const cy = panel.y + panel.h / 2;
-  const hw = panel.w / 2;
-  const hh = panel.h / 2;
-  const RADIUS = 4;
-  const INSET = 4.5;
-  const LX = -0.55;
-  const LY = -0.84;
-
-  for (let py = Math.floor(panel.y - 3); py < Math.ceil(panel.y + panel.h + 3); py++) {
-    for (let px = Math.floor(panel.x - 3); px < Math.ceil(panel.x + panel.w + 3); px++) {
-      const i = (py * width + px) * 4;
-      if (data[i + 3] === 0) continue;
-
-      const dx = px - cx;
-      const dy = py - cy;
-      const sd = roundedRectSD(dx, dy, hw, hh, RADIUS);
-      if (sd > 3) continue;
-
-      let shade = 1;
-
-      // The panel is pressed below the field it sits in, so it takes a little
-      // less light overall and a shadow off the wall that overhangs it.
-      if (sd < 0) {
-        shade *= 1 - 0.02;
-        shade *= 1 - 0.03 * (1 - smoothstep(0, 22, py - panel.y));
-        shade *= 1 + 0.03 * (1 - smoothstep(0, 10, panel.y + panel.h - py));
-        shade *= 1 - 0.03 * (1 - smoothstep(0, 12, px - panel.x));
-      } else {
-        // The lip the stamp raised around itself.
-        shade *= 1 + 0.03 * (1 - smoothstep(0, 3, sd)) * (py < cy ? 1 : -0.8);
-      }
-
-      // The fillet. Depth from how near the groove's centre line, and the two
-      // walls shaded off the outward normal so the line reads as impressed
-      // rather than drawn. Kept deliberately faint: a heavier line stops being
-      // tooling and becomes a border drawn around a rectangle, which is the
-      // one thing this panel must not look like.
-      const d = sd + INSET;
-      if (Math.abs(d) < 1.25) {
-        // A tool pressed by hand does not bite evenly along its run, and a line
-        // of perfectly constant depth is the tell that gave the whole panel
-        // away on the vellum volume — where the ground is pale enough to show
-        // every bit of it. The wander is coarse and slow, an arm's worth.
-        const depth = (1 - (d / 1.25) ** 2)
-          * (0.68 + 0.64 * mottleAt(px, py, 26, seed + 17));
-        const e = 0.35;
-        const nx = roundedRectSD(dx + e, dy, hw, hh, RADIUS) - roundedRectSD(dx - e, dy, hw, hh, RADIUS);
-        const ny = roundedRectSD(dx, dy + e, hw, hh, RADIUS) - roundedRectSD(dx, dy - e, hw, hh, RADIUS);
-        const len = Math.hypot(nx, ny) || 1;
-        const lit = -((nx / len) * LX + (ny / len) * LY);
-        shade *= 1 - 0.045 * depth;
-        shade *= 1 + 0.05 * depth * Math.sign(d) * lit;
-      }
-
-      for (let c = 0; c < 3; c++) data[i + c] = clamp(Math.round(data[i + c] * shade), 0, 255);
-    }
-  }
-
-  return grainSigma;
-}
 
 fs.mkdirSync(OUT_DIR, { recursive: true });
 
 for (const book of books) {
-  const { data, W, H, C } = book.src;
-  let pipeline = sharp(data, { raw: { width: W, height: H, channels: C } })
+  const cover = await sharp(data, { raw: { width: W, height: H, channels: 4 } })
     .extract({ left: book.x0, top: book.y0, width: book.w, height: book.h })
-    .resize(book.scaledW, book.scaledH, { kernel: 'lanczos3' });
+    .resize(book.scaledW, book.scaledH, { kernel: 'lanczos3' })
+    .png()
+    .toBuffer();
 
-  if (book.modulate) pipeline = pipeline.modulate(book.modulate);
-
-  const cover = await pipeline.png().toBuffer();
-
-  // Bound after the book is placed on its canvas, so the wear at the edges is
-  // measured from the volume's own centre rather than from the sheet it was
-  // cut out of.
-  const placed = await sharp({
-    create: {
-      width: canvasW, height: canvasH,
-      channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 },
-    },
+  const out = path.join(OUT_DIR, `${book.slug}.webp`);
+  const result = await sharp({
+    create: { width: canvasW, height: canvasH, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
   })
-    // Centred, because a book scaled to a height is not BODY_W wide.
     .composite([{
       input: cover,
       left: Math.round((canvasW - book.scaledW) / 2),
       top: baseline - book.bodyBottom,
     }])
-    .ensureAlpha()
-    .raw()
-    .toBuffer();
-
-  // Cleared before the grade, not after: `bind` re-hues, caps and vignettes the
-  // whole canvas, and leather that skipped that pass would be a shade off the
-  // cover it was reconstructed from.
-  const grain = relabel(
-    placed, canvasW, canvasH, panelFor(book, canvasW, baseline),
-    // A seed per volume, so no two covers get the same grain, and the same
-    // seed on every run, so a rerun does not put a different hide in the diff.
-    [...book.slug].reduce((a, ch) => a * 31 + ch.charCodeAt(0), 7) % 997,
-  );
-
-  const bound = bind(placed, canvasW, canvasH, STOCK[book.slug]);
-
-  const out = path.join(OUT_DIR, `${book.slug}.webp`);
-  const result = await sharp(bound, {
-    raw: { width: canvasW, height: canvasH, channels: 4 },
-  })
     .webp({ quality: 90, alphaQuality: 100, effort: 6 })
     .toFile(out);
 
   console.log(
     `${book.slug.padEnd(11)} ${result.width}x${result.height}  `
-    + `${String(Math.round(result.size / 1024)).padStart(3)} kB  `
-    + `(resampled ${book.scale.toFixed(3)}, `
-    // Printed because it is measured rather than chosen: if a cover's panel
-    // ever comes out looking flat, this is the first number to look at.
-    + `panel grain ${(grain * 100).toFixed(1)}%)`,
+    + `${String(Math.round(result.size / 1024)).padStart(3)} kB  (resampled ${book.scale.toFixed(3)})`,
   );
 }
 
@@ -935,46 +177,6 @@ console.log(
   + `— ${canvasW}x${canvasH}, standing on y=${baseline}`,
 );
 
-// The shelf has to set its type over the panel this script just cleared, and
-// the panel is in a different place on every cover. Rather than keep the same
-// eight rectangles measured twice — once here against the art, once by hand in
-// the stylesheet — the geometry is written out as build output beside the
-// covers it belongs to, and web/src/covers.ts reads it. LABEL above is the one
-// place they are set; this file is derived and should not be edited.
-//
-// Fractions of the CANVAS rather than pixels, because that is what CSS wants:
-// the book is laid out at whatever width the shelf gives it, so a panel fixed
-// in pixels would drift off its cover at every breakpoint.
-//
-// NOTE THE TWO DIFFERENT FRACTIONS, because conflating them is a bug this file
-// has already had. LABEL holds fractions of a book's own BODY box, which is
-// what makes it survive a rescale. What the shelf needs is fractions of the
-// finished CANVAS, which is a different rectangle — the body is centred in it
-// and the ribbon hangs below. `panelFor` is the bridge: it resolves LABEL into
-// pixels on this canvas, exactly as the erase pass does, and those pixels are
-// what get divided here. Reading LABEL directly divides a fraction by 415 and
-// writes a panel a thousandth of its proper size — which renders every volume
-// on the shelf with no title at all.
-const labels = Object.fromEntries(
-  books.map((book) => {
-    const { x, y, w, h } = panelFor(book, canvasW, baseline);
-    const round = (v) => Number(v.toFixed(5));
-    return [book.slug, {
-      left: round(x / canvasW),
-      top: round(y / canvasH),
-      width: round(w / canvasW),
-      height: round(h / canvasH),
-    }];
-  }),
-);
-
-const labelsFile = path.join(OUT_DIR, 'labels.json');
-fs.writeFileSync(
-  labelsFile,
-  `${JSON.stringify({ _: 'Generated by scripts/prepare-volumes.mjs — edit LABEL there.', ...labels }, null, 2)}\n`,
-);
-console.log(`wrote ${path.relative(ROOT, labelsFile)}`);
-
 // ── Volume seals ──────────────────────────────────────────────────────────
 
 /*
@@ -982,11 +184,10 @@ console.log(`wrote ${path.relative(ROOT, labelsFile)}`);
  * the shelf.
  *
  * The archive has one seal everywhere else: the Dominion insignia at
- * public/seal.webp, on the hall's header and stamped at the foot of every
- * register. That is the Embassy's mark, not any one book's. The Informants'
- * Chronicle keeps its own door, and a door wants the mark of the thing behind
- * it — so its medallion is lifted off its own cover and used on the inside
- * board and on the lock.
+ * public/seal.webp. The Chronicles keep their own door, and a door wants the
+ * mark of the thing behind it — so the medallion off the volume's ORIGINAL
+ * cover is kept for the inside board and the lock. It outlived that cover on
+ * purpose: the shelf art changed, the door did not.
  *
  * The bounds are measured by hand against the source art rather than found:
  * the medallion sits on black leather with no alpha to trace, and one plate is
@@ -995,7 +196,7 @@ console.log(`wrote ${path.relative(ROOT, labelsFile)}`);
 const SEALS = [
   {
     slug: 'informants',
-    file: 'Top Secret Volume.png',
+    file: 'retired/Top Secret Volume.png',
     // The disc, less the laurel that crowds it left and right.
     region: { left: 443, top: 588, width: 372, height: 372 },
   },

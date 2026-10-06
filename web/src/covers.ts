@@ -1,4 +1,5 @@
 // The painted covers, cut from the art sheet by scripts/prepare-volumes.mjs.
+// Their titles are painted in and match the volume names in shared/volumes.ts.
 //
 // Imported one by one rather than through import.meta.glob so that a missing or
 // renamed cover is a build error naming the volume, not a blank space on the
@@ -6,7 +7,6 @@
 
 import type { VolumeSlug } from '../../shared/types';
 
-import labels from './assets/volumes/labels.json';
 import roster from './assets/volumes/roster.webp';
 import statistics from './assets/volumes/statistics.webp';
 import ledger from './assets/volumes/ledger.webp';
@@ -33,30 +33,10 @@ export const COVERS: Record<VolumeSlug, string> = {
  * Intrinsic size of every cover, so the shelf reserves its space up front.
  *
  * Derived by scripts/prepare-volumes.mjs and printed by it — the canvas is
- * sized to the widest book and the tallest ribbon, so it moves when a cover is
+ * sized to the widest book and the tallest art, so it moves when a cover is
  * added or a scale changes. If these two numbers stop matching what that script
  * reports, the shelf reserves the wrong box and every cover is letterboxed
  * inside it.
  */
-export const COVER_W = 415;
-export const COVER_H = 537;
-
-/**
- * Where each cover's lettering panel is, as fractions of the cover.
- *
- * The titles used to be painted into the art and are now set live over it, so
- * the shelf has to know where the cleared panel sits — and it sits somewhere
- * different on almost every volume, because the painted block did. Rather than
- * measure the same eight rectangles twice, once against the art and once by
- * hand in the stylesheet, scripts/prepare-volumes.mjs writes them out beside
- * the covers it cut them from. Editing them here would only be overwritten:
- * the LABEL table in that script is where they are set.
- */
-export interface LabelPanel {
-  left: number;
-  top: number;
-  width: number;
-  height: number;
-}
-
-export const LABELS: Record<VolumeSlug, LabelPanel> = labels;
+export const COVER_W = 271;
+export const COVER_H = 404;

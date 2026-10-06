@@ -1,5 +1,5 @@
 // Per-volume binding colours, read off the cover art in
-// `Assets/Book volumes UI assets.png` by scripts/prepare-volumes.mjs.
+// `Assets/new volume assets.png`.
 //
 // These no longer draw the book — the shelf shows the painted covers — so they
 // exist for one job: to carry a volume's identity through to the page you land
@@ -7,9 +7,9 @@
 // rather than its median, which the heavy vignette drags almost to black.
 //
 // `cover` must stay DARK. ledger.css lays light foil text over it, so a light
-// value here is unreadable rather than merely off-palette. That is why Hall of
-// Honor, whose cover is ivory, takes the bronze of its own clasps and spine
-// bands instead — the darkest colour the art actually gives that volume.
+// value here is unreadable rather than merely off-palette. That is why the
+// Registry, whose cover is parchment, takes the bronze of its own clasps
+// instead — the darkest colour the art actually gives that volume.
 
 import type { VolumeSlug } from '../../shared/types';
 
@@ -18,38 +18,23 @@ export interface Binding {
   cover2: string;
   foil: string;
   subtitle: string;
-  /**
-   * The colour this volume's title is lettered in on the shelf. Almost always
-   * the foil, because that is what the covers were lettered in — but Hall of
-   * Honor is bound in vellum, and gold leaf on a pale ground is a rumour of a
-   * title rather than a title. Its own art lettered it in ink for exactly that
-   * reason, and the live type follows the art. Omitted means the foil.
-   */
-  lettering?: string;
 }
 
-// One gold leaf is used across all six covers, so this is shared rather than
+// One gold leaf is used across all nine covers, so this is shared rather than
 // varied per volume — the art is what it is. Identity lives in `cover`.
 const FOIL = '#c5a169';
 
 export const BINDINGS: Record<VolumeSlug, Binding> = {
-  roster:     { cover: '#121a2e', cover2: '#091626', foil: FOIL, subtitle: 'Military Personnel Register' },
-  statistics: { cover: '#122010', cover2: '#091a07', foil: FOIL, subtitle: 'The Chain of Command' },
-  ledger:     { cover: '#430e10', cover2: '#38070a', foil: FOIL, subtitle: 'Treasury Account' },
-  stipends:   { cover: '#2d1539', cover2: '#220d2f', foil: FOIL, subtitle: 'Receipts & Disbursement' },
-  honor:      { cover: '#4c2d00', cover2: '#2b1800', foil: FOIL, subtitle: 'Ceremonial Citations', lettering: '#2c2114' },
-  calendar:   { cover: '#191617', cover2: '#0f0f0f', foil: FOIL, subtitle: 'Observances & Reckonings' },
-  // Ivory and gold like Hall of Honor, so it takes its dark from the same place
-  // the eye does: the black title plaque the cover's name is lettered on.
-  history:    { cover: '#22201a', cover2: '#12110c', foil: FOIL, subtitle: 'Chronicles of the Realm' },
-  // Black leather, and the only cover whose title is lettered in red rather
-  // than leaf. The foil follows the art: this book's rule and filigree are a
-  // colder, older gold than the other seven.
-  informants: { cover: '#171310', cover2: '#0a0806', foil: '#b08d4f', subtitle: 'Reports of the Field Agents' },
-  // Oxblood, and darker than the Financial Ledger's red because this cover is
-  // graded down rather than merely dyed. Same colder gold as the volume it is
-  // cut from, dulled another step by the wear.
-  enforcement: { cover: '#1c100c', cover2: '#0d0605', foil: '#a8834a', subtitle: 'Acts of the White-Gold Concordat' },
+  roster:     { cover: '#4a0a33', cover2: '#2e0420', foil: FOIL, subtitle: 'Military Personnel Register' },
+  statistics: { cover: '#5a1712', cover2: '#380b07', foil: FOIL, subtitle: 'The Order of Precedence' },
+  ledger:     { cover: '#26331b', cover2: '#141c0e', foil: FOIL, subtitle: 'Treasury Account' },
+  // Parchment, so it takes its dark from the bronze of its own clasps.
+  stipends:   { cover: '#5c3d22', cover2: '#3a2412', foil: FOIL, subtitle: 'Receipts & Disbursement' },
+  honor:      { cover: '#0d2433', cover2: '#061520', foil: FOIL, subtitle: 'Ceremonial Citations' },
+  calendar:   { cover: '#4d2712', cover2: '#2e1404', foil: FOIL, subtitle: 'Observances & Reckonings' },
+  history:    { cover: '#152a33', cover2: '#0a1a20', foil: FOIL, subtitle: 'Chronicles of the Realm' },
+  informants: { cover: '#5e1a14', cover2: '#3a0806', foil: FOIL, subtitle: 'Reports of the Field Agents' },
+  enforcement: { cover: '#232a12', cover2: '#141804', foil: FOIL, subtitle: 'Acts of the White-Gold Concordat' },
 };
 
 export const bindingVars = (slug: VolumeSlug) => {
@@ -58,6 +43,5 @@ export const bindingVars = (slug: VolumeSlug) => {
     '--cover': binding.cover,
     '--cover-2': binding.cover2,
     '--foil': binding.foil,
-    '--lettering': binding.lettering ?? binding.foil,
   } as React.CSSProperties;
 };

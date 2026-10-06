@@ -21,7 +21,7 @@ export const VOLUMES: readonly VolumeDefinition[] = [
   },
   {
     slug: 'statistics',
-    title: 'Order of Precedence',
+    title: 'Chain of Command',
     category: 'Personnel',
     // The Roster, not the Stats tab. These figures are counted off the register
     // itself rather than read from the sheet's hand-kept tallies, which had
@@ -33,7 +33,7 @@ export const VOLUMES: readonly VolumeDefinition[] = [
   },
   {
     slug: 'ledger',
-    title: 'Financial Ledger',
+    title: 'Ledger',
     category: 'Finance',
     tab: { exact: 'Ledger' },
     range: 'A1:N40',
@@ -41,7 +41,7 @@ export const VOLUMES: readonly VolumeDefinition[] = [
   },
   {
     slug: 'stipends',
-    title: 'Stipends Registry',
+    title: 'Registry',
     category: 'Finance',
     tab: { exact: 'Stipends' },
     range: 'A1:G40',
@@ -49,7 +49,7 @@ export const VOLUMES: readonly VolumeDefinition[] = [
   },
   {
     slug: 'honor',
-    title: 'Hall of Honor',
+    title: 'Hall of Honors',
     category: 'Honors & Calendar',
     tab: { exact: 'Hall of Honor' },
     range: 'A1:C40',
@@ -57,7 +57,7 @@ export const VOLUMES: readonly VolumeDefinition[] = [
   },
   {
     slug: 'calendar',
-    title: 'Tamrielic Calendar',
+    title: 'Calendar',
     category: 'Honors & Calendar',
     tab: { prefix: 'Tamrielic Calendar' },
     range: 'A1:AF40',
@@ -74,7 +74,7 @@ export const VOLUMES: readonly VolumeDefinition[] = [
 export const KEPT: readonly KeptVolume[] = [
   {
     slug: 'history',
-    title: 'History of the Realm',
+    title: 'Realm History',
     category: 'Chronicles',
   },
 ] as const;
@@ -92,13 +92,13 @@ export const SEALED: readonly SealedVolume[] = [
     // the browser bundle is readable without ever answering the gate. It is
     // NOT behind a second word — every admitted member may read it.
     slug: 'enforcement',
-    title: 'Ledger of Enforcement',
+    title: 'Arrests',
     category: 'Chronicles',
     route: '/api/enforcement',
   },
   {
     slug: 'informants',
-    title: 'Thalmor Chronicles',
+    title: 'Chronicles',
     category: 'Chronicles',
     route: '/api/chronicle',
   },

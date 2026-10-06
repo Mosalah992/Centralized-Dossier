@@ -39,7 +39,7 @@ export function LedgerView() {
 
   return (
     <Page
-      title="Financial Ledger"
+      title="Ledger"
       subtitle="Weekly Disbursements & Expenses"
       tab={volume.value.tab}
       fetchedAtUtc={volume.value.fetchedAtUtc}
@@ -131,7 +131,7 @@ export function StipendsView() {
 
   return (
     <Page
-      title="Imperial Mint Stipend Registry"
+      title="Registry"
       subtitle="Receipts & Expenditure"
       tab={volume.value.tab}
       fetchedAtUtc={volume.value.fetchedAtUtc}

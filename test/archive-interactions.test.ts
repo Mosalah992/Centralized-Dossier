@@ -79,10 +79,12 @@ describe('interaction boundaries', () => {
     }
   });
 
-  it('retains the requested sidebar preference key and mobile dismissal controls', () => {
-    const app = read('web/src/App.tsx');
+  it('slides the desktop rail open on hover or focus and keeps mobile dismissal controls', () => {
     const sidebar = read('web/src/components/ArchiveSidebar.tsx');
-    expect(app).toContain('thalmor.sidebar.expanded');
+    const navigationCss = read('web/src/styles/archive-navigation.css');
+    expect(sidebar).toContain('onMouseEnter');
+    expect(sidebar).toContain('const expanded = hovered || focused');
+    expect(navigationCss).toContain('--archive-nav-open');
     expect(sidebar).toContain("event.key === 'Escape'");
     expect(sidebar).toContain('archive-sidebar__backdrop');
     expect(sidebar).toContain("document.body.style.overflow = 'hidden'");
