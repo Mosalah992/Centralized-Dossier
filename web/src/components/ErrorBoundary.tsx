@@ -5,6 +5,7 @@
 
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { Notice } from './Notice';
+import { isChunkLoadError, reloadForNewBuild } from '../stale-build';
 
 interface Props {
   children: ReactNode;
@@ -33,6 +34,8 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   override componentDidCatch(error: Error, info: ErrorInfo) {
+    // Not damage, just an older build than the server's: fetch the current one.
+    if (isChunkLoadError(error) && reloadForNewBuild()) return;
     // Keep the component stack in the console for diagnosis; the reader gets
     // the notice above, not a stack trace.
     console.error('Volume failed to render:', error, info.componentStack);
