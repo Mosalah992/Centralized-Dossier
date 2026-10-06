@@ -74,7 +74,7 @@ All new volumes must be explicitly classified before implementation. Do not add 
 5. Shared KV IDs in root and `chronicler/wrangler.toml` must match.
 6. No broad CSS/design-system migration: custom CSS remains authoritative; Fluent v9 is limited to interactive controls through `web/src/fluent/`.
 7. Motion uses GSAP via `web/src/motion.ts`; anime.js is only for the calendar instruments and must stay out of the entry chunk.
-8. Browser security headers are applied by root middleware from `functions/lib/security.ts` and mirrored in `public/_headers`; neither layer may overwrite route-owned cache or `Vary` headers.
+8. Browser security headers are applied by root middleware from `functions/lib/security.ts` and mirrored in `public/_headers`; neither layer may overwrite route-owned cache or `Vary` headers. The same middleware turns an HTML fallback under `/assets/` into an uncacheable 404, so a mid-deploy miss is never cached as an immutable asset.
 
 ## Operations
 
