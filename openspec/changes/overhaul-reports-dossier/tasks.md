@@ -12,12 +12,12 @@
 
 ## Phase 2 — Finding and linking
 
-- [ ] Extend `parseReportsQuery` with `q`, `subcategory`, `from`, `to` (validation + wildcard escaping) and tests.
-- [ ] Move `json()` and the writ check into `functions/lib/reports.ts`; add `[id].ts` and `summary.ts`.
+- [x] Extend `parseReportsQuery` with `q`, `subcategory`, `from`, `to` (validation + wildcard escaping) and tests.
+- [x] Move `json()` and the writ check into `functions/lib/reports.ts`; add `[id].ts` and `summary.ts`.
 - [ ] Migration `0004_reports_lookup.sql`; apply to D1 (`--remote`) after review.
-- [ ] Header tests: every new route and status (200/401/404/empty) carries `private, no-store` and `Vary: Cookie`; 401 carries no data.
-- [ ] Router: `/reports/:id`; URL-held filter state with `replaceState`.
-- [ ] Reader: search box, subcategory and date controls, summary line, desks-without-classification list, deep links.
+- [x] Header tests: every new route and status (200/401/404/empty) carries `private, no-store` and `Vary: Cookie`; 401 carries no data.
+- [x] Router: `/reports/:id`; URL-held filter state with `replaceState`.
+- [x] Reader: search box, subcategory and date controls, summary line, desks-without-classification list, deep links.
 - [ ] Typecheck, tests, build; preview with a real writ; deploy; verify production, including an unauthenticated request to each new route returning 401.
 
 ## Phase 3 — Attribution

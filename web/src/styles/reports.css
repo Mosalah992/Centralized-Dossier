@@ -74,6 +74,113 @@
 
 .reports-dossier__motto::after { transform: scaleX(-1); }
 
+.reports-dossier__summary {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem 1.4rem;
+  margin: 1rem 0 0;
+  font-family: var(--display);
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--parchment) 78%, var(--stone));
+}
+
+.reports-dossier__summary span + span::before {
+  content: '◆';
+  margin-right: 1.4rem;
+  font-size: 0.45rem;
+  vertical-align: 0.15em;
+  color: var(--gold);
+}
+
+/* Search and the finer filters, set as one ruled line on the board. */
+.reports-dossier__search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: center;
+  gap: 0.7rem 1rem;
+  margin: 0 0 1rem;
+}
+
+.reports-dossier__search label {
+  display: grid;
+  gap: 0.3rem;
+  font-family: var(--display);
+  font-size: 0.56rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--gold) 72%, var(--stone));
+}
+
+.reports-dossier__search-text { flex: 1 1 16rem; }
+
+.reports-dossier__search input,
+.reports-dossier__search select {
+  min-height: 2.3rem;
+  padding: 0.35rem 0.6rem;
+  color: var(--parchment);
+  font: 0.95rem var(--serif);
+  color-scheme: dark;
+  background: rgb(0 0 0 / 0.28);
+  border: 1px solid rgb(197 161 105 / 0.32);
+  border-radius: 2px;
+}
+
+.reports-dossier__search input:focus-visible,
+.reports-dossier__search select:focus-visible {
+  outline: 2px solid var(--gold-bright);
+  outline-offset: 1px;
+}
+
+.reports-dossier__clear {
+  padding: 0.5rem 0;
+  color: color-mix(in srgb, var(--gold) 80%, var(--parchment));
+  font-family: var(--display);
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  cursor: pointer;
+}
+
+.reports-dossier__lagging { margin-top: 1rem; padding-top: 0.9rem; border-top: 1px solid rgb(197 161 105 / 0.22); }
+
+.reports-dossier__lagging-head {
+  margin: 0 0 0.5rem !important;
+  font-family: var(--display);
+  font-size: 0.58rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.reports-dossier__lagging ul { display: grid; gap: 0.3rem; margin: 0; padding: 0; list-style: none; }
+
+.reports-dossier__lagging button {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.2rem 1rem;
+  width: 100%;
+  padding: 0.35rem 0.5rem;
+  color: var(--parchment);
+  font: 0.92rem var(--serif);
+  text-align: left;
+  text-transform: capitalize;
+  background: none;
+  border: 0;
+  border-bottom: 1px dotted rgb(197 161 105 / 0.25);
+  cursor: pointer;
+}
+
+.reports-dossier__lagging button span { font-style: italic; text-transform: none; color: color-mix(in srgb, var(--gold) 70%, var(--stone)); }
+.reports-dossier__lagging button:hover { background: rgb(197 161 105 / 0.08); }
+
 /* The doctrine, as a plate set into the board. */
 .reports-dossier__standard {
   margin: 0 auto 1.4rem;
@@ -111,12 +218,12 @@
 
 .reports-dossier__standard dl {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
   gap: 0.6rem 1.2rem;
   margin: 0.4rem 0 0;
 }
 
-.reports-dossier__standard dl div { display: grid; grid-template-columns: 9.5rem 1fr; align-items: center; gap: 0.6rem; }
+.reports-dossier__standard dl div { display: grid; grid-template-columns: 10.5rem 1fr; align-items: center; gap: 0.8rem; }
 .reports-dossier__standard dt { margin: 0; }
 .reports-dossier__standard dd { margin: 0; font-size: 0.9rem; }
 
@@ -219,6 +326,7 @@
   color: inherit;
   font: inherit;
   text-align: left;
+  text-decoration: none;
   background: transparent;
   border: 0;
   cursor: pointer;

@@ -90,7 +90,7 @@ describe('interaction boundaries', () => {
     const reportsCss = read('web/src/styles/reports.css');
     expect(reports).toContain('function LiquidNav');
     expect(reports).toContain('ResizeObserver');
-    expect(reports).toContain('aria-pressed={category === name}');
+    expect(reports).toContain('aria-pressed={filters.category === name}');
     expect(reportsCss).toContain('.reports-liquid-nav::before');
     expect(reportsCss).toContain('@keyframes reports-liquid-settle');
     expect(reportsCss).toContain('border-radius: 2px');

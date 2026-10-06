@@ -8,7 +8,7 @@ import { ALL_SLUGS } from '../../shared/volumes';
 
 export type Route =
   | { name: 'shelf' }
-  | { name: 'reports' }
+  | { name: 'reports'; id?: string }
   | { name: 'volume'; slug: VolumeSlug }
   | { name: 'editor' }
   | { name: 'missing' };
@@ -17,6 +17,9 @@ export function parse(pathname: string): Route {
   const path = pathname.replace(/\/+$/, '');
   if (path === '' || path === '/') return { name: 'shelf' };
   if (path === '/reports') return { name: 'reports' };
+  // One filing, addressed by its id. Opens behind the same gate as the register.
+  const filing = /^\/reports\/(\d{1,24})$/.exec(path);
+  if (filing) return { name: 'reports', id: filing[1]! };
 
   /*
    * The Archives Editor, and ONLY while the dev server is running.

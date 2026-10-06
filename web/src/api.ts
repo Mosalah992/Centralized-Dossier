@@ -196,13 +196,47 @@ export interface Report {
 
 export interface ReportsResponse { reports: Report[]; nextCursor: string | null; }
 
-export const useReports = (unlocked: boolean, category: string | null, severity: ReportSeverity | null, cursor: string | null) => {
+/** The reader's filters. Held in the page URL too, so a view can be shared. */
+export interface ReportsFilters {
+  category: string | null;
+  subcategory: string | null;
+  severity: ReportSeverity | null;
+  q: string | null;
+  from: string | null;
+  to: string | null;
+}
+
+export const NO_REPORT_FILTERS: ReportsFilters = {
+  category: null, subcategory: null, severity: null, q: null, from: null, to: null,
+};
+
+/** Filters as query parameters, in a fixed order so equal views share a URL. */
+export function reportsFilterQuery(filters: ReportsFilters): URLSearchParams {
   const query = new URLSearchParams();
-  if (category) query.set('category', category);
-  if (severity) query.set('severity', severity);
+  for (const key of ['category', 'subcategory', 'severity', 'q', 'from', 'to'] as const) {
+    const value = filters[key];
+    if (value) query.set(key, value);
+  }
+  return query;
+}
+
+export const useReports = (unlocked: boolean, filters: ReportsFilters, cursor: string | null) => {
+  const query = reportsFilterQuery(filters);
   if (cursor) query.set('cursor', cursor);
   return useAsync<ReportsResponse>(unlocked ? `/api/reports${query.size ? `?${query}` : ''}` : null);
 };
+
+export const useReport = (unlocked: boolean, id: string | null) =>
+  useAsync<{ report: Report }>(unlocked && id ? `/api/reports/${encodeURIComponent(id)}` : null);
+
+export interface ReportsSummary {
+  total: { category: string; severity: ReportSeverity; count: number }[];
+  week: { category: string; severity: ReportSeverity; count: number }[];
+  desks: { category: string; subcategory: string | null; filed: number; unassessed: number }[];
+}
+
+export const useReportsSummary = (unlocked: boolean) =>
+  useAsync<ReportsSummary>(unlocked ? '/api/reports/summary' : null);
 
 export async function reportsIsOpen(): Promise<boolean> {
   try {

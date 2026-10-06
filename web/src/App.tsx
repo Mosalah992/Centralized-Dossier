@@ -176,7 +176,7 @@ export default function App() {
           {route.name === 'reports' && (
             <ErrorBoundary resetKey="reports">
               <Suspense fallback={<Consulting />}>
-                <ReportsView />
+                <ReportsView filingId={route.id ?? null} onNavigate={navigate} />
               </Suspense>
             </ErrorBoundary>
           )}
