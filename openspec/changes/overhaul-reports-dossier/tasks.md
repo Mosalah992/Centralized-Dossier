@@ -14,7 +14,7 @@
 
 - [x] Extend `parseReportsQuery` with `q`, `subcategory`, `from`, `to` (validation + wildcard escaping) and tests.
 - [x] Move `json()` and the writ check into `functions/lib/reports.ts`; add `[id].ts` and `summary.ts`.
-- [ ] Migration `0004_reports_lookup.sql`; apply to D1 (`--remote`) after review.
+- [x] Migration `0004_reports_lookup.sql`; apply to D1 (`--remote`) after review.
 - [x] Header tests: every new route and status (200/401/404/empty) carries `private, no-store` and `Vary: Cookie`; 401 carries no data.
 - [x] Router: `/reports/:id`; URL-held filter state with `replaceState`.
 - [x] Reader: search box, subcategory and date controls, summary line, desks-without-classification list, deep links.
@@ -26,7 +26,7 @@
 - [x] Reporter: fetch roster once per run; resolve; pass a roster-loaded flag; `COALESCE` upsert when the roster failed.
 - [x] Assert in tests that no Discord identifier reaches the upsert bindings.
 - [x] Reader: "Filed by <name>" on attributed filings only.
-- [ ] Deploy the reporter; trigger one run; verify on production that attributed filings show names and D1 holds no handles (`SELECT` spot-check of `author_name` values against roster names).
+- [x] Deploy the reporter; trigger one run; verify on production that attributed filings show names and D1 holds no handles (`SELECT` spot-check of `author_name` values against roster names).
 
 ## Records
 
