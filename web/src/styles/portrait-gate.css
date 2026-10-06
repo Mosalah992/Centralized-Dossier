@@ -68,3 +68,12 @@
 @media (max-width: 680px) { .portrait-gate { gap: 1.2rem; min-height: 0; padding-block: 2.4rem; } .portrait-gate__stage { width: min(70vw, 18rem); } .portrait-gate__copy { width: min(100%, 18rem); } }
 @media (max-width: 480px) and (max-height: 900px) { .portrait-gate { gap: 1rem; padding-block: 1.5rem 3rem; } .portrait-gate__stage { width: min(48vw, 12rem); } .portrait-gate__dialogue { margin-block: .75rem .5rem; } }
 @media (prefers-reduced-motion: reduce) { .portrait-gate__door, .portrait-gate__threshold, .portrait-gate__reaction, .portrait-gate__aura, .portrait-gate__form button { transition: none; } .portrait-gate__idle, .portrait-gate__reaction { opacity: 0 !important; } .portrait-gate__stage, .portrait-gate__eyebrow, .portrait-gate__copy h1, .portrait-gate__description, .portrait-gate__dialogue, .portrait-gate__form, .portrait-gate__form input, .portrait-gate__status { animation: none; } .portrait-gate[data-state='opening'] .portrait-gate__door, .portrait-gate[data-state='open'] .portrait-gate__door { transform: none; opacity: 0; } .portrait-gate[data-state='opening'] .portrait-gate__threshold, .portrait-gate[data-state='open'] .portrait-gate__threshold { opacity: 1; } }
+
+/* The title above the portrait: allegiance in small tracked gold, then the
+   volume's name, in the hall's display face. */
+.portrait-gate__title { display: grid; justify-items: center; gap: .5rem; text-align: center; animation: portrait-gate-copy-arrive .5s var(--ease) both; }
+.portrait-gate__allegiance { display: flex; align-items: center; gap: .9rem; margin: 0; font-family: var(--display); font-size: .66rem; letter-spacing: .32em; text-transform: uppercase; color: var(--portrait-gold); }
+.portrait-gate__allegiance::before, .portrait-gate__allegiance::after { content: ''; width: clamp(1.5rem, 5vw, 3.5rem); height: 1px; background: linear-gradient(90deg, transparent, rgb(201 169 83 / .7)); }
+.portrait-gate__allegiance::after { transform: scaleX(-1); }
+.portrait-gate__title h1 { margin: 0; color: var(--gold-bright); font-size: clamp(1.6rem, 3.6vw, 2.6rem); letter-spacing: .12em; line-height: 1.1; text-shadow: 0 2px 14px rgb(0 0 0 / .7); }
+@media (prefers-reduced-motion: reduce) { .portrait-gate__title { animation: none; } }

@@ -409,6 +409,10 @@ export function PortraitGate({
       aria-busy={authState === 'checking'}
     >
       {sky && <NirnSky />}
+      <header className="portrait-gate__title">
+        <p className="portrait-gate__allegiance">Third Aldmeri Dominion</p>
+        <h1>{collection}</h1>
+      </header>
       <div className="portrait-gate__stage" aria-hidden="true">
         <div className="portrait-gate__threshold">
           <p>The seal is lifted</p>
@@ -456,12 +460,11 @@ export function PortraitGate({
       </div>
 
       {/* The portrait stands alone, with only the field beneath it. The words
-          that used to sit beside it are still here for anyone reading the
-          gate with assistive technology: the collection as the page heading,
-          its description, and Ancarion's spoken line as a live region. */}
+          that used to sit beside it — the eyebrow, the description and
+          Ancarion's spoken line, as a live region — are still here for anyone
+          reading the gate with assistive technology. */}
       <div className="portrait-gate__copy">
         <p className="portrait-gate__eyebrow sr-only">{eyebrow} · Keeper of the threshold</p>
-        <h1 className="sr-only">{collection}</h1>
         <p className="portrait-gate__description sr-only">{description}</p>
         <p className="portrait-gate__dialogue sr-only" aria-live="polite">
           {dialogue}

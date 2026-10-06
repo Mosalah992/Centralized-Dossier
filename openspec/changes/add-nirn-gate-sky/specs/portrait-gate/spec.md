@@ -4,7 +4,7 @@ How the sealed volumes' shared portrait gate is presented, and the setting drawn
 ## ADDED Requirements
 
 ### Requirement: Centred portrait gate
-The portrait gate SHALL present Ancarion's portrait centred, with the passphrase field, its submit button and a status line beneath it, and SHALL NOT show a visible title, description or dialogue panel beside the portrait. The collection name, field label and Ancarion's line SHALL remain available to assistive technology.
+The portrait gate SHALL present Ancarion's portrait centred, beneath a title of "Third Aldmeri Dominion" and the collection name, with the passphrase field, its submit button and a status line below it, and SHALL NOT show a description or dialogue panel beside the portrait. The collection name, field label and Ancarion's line SHALL remain available to assistive technology.
 
 #### Scenario: Reports gate
 - **WHEN** a reader without a Reports writ opens `/reports`
