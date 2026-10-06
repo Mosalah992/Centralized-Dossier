@@ -8,7 +8,7 @@
 - [x] Add the "Awaiting assessment" view.
 - [x] Page-turn motion through `motion.ts`; reduced motion gets a cut.
 - [x] `npm run typecheck`, `npm test`, `npm run build`.
-- [ ] Verify on a `*.pages.dev` preview with a real Reports writ (desktop, phone, reduced motion); deploy; verify on production (deployment URL first, then domain).
+- [x] Verify on a `*.pages.dev` preview with a real Reports writ (desktop, phone, reduced motion); deploy; verify on production (deployment URL first, then domain).
 
 ## Phase 2 — Finding and linking
 
@@ -18,7 +18,7 @@
 - [x] Header tests: every new route and status (200/401/404/empty) carries `private, no-store` and `Vary: Cookie`; 401 carries no data.
 - [x] Router: `/reports/:id`; URL-held filter state with `replaceState`.
 - [x] Reader: search box, subcategory and date controls, summary line, desks-without-classification list, deep links.
-- [ ] Typecheck, tests, build; preview with a real writ; deploy; verify production, including an unauthenticated request to each new route returning 401.
+- [x] Typecheck, tests, build; preview with a real writ; deploy; verify production, including an unauthenticated request to each new route returning 401.
 
 ## Phase 3 — Attribution
 
@@ -31,3 +31,10 @@
 ## Records
 
 - [x] Update `CODEX.md`, `knowledge/Architecture.md`, `knowledge/Integration Contracts.md` and the Decision Log (attribution rule, search approach, new routes).
+
+## Verified against production (2026-10-06)
+
+- `/api/reports`, `/api/reports/summary` and `/api/reports/:id` return 401 with `Cache-Control: private, no-store` and `Vary: Cookie` without a writ, on the deployment URL and on thalmor-archives.com.
+- `reports_subcategory_timestamp` index present in the production D1.
+- One collector run signed 43 of 59 filings; all 12 distinct `author_name` values are exact roster names; none is a handle or a Discord id.
+- The site owner opened `/reports` with the real passphrase and confirmed the dossier, search, filing pages and phone layout work.
