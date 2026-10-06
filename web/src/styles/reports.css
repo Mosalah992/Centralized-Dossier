@@ -1,32 +1,363 @@
-.reports-reader { width: min(92vw, 52rem); margin: 4rem auto; padding: clamp(1.5rem, 5vw, 3.5rem); color: var(--ink); background: linear-gradient(135deg, var(--parchment), var(--parchment-2)); border: 1px solid color-mix(in srgb, var(--gold) 55%, transparent); box-shadow: 0 12px 42px rgba(0,0,0,.36), inset 0 0 0 .35rem rgb(90 70 35 / .08); }
-.reports-reader__class, .report__meta { margin: 0 0 .5rem; font-family: var(--display); font-size: .65rem; letter-spacing: .2em; text-transform: uppercase; color: color-mix(in srgb, var(--ink-soft) 75%, var(--gold)); }
-.reports-reader h1 { font-size: clamp(1.5rem, 5vw, 2.25rem); }
-.reports-reader__categories button, .reports-reader__more { padding:.55rem .85rem; color:var(--ink); font:inherit; background:transparent; border:1px solid color-mix(in srgb, var(--ink-soft) 35%, transparent); cursor:pointer; }
-.reports-reader__categories { display:flex; gap:.5rem; flex-wrap:wrap; margin:1.5rem 0; }
-.reports-reader__categories .is-active { color:var(--parchment); }
-.reports-reader__empty { color:var(--ink-soft); font-style:italic; }
-.report { padding:0; border-top:1px solid rgb(90 70 35 / .25); }
-.report__title { display:block; font-family:var(--display); font-size:1.05rem; font-weight:600; letter-spacing:.08em; }
-.report p { white-space:pre-wrap; }
-.report__meta { display:flex; gap:.7rem; }
-.report__meta time { margin-left:auto; letter-spacing:.08em; }
-.report__author { font-style:italic; }
-.reports-reader__more { margin-top:1rem; padding:.55rem .85rem; color:var(--ink); font:inherit; background:transparent; border:1px solid color-mix(in srgb, var(--ink-soft) 35%, transparent); cursor:pointer; }
+/* High Command Reports, bound as a dossier.
 
-.reports-reader__standard { margin:1.2rem 0 0; padding:.8rem 1rem; border-block:1px solid rgb(90 70 35 / .24); }
-.reports-reader__standard summary { cursor:pointer; font-family:var(--display); font-size:.65rem; letter-spacing:.15em; text-transform:uppercase; color:var(--ink-soft); }
-.reports-reader__standard p { margin:.75rem 0; }
-.reports-reader__standard .reports-reader__severity-note { padding:.65rem .75rem; color:var(--ink-soft); background:rgb(90 70 35 / .055); border-left:2px solid color-mix(in srgb, var(--gold) 58%, var(--ink-soft)); }
-.reports-reader__severity-note code { padding:.05rem .22rem; color:var(--ink); font-family:ui-monospace, SFMono-Regular, Consolas, monospace; font-size:.78em; background:rgb(90 70 35 / .08); }
-.reports-reader__standard dl { display:grid; grid-template-columns:repeat(auto-fit, minmax(12rem, 1fr)); gap:.4rem 1rem; margin:0; }
-.reports-reader__standard dl div { display:grid; grid-template-columns:auto 1fr; gap:.45rem; }
-.reports-reader__standard dt { font-family:var(--display); font-size:.58rem; letter-spacing:.13em; text-transform:uppercase; color:var(--ink-soft); }
-.reports-reader__standard dd { margin:0; font-size:.88rem; }
-.reports-reader__categories, .reports-reader__severities { display:flex; gap:.5rem; flex-wrap:wrap; margin:1.5rem 0; }
-.reports-reader__severities { align-items:center; margin-top:-.75rem; }
-.reports-reader__severities > span { font-family:var(--display); font-size:.62rem; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-soft); }
-.reports-reader__categories .is-active, .reports-reader__severities .is-active { color:var(--parchment); background:transparent; }
-.reports-reader__severities button { padding:.45rem .6rem; color:var(--severity-ink, var(--ink)); font-family:var(--display); font-size:.58rem; letter-spacing:.1em; line-height:1; text-transform:uppercase; background:transparent; border:1px solid color-mix(in srgb, var(--severity-ink, var(--ink-soft)) 35%, transparent); cursor:pointer; }
+   The same material as the Chronicles book, so the two sealed volumes read as
+   one Embassy's work: a dark leather board with a gilt rule, and parchment
+   leaves on it. The board carries the title and the doctrine; the leaves carry
+   the filings. Nothing here is a card, a glass panel or a dashboard tile. */
+
+.reports-dossier {
+  width: min(92vw, 60rem);
+  margin: clamp(1.5rem, 4vw, 3rem) auto 4rem;
+  padding: clamp(1.4rem, 4vw, 3rem);
+  color: var(--parchment);
+  background: radial-gradient(ellipse at 30% 20%, #3a2f22, #17120c 78%);
+  border-radius: 6px;
+  box-shadow:
+    inset 0 0 0 3px rgb(197 161 105 / 0.28),
+    inset 0 0 0 9px rgb(23 18 12 / 0.9),
+    inset 0 0 0 10px rgb(197 161 105 / 0.16),
+    0 26px 48px rgb(0 0 0 / 0.55);
+}
+
+.reports-dossier__head {
+  display: grid;
+  justify-items: center;
+  padding-block: 0.5rem 1.6rem;
+  text-align: center;
+}
+
+.reports-dossier__seal {
+  width: clamp(3.6rem, 7vw, 5rem);
+  height: auto;
+  margin-bottom: 0.9rem;
+  filter: drop-shadow(0 6px 10px rgb(0 0 0 / 0.6));
+}
+
+.reports-dossier__class,
+.report__meta,
+.report-page__eyebrow {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.reports-dossier__class { color: color-mix(in srgb, var(--gold) 78%, var(--stone)); }
+
+.reports-dossier__head h1 {
+  margin: 0.55rem 0 0;
+  font-size: clamp(1.6rem, 4.4vw, 2.7rem);
+  letter-spacing: 0.14em;
+  color: var(--parchment);
+  text-shadow: 0 2px 14px rgb(0 0 0 / 0.6);
+}
+
+.reports-dossier__motto {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  width: min(32rem, 100%);
+  margin: 0.9rem 0 0;
+  font-family: var(--serif);
+  font-style: italic;
+  color: color-mix(in srgb, var(--gold) 70%, var(--parchment));
+}
+
+.reports-dossier__motto::before,
+.reports-dossier__motto::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--gold) 60%, transparent));
+}
+
+.reports-dossier__motto::after { transform: scaleX(-1); }
+
+/* The doctrine, as a plate set into the board. */
+.reports-dossier__standard {
+  margin: 0 auto 1.4rem;
+  padding: 0.85rem 1.1rem;
+  color: color-mix(in srgb, var(--parchment) 86%, var(--stone));
+  background: rgb(0 0 0 / 0.22);
+  border: 1px solid rgb(197 161 105 / 0.3);
+  border-radius: 3px;
+}
+
+.reports-dossier__standard summary {
+  cursor: pointer;
+  font-family: var(--display);
+  font-size: 0.64rem;
+  letter-spacing: 0.18em;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.reports-dossier__standard p { margin: 0.8rem 0; line-height: 1.6; }
+
+.reports-dossier__severity-note {
+  padding: 0.6rem 0.8rem;
+  border-left: 2px solid color-mix(in srgb, var(--gold) 60%, transparent);
+  background: rgb(197 161 105 / 0.06);
+}
+
+.reports-dossier__severity-note code {
+  padding: 0.05rem 0.25rem;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.8em;
+  background: rgb(197 161 105 / 0.12);
+}
+
+.reports-dossier__standard dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.6rem 1.2rem;
+  margin: 0.4rem 0 0;
+}
+
+.reports-dossier__standard dl div { display: grid; grid-template-columns: 9.5rem 1fr; align-items: center; gap: 0.6rem; }
+.reports-dossier__standard dt { margin: 0; }
+.reports-dossier__standard dd { margin: 0; font-size: 0.9rem; }
+
+/* The filter bar keeps the pressed-ink marker; on the board it is gilt on dark. */
+.reports-dossier__filters { display: grid; gap: 0.6rem; margin-bottom: 1.4rem; }
+
+.reports-dossier__categories,
+.reports-dossier__severities {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.reports-dossier__categories button,
+.reports-dossier__severities button,
+.reports-dossier__more {
+  padding: 0.5rem 0.8rem;
+  color: color-mix(in srgb, var(--parchment) 82%, var(--stone));
+  font-family: var(--display);
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: transparent;
+  border: 1px solid rgb(197 161 105 / 0.28);
+  cursor: pointer;
+}
+
+.reports-dossier__categories .is-active,
+.reports-dossier__severities .is-active { color: var(--parchment); }
+
+.reports-dossier__severities > span {
+  font-family: var(--display);
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--gold) 70%, var(--stone));
+}
+
+/* ── The leaves ─────────────────────────────────────────────────────────── */
+
+.reports-dossier__ledger,
+.report-page {
+  position: relative;
+  color: #2a2016;
+  background:
+    radial-gradient(ellipse at 18% 12%, rgb(255 250 230 / 0.5), transparent 55%),
+    radial-gradient(ellipse at 85% 90%, rgb(122 88 40 / 0.2), transparent 60%),
+    radial-gradient(ellipse at 50% 50%, #e9dcba 55%, #d9c69a 100%);
+  border-radius: 3px;
+  box-shadow:
+    inset 0 0 46px rgb(94 66 28 / 0.35),
+    inset 0 0 6px rgb(94 66 28 / 0.3),
+    0 10px 24px rgb(0 0 0 / 0.4);
+}
+
+.reports-dossier__ledger { padding: clamp(1rem, 3vw, 2.2rem); }
+
+.reports-dossier__empty { margin: 1rem 0; text-align: center; font-style: italic; color: #5b4a33; }
+
+.reports-dossier__month + .reports-dossier__month { margin-top: 1.6rem; }
+
+.reports-dossier__month-head {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin: 0 0 0.6rem;
+  font-family: var(--display);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: #6b5333;
+}
+
+.reports-dossier__month-head::before,
+.reports-dossier__month-head::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(122 88 40 / 0.55));
+}
+
+.reports-dossier__month-head::after { transform: scaleX(-1); }
+
+/* One entry in the ledger: a ruled line, the severity in the margin. */
+.report {
+  --severity-mark: #756a5a;
+  border-left: 3px solid var(--severity-mark);
+  border-bottom: 1px solid rgb(94 66 28 / 0.18);
+  transition: background-color 0.25s var(--ease);
+}
+
+.report__open {
+  display: grid;
+  gap: 0.35rem;
+  width: 100%;
+  padding: 0.95rem 1rem 0.9rem;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.report:hover,
+.report:focus-within { background: rgb(94 66 28 / 0.07); }
+
+.report__meta { display: flex; gap: 0.8rem; color: #6b5333; }
+.report__meta time { margin-left: auto; letter-spacing: 0.08em; }
+
+.report__title {
+  font-family: var(--display);
+  font-size: 1.02rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: #241a10;
+}
+
+.report__excerpt {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #4d3e2a;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.report__foot { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 0.25rem; }
+
+.report__action {
+  font-family: var(--display);
+  font-size: 0.58rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--severity-mark);
+}
+
+.reports-dossier__pager { display: flex; justify-content: center; gap: 0.8rem; margin-top: 1.4rem; }
+.reports-dossier__pager:empty { display: none; }
+
+/* ── A filing, opened ───────────────────────────────────────────────────── */
+
+.reports-dossier--page { perspective: 2400px; }
+
+.report-page {
+  padding: clamp(1.4rem, 4vw, 3rem);
+  border-left: 4px solid var(--severity-mark);
+  transform-origin: left center;
+}
+
+.report-page__back {
+  display: inline-flex;
+  gap: 0.4rem;
+  margin-bottom: 1.4rem;
+  padding: 0;
+  color: #6b5333;
+  font-family: var(--display);
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.report-page__head { padding-bottom: 1.2rem; margin-bottom: 1.2rem; border-bottom: 1px solid rgb(94 66 28 / 0.3); }
+.report-page__eyebrow { color: #6b5333; }
+
+.report-page__head h2 {
+  margin: 0.5rem 0 0.8rem;
+  font-size: clamp(1.3rem, 3.2vw, 1.9rem);
+  letter-spacing: 0.06em;
+  line-height: 1.25;
+  color: #241a10;
+}
+
+.report-page__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; color: #5b4a33; font-style: italic; }
+
+.report-page__body { font-size: 1.04rem; line-height: 1.7; }
+.report-page__body p { margin: 0 0 1em; white-space: pre-line; }
+
+/* A template field, set as a line of the record: label in the margin. */
+.report-page__field {
+  display: grid;
+  grid-template-columns: minmax(7rem, 11rem) 1fr;
+  gap: 1rem;
+  margin: 0;
+  padding: 0.4rem 0;
+  border-bottom: 1px dotted rgb(94 66 28 / 0.3);
+}
+
+.report-page__field + p { margin-top: 1em; }
+.report-page__field dt {
+  font-family: var(--display);
+  font-size: 0.64rem;
+  letter-spacing: 0.14em;
+  line-height: 1.9;
+  text-transform: uppercase;
+  color: #6b5333;
+}
+.report-page__field dd { margin: 0; }
+
+.report-page__author {
+  margin: 1.8rem 0 0;
+  text-align: right;
+  font-style: italic;
+  color: #4d3e2a;
+}
+
+/* ── Classification stamps ──────────────────────────────────────────────── */
+
+/* Struck, not printed: a double-ruled frame in the level's ink, slightly
+   turned, with the word always written out so colour is never the only cue. */
+.report-stamp {
+  padding: 0.3rem 0.55rem;
+  border-width: 2px;
+  border-style: double;
+  border-radius: 2px;
+  transform: rotate(-2deg);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--severity-ink) 25%, transparent);
+}
+
+@media (max-width: 640px) {
+  .reports-dossier { width: 100%; padding: 1rem; }
+  .reports-dossier__standard dl div { grid-template-columns: 1fr; }
+  .report-page__field { grid-template-columns: 1fr; gap: 0.1rem; }
+  .report__meta { flex-wrap: wrap; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .report,
+  .reports-liquid-nav::before,
+  .reports-liquid-nav::after,
+  .reports-liquid-nav > button {
+    transition: none;
+    animation: none;
+  }
+}
 
 /* One pool of pressed ink moves under the active filing tab. Its geometry is
    measured only when a selection or layout changes; the motion itself remains
@@ -139,38 +470,3 @@
 .report--low { --severity-mark:#58703c; --severity-wash:rgb(88 112 60 / .085); }
 .report--informational { --severity-mark:#496b76; --severity-wash:rgb(73 107 118 / .085); }
 .report--unassessed { --severity-mark:#756a5a; --severity-wash:rgb(117 106 90 / .07); }
-.report .severity { margin-bottom:.45rem; }
-
-.report details { display:block; }
-.report summary { display:block; padding:1.15rem 1rem; cursor:pointer; list-style:none; }
-.report summary::-webkit-details-marker { display:none; }
-.report summary:hover, .report summary:focus-visible { background:color-mix(in srgb, var(--severity-mark) 8%, transparent); }
-.report details[open] { background:color-mix(in srgb, var(--severity-mark) 4%, transparent); }
-.report:hover, .report:focus-within { transform:translateY(-1px); box-shadow:0 .5rem 1rem rgb(50 35 12 / .08); }
-.report__excerpt { display:-webkit-box; margin-top:.55rem; overflow:hidden; color:var(--ink-soft); -webkit-box-orient:vertical; -webkit-line-clamp:2; line-clamp:2; }
-.report__action { display:flex; align-items:center; justify-content:flex-end; gap:.5rem; margin-top:.65rem; color:var(--severity-mark); font-family:var(--display); font-size:.56rem; letter-spacing:.12em; text-transform:uppercase; }
-.report__action > span[aria-hidden] { font-size:.9rem; transition:transform .3s var(--ease); }
-.report__action-close { display:none; }
-.report details[open] .report__excerpt { display:none; }
-.report details[open] .report__action-open { display:none; }
-.report details[open] .report__action-close { display:inline; }
-.report details[open] .report__action > span[aria-hidden] { transform:rotate(180deg); }
-.report__body { padding:0 1rem 1.25rem; border-top:1px solid rgb(90 70 35 / .12); animation:report-unfold .32s var(--ease) both; }
-.report__body::before { content:''; display:block; width:38%; height:1px; margin:0 auto .8rem; background:linear-gradient(90deg, transparent, var(--severity-mark), transparent); }
-
-@keyframes report-unfold {
-  from { opacity:0; transform:translateY(-.35rem); }
-  to { opacity:1; transform:none; }
-}
-
-@media (max-width: 700px) {
-  .reports-reader { width:min(92vw, 52rem); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .report, .report__action > span[aria-hidden], .report__body,
-  .reports-liquid-nav::before, .reports-liquid-nav::after, .reports-liquid-nav > button {
-    transition:none;
-    animation:none;
-  }
-}

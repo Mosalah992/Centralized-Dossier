@@ -129,3 +129,42 @@ export interface StoredReport {
   sourceChannelId: string;
   authorName: string | null;
 }
+
+/**
+ * A filing's body as the template it was written in: `Label: value` lines as
+ * fields, everything else as prose, in the order they were filed.
+ *
+ * PRESENTATIONAL ONLY. Nothing is dropped, merged across a field, or reordered —
+ * a block that is not a field stays exactly as written — so the reader can lay
+ * out an official template as a record without ever hiding a line of it. The
+ * label shape is narrow on purpose (a capitalised label of at most 32
+ * characters, then a colon and a value on the same line) so narrative prose
+ * that happens to contain a colon is left as prose.
+ */
+export type ReportBlock =
+  | { kind: 'field'; label: string; value: string }
+  | { kind: 'prose'; text: string };
+
+const FIELD = /^([A-Z][\w /&'()-]{0,31}):\s+(\S.*)$/;
+
+export function parseReportRecord(body: string): ReportBlock[] {
+  const blocks: ReportBlock[] = [];
+  let prose: string[] = [];
+  const flush = () => {
+    const text = prose.join('\n').replace(/^\n+|\n+$/g, '');
+    if (text) blocks.push({ kind: 'prose', text });
+    prose = [];
+  };
+
+  for (const line of body.split(/\r?\n/)) {
+    const match = FIELD.exec(line.trim());
+    if (match) {
+      flush();
+      blocks.push({ kind: 'field', label: match[1]!.trim(), value: match[2]!.trim() });
+    } else {
+      prose.push(line);
+    }
+  }
+  flush();
+  return blocks;
+}
