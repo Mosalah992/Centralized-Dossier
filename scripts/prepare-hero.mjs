@@ -25,7 +25,7 @@ const OUT = path.join(ROOT, 'web', 'src', 'assets', 'hero');
 fs.mkdirSync(OUT, { recursive: true });
 
 for (const width of [1280, 1920]) {
-  const out = path.join(OUT, `portrait-${width}.webp`);
+  const out = path.join(OUT, `embassy-${width}.webp`);
   const result = await sharp(path.join(SRC, 'portrait 4.JPG'))
     .resize({ width, kernel: 'lanczos3' })
     .webp({ quality: 82, effort: 6 })
