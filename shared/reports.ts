@@ -168,3 +168,44 @@ export function parseReportRecord(body: string): ReportBlock[] {
   flush();
   return blocks;
 }
+
+// ── Attribution ─────────────────────────────────────────────────────────────
+//
+// A filing is signed with its filer's in-world name, never their Discord
+// identity. The roster already records each member's handles beside their
+// character name, so the collector resolves the one to the other in memory
+// and stores only the name. A handle two members both claim resolves to no
+// one: an archive that guesses a signature is worse than one that leaves the
+// line blank.
+
+/** Handle → in-world name, or null where the handle is claimed twice. */
+export type FilerIndex = ReadonlyMap<string, string | null>;
+
+export function buildFilerIndex(members: readonly { name: string; discord: readonly string[] }[]): FilerIndex {
+  const index = new Map<string, string | null>();
+  for (const member of members) {
+    const name = member.name.trim();
+    if (!name) continue;
+    for (const raw of member.discord) {
+      const handle = raw.trim().replace(/^@+/, '').toLowerCase();
+      if (!handle) continue;
+      const known = index.get(handle);
+      index.set(handle, known === undefined || known === name ? name : null);
+    }
+  }
+  return index;
+}
+
+/** The filer's in-world name, or null when no single member matches. */
+export function resolveFiler(
+  author: Pick<DiscordReportMessage['author'], 'username' | 'global_name'>,
+  index: FilerIndex,
+): string | null {
+  for (const candidate of [author.username, author.global_name]) {
+    const handle = candidate?.trim().replace(/^@+/, '').toLowerCase();
+    if (!handle) continue;
+    const name = index.get(handle);
+    if (name) return name;
+  }
+  return null;
+}

@@ -2,7 +2,14 @@
 // Reports D1 database; it has no route, never posts to Discord, and never serves
 // report text. Pages is the only reader-facing boundary.
 
-import { filterReportMessage, type DiscordReportMessage, type StoredReport } from '../../shared/reports';
+import {
+  buildFilerIndex,
+  filterReportMessage,
+  resolveFiler,
+  type DiscordReportMessage,
+  type FilerIndex,
+  type StoredReport,
+} from '../../shared/reports';
 import { REPORT_CATEGORIES } from './config';
 import {
   DISCORD_FORUM_CHANNEL_TYPE,
@@ -15,6 +22,30 @@ interface Env {
   REPORTS: D1Database;
   DISCORD_BOT_TOKEN?: string;
   DISCORD_GUILD_ID: string;
+  /** The archive's own public roster endpoint; overridable for a preview. */
+  ROSTER_URL?: string;
+}
+
+const DEFAULT_ROSTER_URL = 'https://thalmor-archives.com/api/volumes/roster';
+
+/**
+ * Handles → in-world names, read once per run from the archive's public roster
+ * endpoint: the same data any reader of the site already sees, so the
+ * collector needs no Sheets credentials of its own. Null when it cannot be
+ * read, which the upsert treats as "keep the names already on record".
+ */
+async function filerIndex(env: Env): Promise<FilerIndex | null> {
+  try {
+    const response = await fetch(env.ROSTER_URL ?? DEFAULT_ROSTER_URL, {
+      headers: { Accept: 'application/json', 'User-Agent': 'ThalmorReports/1.0' },
+    });
+    if (!response.ok) return null;
+    const body = (await response.json()) as { data?: { members?: { name: string; discord: string[] }[] } };
+    const members = body.data?.members;
+    return Array.isArray(members) ? buildFilerIndex(members) : null;
+  } catch {
+    return null;
+  }
 }
 
 async function discord<T>(token: string, path: string): Promise<T | null> {
@@ -44,7 +75,11 @@ async function messagesFor(token: string, channel: DiscordChannel): Promise<Disc
   return pages.flatMap((page) => page ?? []);
 }
 
-function upsert(database: D1Database, report: StoredReport): D1PreparedStatement {
+// With the roster read, its answer is the record: a member who has left the
+// roster stops signing their filings on the next run. Without it, a run must
+// not erase names it simply could not check.
+function upsert(database: D1Database, report: StoredReport, rosterRead: boolean): D1PreparedStatement {
+  const author = rosterRead ? 'excluded.author_name' : 'COALESCE(excluded.author_name, reports.author_name)';
   return database.prepare(`
     INSERT INTO reports (
       id, category, subcategory, severity, title, body, timestamp,
@@ -58,7 +93,7 @@ function upsert(database: D1Database, report: StoredReport): D1PreparedStatement
       body = excluded.body,
       timestamp = excluded.timestamp,
       source_channel_id = excluded.source_channel_id,
-      author_name = excluded.author_name,
+      author_name = ${author},
       edited_at = excluded.edited_at
   `).bind(
     report.id, report.category, report.subcategory, report.severity, report.title, report.body,
@@ -67,7 +102,15 @@ function upsert(database: D1Database, report: StoredReport): D1PreparedStatement
   );
 }
 
-export interface CollectResult { scanned: number; stored: number; dropped: number; unavailable: boolean; }
+export interface CollectResult {
+  scanned: number;
+  stored: number;
+  dropped: number;
+  unavailable: boolean;
+  /** Counts only: how many filings were signed, never by whom. */
+  attributed?: number;
+  rosterRead?: boolean;
+}
 
 export async function collectReports(env: Env): Promise<CollectResult> {
   const token = env.DISCORD_BOT_TOKEN;
@@ -75,6 +118,7 @@ export async function collectReports(env: Env): Promise<CollectResult> {
 
   const channels = await discord<DiscordChannel[]>(token, `/guilds/${env.DISCORD_GUILD_ID}/channels`);
   if (!channels) return { scanned: 0, stored: 0, dropped: 0, unavailable: true };
+  const filers = await filerIndex(env);
   const pending: StoredReport[] = [];
   let scanned = 0;
   let dropped = 0;
@@ -99,15 +143,25 @@ export async function collectReports(env: Env): Promise<CollectResult> {
           timestamp: message.timestamp,
           sourceMessageId: message.id,
           sourceChannelId: source.id,
-          // Discord handles are intentionally neither stored nor exposed.
-          authorName: null,
+          // Only the in-world name the roster gives for this filer leaves
+          // memory. The handle it was matched on is never stored.
+          authorName: filers ? resolveFiler(message.author, filers) : null,
         });
       }
     }
   }
 
-  if (pending.length) await env.REPORTS.batch(pending.map((report) => upsert(env.REPORTS, report)));
-  return { scanned, stored: pending.length, dropped, unavailable: false };
+  if (pending.length) {
+    await env.REPORTS.batch(pending.map((report) => upsert(env.REPORTS, report, filers !== null)));
+  }
+  return {
+    scanned,
+    stored: pending.length,
+    dropped,
+    unavailable: false,
+    attributed: pending.filter((report) => report.authorName).length,
+    rosterRead: filers !== null,
+  };
 }
 
 export default {

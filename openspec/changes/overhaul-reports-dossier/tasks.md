@@ -22,10 +22,10 @@
 
 ## Phase 3 — Attribution
 
-- [ ] Add `resolveFiler` and roster-index builder to `shared/reports.ts` with tests (match, case, `/`-split, `@`, ambiguity, never returns a handle).
-- [ ] Reporter: fetch roster once per run; resolve; pass a roster-loaded flag; `COALESCE` upsert when the roster failed.
-- [ ] Assert in tests that no Discord identifier reaches the upsert bindings.
-- [ ] Reader: "Filed by <name>" on attributed filings only.
+- [x] Add `resolveFiler` and roster-index builder to `shared/reports.ts` with tests (match, case, `/`-split, `@`, ambiguity, never returns a handle).
+- [x] Reporter: fetch roster once per run; resolve; pass a roster-loaded flag; `COALESCE` upsert when the roster failed.
+- [x] Assert in tests that no Discord identifier reaches the upsert bindings.
+- [x] Reader: "Filed by <name>" on attributed filings only.
 - [ ] Deploy the reporter; trigger one run; verify on production that attributed filings show names and D1 holds no handles (`SELECT` spot-check of `author_name` values against roster names).
 
 ## Records
