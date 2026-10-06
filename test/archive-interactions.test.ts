@@ -36,23 +36,53 @@ describe('archive navigation', () => {
 });
 
 describe('interaction boundaries', () => {
-  it('places ArchiveSeal on Reports and not in the cabinet', () => {
-    expect(read('web/src/views/Reports.tsx')).toContain('<ArchiveSeal');
-    expect(read('web/src/components/Shelf.tsx')).not.toContain('ArchiveSeal');
+  it('uses one PortraitGate for both sealed routes', () => {
+    expect(read('web/src/views/Reports.tsx')).toContain('<PortraitGate');
+    expect(read('web/src/views/Informants.tsx')).toContain('<PortraitGate');
+    expect(read('web/src/views/Reports.tsx')).not.toContain('ArchiveSeal');
   });
 
-  it('keeps the Reports gate server-backed and the hidden face inert', () => {
+  it('keeps the two gates server-backed and separately adapted', () => {
     const reports = read('web/src/views/Reports.tsx');
-    const seal = read('web/src/components/ArchiveSeal.tsx');
-    expect(reports).toContain('openReports(word)');
-    expect(seal).toContain('backFace.current.inert = !flipped');
+    const chronicle = read('web/src/views/Informants.tsx');
+    expect(reports).toContain('openReports(passphrase, signal)');
+    expect(chronicle).toContain('openChronicle(passphrase, signal)');
   });
 
   it('uses the existing motion system and ships no Three.js dependency', () => {
     const manifest = JSON.parse(read('package.json')) as { dependencies?: Record<string, string> };
     expect(manifest.dependencies?.three).toBeUndefined();
-    expect(read('web/src/components/ArchiveSeal.tsx')).toContain("from '../motion'");
-    expect(read('web/src/styles/archive-seal.css')).toContain('prefers-reduced-motion: reduce');
+    const gateCss = read('web/src/styles/portrait-gate.css');
+    expect(gateCss).toContain('prefers-reduced-motion: reduce');
+    expect(gateCss).toContain('@keyframes portrait-gate-attention-cue');
+    expect(gateCss).toContain('.portrait-gate__form input, .portrait-gate__status { animation: none; }');
+    const gate = read('web/src/components/PortraitGate.tsx');
+    expect(gate).toContain('clips?: Partial<');
+    expect(gate).toContain("ancarion-idle.mp4");
+    expect(gate).toContain("ancarion-refusal.webm");
+    expect(gate).toContain("ancarion-sigh.webm");
+    expect(gate).toContain("import { D, gsap, staged } from '../motion'");
+    expect(gate).toContain('export type PortraitState =');
+    expect(gate).toContain('className="portrait-gate__media-stage"');
+    expect(gate).toContain('preload="auto"');
+    expect(gate).toContain('autoPlay');
+    expect(gate).toContain('const IDLE_REPLAY_PAUSE_MS = 2_000');
+    expect(gate).toContain('onEnded={pauseBeforeIdleReplay}');
+    expect(gate).toContain('onEnded={() => onComplete(state)}');
+    expect(gate).toContain('void element.play().catch(() => setIdleUnavailable(true))');
+    const idleVideo = gate.match(/<video\s+ref=\{idleVideo\}[\s\S]*?\/>/)?.[0] ?? '';
+    expect(idleVideo).not.toContain('loop');
+    expect(gate).toContain("setPortraitState('accepted')");
+    expect(gate).toContain('onFocus={notice}');
+    expect(gate).toContain('const passphrase = phrase;');
+    expect(gate).not.toContain('const passphrase = phrase.trim();');
+  });
+
+  it('prepares the supplied portrait performances without transcoding them', () => {
+    const preparation = read('scripts/prepare-portrait-video.mjs');
+    expect(preparation).toContain("['blink.mp4', 'ancarion-idle.mp4']");
+    expect(preparation).toContain("['ancarion-shake.webm', 'ancarion-refusal.webm']");
+    expect(preparation).toContain("['ancarion-sigh.webm', 'ancarion-sigh.webm']");
   });
 
   it('moves a CSS-driven Dominion ink marker between Reports filters', () => {

@@ -26,6 +26,7 @@ import { chronicleIsOpen, openChronicle, useChronicle } from '../api';
 import { D, failsafe, gsap, staged } from '../motion';
 import type { Chronicle, ChronicleEntry } from '../api';
 import { Consulting, Notice } from '../components/Notice';
+import { PortraitGate } from '../components/PortraitGate';
 import { GuidedToggle, mark, prose, useGuidedReading } from '../reading';
 import sealUrl from '../assets/volumes/informants-seal.webp';
 
@@ -431,67 +432,6 @@ function buildLeaves(chronicle: Chronicle, term: string, guided: boolean): Leaf[
  * were — still inside the archive, still holding their writ, simply not
  * admitted to this book.
  */
-function VolumeSeal({ onOpen }: { onOpen: () => void }) {
-  const [word, setWord] = useState('');
-  const [refusal, setRefusal] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
-
-  return (
-    <form
-      className="chron-lock"
-      onSubmit={(event) => {
-        event.preventDefault();
-        if (pending || !word) return;
-        setPending(true);
-        setRefusal(null);
-        openChronicle(word)
-          .then((error) => {
-            if (error) {
-              setRefusal(error);
-              setWord('');
-            } else {
-              onOpen();
-            }
-          })
-          .catch(() => setRefusal('The volume cannot be reached.'))
-          .finally(() => setPending(false));
-      }}
-    >
-      <img className="chron-lock__seal" src={sealUrl} alt="" width={186} height={186} />
-
-      <p className="chron-lock__class">Sealed — Embassy Register</p>
-      <h1 className="chron-lock__title">Chronicles</h1>
-      <p className="chron-lock__note">
-        The rest of the archive is open. This volume is not: it is kept under a
-        word of its own, and nothing that opens the others opens it.
-      </p>
-
-      <label className="chron-lock__label" htmlFor="chron-word">
-        The word
-      </label>
-      <input
-        id="chron-word"
-        className="chron-lock__input"
-        type="password"
-        autoComplete="off"
-        spellCheck={false}
-        value={word}
-        onChange={(event) => setWord(event.target.value)}
-        disabled={pending}
-      />
-
-      {/* Reserved height, so a refusal does not shove the button down the page. */}
-      <p className="chron-lock__refusal" role="alert">
-        {refusal ?? ' '}
-      </p>
-
-      <button className="chron-lock__btn" type="submit" disabled={pending || !word}>
-        {pending ? 'Testing the seal' : 'Break the seal'}
-      </button>
-    </form>
-  );
-}
-
 /**
  * Which page numbers to print, given where the reader is.
  *
@@ -521,18 +461,26 @@ function pageWindow(current: number, count: number): (number | 'gap')[] {
 export function InformantsView() {
   // Null until the volume's door has answered, so the lock does not flash for a
   // reader who is already through it.
-  const [unlocked, setUnlocked] = useState<boolean | null>(null);
+  const [authorized, setAuthorized] = useState<boolean | null>(null);
+  const [unlocked, setUnlocked] = useState(false);
+  const scry = useRef<HTMLInputElement>(null);
   useEffect(() => {
     let live = true;
     chronicleIsOpen().then((open) => {
-      if (live) setUnlocked(open);
+      if (live) {
+        setAuthorized(open);
+        setUnlocked(open);
+      }
     });
     return () => {
       live = false;
     };
   }, []);
 
-  const chronicle = useChronicle(unlocked === true);
+  const chronicle = useChronicle(authorized === true);
+  useEffect(() => {
+    if (unlocked && chronicle.state === 'ready') scry.current?.focus();
+  }, [unlocked, chronicle.state]);
 
   const [query, setQuery] = useState('');
   // Two characters is where a search stops being every page at once. The
@@ -788,8 +736,17 @@ export function InformantsView() {
     return () => window.removeEventListener('keydown', onKey);
   }, [turn]);
 
-  if (unlocked === null) return <Consulting />;
-  if (!unlocked) return <VolumeSeal onOpen={() => setUnlocked(true)} />;
+  if (authorized === null) return <Consulting />;
+  if (!unlocked) return (
+    <PortraitGate
+      collection="Chronicles"
+      eyebrow="Sealed Embassy Register"
+      description="The rest of the archive is open. This volume is kept under a word of its own."
+      verify={(passphrase, signal) => openChronicle(passphrase, signal)}
+      onAuthorized={() => setAuthorized(true)}
+      onGranted={() => setUnlocked(true)}
+    />
+  );
 
   if (chronicle.state === 'loading') return <Consulting />;
   if (chronicle.state === 'error') {
@@ -844,6 +801,7 @@ export function InformantsView() {
             Scry the chronicle
           </label>
           <input
+            ref={scry}
             id="scry-input"
             className="scry__input"
             type="search"

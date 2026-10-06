@@ -1,5 +1,15 @@
 # Decision Log
 
+## 2026-10-01 - Ancarion is a shared gate presentation, never a shared writ
+
+Chronicles and Reports use the same lazy portrait gate so accessibility,
+Ancarion artwork, and reduced-motion behavior do not diverge. The gate
+receives a separate adapter for each endpoint; it never reads, writes, or
+reuses either volume's session. The supplied frame and matching Ancarion
+performance are user-provided. The shared gate plays the real idle performance
+when playback is available and otherwise uses the unchanged static portrait;
+no facial motion is synthesized.
+
 ## 2026-09-29 — Markdown-first neural memory
 
 `AGENTS.md` is the execution contract and `CODEX.md` the concise architecture index. The `knowledge/` Obsidian vault holds linked detail. All are version-controlled Markdown so ownership, history, review, and graph navigation remain available without a proprietary memory backend.

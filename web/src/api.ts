@@ -211,15 +211,38 @@ export async function reportsIsOpen(): Promise<boolean> {
   } catch { return false; }
 }
 
-export async function openReports(passphrase: string): Promise<string | null> {
-  const response = await fetch('/api/reports/gate', {
+export interface GateResult {
+  ok: boolean;
+  message: string;
+  retryAfterSeconds?: number;
+}
+
+function retryAfterSeconds(value: string | null): number | undefined {
+  if (!value) return undefined;
+  const seconds = Number(value);
+  if (Number.isFinite(seconds) && seconds > 0) return Math.ceil(seconds);
+  const date = Date.parse(value);
+  return Number.isNaN(date) ? undefined : Math.max(0, Math.ceil((date - Date.now()) / 1000));
+}
+
+async function submitGate(endpoint: string, passphrase: string, signal?: AbortSignal): Promise<GateResult> {
+  const response = await fetch(endpoint, {
     method: 'POST',
+    signal,
     headers: { 'content-type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify({ passphrase }),
   });
-  if (response.ok) return null;
+  if (response.ok) return { ok: true, message: '' };
   const body = (await response.json().catch(() => null)) as { error?: string } | null;
-  return body?.error ?? `Reports returned ${response.status}`;
+  return {
+    ok: false,
+    message: body?.error ?? `The seal returned ${response.status}.`,
+    retryAfterSeconds: response.status === 429 ? retryAfterSeconds(response.headers.get('Retry-After')) : undefined,
+  };
+}
+
+export async function openReports(passphrase: string, signal?: AbortSignal): Promise<GateResult> {
+  return submitGate('/api/reports/gate', passphrase, signal);
 }
 
 /* ── The Register of Consultation ────────────────────────────────────────── */
@@ -307,15 +330,8 @@ export async function chronicleIsOpen(): Promise<boolean> {
 }
 
 /** Offer the volume's word. Resolves to null on success, or the refusal. */
-export async function openChronicle(passphrase: string): Promise<string | null> {
-  const res = await fetch('/api/chronicle/gate', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify({ passphrase }),
-  });
-  if (res.ok) return null;
-  const body = (await res.json().catch(() => null)) as { error?: string } | null;
-  return body?.error ?? `The volume returned ${res.status}`;
+export async function openChronicle(passphrase: string, signal?: AbortSignal): Promise<GateResult> {
+  return submitGate('/api/chronicle/gate', passphrase, signal);
 }
 
 export function useVolume<S extends FetchableSlug>(

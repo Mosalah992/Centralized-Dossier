@@ -8,7 +8,7 @@ import {
 } from 'react';
 
 import { openReports, reportsIsOpen, useReports, type ReportsResponse } from '../api';
-import { ArchiveSeal } from '../components/ArchiveSeal';
+import { PortraitGate } from '../components/PortraitGate';
 import { Consulting, Notice } from '../components/Notice';
 import {
   REPORT_CATEGORY_NAMES,
@@ -89,75 +89,38 @@ function LiquidNav({ activeKey, ariaLabel, children, className, tone }: LiquidNa
   );
 }
 
-function Seal({ onOpen }: { onOpen: () => void }) {
-  const [word, setWord] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
-
-  return (
-    <section className="reports-stage">
-      <ArchiveSeal
-        eyebrow="Thalmor Central Archives"
-        title="High Command Reports"
-        subtitle="Access archive"
-        crestSrc="/seal.webp"
-      >
-        <form
-          className="reports-lock"
-          onSubmit={(event) => {
-            event.preventDefault();
-            if (!word || pending) return;
-            setPending(true);
-            setError(null);
-            openReports(word)
-              .then((refusal) => {
-                if (refusal) {
-                  setError(refusal);
-                  setWord('');
-                } else {
-                  onOpen();
-                }
-              })
-              .catch(() => setError('Reports cannot be reached.'))
-              .finally(() => setPending(false));
-          }}
-        >
-          <p className="reports-lock__class">Sealed — Embassy Register</p>
-          <h1>Archive Access</h1>
-          <p>Reserved for the Eyes of the High Command</p>
-          <label htmlFor="reports-word">The word</label>
-          <input
-            id="reports-word"
-            type="password"
-            value={word}
-            autoComplete="off"
-            spellCheck={false}
-            onChange={(event) => setWord(event.target.value)}
-            disabled={pending}
-          />
-          <p className="reports-lock__error" role="alert">{error ?? '\u00a0'}</p>
-          <button className="reports-lock__submit" type="submit" disabled={!word || pending}>
-            {pending ? 'Testing the seal' : 'Enter reports'}
-          </button>
-        </form>
-      </ArchiveSeal>
-    </section>
-  );
-}
-
 export function ReportsView() {
   const [open, setOpen] = useState<boolean | null>(null);
+  const [revealed, setRevealed] = useState(false);
+  const heading = useRef<HTMLHeadingElement>(null);
   const [category, setCategory] = useState<string | null>(null);
   const [severity, setSeverity] = useState<ReportSeverity | null>(null);
   const [cursor, setCursor] = useState<string | null>(null);
   const previousReports = useRef<ReportsResponse | null>(null);
-  useEffect(() => { void reportsIsOpen().then(setOpen); }, []);
+  useEffect(() => {
+    void reportsIsOpen().then((isOpen) => {
+      setOpen(isOpen);
+      setRevealed(isOpen);
+    });
+  }, []);
   const state = useReports(open === true, category, severity, cursor);
   const categories = useMemo(() => REPORT_CATEGORY_NAMES, []);
   if (state.state === 'ready') previousReports.current = state.value;
   const reports = state.state === 'ready' ? state.value : previousReports.current;
+  useEffect(() => {
+    if (open && revealed && reports) heading.current?.focus();
+  }, [open, reports, revealed]);
   if (open === null) return <Consulting />;
-  if (!open) return <Seal onOpen={() => setOpen(true)} />;
+  if (!open || !revealed) return (
+    <PortraitGate
+      collection="High Command Reports"
+      eyebrow="Thalmor Central Archives"
+      description="Reserved for the eyes of High Command. The register remains sealed until its own word is recognized."
+      verify={(passphrase, signal) => openReports(passphrase, signal)}
+      onAuthorized={() => setOpen(true)}
+      onGranted={() => setRevealed(true)}
+    />
+  );
   if (state.state === 'error') {
     return <Notice kind="error" title="Reports unavailable" body={state.message} />;
   }
@@ -167,7 +130,7 @@ export function ReportsView() {
     <section className="reports-reader" aria-busy={state.state === 'loading'}>
       <header>
         <p className="reports-reader__class">Sealed — Reports Register</p>
-        <h1>Reports</h1>
+        <h1 ref={heading} tabIndex={-1}>Reports</h1>
       </header>
       <details className="reports-reader__standard">
         <summary>Saelthar Classification Standard</summary>
