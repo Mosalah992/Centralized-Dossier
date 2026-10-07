@@ -2,9 +2,9 @@
 //
 // three.js is imported dynamically from here, so it lands in its own chunk and
 // only readers who reach a gate that asks for the sky download it. Phones,
-// reduced-motion readers and browsers without WebGL get the still plate built
-// from the calendar's mundus art; below the single-column breakpoint the sky
-// is omitted because the planet would sit behind the form.
+// reduced-motion readers, narrow screens and browsers without WebGL get the
+// still plate built from the calendar's mundus art; in the single-column
+// layout it shrinks the bodies to the edges so none sits behind the form.
 
 import { useEffect, useRef, useState } from 'react';
 

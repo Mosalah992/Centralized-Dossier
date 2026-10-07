@@ -17,7 +17,7 @@ The portrait gate SHALL present Ancarion's portrait centred, beneath a title of 
 - **THEN** it announces the collection name as a heading and the field as "Passphrase"
 
 ### Requirement: Nirn sky behind the Reports gate
-The Reports gate SHALL draw Nirn, Masser and Secunda behind the centred portrait: a live three.js scene on wide, fine-pointer screens with WebGL2; a still plate for reduced motion, touch devices or no WebGL2; and nothing below 721px. The Chronicles gate SHALL NOT draw the sky.
+The Reports gate SHALL draw Nirn, Masser and Secunda behind the centred portrait: a live three.js scene on wide, fine-pointer screens with WebGL2; and a still plate for reduced motion, touch devices, no WebGL2, or widths below 721px, where the bodies are drawn small at the edges, clear of the portrait and field. The Chronicles gate SHALL NOT draw the sky.
 
 #### Scenario: Desktop
 - **WHEN** a desktop reader with WebGL2 opens `/reports`
@@ -26,6 +26,10 @@ The Reports gate SHALL draw Nirn, Masser and Secunda behind the centred portrait
 #### Scenario: Reduced motion
 - **WHEN** the reader prefers reduced motion
 - **THEN** the still plate is shown instead of the live scene
+
+#### Scenario: Phone
+- **WHEN** a reader opens `/reports` on a screen narrower than 721px
+- **THEN** the still plate is shown behind the gate, never a blank background
 
 ### Requirement: The rest of Mundus in the Reports sky
 The live Reports sky SHALL show Masser and Secunda orbiting Nirn, and Magnus with the eight Divine planets on the left, the Divines slowly orbiting Magnus, using the calendar orrery's sprites. The still plate SHALL show the same bodies at rest.

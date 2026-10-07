@@ -1,5 +1,13 @@
 # Decision Log
 
+## 2026-10-07 - Phones get the still Nirn plate, not a blank sky
+
+Below 721px the Reports gate drew no sky, which left phones with a flat black
+background. `chooseSkyMode` now returns the still plate there; a 720px media
+query in `nirn-sky.css` shrinks the bodies and keeps them to the edges so none
+sits behind the centred portrait or the passphrase field. The live three.js
+scene stays desktop-only. Presentation only: adapter, endpoint and writ untouched.
+
 ## 2026-10-06 - Three.js admitted for the Reports sky only
 
 The Reports portrait gate gains a live Nirn sky (Nirn, Masser, Secunda) beside

@@ -21,8 +21,9 @@ describe('Nirn sky mode', () => {
     expect(chooseSkyMode({ ...desktop, webgl: false })).toBe('still');
   });
 
-  it('draws nothing in the single-column layout, where the planet would sit behind the form', () => {
-    expect(chooseSkyMode({ ...desktop, width: LIVE_MIN_WIDTH - 1 })).toBe('none');
+  it('gives the single-column layout the still plate rather than a blank sky', () => {
+    expect(chooseSkyMode({ ...desktop, width: LIVE_MIN_WIDTH - 1 })).toBe('still');
+    expect(chooseSkyMode({ ...desktop, width: 360, coarsePointer: true })).toBe('still');
     expect(chooseSkyMode({ ...desktop, width: LIVE_MIN_WIDTH })).toBe('live');
   });
 });

@@ -5,11 +5,11 @@
 // battery, and it is motion, so reduced-motion readers get the still plate.
 // Kept pure so the decision is testable without a browser.
 
-export type SkyMode = 'live' | 'still' | 'none';
+export type SkyMode = 'live' | 'still';
 
 export interface SkyConditions {
   reducedMotion: boolean;
-  /** Width of the gate in CSS pixels. Below the single-column breakpoint the planet would sit behind the form. */
+  /** Width of the gate in CSS pixels. Below the single-column breakpoint the still plate is laid out for a phone. */
   width: number;
   coarsePointer: boolean;
   webgl: boolean;
@@ -18,8 +18,7 @@ export interface SkyConditions {
 export const LIVE_MIN_WIDTH = 721;
 
 export function chooseSkyMode(c: SkyConditions): SkyMode {
-  if (c.width < LIVE_MIN_WIDTH) return 'none';
-  if (c.reducedMotion || c.coarsePointer || !c.webgl) return 'still';
+  if (c.width < LIVE_MIN_WIDTH || c.reducedMotion || c.coarsePointer || !c.webgl) return 'still';
   return 'live';
 }
 
