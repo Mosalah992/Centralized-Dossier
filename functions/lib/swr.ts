@@ -26,6 +26,9 @@
 /** Records when an entry was produced, since the Cache API will not tell us. */
 const STAMP = 'x-archive-fetched-at';
 
+/** The route's own Cache-Control, held while retention borrows the real one. */
+const READER_CACHE = 'x-archive-cache-control';
+
 /**
  * How long an entry is kept at all. Longer than the freshness window on
  * purpose: an entry has to outlive its own staleness to be servable while the
@@ -40,11 +43,29 @@ const now = () => Math.floor(Date.now() / 1000);
 function stamped(response: Response): Response {
   const copy = new Response(response.clone().body, response);
   copy.headers.set(STAMP, String(now()));
+  const own = response.headers.get('Cache-Control');
+  if (own) copy.headers.set(READER_CACHE, own);
   // Governs retention in the Worker cache. Without a cacheable directive here,
-  // cache.put drops the entry outright. It is not what the reader is sent —
-  // that is whatever the route itself set, which for the volumes is a much
-  // shorter `public, max-age=60`.
+  // cache.put drops the entry outright. It is not what the reader is sent:
+  // `served` puts back whatever the route itself set, which for the volumes
+  // is a much shorter `public, max-age=60`.
   copy.headers.set('Cache-Control', `public, max-age=${RETAIN_SECONDS}`);
+  return copy;
+}
+
+/**
+ * A cached entry as the reader should see it. Without this a hit went out
+ * with the day-long retention header, so a browser would keep a roster for a
+ * day instead of a minute.
+ */
+function served(entry: Response): Response {
+  const copy = new Response(entry.body, entry);
+  const own = copy.headers.get(READER_CACHE);
+  if (own) copy.headers.set('Cache-Control', own);
+  // Entries stored before the route's header was kept: revalidate rather than
+  // guess. They are replaced within one freshness window.
+  else copy.headers.set('Cache-Control', 'no-cache');
+  copy.headers.delete(READER_CACHE);
   return copy;
 }
 
@@ -83,7 +104,7 @@ export async function staleWhileRevalidate(options: Options): Promise<Response> 
 
     // An unstamped entry predates this code. Treat it as stale rather than
     // trusting it indefinitely.
-    if (age !== null && age < freshSeconds) return hit;
+    if (age !== null && age < freshSeconds) return served(hit);
 
     // Serve what we have and replace it behind the reader. A failed refresh
     // must not fail the request: the whole point is that the reader already
@@ -92,7 +113,7 @@ export async function staleWhileRevalidate(options: Options): Promise<Response> 
       console.error('background refresh failed; serving stale:', error);
     }));
 
-    return hit;
+    return served(hit);
   }
 
   // Nothing cached: the caller waits, and this is the only path that does.
