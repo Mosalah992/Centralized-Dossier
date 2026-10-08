@@ -1,138 +1,97 @@
 # Thalmor Embassy Archives
 
-An open, read-only web archive that renders a roleplay community's records as
-in-world ceremonial registers — a shelf of bound volumes you open and read,
-rather than a spreadsheet with a theme on it.
+[![CI](https://github.com/Mosalah992/Centralized-Dossier/actions/workflows/ci.yml/badge.svg)](https://github.com/Mosalah992/Centralized-Dossier/actions/workflows/ci.yml)
 
-Live at **[thalmor-archives.com](https://thalmor-archives.com)**. The legacy
-`thalmor-archives.pages.dev` hostname permanently redirects there; preview
-deployment hostnames remain available for feature validation.
-It is `noindex, nofollow` and stays that way: the registers carry about a
-hundred real people's handles and activity. That keeps them out of search
-results — it does not keep them private, and is not meant to. Anyone with the
-link reads the archive.
+A web archive for a roleplay community. Its records are presented as in-world
+ceremonial registers: a hall of bound volumes you open and read, not a
+spreadsheet with a theme on it.
+
+Live at **[thalmor-archives.com](https://thalmor-archives.com)**.
 
 ---
 
-## Reading the archive
+## What it offers
 
-### Getting in
-
-You don't. The archive opens straight onto the shelf, for anyone with the link.
-
-It was gated once — first by a shared word, then by a Discord login that checked
-your membership of the community's servers — and both have been removed. One
-volume is still shut: the Thalmor Chronicles keep a word of their own, handed
-out by the Embassy and not in this repository.
-
-### The shelf
-
-Eight volumes stand in the hall, grouped by what they hold. Each is painted art
-with its title lettered live, so a book is opened by clicking it. A volume whose
-source has gone missing stays on the shelf marked **withdrawn** rather than
-disappearing or breaking the page.
-
-### Inside a volume
-
-Registers — the roster, the statistics, the ledger, the stipends, the hall of
-honor — open as parchment pages: summary figures at the top, then the record
-itself. On a narrow screen the wide tables become cards rather than scrolling
-sideways.
-
-**The Tamrielic Calendar** keeps the realm's own time. A sand clock beside the
-date shows how far the day has run — the upper bulb drains from midnight to
-midnight — and the clock advances by itself. Today's date is ringed in the year
-grid. **Tap or click any marked day** to read what falls on it; the note opens
-in a panel pinned to the foot of the screen, which is how it works on a phone
-as well as under a mouse.
-
-**The Thalmor Chronicles** is sealed a second time and asks for a word of its
-own. Inside, it is bound as a book rather than laid out as a page: two leaves
-facing each other, a leaf that turns, and your place kept as you go. Arrow keys
-turn it, narrow screens show one leaf at a time, and readers who ask for less
-motion get the same pages without the turn.
-
-Two aids sit above that volume:
-
-- **Scrying** — search the whole chronicle. Every hit is lit where it sits, and
-  choosing one turns the book to the leaf that holds it.
-- **Guided reading** — bionic reading, which sets the opening of each word in
-  bold so the eye has somewhere to land. Off unless you ask for it, and
-  remembered once you do.
+- **The hall.** A torch-lit front page with the Embassy's seal, its statement of
+  purpose, a portrait, a film and a gallery of the Embassy at work.
+- **Recruitment.** The Dominion's terms for applicants and a link to the
+  application form.
+- **The registers.** Each volume opens as parchment pages, with summary figures
+  first and the record beneath. Wide tables become cards on a phone.
+- **The Tamrielic Calendar.** It keeps the realm's own time, with a sand clock
+  that drains through the day and notes you can open on any marked date.
+- **Sealed volumes.** Some records are held back behind their own in-world
+  gates. Their contents are never shipped to the browser or kept in this
+  repository.
+- **Reading aids.** Search within a volume, an optional bionic-reading mode, full
+  keyboard navigation, and a reduced-motion experience for readers who ask for
+  one.
 
 ---
 
-## Architecture
+## How it is built
 
-The community's spreadsheet is the source of truth. A **separate** clock-in bot
-writes to it; this archive only ever reads, and holds a read-only scope so a bug
-here cannot reach the bot's columns.
+The community's spreadsheet is the source of truth. This archive only reads it;
+it never writes back.
 
 ```mermaid
-flowchart TB
-    Discord([Discord]) -->|clock-in commands| Bot[Clock-in bot<br/>separate repo]
-    Bot -->|writes| Sheet[(The spreadsheet<br/>authoritative)]
-
-    Reader([Reader]) --> Pages[Cloudflare Pages<br/>site and functions]
-    Pages -->|read only| Sheet
-
-    Pages --> Shelf[The shelf]
-    Shelf --> V1[Sheet-backed volumes<br/>read from the spreadsheet]
-    Shelf --> V2[Kept volume<br/>written here, ships with the site]
-    Shelf --> V3[Sealed volume<br/>second word, never bundled]
+flowchart LR
+    Sheet[(Community spreadsheet)] -->|read only| Site[Archive<br/>Cloudflare Pages]
+    Reader([Reader]) --> Site
 ```
 
-Four things that shape everything else:
-
-- **There is no boundary any more, and that is deliberate.** Every data route
-  answers anyone. What used to be checked server-side on every request is gone;
-  the one check left belongs to a single volume rather than to the archive.
-- **Three kinds of volume.** Most are read from the spreadsheet. One is written
-  here and travels with the site. One is *sealed* — its text is served only
-  after its own word, and is kept out of the browser bundle and out of this
-  repository so that neither a page source nor a `git clone` is a copy of it.
-- **One origin.** Site and data are deployed together, so there is no CORS and
-  no second service to keep in step.
-- **Assets are built, not hand-cropped.** The covers are cut, re-bound and
-  lettered by a committed script from the delivered art, so the result is
-  reproducible rather than a folder of one-off exports.
-
----
-
-## Layout
-
-| Directory | What it is |
+| Layer | Choice |
 |---|---|
-| [`web/`](web/) | The archive itself — shelf, volumes, styling. |
-| [`shared/`](shared/) | The volume registry, parsers and reckoning. Pure, used by both halves. |
-| [`server/`](server/) | Reads the spreadsheet and parses it. |
-| [`functions/`](functions/) | The data routes, and the sealed volume's door. |
-| [`scripts/`](scripts/) | Asset preparation. Committed script, committed output. |
-| [`test/`](test/) | Vitest — parsers, the calendar's reckoning, the statistics, the palette. |
-| [`docs/`](docs/) | Research notes and the transcribed press history. |
+| Front end | React 18, TypeScript, Vite 7, GSAP for motion |
+| Hosting | Cloudflare Pages, with its server functions on the same origin |
+| Type | Self-hosted Cinzel and EB Garamond |
+| Tests | Vitest |
+
+Principles the codebase holds to:
+
+- **Read-only by design.** Nothing in the archive can change the records it
+  displays.
+- **No third parties.** No analytics, trackers, external fonts or CDNs. A
+  reader's visit reaches no one but the archive.
+- **Not indexed.** The archive is excluded from search engines.
+- **Reproducible assets.** Covers, portraits and other art are produced by
+  committed scripts from the source material, not hand-exported.
+- **Accessible and calm.** Semantic structure, visible focus, reduced-motion
+  support, and pages audited with axe.
 
 ---
 
-## Running it
+## Quality
 
-Node is pinned in [`.nvmrc`](.nvmrc) so the toolchain the clock-in bot shares is
-left alone.
+Every push and pull request is checked by CI from a clean clone: type checks,
+the test suite, a production build, and a dependency audit. The site ships a
+strict Content Security Policy and hardened response headers.
+
+---
+
+## Development
+
+Node is pinned in [`.nvmrc`](.nvmrc).
 
 ```bash
 npm install
-npm run dev        # the archive, with data proxied from the local functions
-npm test           # unit tests
-npm run typecheck  # both TypeScript projects, browser and worker
+npm run dev        # local development server
+npm test           # test suite
+npm run typecheck  # browser and server TypeScript projects
+npm run build      # production build
 ```
 
-Configuration, deployment and the asset pipeline are documented in
-[CLAUDE.md](CLAUDE.md), along with the invariants a change here must not break.
-Nothing needed to run the archive against real data is in this repository, and
-nothing that would open it should ever be committed.
+A fresh clone builds and tests with placeholder content. The real records, and
+the credentials to read them, are deliberately not in this repository and must
+never be committed.
+
+Contributors should start with [AGENTS.md](AGENTS.md), which holds the working
+rules and the invariants a change must not break.
 
 ---
 
-## Status
+## Security
 
-The archive is built and live. It is read-only by design; there is no write path
-back to the spreadsheet and there should not be one.
+Please report suspected vulnerabilities privately through GitHub's **Security →
+Report a vulnerability**, not in a public issue. The security model is described
+in [SECURITY.md](SECURITY.md).
