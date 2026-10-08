@@ -81,7 +81,7 @@ All new volumes must be explicitly classified before implementation. Do not add 
 
 - Toolchain: Node `24.18.0`, Vite 7, React 18, TypeScript, Cloudflare Pages/Workers.
 - OpenSpec: [`openspec/config.yaml`](openspec/config.yaml) is the repository's spec-driven change guide. Use it before a new capability or a cross-boundary change; record scope, invariants, data/gate impact, and live verification. It supplements the versioned `knowledge/` vault rather than replacing it.
-- Security: [`SECURITY.md`](SECURITY.md) records the trust boundaries, OWASP control map, and repeatable dependency audit. Keep it aligned with `functions/lib/security.ts` and the sealed-route invariants.
+- Security: [`SECURITY.md`](SECURITY.md) is the public policy (reporting, scope, principles) and deliberately omits route names and gate mechanics. The enforceable detail lives in `functions/lib/security.ts`, the sealed-route invariants above, and `knowledge/Invariants.md`.
 - Checks: `npm run typecheck`, `npm test`, and `npm run build` where applicable.
 - CI: `.github/workflows/ci.yml` typechecks, tests, builds and audits every push and PR from a clean clone, with the sealed modules' `.example.ts` placeholders in place. It must never deploy: a clean build carries placeholder Chronicle and Ledger text.
 - Deployment is manual. A Pages upload is not success: verify the live bundle and appropriate public/sealed API behavior after deployment.
