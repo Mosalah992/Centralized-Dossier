@@ -1,7 +1,7 @@
 import { useGSAP } from '@gsap/react';
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 
-import ancarionAccepted from '../assets/ancarion-accept.png';
+import ancarionAccepted from '../assets/ancarion-accept.webp';
 import ancarionDenied from '../assets/ancarion-refusal.webm';
 import ancarionAnnoyed from '../assets/ancarion-sigh.webm';
 import ancarionIdle from '../assets/ancarion-idle.mp4';
