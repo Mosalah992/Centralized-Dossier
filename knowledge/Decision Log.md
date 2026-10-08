@@ -103,3 +103,7 @@ Pages serves `index.html` for any path it does not have, and `public/_headers` m
 ## 2026-10-06 - Reports become a searchable, signed dossier
 
 `overhaul-reports-dossier`: the Reports reader is bound like the Chronicles book, with month-grouped filings, template fields laid out as records and an "Awaiting assessment" view. Search uses parameterised, escaped `LIKE` rather than FTS5, which is unnecessary at a few hundred filings. Filings gain addresses (`/reports/:id`) and a counts-only summary that also names desks filing without a classification — shown to High Command on the page, because the collectors never post to Discord. Filers are signed with their in-world roster name, resolved in the collector's memory from the public roster; resolving at read time was rejected because it would require storing a Discord identity in D1.
+
+## 2026-10-08 - CI verifies a clean clone and never deploys
+
+A clean clone used to fail `npm run typecheck`: `chronicle.example.ts` lacked the `FUNERAL` export the Worker imports, and `test/volumes-pipeline.test.ts` read the gitignored `content/chronicle.json` and `content/enforcement.jsonl`. The example now carries a placeholder `FUNERAL`, and those two suites skip (with guarded reads) where their JSON is absent. GitHub Actions runs typecheck, test, build and a production `npm audit` with the placeholders copied in. Deploying from CI was rejected: the build there holds placeholder text, so a CI deploy would silently replace the live sealed volumes. Deploys stay manual from the machine that holds them.

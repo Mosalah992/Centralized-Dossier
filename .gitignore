@@ -76,3 +76,9 @@ Assets/hesperides.zip
 # Delivery archives. The extracted art is committed beside them, so a zip is
 # the same bytes twice — Assets/w2560.zip was 4.2 MB of duplicate.
 Assets/*.zip
+
+# Local hand-off material and source portraits, kept on this machine only.
+HANDOFF.md
+nirn-sky-handoff/
+nirn-sky-handoff.zip
+Assets/portraits/

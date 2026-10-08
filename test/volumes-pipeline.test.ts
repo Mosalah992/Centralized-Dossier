@@ -29,6 +29,12 @@ import {
   SECOND_SEED,
 } from '../web/src/views/history-data';
 
+// The two sealed volumes' sources are gitignored (see .gitignore), so a clean
+// clone — and CI — has only the placeholder modules and nothing to compare
+// them against. Those suites run wherever the real JSON is present; the
+// reads below are guarded too, since a skipped suite's body still runs.
+const has = (name: string) => fs.existsSync(path.join('content', name));
+
 const read = (name: string) =>
   JSON.parse(fs.readFileSync(path.join('content', name), 'utf8'));
 
@@ -38,8 +44,8 @@ const readJsonl = (name: string) =>
     .filter((l) => l.trim())
     .map((l) => JSON.parse(l));
 
-describe('the Thalmor Chronicles', () => {
-  const data = read('chronicle.json');
+describe.skipIf(!has('chronicle.json'))('the Thalmor Chronicles', () => {
+  const data = has('chronicle.json') ? read('chronicle.json') : {};
 
   it('serves exactly what the JSON holds', () => {
     expect(MONTHS).toEqual(data.months);
@@ -65,8 +71,8 @@ describe('the Thalmor Chronicles', () => {
   });
 });
 
-describe('the Ledger of Enforcement', () => {
-  const records = readJsonl('enforcement.jsonl');
+describe.skipIf(!has('enforcement.jsonl'))('the Ledger of Enforcement', () => {
+  const records = has('enforcement.jsonl') ? readJsonl('enforcement.jsonl') : [];
 
   it('serves one entry per record, less exact duplicates', () => {
     const signatures = new Set(records.map((r) => `${r.date}|${r.subject}|${r.kind}`));

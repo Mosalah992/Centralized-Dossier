@@ -12,8 +12,8 @@
 // volume work — the gate, the scoped writ, the reader, the art — is in this
 // repository and reviewable. Only the words are held back.
 //
-// WHY THIS FILE EXISTS AT ALL: `api/chronicle/index.ts` imports MONTHS, POWERS
-// and UNRESOLVED from `./chronicle`. Gitignoring that module without leaving
+// WHY THIS FILE EXISTS AT ALL: `api/chronicle/index.ts` imports MONTHS, POWERS,
+// UNRESOLVED and FUNERAL from `./chronicle`. Gitignoring that module without leaving
 // anything in its place means a fresh clone fails `npm run typecheck` and
 // `npm run build` on a missing import, which reads as a broken repository
 // rather than a deliberate omission. Copy this file to `chronicle.ts` and both
@@ -82,6 +82,13 @@ export const POWERS: { name: string; note: string }[] = [
     note: 'A faction, court or warband the reports keep returning to, and what the Embassy concluded about it.',
   },
 ];
+
+/** A notice the record closes a thread on, set as a document. */
+export const FUNERAL: { lead: string; notice: string[]; close: string } = {
+  lead: 'Placeholder. In the sealed volume this introduces a notice posted for the province.',
+  notice: ['Placeholder notice, line one.', 'Placeholder notice, line two.'],
+  close: 'Placeholder closing line.',
+};
 
 /** What the record never resolved. Eight in the sealed volume. */
 export const UNRESOLVED: { name: string; note: string }[] = [
