@@ -149,16 +149,18 @@ export default function App() {
 
       <div
         className={`archive-app${boundToArchive ? '' : ' archive-app--unbound'}`}      >
-        <a
-          className="support-seal"
-          href="https://ko-fi.com/N1B0279SRR"
-          target="_blank"
-          rel="noopener noreferrer external"
-          aria-label="Support the Thalmor Archives on Ko-fi (opens in a new tab)"
-        >
-          <span aria-hidden="true">☕</span>
-          <span>Support the Archives</span>
-        </a>
+        <aside aria-label="Support the archive">
+          <a
+            className="support-seal"
+            href="https://ko-fi.com/N1B0279SRR"
+            target="_blank"
+            rel="noopener noreferrer external"
+            aria-label="Support the Thalmor Archives on Ko-fi (opens in a new tab)"
+          >
+            <span aria-hidden="true">☕</span>
+            <span>Support the Archives</span>
+          </a>
+        </aside>
 
         {boundToArchive && (
           <ArchiveSidebar

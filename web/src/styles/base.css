@@ -176,6 +176,10 @@ a {
 }
 
 .notice__title {
+  /* Matches the paragraph it is when loading, now that it is a heading when
+     a volume fails. */
+  margin-block: 1em;
+  font-weight: 400;
   font-family: var(--display);
   letter-spacing: 0.18em;
   font-size: 1.05rem;

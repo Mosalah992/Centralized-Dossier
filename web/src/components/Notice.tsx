@@ -13,7 +13,10 @@ interface Props {
 }
 
 export function Notice({ kind, title, body }: Props) {
-  const line = useRef<HTMLParagraphElement>(null);
+  const line = useRef<HTMLHeadingElement & HTMLParagraphElement>(null);
+  // A failed volume shows nothing but this notice, so its title is the page's
+  // heading; otherwise the page would have none at all.
+  const Title = kind === 'error' ? 'h1' : 'p';
 
   /*
    * The archivist is fetching the volume, not a spinner.
@@ -36,7 +39,7 @@ export function Notice({ kind, title, body }: Props) {
       role={kind === 'error' ? 'alert' : 'status'}
       aria-live="polite"
     >
-      <p className="notice__title" ref={line}>{title}</p>
+      <Title className="notice__title" ref={line}>{title}</Title>
       {body && <p className="notice__body">{body}</p>}
     </div>
   );
