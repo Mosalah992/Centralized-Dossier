@@ -375,15 +375,28 @@
   }
 }
 
-/* The hall's own shelf: the insignia and three in-page destinations, fixed
-   over the page to the right of the archive rail on a thin, smoked-glass
-   ground, so the torchlight still shows through it. */
+/* The hall's own shelf: the Dominion's name and three in-page destinations,
+   fixed over the page to the right of the archive rail on a thin,
+   smoked-glass ground, so the torchlight still shows through it.
+
+   One type size for everything in the bar — name and links alike — so it
+   reads as a single line of inscription; the name is set apart by colour,
+   not by scale. */
 .hall {
   --hall-nav-height: 3.5rem;
   padding-top: calc(var(--hall-nav-height) + clamp(0.6rem, 2vw, 1.4rem));
 }
 
+/* Jumps — by link, by Tab, by the browser's find — stop clear of the bar
+   instead of under it (WCAG 2.4.11, Focus Not Obscured). */
+html:has(.hall-nav) {
+  scroll-padding-top: calc(3.5rem + 1.25rem);
+}
+
 .hall-nav {
+  --hall-nav-type: 0.8rem;
+  --hall-nav-gutter: clamp(1.25rem, 3vw, 2.5rem);
+
   position: fixed;
   top: 0;
   inset-inline: var(--archive-nav-width, 0px) 0;
@@ -399,33 +412,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
-  max-width: 72rem;
   height: var(--hall-nav-height);
-  margin-inline: auto;
-  padding-inline: clamp(1.25rem, 3vw, 2rem);
-}
-
-.hall-nav button {
-  padding: 0;
-  font: inherit;
-  color: inherit;
-  background: none;
-  border: 0;
-  cursor: pointer;
-}
-
-.hall-nav__brand {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.hall-nav__brand span {
-  font-family: var(--display);
-  font-size: clamp(0.7rem, 0.9vw, 0.82rem);
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
-  color: var(--parchment);
+  padding-inline: var(--hall-nav-gutter);
 }
 
 .hall-nav__links,
@@ -438,24 +426,69 @@
 .hall-nav__links {
   display: flex;
   align-items: center;
-  gap: clamp(1.5rem, 3vw, 2.5rem);
+  gap: clamp(0.5rem, 1.5vw, 1.5rem);
 }
 
-.hall-nav__links button,
-.hall-nav__menu button {
+/* Every target is at least 44px tall (WCAG 2.5.5); the padding widens the
+   hit area without moving the letters. */
+.hall-nav__brand,
+.hall-nav__links a,
+.hall-nav__menu a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
   font-family: var(--display);
-  font-size: 0.64rem;
+  font-size: var(--hall-nav-type);
+  font-weight: 400;
+  line-height: 1;
   letter-spacing: 0.22em;
   text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.hall-nav__brand {
+  color: var(--parchment);
+}
+
+.hall-nav__links a,
+.hall-nav__menu a {
+  position: relative;
+  padding-inline: 0.5rem;
   color: color-mix(in srgb, var(--parchment) 72%, var(--stone));
   transition: color 0.22s var(--ease);
 }
 
-.hall-nav__links button:hover,
-.hall-nav__links button:focus-visible,
-.hall-nav__menu button:hover,
-.hall-nav__menu button:focus-visible {
+/* The section in view: gold, with a hairline under it. */
+.hall-nav__links a::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0.5rem calc(0.5rem + 0.22em);
+  bottom: 0.6rem;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transition: transform 0.25s var(--ease);
+}
+
+.hall-nav__links a[aria-current],
+.hall-nav__menu a[aria-current] {
+  color: var(--gold);
+}
+
+.hall-nav__links a[aria-current]::after {
+  transform: scaleX(1);
+}
+
+.hall-nav a:hover,
+.hall-nav a:focus-visible {
   color: var(--gold-bright);
+}
+
+.hall-nav a:focus-visible,
+.hall-nav__toggle:focus-visible {
+  outline: 1px solid var(--gold-bright);
+  outline-offset: 2px;
 }
 
 .hall-nav__toggle {
@@ -464,8 +497,12 @@
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
-  width: 2.25rem;
-  height: 2.25rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
 }
 
 .hall-nav__toggle span {
@@ -477,9 +514,19 @@
 
 .hall-nav__menu {
   display: grid;
-  padding: 0.2rem clamp(1.25rem, 3vw, 2rem) 1rem;
-  gap: 0.8rem;
-  text-align: end;
+  justify-items: end;
+  gap: 0.25rem;
+  padding: 0 var(--hall-nav-gutter) 0.75rem;
+}
+
+.hall-nav__menu[hidden] {
+  display: none;
+}
+
+/* Sections are focus targets for the bar's links, not controls; the jump is
+   the cue, so they take no ring of their own. */
+.hall [tabindex='-1']:focus {
+  outline: none;
 }
 
 /* The recruiting notice: a short proclamation under the gallery, set in the
@@ -490,7 +537,6 @@
   width: min(44rem, 100%);
   margin: 0 auto;
   text-align: center;
-  scroll-margin-top: calc(var(--hall-nav-height) + 1rem);
 }
 
 .hall__recruit-label {
@@ -579,29 +625,19 @@
   transform: translateY(-1px);
 }
 
-.hall__gallery,
-.hall__command {
-  scroll-margin-top: calc(var(--hall-nav-height) + 1rem);
-}
-
 @media (max-width: 900px) {
   /* The rail is a drawer here and its button holds the top-left corner, so
-     the shelf runs the full width and its contents give way to the right. */
+     the shelf runs the full width and the name gives way to it. */
   .hall-nav {
     inset-inline: 0;
   }
 
   .hall-nav__bar {
     justify-content: flex-end;
-    gap: clamp(1rem, 3vw, 2rem);
   }
 
-  .hall-nav__brand span {
+  .hall-nav__brand {
     display: none;
-  }
-
-  .hall-nav__links {
-    gap: clamp(1rem, 3vw, 1.75rem);
   }
 }
 
@@ -626,5 +662,12 @@
 @media (max-width: 720px) {
   .hall {
     padding-top: calc(var(--hall-nav-height) + 0.5rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hall-nav a,
+  .hall-nav__links a::after {
+    transition: none;
   }
 }

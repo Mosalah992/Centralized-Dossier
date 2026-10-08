@@ -5,7 +5,7 @@
 // The volumes stand in the navigation rail, each on its own painted cover, so
 // the hall does not repeat them.
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type MouseEvent } from 'react';
 import { useGSAP } from '@gsap/react';
 
 import { D, failsafe, gsap, revealOnEnter, staged, suspendOffScreen } from '../motion';
@@ -40,8 +40,9 @@ const GALLERY = [
 const APPLICATION_URL =
   'https://docs.google.com/forms/d/e/1FAIpQLScvhD-8VfQj3tmGSQ0qB7v7z9tfr7XDILvJwl7Ex2ccrF8Cuw/viewform?usp=publish-edito';
 
-// In-page destinations, not routes: the router owns the path, so these scroll
-// rather than set a hash.
+// In-page destinations. Real links, so they read as navigation and can be
+// opened or copied, but followed by script: the router owns the URL, and a
+// hash change is not needed to move the reader.
 const SECTIONS = [
   { id: 'hall-gallery', label: 'Gallery' },
   { id: 'hall-recruitment', label: 'Recruitment' },
@@ -49,8 +50,13 @@ const SECTIONS = [
 ] as const;
 
 function goTo(id: string) {
+  const target = document.getElementById(id);
+  if (!target) return;
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  document.getElementById(id)?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+  target.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+  // Keyboard and screen-reader focus follows the reader to the section, or
+  // the next Tab would resume from the bar.
+  target.focus({ preventScroll: true });
 }
 
 interface Props {
@@ -64,6 +70,7 @@ export function Shelf({ onOpen }: Props) {
   const film = useRef<HTMLVideoElement>(null);
   const gallery = useRef<HTMLUListElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [current, setCurrent] = useState<string | null>(null);
 
   // The drop-down is the phone layout's; widening the window shuts it.
   useEffect(() => {
@@ -73,10 +80,49 @@ export function Shelf({ onOpen }: Props) {
     return () => wide.removeEventListener('change', shut);
   }, []);
 
-  const jump = (id: string) => {
+  // Escape folds the phone menu, as any disclosure should.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') setMenuOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [menuOpen]);
+
+  // Marks whichever section holds the middle band of the screen, so the bar
+  // shows the reader where they are.
+  useEffect(() => {
+    const targets = SECTIONS
+      .map(({ id }) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null);
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) setCurrent(entry.target.id);
+        else setCurrent((id) => (id === entry.target.id ? null : id));
+      }
+    }, { rootMargin: '-45% 0px -50% 0px' });
+    targets.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+
+  const follow = (event: MouseEvent<HTMLAnchorElement>, id: string) => {
+    // A modified click is the reader asking for a new tab; let it through.
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+    event.preventDefault();
     setMenuOpen(false);
     goTo(id);
   };
+
+  const links = SECTIONS.map(({ id, label }) => (
+    <li key={id}>
+      <a
+        href={`#${id}`}
+        aria-current={current === id ? 'location' : undefined}
+        onClick={(event) => follow(event, id)}
+      >
+        {label}
+      </a>
+    </li>
+  ));
 
   // The hall comes up out of the dark, seal first. Once, on mount.
   useGSAP(() => staged(({ moving }) => {
@@ -197,25 +243,16 @@ export function Shelf({ onOpen }: Props) {
 
   return (
     <div className="hall" ref={hall}>
-      <nav
-        className="hall-nav"
-        aria-label="Hall sections"
-      >
+      <nav className="hall-nav" aria-label="Hall sections">
         <div className="hall-nav__bar">
-          <button className="hall-nav__brand" type="button" onClick={() => jump('hall-archive')}>
-            <span>Aldmeri Dominion</span>
-          </button>
-          <ul className="hall-nav__links">
-            {SECTIONS.map(({ id, label }) => (
-              <li key={id}>
-                <button type="button" onClick={() => jump(id)}>{label}</button>
-              </li>
-            ))}
-          </ul>
+          <a className="hall-nav__brand" href="#hall-archive" onClick={(event) => follow(event, 'hall-archive')}>
+            Aldmeri Dominion
+          </a>
+          <ul className="hall-nav__links">{links}</ul>
           <button
             className="hall-nav__toggle"
             type="button"
-            aria-label="Toggle hall sections"
+            aria-label="Hall sections menu"
             aria-expanded={menuOpen}
             aria-controls="hall-nav-menu"
             onClick={() => setMenuOpen((open) => !open)}
@@ -223,20 +260,12 @@ export function Shelf({ onOpen }: Props) {
             <span /><span /><span />
           </button>
         </div>
-        {menuOpen && (
-          <ul className="hall-nav__menu" id="hall-nav-menu">
-            {SECTIONS.map(({ id, label }) => (
-              <li key={id}>
-                <button type="button" onClick={() => jump(id)}>{label}</button>
-              </li>
-            ))}
-          </ul>
-        )}
+        <ul className="hall-nav__menu" id="hall-nav-menu" hidden={!menuOpen}>{links}</ul>
       </nav>
 
       <span className="hall__dust" ref={dust} aria-hidden />
 
-      <header className="hall__hero" id="hall-archive">
+      <header className="hall__hero" id="hall-archive" tabIndex={-1}>
         {/* The Dominion insignia. Decorative — the heading beneath it already
             names the archive, so it is not announced a second time. */}
         <img
@@ -306,7 +335,7 @@ export function Shelf({ onOpen }: Props) {
         />
       </figure>
 
-      <ul className="hall__gallery" id="hall-gallery" ref={gallery}>
+      <ul className="hall__gallery" id="hall-gallery" tabIndex={-1} aria-label="Gallery" ref={gallery}>
         {GALLERY.map(({ src, alt }) => (
           <li key={src}>
             <img src={src} alt={alt} width={1200} height={675} loading="lazy" decoding="async" />
@@ -314,7 +343,7 @@ export function Shelf({ onOpen }: Props) {
         ))}
       </ul>
 
-      <section className="hall__recruit" id="hall-recruitment" aria-labelledby="hall-recruit-title">
+      <section className="hall__recruit" id="hall-recruitment" tabIndex={-1} aria-labelledby="hall-recruit-title">
         <div className="hall__divider" aria-hidden>
           <span />
         </div>
@@ -344,7 +373,7 @@ export function Shelf({ onOpen }: Props) {
 
       {/* A guarded doorway, not another volume: High Command's seal is held
           below the hall so the public registers remain the primary action. */}
-      <section className="hall__command" id="hall-command" aria-label="High Command reports">
+      <section className="hall__command" id="hall-command" tabIndex={-1} aria-label="High Command reports">
         <p className="hall__command-label">For the Eyes of High Command</p>
         <button className="hall__command-seal" type="button" onClick={() => onOpen('/reports')}>
           <img src={reportsSealUrl} alt="" width={132} height={132} />
