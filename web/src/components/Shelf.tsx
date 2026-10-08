@@ -5,7 +5,7 @@
 // The volumes stand in the navigation rail, each on its own painted cover, so
 // the hall does not repeat them.
 
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useGSAP } from '@gsap/react';
 
 import { D, failsafe, gsap, revealOnEnter, staged, suspendOffScreen } from '../motion';
@@ -35,6 +35,24 @@ const GALLERY = [
   { src: gallery8, alt: 'Hooded agents filing up a snow-dusted stair.' },
 ];
 
+// The Dominion's application form. External, so it opens beside the archive
+// rather than in place of it.
+const APPLICATION_URL =
+  'https://docs.google.com/forms/d/e/1FAIpQLScvhD-8VfQj3tmGSQ0qB7v7z9tfr7XDILvJwl7Ex2ccrF8Cuw/viewform?usp=publish-edito';
+
+// In-page destinations, not routes: the router owns the path, so these scroll
+// rather than set a hash.
+const SECTIONS = [
+  { id: 'hall-gallery', label: 'Gallery' },
+  { id: 'hall-recruitment', label: 'Recruitment' },
+  { id: 'hall-command', label: 'High Command' },
+] as const;
+
+function goTo(id: string) {
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.getElementById(id)?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+}
+
 interface Props {
   onOpen: (href: string) => void;
 }
@@ -45,6 +63,20 @@ export function Shelf({ onOpen }: Props) {
   const portrait = useRef<HTMLElement>(null);
   const film = useRef<HTMLVideoElement>(null);
   const gallery = useRef<HTMLUListElement>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // The drop-down is the phone layout's; widening the window shuts it.
+  useEffect(() => {
+    const wide = window.matchMedia('(min-width: 641px)');
+    const shut = () => { if (wide.matches) setMenuOpen(false); };
+    wide.addEventListener('change', shut);
+    return () => wide.removeEventListener('change', shut);
+  }, []);
+
+  const jump = (id: string) => {
+    setMenuOpen(false);
+    goTo(id);
+  };
 
   // The hall comes up out of the dark, seal first. Once, on mount.
   useGSAP(() => staged(({ moving }) => {
@@ -165,9 +197,46 @@ export function Shelf({ onOpen }: Props) {
 
   return (
     <div className="hall" ref={hall}>
+      <nav
+        className="hall-nav"
+        aria-label="Hall sections"
+      >
+        <div className="hall-nav__bar">
+          <button className="hall-nav__brand" type="button" onClick={() => jump('hall-archive')}>
+            <span>Aldmeri Dominion</span>
+          </button>
+          <ul className="hall-nav__links">
+            {SECTIONS.map(({ id, label }) => (
+              <li key={id}>
+                <button type="button" onClick={() => jump(id)}>{label}</button>
+              </li>
+            ))}
+          </ul>
+          <button
+            className="hall-nav__toggle"
+            type="button"
+            aria-label="Toggle hall sections"
+            aria-expanded={menuOpen}
+            aria-controls="hall-nav-menu"
+            onClick={() => setMenuOpen((open) => !open)}
+          >
+            <span /><span /><span />
+          </button>
+        </div>
+        {menuOpen && (
+          <ul className="hall-nav__menu" id="hall-nav-menu">
+            {SECTIONS.map(({ id, label }) => (
+              <li key={id}>
+                <button type="button" onClick={() => jump(id)}>{label}</button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </nav>
+
       <span className="hall__dust" ref={dust} aria-hidden />
 
-      <header className="hall__hero">
+      <header className="hall__hero" id="hall-archive">
         {/* The Dominion insignia. Decorative — the heading beneath it already
             names the archive, so it is not announced a second time. */}
         <img
@@ -237,7 +306,7 @@ export function Shelf({ onOpen }: Props) {
         />
       </figure>
 
-      <ul className="hall__gallery" ref={gallery}>
+      <ul className="hall__gallery" id="hall-gallery" ref={gallery}>
         {GALLERY.map(({ src, alt }) => (
           <li key={src}>
             <img src={src} alt={alt} width={1200} height={675} loading="lazy" decoding="async" />
@@ -245,13 +314,37 @@ export function Shelf({ onOpen }: Props) {
         ))}
       </ul>
 
+      <section className="hall__recruit" id="hall-recruitment" aria-labelledby="hall-recruit-title">
+        <div className="hall__divider" aria-hidden>
+          <span />
+        </div>
+        <p className="hall__recruit-label">Recruitment</p>
+        <h2 className="hall__recruit-title" id="hall-recruit-title">To Join the Thalmor</h2>
+        <ul className="hall__recruit-terms">
+          <li>We accept no AI-made applications.</li>
+          <li>Joining the Thalmor demands a life oath, so prepare to give your life to the Dominion.</li>
+          <li>We do not mind Bosmer or Khajiit applicants.</li>
+          <li>Make sure you don’t write too much, but not too little — in between is good.</li>
+        </ul>
+        <p className="hall__recruit-blessing">May Auri-El bless you and Xarxes guide your word.</p>
+        <a
+          className="hall__recruit-oath"
+          href={APPLICATION_URL}
+          target="_blank"
+          rel="noopener noreferrer external"
+          aria-label="Submit Your Oath (opens the application form in a new tab)"
+        >
+          Submit Your Oath
+        </a>
+      </section>
+
       <div className="hall__divider" aria-hidden>
         <span />
       </div>
 
       {/* A guarded doorway, not another volume: High Command's seal is held
           below the hall so the public registers remain the primary action. */}
-      <section className="hall__command" aria-label="High Command reports">
+      <section className="hall__command" id="hall-command" aria-label="High Command reports">
         <p className="hall__command-label">For the Eyes of High Command</p>
         <button className="hall__command-seal" type="button" onClick={() => onOpen('/reports')}>
           <img src={reportsSealUrl} alt="" width={132} height={132} />

@@ -11,10 +11,10 @@ import { ALL_SLUGS } from '../shared/volumes';
 const read = (path: string) => readFileSync(path, 'utf8');
 
 describe('archive navigation', () => {
-  it('is generated from every published volume and the two real standalone routes', () => {
+  it('is generated from every published volume and High Command, with home left to the insignia', () => {
     const hrefs = ARCHIVE_NAVIGATION.map((item) => item.href);
     expect(new Set(hrefs).size).toBe(hrefs.length);
-    expect(hrefs).toContain('/');
+    expect(hrefs).not.toContain('/');
     expect(hrefs).toContain('/reports');
     for (const slug of ALL_SLUGS) expect(hrefs).toContain(`/archives/${slug}`);
   });

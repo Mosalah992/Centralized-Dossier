@@ -22,8 +22,9 @@ const MARKS: Record<VolumeSlug, string> = {
   informants: 'I',
 };
 
+// The hall has no entry of its own: the insignia at the head of the rail
+// already leads home.
 export const ARCHIVE_NAVIGATION: readonly ArchiveNavigationItem[] = [
-  { href: '/', label: 'Archive Cabinet', group: 'Archive', mark: '⌂' },
   ...SHELF.flatMap((section) => section.volumes.map((volume) => ({
     href: hrefFor(volume.slug),
     label: volume.title,
@@ -35,7 +36,6 @@ export const ARCHIVE_NAVIGATION: readonly ArchiveNavigationItem[] = [
 ];
 
 export function navigationItemIsActive(route: Route, item: ArchiveNavigationItem): boolean {
-  if (item.href === '/') return route.name === 'shelf';
   if (item.href === '/reports') return route.name === 'reports';
   return route.name === 'volume' && route.slug === item.slug;
 }
