@@ -9,6 +9,7 @@ import { ALL_SLUGS } from '../../shared/volumes';
 export type Route =
   | { name: 'shelf' }
   | { name: 'reports'; id?: string }
+  | { name: 'penalcode' }
   | { name: 'volume'; slug: VolumeSlug }
   | { name: 'editor' }
   | { name: 'missing' };
@@ -17,6 +18,8 @@ export function parse(pathname: string): Route {
   const path = pathname.replace(/\/+$/, '');
   if (path === '' || path === '/') return { name: 'shelf' };
   if (path === '/reports') return { name: 'reports' };
+  // The Code is asked for as "/Penalcode" as often as not; any casing opens it.
+  if (path.toLowerCase() === '/penalcode') return { name: 'penalcode' };
   // One filing, addressed by its id. Opens behind the same gate as the register.
   const filing = /^\/reports\/(\d{1,24})$/.exec(path);
   if (filing) return { name: 'reports', id: filing[1]! };

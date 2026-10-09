@@ -8,6 +8,9 @@ const read = (path: string) => readFileSync(path, 'utf8');
 
 describe('retired mini-game', () => {
   it('has no route, runtime, model, stylesheet, test, or asset preparation surface', () => {
+    expect(parse('/penalcode')).toEqual({ name: 'penalcode' });
+    expect(parse('/Penalcode')).toEqual({ name: 'penalcode' });
+    expect(parse('/penalcode/')).toEqual({ name: 'penalcode' });
     expect(parse('/slaytheheretic')).toEqual({ name: 'missing' });
     expect(parse('/SlayTheHeretic')).toEqual({ name: 'missing' });
 

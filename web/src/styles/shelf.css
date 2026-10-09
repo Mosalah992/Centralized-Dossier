@@ -643,7 +643,7 @@ html:has(.hall-nav) {
 
 /* Too narrow for the three destinations beside the drawer button: they fold
    into a menu under the same smoked-glass shelf. */
-@media (max-width: 640px) {
+@media (max-width: 800px) {
   .hall-nav__links {
     display: none;
   }
@@ -653,7 +653,7 @@ html:has(.hall-nav) {
   }
 }
 
-@media (min-width: 641px) {
+@media (min-width: 801px) {
   .hall-nav__menu {
     display: none;
   }

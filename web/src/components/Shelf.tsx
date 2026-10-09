@@ -74,7 +74,7 @@ export function Shelf({ onOpen }: Props) {
 
   // The drop-down is the phone layout's; widening the window shuts it.
   useEffect(() => {
-    const wide = window.matchMedia('(min-width: 641px)');
+    const wide = window.matchMedia('(min-width: 801px)');
     const shut = () => { if (wide.matches) setMenuOpen(false); };
     wide.addEventListener('change', shut);
     return () => wide.removeEventListener('change', shut);
@@ -112,7 +112,7 @@ export function Shelf({ onOpen }: Props) {
     goTo(id);
   };
 
-  const links = SECTIONS.map(({ id, label }) => (
+  const sectionLinks = SECTIONS.map(({ id, label }) => (
     <li key={id}>
       <a
         href={`#${id}`}
@@ -123,6 +123,25 @@ export function Shelf({ onOpen }: Props) {
       </a>
     </li>
   ));
+
+  // The Code is a page of its own, not a part of the hall, so this one leaves
+  // through the router rather than scrolling.
+  const links = [
+    ...sectionLinks,
+    <li key="penalcode">
+      <a
+        href="/penalcode"
+        onClick={(event) => {
+          if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+          event.preventDefault();
+          setMenuOpen(false);
+          onOpen('/penalcode');
+        }}
+      >
+        Penal Code
+      </a>
+    </li>,
+  ];
 
   // The hall comes up out of the dark, seal first. Once, on mount.
   useGSAP(() => staged(({ moving }) => {

@@ -13,6 +13,7 @@ flowchart TB
   Canonical --> App[React archive: web/src/App.tsx]
   App --> Router[router.ts]
   App --> Views[Lazy volume views + shelf]
+  App --> PenalCode[/penalcode: bundled, Embassy-kept Code]
   App --> Client[web/src/api.ts]
 
   Client --> Pages[Cloudflare Pages Functions]

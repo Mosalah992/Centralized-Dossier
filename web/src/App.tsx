@@ -35,6 +35,7 @@ const HistoryView = lazy(() => import('./views/History').then((m) => ({ default:
 const InformantsView = lazy(() => import('./views/Informants').then((m) => ({ default: m.InformantsView })));
 const EnforcementView = lazy(() => import('./views/Enforcement').then((m) => ({ default: m.EnforcementView })));
 const ReportsView = lazy(() => import('./views/Reports').then((m) => ({ default: m.ReportsView })));
+const PenalCodeView = lazy(() => import('./views/PenalCode').then((m) => ({ default: m.PenalCodeView })));
 
 /*
  * Fluent's provider, and it is lazy for the same reason the views are — only
@@ -120,6 +121,12 @@ const VOLUME_TRACKS: Partial<Record<VolumeSlug, Track>> = {
   },
 };
 
+const PENAL_BINDING = {
+  '--cover': '#2b2216',
+  '--cover-2': '#17110a',
+  '--foil': '#c5a169',
+} as React.CSSProperties;
+
 export default function App() {
   const [route, navigate] = useRoute();
 
@@ -129,7 +136,9 @@ export default function App() {
 
   // The tab title should say which volume is open.
   useEffect(() => {
-    const name = route.name === 'volume' ? getTitle(route.slug) : null;
+    const name = route.name === 'volume'
+      ? getTitle(route.slug)
+      : route.name === 'penalcode' ? 'Penal Code' : null;
     document.title = name
       ? `${name} - Thalmor Embassy Archives`
       : 'Thalmor Embassy Archives';
@@ -192,6 +201,21 @@ export default function App() {
                 <EditorView />
               </Suspense>
             </ErrorBoundary>
+          )}
+
+          {/* Bound like a volume, in the Embassy's own black and gold, but kept
+              by the Embassy rather than read from the sheet. */}
+          {route.name === 'penalcode' && (
+            <div className="volume volume--penalcode" style={PENAL_BINDING}>
+              <button className="volume__back" type="button" onClick={() => navigate('/')}>
+                Return to the cabinet
+              </button>
+              <ErrorBoundary resetKey="penalcode">
+                <Suspense fallback={<Consulting />}>
+                  <PenalCodeView />
+                </Suspense>
+              </ErrorBoundary>
+            </div>
           )}
 
           {route.name === 'volume' && (

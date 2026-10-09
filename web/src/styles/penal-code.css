@@ -1,0 +1,300 @@
+/* The Penal Code, set as a decree on the volume's parchment: an eagle in the
+   binding's ink at the head, numbered articles under each part, and the
+   signatories' hands at the foot. Colours come from the page's own --ink and
+   --cover so it reads as one of the archive's volumes, not a separate site. */
+
+.penal__eagle {
+  width: clamp(4.5rem, 9vw, 6.5rem);
+  aspect-ratio: 445 / 560;
+  margin: 1.6rem auto 0;
+  /* The source eagle is parchment-coloured, made for a dark page. Used as a
+     mask it takes whatever ink the volume is bound in instead. */
+  background: color-mix(in srgb, var(--cover) 70%, var(--ink));
+  -webkit-mask: var(--eagle) center / contain no-repeat;
+  mask: var(--eagle) center / contain no-repeat;
+  opacity: 0.85;
+}
+
+.penal__preamble,
+.penal__contents,
+.penal__classification {
+  max-width: 44rem;
+  margin-inline: auto;
+}
+
+.penal__preamble p,
+.penal__classification p {
+  margin: 0.9rem 0 0;
+  line-height: 1.7;
+  text-wrap: pretty;
+}
+
+.penal__provisions {
+  margin: 1rem 0 0;
+  padding-inline-start: 2.2rem;
+  list-style: upper-roman;
+  line-height: 1.7;
+}
+
+.penal__provisions li + li {
+  margin-top: 0.6rem;
+}
+
+.penal__disclaimer {
+  margin: 1.6rem 0 0;
+  padding: 1rem 1.25rem;
+  border-inline-start: 2px solid color-mix(in srgb, var(--cover) 60%, transparent);
+  background: color-mix(in srgb, var(--cover) 7%, transparent);
+}
+
+.penal__disclaimer p {
+  margin: 0;
+  font-style: italic;
+}
+
+.penal__disclaimer .penal__disclaimer-label {
+  margin-bottom: 0.4rem;
+  font-family: var(--display);
+  font-size: 0.7rem;
+  font-style: normal;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+/* ── Contents ────────────────────────────────────────────────────────────── */
+
+.penal__contents ol {
+  margin: 1.2rem 0 0;
+  padding: 0;
+  list-style: none;
+  columns: 2 16rem;
+  column-gap: 2.5rem;
+}
+
+.penal__contents li {
+  break-inside: avoid;
+}
+
+.penal__contents a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s var(--ease), color 0.2s var(--ease);
+}
+
+.penal__contents a:hover,
+.penal__contents a:focus-visible {
+  color: color-mix(in srgb, var(--cover) 70%, var(--ink));
+  border-bottom-color: currentColor;
+}
+
+/* ── Charges ─────────────────────────────────────────────────────────────── */
+
+/* The class is always written out; the treatment only reinforces it. A felony
+   is a filled stamp, a misdemeanor an outlined one. */
+.penal__charge {
+  display: inline-block;
+  margin: 0;
+  padding: 0.2rem 0.6rem;
+  font-family: var(--display);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  border: 1px solid color-mix(in srgb, var(--cover) 70%, var(--ink));
+}
+
+.penal__charge--felony {
+  color: var(--parchment);
+  background: color-mix(in srgb, var(--cover) 82%, #000);
+}
+
+.penal__charge--misdemeanor {
+  color: color-mix(in srgb, var(--cover) 75%, var(--ink));
+  background: transparent;
+}
+
+.penal__classes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: 1.2rem;
+  margin: 1.4rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.penal__class {
+  padding: 1rem 1.1rem;
+  border: 1px solid color-mix(in srgb, var(--cover) 25%, transparent);
+  background: color-mix(in srgb, #fff 18%, transparent);
+}
+
+.penal__class ul {
+  margin: 0.8rem 0 0;
+  padding-inline-start: 1.1rem;
+  line-height: 1.6;
+}
+
+.penal__classification h3 {
+  margin: 1.8rem 0 0;
+  font-family: var(--display);
+  font-size: 0.78rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.penal__modifiers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.8rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.penal__modifiers li {
+  padding: 0.3rem 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--cover) 30%, transparent);
+}
+
+.penal__modifiers span {
+  margin-inline-start: 0.3rem;
+  font-family: var(--display);
+  font-weight: 600;
+}
+
+/* ── Parts and articles ──────────────────────────────────────────────────── */
+
+.penal__part {
+  margin-top: 3.2rem;
+}
+
+.penal__part-title {
+  display: grid;
+  justify-items: center;
+  gap: 0.4rem;
+  padding-bottom: 0.9rem;
+  font-size: clamp(1.15rem, 2.2vw, 1.5rem);
+  font-weight: 400;
+  text-align: center;
+  border-bottom: 1px solid color-mix(in srgb, var(--foil) 55%, transparent);
+}
+
+.penal__numeral {
+  font-size: 0.68rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--cover) 55%, var(--ink));
+}
+
+.penal__chapter-title {
+  margin: 2rem 0 0;
+  font-size: 0.9rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.penal__chapter-title span {
+  color: color-mix(in srgb, var(--cover) 55%, var(--ink));
+}
+
+.penal__articles {
+  display: grid;
+  gap: 1.4rem;
+  margin: 1.1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.penal__article {
+  padding-inline-start: 1rem;
+  border-inline-start: 1px solid color-mix(in srgb, var(--cover) 22%, transparent);
+}
+
+.penal__article-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 0.7rem;
+  margin: 0 0 0.45rem;
+  font-family: var(--serif);
+  font-size: 1.12rem;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.penal__article-code {
+  font-family: var(--display);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  color: color-mix(in srgb, var(--cover) 55%, var(--ink));
+}
+
+.penal__article p:not(.penal__charge) {
+  margin: 0.55rem 0 0;
+  line-height: 1.65;
+  text-wrap: pretty;
+}
+
+/* ── Signatories ─────────────────────────────────────────────────────────── */
+
+.penal__signatories {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 2rem;
+  margin: 1.6rem 0 0;
+  padding: 0;
+  list-style: none;
+  text-align: center;
+}
+
+.penal__signatories img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: 5.5rem;
+  margin: 0 auto;
+  object-fit: contain;
+  /* The signatures are ink on a transparent ground; multiply sits them into
+     the parchment rather than on top of it. */
+  mix-blend-mode: multiply;
+}
+
+.penal__signatory-name {
+  margin: 0.4rem 0 0;
+  padding-top: 0.6rem;
+  font-family: var(--display);
+  font-size: 0.78rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  border-top: 1px solid color-mix(in srgb, var(--ink) 45%, transparent);
+}
+
+.penal__signatory-office {
+  margin: 0.3rem 0 0;
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+/* Sections are focus targets for the contents, not controls. */
+.penal__part:focus,
+#penal-punishments:focus,
+#penal-signatories:focus {
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .penal__contents a {
+    transition: none;
+  }
+}
+
+/* A jump from the contents lands clear of the phone's drawer button. */
+.penal__part,
+#penal-punishments,
+#penal-signatories {
+  scroll-margin-top: 4.5rem;
+}
