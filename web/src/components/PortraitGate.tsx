@@ -1,10 +1,14 @@
 import { useGSAP } from '@gsap/react';
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 
-import ancarionAccepted from '../assets/ancarion-accept.webp';
-import ancarionDenied from '../assets/ancarion-refusal.webm';
-import ancarionAnnoyed from '../assets/ancarion-sigh.webm';
-import ancarionIdle from '../assets/ancarion-idle.mp4';
+import ancarionAcceptedMp4 from '../assets/ancarion-accept.mp4';
+import ancarionAcceptedWebm from '../assets/ancarion-accept.webm';
+import ancarionIdleMp4 from '../assets/ancarion-idle.mp4';
+import ancarionIdleWebm from '../assets/ancarion-idle.webm';
+import ancarionDeniedMp4 from '../assets/ancarion-refusal.mp4';
+import ancarionDeniedWebm from '../assets/ancarion-refusal.webm';
+import ancarionAnnoyedMp4 from '../assets/ancarion-sigh.mp4';
+import ancarionAnnoyedWebm from '../assets/ancarion-sigh.webm';
 import ancarion from '../assets/canonreeve.webp';
 import frame from '../assets/portrait-frame.png';
 import { NirnSky } from './NirnSky';
@@ -15,12 +19,15 @@ export type GateDecision =
   | { ok: true }
   | { ok: false; message: string; retryAfterSeconds?: number };
 
+/** One source, or several in preference order (the browser plays the first it can). */
+export type ClipSource = string | readonly string[];
+
 export interface PortraitGateProps {
   collection: string;
   eyebrow: string;
   description: string;
   clips?: Partial<
-    Record<'idle' | 'listening' | 'denied' | 'annoyed' | 'accepted', string>
+    Record<'idle' | 'listening' | 'denied' | 'annoyed' | 'accepted', ClipSource>
   >;
   verify: (passphrase: string, signal: AbortSignal) => Promise<GateDecision>;
   /** Starts the already-authorized route's data request behind the opening. */
@@ -44,28 +51,70 @@ export type PortraitState =
 type ReactionState = Extract<PortraitState, 'denied' | 'annoyed' | 'accepted'>;
 
 const BUSY: readonly AuthState[] = ['checking', 'authorized'];
+// WebM first: it is a fifth of the MP4's size. The MP4 is for browsers
+// without VP9.
 const DEFAULT_CLIPS = {
-  idle: ancarionIdle,
-  denied: ancarionDenied,
-  annoyed: ancarionAnnoyed,
-  accepted: ancarionAccepted,
-} satisfies Partial<Record<PortraitState, string>>;
+  idle: [ancarionIdleWebm, ancarionIdleMp4],
+  denied: [ancarionDeniedWebm, ancarionDeniedMp4],
+  annoyed: [ancarionAnnoyedWebm, ancarionAnnoyedMp4],
+  accepted: [ancarionAcceptedWebm, ancarionAcceptedMp4],
+} satisfies Partial<Record<PortraitState, ClipSource>>;
 const REACTION_STATES: ReactionState[] = ['denied', 'annoyed', 'accepted'];
 const IDLE_REPLAY_PAUSE_MS = 2_000;
+// Safety nets for a reaction whose `ended` never arrives; both performances
+// run 5.04 s, and `ended` normally returns him to idle first.
 const DENIED_FALLBACK_MS = 5_500;
-const ANNOYED_FALLBACK_MS = 3_000;
+const ANNOYED_FALLBACK_MS = 5_500;
+// How long Ancarion holds before the door swings. A still needs only a beat;
+// the accept performance's nod has finished and his eyes have reopened by
+// about 3.7 s, and the clip plays on beneath the swinging door.
+const ACCEPTED_STILL_HOLD_MS = 520;
+const ACCEPTED_PERFORMANCE_HOLD_MS = 3_700;
 
 function isReactionState(state: PortraitState): state is ReactionState {
   return REACTION_STATES.includes(state as ReactionState);
 }
 
-function isVideoAsset(source: string) {
-  return /\.(?:mp4|webm)(?:[?#].*)?$/i.test(source);
+function sourceList(source: ClipSource): readonly string[] {
+  return typeof source === 'string' ? [source] : source;
+}
+
+function isVideoAsset(source: ClipSource) {
+  return /\.(?:mp4|webm)(?:[?#].*)?$/i.test(sourceList(source)[0] ?? '');
+}
+
+function videoType(source: string) {
+  return /\.webm(?:[?#].*)?$/i.test(source) ? 'video/webm' : 'video/mp4';
+}
+
+/**
+ * A <video> with <source> children reports a failed load on its last
+ * <source>, not on itself, so the fallback handler goes there.
+ */
+function VideoSources({
+  sources,
+  onError,
+}: {
+  sources: readonly string[];
+  onError: () => void;
+}) {
+  return (
+    <>
+      {sources.map((source, index) => (
+        <source
+          key={source}
+          src={source}
+          type={videoType(source)}
+          onError={index === sources.length - 1 ? onError : undefined}
+        />
+      ))}
+    </>
+  );
 }
 
 interface ReactionLayerProps {
   state: ReactionState;
-  source: string;
+  source: ClipSource;
   active: boolean;
   onComplete: (state: ReactionState) => void;
   onFailure: (state: ReactionState) => void;
@@ -80,6 +129,8 @@ function ReactionLayer({
 }: ReactionLayerProps) {
   const video = useRef<HTMLVideoElement>(null);
   const videoAsset = isVideoAsset(source);
+  const sources = sourceList(source);
+  const sourceKey = sources.join('|');
 
   useEffect(() => {
     const element = video.current;
@@ -91,14 +142,14 @@ function ReactionLayer({
 
     element.currentTime = 0;
     void element.play().catch(() => onFailure(state));
-  }, [active, onFailure, source, state]);
+  }, [active, onFailure, sourceKey, state]);
 
   if (videoAsset) {
     return (
       <video
+        key={sourceKey}
         ref={video}
         className="portrait-gate__reaction"
-        src={source}
         muted
         playsInline
         preload="auto"
@@ -106,14 +157,16 @@ function ReactionLayer({
         data-active={active}
         onEnded={() => onComplete(state)}
         onError={() => onFailure(state)}
-      />
+      >
+        <VideoSources sources={sources} onError={() => onFailure(state)} />
+      </video>
     );
   }
 
   return (
     <img
       className="portrait-gate__reaction"
-      src={source}
+      src={sources[0]}
       alt=""
       aria-hidden="true"
       data-active={active}
@@ -159,7 +212,9 @@ export function PortraitGate({
   const aura = useRef<HTMLSpanElement>(null);
   const finished = useRef(false);
 
-  const idleSource = clips.idle ?? DEFAULT_CLIPS.idle;
+  const idleSources = sourceList(clips.idle ?? DEFAULT_CLIPS.idle);
+  const idleKey = idleSources.join('|');
+  const acceptedSource = clips.accepted ?? DEFAULT_CLIPS.accepted;
   const activeReaction = isReactionState(portraitState) ? portraitState : null;
 
   const markReactionFailed = useCallback((reaction: ReactionState) => {
@@ -208,7 +263,7 @@ export function PortraitGate({
     }
 
     void element.play().catch(() => setIdleUnavailable(true));
-  }, [idleSource, idleUnavailable, reducedMotion]);
+  }, [idleKey, idleUnavailable, reducedMotion]);
 
   const pauseBeforeIdleReplay = useCallback(() => {
     if (reducedMotion || idleUnavailable) return;
@@ -233,9 +288,13 @@ export function PortraitGate({
       staged(({ moving }) => {
         if (!moving) return;
 
-        const activeLayer = root.current?.querySelector<HTMLElement>(
-          '.portrait-gate__reaction[data-active="true"]',
-        );
+        // Only a new reaction fades in; the accept clip carried into the
+        // opening is already showing.
+        const activeLayer = isReactionState(portraitState)
+          ? root.current?.querySelector<HTMLElement>(
+              '.portrait-gate__reaction[data-active="true"]',
+            )
+          : null;
         const auraElement = aura.current;
         const timeline = gsap.timeline();
 
@@ -378,10 +437,14 @@ export function PortraitGate({
         finish();
         return;
       }
-      openingTimer.current = window.setTimeout(() => {
-        setPortraitState('opening');
-        openingTimer.current = window.setTimeout(finish, 1_250);
-      }, 520);
+      const performs = isVideoAsset(acceptedSource) && !failedReactions.accepted;
+      openingTimer.current = window.setTimeout(
+        () => {
+          setPortraitState('opening');
+          openingTimer.current = window.setTimeout(finish, 1_250);
+        },
+        performs ? ACCEPTED_PERFORMANCE_HOLD_MS : ACCEPTED_STILL_HOLD_MS,
+      );
     } catch {
       if (controller.signal.aborted && !timedOut) return;
       setAuthState('error');
@@ -427,8 +490,8 @@ export function PortraitGate({
               <img className="portrait-gate__portrait" src={ancarion} alt="" />
               <video
                 ref={idleVideo}
+                key={idleKey}
                 className="portrait-gate__idle"
-                src={idleSource}
                 poster={ancarion}
                 autoPlay
                 muted
@@ -437,7 +500,9 @@ export function PortraitGate({
                 aria-hidden="true"
                 onEnded={pauseBeforeIdleReplay}
                 onError={() => setIdleUnavailable(true)}
-              />
+              >
+                <VideoSources sources={idleSources} onError={() => setIdleUnavailable(true)} />
+              </video>
               {REACTION_STATES.map((reaction) => {
                 const source = clips[reaction] ?? DEFAULT_CLIPS[reaction];
                 if (!source || failedReactions[reaction]) return null;
@@ -446,7 +511,11 @@ export function PortraitGate({
                     key={reaction}
                     state={reaction}
                     source={source}
-                    active={activeReaction === reaction}
+                    // The accept performance keeps playing while the door swings.
+                    active={
+                      activeReaction === reaction ||
+                      (reaction === 'accepted' && portraitState === 'opening')
+                    }
                     onComplete={completeReaction}
                     onFailure={markReactionFailed}
                   />

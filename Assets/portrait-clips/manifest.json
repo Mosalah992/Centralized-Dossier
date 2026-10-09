@@ -1,0 +1,178 @@
+{
+  "title": "Ancarion living-portrait clips",
+  "provenance": "These clips are AI-generated (Kling AI image-to-video) from the owner's own painting, web/src/assets/canonreeve.webp. The painting itself was not altered; no other source imagery was used. The raw MP4s also carry Kling's AIGC metadata tag.",
+  "source_image": {
+    "path": "web/src/assets/canonreeve.webp",
+    "sha256": "ef1df50411aab618bf5f1d5add1b8ef0db5ae9ccadad780b1f55806602b57936",
+    "width": 760,
+    "height": 760,
+    "uploaded_as": {
+      "file": "canonreeve.png",
+      "sha256": "e0cb7e0a5de25b43e3a0d06d907afa60638999d681776de9fe9990be3e7b0094",
+      "note": "lossless WebP-to-PNG conversion (Kling accepts only PNG/JPG); decoded pixels verified identical; uploaded bytes verified identical by re-download"
+    }
+  },
+  "local_only": "raw/ and ancarion-poster.png are kept on the author's machine (gitignored); the committed WebM/MP4 encodes are what scripts/prepare-portrait-video.mjs copies into web/src/assets.",
+  "generator": {
+    "service": "Kling AI",
+    "interface": "Kling MCP 1.3.3",
+    "tool": "image_to_video",
+    "download": "urlWithoutWatermark"
+  },
+  "raw_output": {
+    "width": 1440,
+    "height": 1440,
+    "fps": 24,
+    "frames": 121,
+    "duration_s": 5.041667,
+    "codec": "h264",
+    "audio": "none"
+  },
+  "web_encodes": {
+    "webm": "VP9 (libvpx-vp9 CRF 30, -b:v 0), yuv420p, no audio, 1440x1440",
+    "mp4": "H.264 High (libx264 slow CRF 18), yuv420p, +faststart, no audio, 1440x1440",
+    "encoder": "ffmpeg 9.0.1 (gyan.dev essentials build)"
+  },
+  "poster": {
+    "file": "ancarion-poster.png",
+    "from": "frame 0 of raw/ancarion-idle.mp4",
+    "sha256": "6ac70271eb3ac110351306c511528e9300e96510abbd46c22f3f0c6633088dbe"
+  },
+  "clips": [
+    {
+      "name": "idle",
+      "model": "kling-video-v3_0",
+      "mode": "pro",
+      "mode_parameter": "resolution=1080p (the Kling MCP exposes pro mode as the 1080p resolution tier)",
+      "duration": 5,
+      "cfg_scale": null,
+      "cfg_scale_note": "0.5 requested; the Kling MCP image_to_video schema has no cfg_scale parameter, so none was sent",
+      "prompt": "Painted portrait of a masked high elf mage: long white hair, gold circlet, golden halo, black mask over nose and mouth, black robe with gold trim, gold staff with violet smoke. He breathes slowly; his shoulders rise and fall slightly. He blinks once, slowly. A few hair strands drift. The halo glows softly and the violet smoke curls. He faces forward, eyes on the viewer. Locked-off static camera. Keep the brushwork, colors and composition exactly; only he moves.",
+      "negative_prompt": "camera movement, zoom, pan, cut, morphing, warping, distorted face, exposed mouth, lips, teeth, talking, extra hands, new objects, text, watermark, color shift, photorealistic, 3D render",
+      "negative_prompt_sent": false,
+      "negative_prompt_note": "the Kling MCP image_to_video schema has no negative_prompt parameter; recorded here as specified but not sent",
+      "other_parameters_sent": {
+        "enable_audio": "false",
+        "prefer_multi_shots": "false",
+        "imageCount": "1"
+      },
+      "first_image": "canonreeve.png (lossless PNG of the source, pixel-identical)",
+      "tail_image": "canonreeve.png (same image as first_image)",
+      "task_id": "ARbZloqznQpKBe8XGYhKjLCUm-txsjZpS3hIBUcauM-6oZ_Blbir91zekNdWvw03hcW6aIWl",
+      "date": "2026-10-09T16:16:38.825Z",
+      "credits": 40,
+      "source_image_sha256": "ef1df50411aab618bf5f1d5add1b8ef0db5ae9ccadad780b1f55806602b57936",
+      "attempt": 1,
+      "files": {
+        "raw": "raw/ancarion-idle.mp4",
+        "raw_sha256": "2331a0d2aa5534441ab6dca9e7671e96b3912f256e250b25ec1701fe7e5afa6c",
+        "webm": "ancarion-idle.webm",
+        "mp4": "ancarion-idle.mp4"
+      }
+    },
+    {
+      "name": "refusal",
+      "model": "kling-video-v3_0",
+      "mode": "pro",
+      "mode_parameter": "resolution=1080p (the Kling MCP exposes pro mode as the 1080p resolution tier)",
+      "duration": 5,
+      "cfg_scale": null,
+      "cfg_scale_note": "0.5 requested; the Kling MCP image_to_video schema has no cfg_scale parameter, so none was sent",
+      "prompt": "Painted portrait of a masked high elf mage: long white hair, gold circlet, golden halo, black mask over nose and mouth, black robe with gold trim, gold staff with violet smoke. He narrows his eyes in cold disapproval, then gives one slow, small shake of the head. The halo flares briefly. He settles back into his starting pose, eyes on the viewer. Locked-off static camera. Keep the brushwork, colors and composition exactly; only he moves.",
+      "negative_prompt": "camera movement, zoom, pan, cut, morphing, warping, distorted face, exposed mouth, lips, teeth, talking, extra hands, new objects, text, watermark, color shift, photorealistic, 3D render",
+      "negative_prompt_sent": false,
+      "negative_prompt_note": "the Kling MCP image_to_video schema has no negative_prompt parameter; recorded here as specified but not sent",
+      "other_parameters_sent": {
+        "enable_audio": "false",
+        "prefer_multi_shots": "false",
+        "imageCount": "1"
+      },
+      "first_image": "canonreeve.png (lossless PNG of the source, pixel-identical)",
+      "tail_image": "canonreeve.png (same image as first_image)",
+      "task_id": "ATSCry8uxVPRTY87cBpXFQihxi5qEUVNFzn6WzLBUD3LLDBJ-gAW8VJa2UfC39hHvAw_LNkX",
+      "date": "2026-10-09T16:25:51.744Z",
+      "credits": 40,
+      "source_image_sha256": "ef1df50411aab618bf5f1d5add1b8ef0db5ae9ccadad780b1f55806602b57936",
+      "attempt": 2,
+      "files": {
+        "raw": "raw/ancarion-refusal.mp4",
+        "raw_sha256": "a3a8f2cf8a93fa78deafd74302d3555f40ad1893bec90ba036f71cf4caf43ef0",
+        "webm": "ancarion-refusal.webm",
+        "mp4": "ancarion-refusal.mp4"
+      }
+    },
+    {
+      "name": "sigh",
+      "model": "kling-video-v3_0",
+      "mode": "pro",
+      "mode_parameter": "resolution=1080p (the Kling MCP exposes pro mode as the 1080p resolution tier)",
+      "duration": 5,
+      "cfg_scale": null,
+      "cfg_scale_note": "0.5 requested; the Kling MCP image_to_video schema has no cfg_scale parameter, so none was sent",
+      "prompt": "Painted portrait of a masked high elf mage: long white hair, gold circlet, golden halo, black mask over nose and mouth, black robe with gold trim, gold staff with violet smoke. He sighs: shoulders rise with a slow breath in, then sink as he breathes out; the mask cloth shifts slightly. His eyes close briefly and reopen, weary. He settles back into his starting pose. Locked-off static camera. Keep the brushwork, colors and composition exactly; only he moves.",
+      "negative_prompt": "camera movement, zoom, pan, cut, morphing, warping, distorted face, exposed mouth, lips, teeth, talking, extra hands, new objects, text, watermark, color shift, photorealistic, 3D render",
+      "negative_prompt_sent": false,
+      "negative_prompt_note": "the Kling MCP image_to_video schema has no negative_prompt parameter; recorded here as specified but not sent",
+      "other_parameters_sent": {
+        "enable_audio": "false",
+        "prefer_multi_shots": "false",
+        "imageCount": "1"
+      },
+      "first_image": "canonreeve.png (lossless PNG of the source, pixel-identical)",
+      "tail_image": "canonreeve.png (same image as first_image)",
+      "task_id": "AVeqOhvak62Nwa1rtzKViu8aUhkYCq0e9m_zdLZuTUB1C74iwcwiCNNNOxQuHFpl--kod_Zh",
+      "date": "2026-10-09T16:24:12.156Z",
+      "credits": 40,
+      "source_image_sha256": "ef1df50411aab618bf5f1d5add1b8ef0db5ae9ccadad780b1f55806602b57936",
+      "attempt": 1,
+      "files": {
+        "raw": "raw/ancarion-sigh.mp4",
+        "raw_sha256": "b36b3d0295e6673452895e73c80f8d1a68fafc1d0096a68decfce3acbccd7021",
+        "webm": "ancarion-sigh.webm",
+        "mp4": "ancarion-sigh.mp4"
+      }
+    },
+    {
+      "name": "accept",
+      "model": "kling-video-v3_0",
+      "mode": "pro",
+      "mode_parameter": "resolution=1080p (the Kling MCP exposes pro mode as the 1080p resolution tier)",
+      "duration": 5,
+      "cfg_scale": null,
+      "cfg_scale_note": "0.5 requested; the Kling MCP image_to_video schema has no cfg_scale parameter, so none was sent",
+      "prompt": "Painted portrait of a masked high elf mage: long white hair, gold circlet, golden halo, black mask over nose and mouth, black robe with gold trim, gold staff with violet smoke. He gives one slow, small nod of approval and his eyes soften. The halo brightens and the violet smoke swells briefly, then calms. He settles back into his starting pose, eyes on the viewer. Locked-off static camera. Keep the brushwork, colors and composition exactly; only he moves.",
+      "negative_prompt": "camera movement, zoom, pan, cut, morphing, warping, distorted face, exposed mouth, lips, teeth, talking, extra hands, new objects, text, watermark, color shift, photorealistic, 3D render",
+      "negative_prompt_sent": false,
+      "negative_prompt_note": "the Kling MCP image_to_video schema has no negative_prompt parameter; recorded here as specified but not sent",
+      "other_parameters_sent": {
+        "enable_audio": "false",
+        "prefer_multi_shots": "false",
+        "imageCount": "1"
+      },
+      "first_image": "canonreeve.png (lossless PNG of the source, pixel-identical)",
+      "tail_image": "canonreeve.png (same image as first_image)",
+      "task_id": "AcuR2TACgQ8J8kHS8yCS5HR4zYDhZIxXGM9kkXUSy14DAu1iWrJo8c7T4ztMAE56fjQxZwWU",
+      "date": "2026-10-09T16:29:03.467Z",
+      "credits": 40,
+      "source_image_sha256": "ef1df50411aab618bf5f1d5add1b8ef0db5ae9ccadad780b1f55806602b57936",
+      "attempt": 1,
+      "files": {
+        "raw": "raw/ancarion-accept.mp4",
+        "raw_sha256": "e8015777cf3f78edc3cd2dd47b6af478cd4762ce1136b466b4c52310aa2c5164",
+        "webm": "ancarion-accept.webm",
+        "mp4": "ancarion-accept.mp4"
+      }
+    }
+  ],
+  "rejected_attempts": [
+    {
+      "name": "refusal",
+      "attempt": 1,
+      "task_id": "ASOO-uVrZj_2r4wc06kQIM7McYW6TUkBaq2PzS4WLSJ2O8jdy82lxPdpLtAwlrh42FswluZ6",
+      "date": "2026-10-09T16:21:10.618Z",
+      "credits": 40,
+      "reason": "violet smoke flashed white with a one-frame onset at 3.58-3.9 s; no head shake. Regenerated once with identical settings and prompt."
+    }
+  ],
+  "total_credits": 200
+}

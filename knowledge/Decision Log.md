@@ -1,5 +1,23 @@
 # Decision Log
 
+## 2026-10-09 - Ancarion's performances regenerated from his painting
+
+The gate's idle, refusal, sigh and accept clips are now AI-generated (Kling,
+image-to-video) from the owner's own painting, `canonreeve.webp`, with the
+painting as both first and last frame. Every clip therefore begins and ends on
+the still, and the gate can cut between still and clip without a jump. The
+site still synthesizes no motion itself; it plays supplied files. Settings,
+prompts, task ids and hashes are in `Assets/portrait-clips/manifest.json`; the
+raw downloads stay on the author's machine and only the WebM/MP4 encodes are
+committed.
+
+Each clip ships as VP9 WebM with an H.264 MP4 fallback (`<source>` order), so
+reactions also play on browsers without VP9. Accept is now a performance rather
+than a still: the door waits 3.7 s for the nod to finish (0.52 s if the clip
+cannot play), and the clip keeps playing beneath the swinging door. The sigh's
+fallback timer grew from 3 s to 5.5 s to cover the longer clip. Presentation
+only: adapters, endpoints and writs are untouched.
+
 ## 2026-10-07 - Phones get the still Nirn plate, not a blank sky
 
 Below 721px the Reports gate drew no sky, which left phones with a flat black

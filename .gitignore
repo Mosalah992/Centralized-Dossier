@@ -82,3 +82,9 @@ HANDOFF.md
 nirn-sky-handoff/
 nirn-sky-handoff.zip
 Assets/portraits/
+
+# Raw Kling downloads behind Ancarion's performances and the poster frame cut
+# from them. The committed WebM/MP4 encodes beside them are what the site uses;
+# manifest.json records the raw files' hashes and the generation settings.
+Assets/portrait-clips/raw/
+Assets/portrait-clips/ancarion-poster.png

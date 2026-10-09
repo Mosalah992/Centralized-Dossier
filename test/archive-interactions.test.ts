@@ -86,9 +86,21 @@ describe('interaction boundaries', () => {
 
   it('prepares the supplied portrait performances without transcoding them', () => {
     const preparation = read('scripts/prepare-portrait-video.mjs');
-    expect(preparation).toContain("['blink.mp4', 'ancarion-idle.mp4']");
-    expect(preparation).toContain("['ancarion-shake.webm', 'ancarion-refusal.webm']");
-    expect(preparation).toContain("['ancarion-sigh.webm', 'ancarion-sigh.webm']");
+    expect(preparation).toContain("resolve(ROOT, 'Assets/portrait-clips')");
+    expect(preparation).toContain("const performances = ['idle', 'refusal', 'sigh', 'accept'];");
+    expect(preparation).toContain("const formats = ['webm', 'mp4'];");
+    expect(preparation).toContain('await copyFile(');
+    expect(preparation).not.toContain('sharp');
+  });
+
+  it('offers every Ancarion performance as WebM with an MP4 fallback', () => {
+    const gate = read('web/src/components/PortraitGate.tsx');
+    for (const performance of ['idle', 'refusal', 'sigh', 'accept']) {
+      expect(gate).toContain(`ancarion-${performance}.webm`);
+      expect(gate).toContain(`ancarion-${performance}.mp4`);
+    }
+    expect(gate).not.toContain('ancarion-accept.webp');
+    expect(gate).toContain('const ACCEPTED_PERFORMANCE_HOLD_MS = 3_700;');
   });
 
   it('moves a CSS-driven Dominion ink marker between Reports filters', () => {
