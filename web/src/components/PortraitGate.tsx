@@ -16,6 +16,8 @@ import ancarionListeningMp4 from '../assets/ancarion-listening.mp4';
 import ancarionListeningWebm from '../assets/ancarion-listening.webm';
 import ancarionDeniedMp4 from '../assets/ancarion-refusal.mp4';
 import ancarionDeniedWebm from '../assets/ancarion-refusal.webm';
+import ancarionRebuffedMp4 from '../assets/ancarion-shake.mp4';
+import ancarionRebuffedWebm from '../assets/ancarion-shake.webm';
 import ancarionAnnoyedMp4 from '../assets/ancarion-sigh.mp4';
 import ancarionAnnoyedWebm from '../assets/ancarion-sigh.webm';
 import ancarionWakeMp4 from '../assets/ancarion-wake.mp4';
@@ -40,7 +42,7 @@ export interface PortraitGateProps {
   description: string;
   clips?: Partial<
     Record<
-      'idle' | 'listening' | 'denied' | 'annoyed' | 'accepted' | 'doze' | 'wake',
+      'idle' | 'listening' | 'denied' | 'rebuffed' | 'annoyed' | 'accepted' | 'doze' | 'wake',
       ClipSource
     >
   >;
@@ -58,6 +60,7 @@ export type PortraitState =
   | 'idle'
   | 'listening'
   | 'denied'
+  | 'rebuffed'
   | 'annoyed'
   | 'accepted'
   | 'opening'
@@ -66,10 +69,10 @@ export type PortraitState =
   | 'asleep'
   | 'waking';
 
-type ReactionState = Extract<PortraitState, 'denied' | 'annoyed' | 'accepted'>;
+type ReactionState = Extract<PortraitState, 'denied' | 'rebuffed' | 'annoyed' | 'accepted'>;
 /** Every clip that plays over the idle layer. */
 type Performance = ReactionState | 'listening' | 'doze' | 'wake';
-type Line = 'greet' | 'denied' | 'annoyed' | 'accepted' | 'woken';
+type Line = 'greet' | 'denied' | 'rebuffed' | 'annoyed' | 'accepted' | 'woken';
 
 const BUSY: readonly AuthState[] = ['checking', 'authorized'];
 // WebM first: it is a fifth of the MP4's size. The MP4 is for browsers
@@ -78,6 +81,8 @@ const DEFAULT_CLIPS = {
   idle: [ancarionIdleWebm, ancarionIdleMp4],
   listening: [ancarionListeningWebm, ancarionListeningMp4],
   denied: [ancarionDeniedWebm, ancarionDeniedMp4],
+  // The original head-shake, kept for the second refusal.
+  rebuffed: [ancarionRebuffedWebm, ancarionRebuffedMp4],
   annoyed: [ancarionAnnoyedWebm, ancarionAnnoyedMp4],
   accepted: [ancarionAcceptedWebm, ancarionAcceptedMp4],
   doze: [ancarionDozeWebm, ancarionDozeMp4],
@@ -89,11 +94,11 @@ const IDLE_VARIANTS: readonly ClipSource[] = [
   [ancarionAppraiseWebm, ancarionAppraiseMp4],
   [ancarionSmokeWebm, ancarionSmokeMp4],
 ];
-const REACTION_STATES: ReactionState[] = ['denied', 'annoyed', 'accepted'];
+const REACTION_STATES: ReactionState[] = ['denied', 'rebuffed', 'annoyed', 'accepted'];
 const PERFORMANCES: Performance[] = [...REACTION_STATES, 'listening', 'doze', 'wake'];
 const IDLE_REPLAY_PAUSE_MS = 2_000;
-// Safety nets for a reaction whose `ended` never arrives; both performances
-// run 5.04 s, and `ended` normally returns him to idle first.
+// Safety nets for a reaction whose `ended` never arrives; the performances
+// run 4.67-5.04 s, and `ended` normally returns him to idle first.
 const DENIED_FALLBACK_MS = 5_500;
 const ANNOYED_FALLBACK_MS = 5_500;
 // How long Ancarion holds before the door swings. A still needs only a beat;
@@ -142,6 +147,14 @@ function sourceList(source: ClipSource): readonly string[] {
 
 function isVideoAsset(source: ClipSource) {
   return /\.(?:mp4|webm)(?:[?#].*)?$/i.test(sourceList(source)[0] ?? '');
+}
+
+/**
+ * Only a missing or unplayable source retires a clip. A play() cut short by a
+ * pause(), or held by autoplay policy, will succeed another time.
+ */
+function cannotPlay(error: unknown) {
+  return error instanceof DOMException && error.name === 'NotSupportedError';
 }
 
 function videoType(source: string) {
@@ -194,6 +207,10 @@ function ReactionLayer({
   onFailure,
 }: ReactionLayerProps) {
   const video = useRef<HTMLVideoElement>(null);
+  // Read at rejection time; as an effect dependency it would restart the
+  // clip whenever the parent re-renders with a new callback.
+  const completeRef = useRef(onComplete);
+  completeRef.current = onComplete;
   const videoAsset = isVideoAsset(source);
   const sources = sourceList(source);
   const sourceKey = sources.join('|');
@@ -207,7 +224,8 @@ function ReactionLayer({
     }
 
     element.currentTime = 0;
-    void element.play().catch(() => onFailure(state));
+    // Interrupted or held back this once: skip the performance, keep the clip.
+    void element.play().catch((error) => (cannotPlay(error) ? onFailure(state) : completeRef.current(state)));
   }, [active, onFailure, sourceKey, state]);
 
   if (videoAsset) {
@@ -381,7 +399,7 @@ export function PortraitGate({
     }
 
     element.currentTime = 0;
-    void element.play().catch(() => setIdleUnavailable(true));
+    void element.play().catch((error) => cannotPlay(error) && setIdleUnavailable(true));
   }, [idleUnavailable, overlaid, reducedMotion]);
 
   // Choose the next idle while the last one rests on the still, so a variant
@@ -403,7 +421,7 @@ export function PortraitGate({
       const element = idleVideo.current;
       if (!element) return;
       element.currentTime = 0;
-      void element.play().catch(() => setIdleUnavailable(true));
+      void element.play().catch((error) => cannotPlay(error) && setIdleUnavailable(true));
     }, IDLE_REPLAY_PAUSE_MS);
   }, [failedIdleVariants, idleClip, idleUnavailable, reducedMotion]);
 
@@ -501,7 +519,9 @@ export function PortraitGate({
           );
         } else if (
           auraElement &&
-          (portraitState === 'denied' || portraitState === 'annoyed')
+          (portraitState === 'denied' ||
+            portraitState === 'rebuffed' ||
+            portraitState === 'annoyed')
         ) {
           timeline.fromTo(
             auraElement,
@@ -643,7 +663,9 @@ export function PortraitGate({
       if (controller.signal.aborted) return;
       if (!result.ok) {
         denialCount.current += 1;
-        const reaction: ReactionState = denialCount.current > 1 ? 'annoyed' : 'denied';
+        // His patience wears: narrowed eyes, then the head-shake, then sighs.
+        const reaction: ReactionState =
+          denialCount.current === 1 ? 'denied' : denialCount.current === 2 ? 'rebuffed' : 'annoyed';
         setPhrase('');
         setAuthState('denied');
         setPortraitState(reaction);

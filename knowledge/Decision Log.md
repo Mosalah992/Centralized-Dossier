@@ -1,5 +1,21 @@
 # Decision Log
 
+## 2026-10-10 - Refusals escalate; only an unplayable clip is retired
+
+Wrong passphrases now escalate: the first plays the regenerated refusal
+(narrowed eyes), the second the original supplied head-shake
+(`Assets/Ancarion live portrait assets/ancarion-shake.webm`, copied untouched
+into `Assets/portrait-clips/` with an H.264 MP4 fallback encoded from it), and
+every later one the sigh. The head-shake is not a Kling clip from this
+pipeline; it is 1024 px at an effective 12 fps, and its first and last frames
+sit within about 4/255 of the still.
+
+A `play()` rejection retires a clip only when it is `NotSupportedError` (no
+playable source). An `AbortError` (for instance Chromium pausing video-only
+media in a background tab) or an autoplay refusal now skips that one
+performance instead of disabling the clip, the idle layer, or dozing for the
+rest of the visit.
+
 ## 2026-10-09 - Ancarion behaves like a Hogwarts portrait
 
 The gate now gives Ancarion a life between passphrases, all from supplied

@@ -21,6 +21,7 @@ const performances = [
   'idle-smoke',
   'listening',
   'refusal',
+  'shake',
   'sigh',
   'accept',
   'doze',

@@ -42,6 +42,7 @@ const PERFORMANCES = [
   'idle-smoke',
   'listening',
   'refusal',
+  'shake',
   'sigh',
   'accept',
   'doze',
@@ -90,7 +91,8 @@ describe('interaction boundaries', () => {
     expect(gate).toContain('const IDLE_REPLAY_PAUSE_MS = 2_000');
     expect(gate).toContain('onEnded={pauseBeforeIdleReplay}');
     expect(gate).toContain('onEnded={() => onComplete(state)}');
-    expect(gate).toContain('void element.play().catch(() => setIdleUnavailable(true))');
+    expect(gate).toContain('void element.play().catch((error) => cannotPlay(error) && setIdleUnavailable(true));');
+    expect(gate).toContain("return error instanceof DOMException && error.name === 'NotSupportedError';");
     const idleVideo = gate.match(/<video\s+ref=\{idleVideo\}[\s\S]*?\/>/)?.[0] ?? '';
     expect(idleVideo).not.toContain('loop');
     expect(gate).toContain("setPortraitState('accepted')");

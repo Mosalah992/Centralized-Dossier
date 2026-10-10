@@ -324,6 +324,17 @@
       }
     }
   ],
+  "supplied_clips": [
+    {
+      "name": "shake",
+      "used_for": "second wrong passphrase (rebuffed)",
+      "source": "Assets/Ancarion live portrait assets/ancarion-shake.webm (the earlier supplied head-shake performance, not generated in this pipeline)",
+      "webm": "ancarion-shake.webm (copied untouched)",
+      "webm_sha256": "ce2ffb9ae9b7ba9aaee73ba69c9752f0d1b8858462775d542bd280295add39fa",
+      "mp4": "ancarion-shake.mp4 (H.264 High, libx264 slow CRF 18, +faststart, encoded from the WebM)",
+      "format": "1024x1024, 24 fps container (effective 12 fps), 112 frames, 4.667 s"
+    }
+  ],
   "rejected_attempts": [
     {
       "name": "refusal",
