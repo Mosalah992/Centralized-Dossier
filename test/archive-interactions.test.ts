@@ -35,6 +35,19 @@ describe('archive navigation', () => {
   });
 });
 
+// Every Ancarion clip the gate plays, each shipped as WebM and MP4.
+const PERFORMANCES = [
+  'idle',
+  'idle-appraise',
+  'idle-smoke',
+  'listening',
+  'refusal',
+  'sigh',
+  'accept',
+  'doze',
+  'wake',
+];
+
 describe('interaction boundaries', () => {
   it('uses one PortraitGate for both sealed routes', () => {
     expect(read('web/src/views/Reports.tsx')).toContain('<PortraitGate');
@@ -71,7 +84,9 @@ describe('interaction boundaries', () => {
     expect(gate).toContain('export type PortraitState =');
     expect(gate).toContain('className="portrait-gate__media-stage"');
     expect(gate).toContain('preload="auto"');
-    expect(gate).toContain('autoPlay');
+    // The idle layer is started and paced by the component (rotation, and a
+    // pause on the still while another clip covers it), not by autoPlay.
+    expect(gate).not.toContain('autoPlay');
     expect(gate).toContain('const IDLE_REPLAY_PAUSE_MS = 2_000');
     expect(gate).toContain('onEnded={pauseBeforeIdleReplay}');
     expect(gate).toContain('onEnded={() => onComplete(state)}');
@@ -87,20 +102,42 @@ describe('interaction boundaries', () => {
   it('prepares the supplied portrait performances without transcoding them', () => {
     const preparation = read('scripts/prepare-portrait-video.mjs');
     expect(preparation).toContain("resolve(ROOT, 'Assets/portrait-clips')");
-    expect(preparation).toContain("const performances = ['idle', 'refusal', 'sigh', 'accept'];");
+    for (const performance of PERFORMANCES) expect(preparation).toContain(`'${performance}'`);
     expect(preparation).toContain("const formats = ['webm', 'mp4'];");
     expect(preparation).toContain('await copyFile(');
-    expect(preparation).not.toContain('sharp');
+    // Only the asleep keyframe is re-encoded; the clips are copied as they are.
+    expect(preparation.match(/sharp\(/g)).toHaveLength(1);
+    expect(preparation).toContain("'ancarion-asleep.png'");
   });
 
   it('offers every Ancarion performance as WebM with an MP4 fallback', () => {
     const gate = read('web/src/components/PortraitGate.tsx');
-    for (const performance of ['idle', 'refusal', 'sigh', 'accept']) {
+    for (const performance of PERFORMANCES) {
       expect(gate).toContain(`ancarion-${performance}.webm`);
       expect(gate).toContain(`ancarion-${performance}.mp4`);
     }
     expect(gate).not.toContain('ancarion-accept.webp');
     expect(gate).toContain('const ACCEPTED_PERFORMANCE_HOLD_MS = 3_700;');
+  });
+
+  it('lets Ancarion notice the reader, doze when left alone and speak only when sound is wanted', () => {
+    const gate = read('web/src/components/PortraitGate.tsx');
+    expect(gate).toContain("| 'dozing'");
+    expect(gate).toContain("| 'asleep'");
+    expect(gate).toContain("| 'waking'");
+    expect(gate).toContain('const DOZE_AFTER_MS = 45_000;');
+    expect(gate).toContain('const NIGHT_DOZE_AFTER_MS = 20_000;');
+    expect(gate).toContain('return hour >= 23 || hour < 6;');
+    expect(gate).toContain("import ancarionAsleep from '../assets/ancarion-asleep.webp'");
+    // Motion-sensitive readers never see him doze.
+    expect(gate).toContain('if (reducedMotion || !canDoze) return;');
+    // The listening clip plays once, on the first notice, not per keystroke.
+    expect(gate).toContain("if (portraitState !== 'idle') return;");
+    expect(gate).toContain("return portraitState === 'listening' && attentive;");
+    // The voice answers to the archive's one sound control.
+    expect(gate).toContain("import { AMBIENCE_CHANGED_EVENT, ambienceWanted } from './Ambience'");
+    expect(gate).toContain('if (!audio || !source || !ambienceWanted()) return;');
+    expect(gate).toContain('window.addEventListener(AMBIENCE_CHANGED_EVENT, onPreferenceChange);');
   });
 
   it('moves a CSS-driven Dominion ink marker between Reports filters', () => {

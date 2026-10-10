@@ -3,14 +3,26 @@ import { useCallback, useEffect, useId, useRef, useState } from 'react';
 
 import ancarionAcceptedMp4 from '../assets/ancarion-accept.mp4';
 import ancarionAcceptedWebm from '../assets/ancarion-accept.webm';
+import ancarionAsleep from '../assets/ancarion-asleep.webp';
+import ancarionDozeMp4 from '../assets/ancarion-doze.mp4';
+import ancarionDozeWebm from '../assets/ancarion-doze.webm';
+import ancarionAppraiseMp4 from '../assets/ancarion-idle-appraise.mp4';
+import ancarionAppraiseWebm from '../assets/ancarion-idle-appraise.webm';
+import ancarionSmokeMp4 from '../assets/ancarion-idle-smoke.mp4';
+import ancarionSmokeWebm from '../assets/ancarion-idle-smoke.webm';
 import ancarionIdleMp4 from '../assets/ancarion-idle.mp4';
 import ancarionIdleWebm from '../assets/ancarion-idle.webm';
+import ancarionListeningMp4 from '../assets/ancarion-listening.mp4';
+import ancarionListeningWebm from '../assets/ancarion-listening.webm';
 import ancarionDeniedMp4 from '../assets/ancarion-refusal.mp4';
 import ancarionDeniedWebm from '../assets/ancarion-refusal.webm';
 import ancarionAnnoyedMp4 from '../assets/ancarion-sigh.mp4';
 import ancarionAnnoyedWebm from '../assets/ancarion-sigh.webm';
+import ancarionWakeMp4 from '../assets/ancarion-wake.mp4';
+import ancarionWakeWebm from '../assets/ancarion-wake.webm';
 import ancarion from '../assets/canonreeve.webp';
 import frame from '../assets/portrait-frame.png';
+import { AMBIENCE_CHANGED_EVENT, ambienceWanted } from './Ambience';
 import { NirnSky } from './NirnSky';
 import { D, gsap, staged } from '../motion';
 import '../styles/portrait-gate.css';
@@ -27,7 +39,10 @@ export interface PortraitGateProps {
   eyebrow: string;
   description: string;
   clips?: Partial<
-    Record<'idle' | 'listening' | 'denied' | 'annoyed' | 'accepted', ClipSource>
+    Record<
+      'idle' | 'listening' | 'denied' | 'annoyed' | 'accepted' | 'doze' | 'wake',
+      ClipSource
+    >
   >;
   verify: (passphrase: string, signal: AbortSignal) => Promise<GateDecision>;
   /** Starts the already-authorized route's data request behind the opening. */
@@ -46,20 +61,36 @@ export type PortraitState =
   | 'annoyed'
   | 'accepted'
   | 'opening'
-  | 'open';
+  | 'open'
+  | 'dozing'
+  | 'asleep'
+  | 'waking';
 
 type ReactionState = Extract<PortraitState, 'denied' | 'annoyed' | 'accepted'>;
+/** Every clip that plays over the idle layer. */
+type Performance = ReactionState | 'listening' | 'doze' | 'wake';
+type Line = 'greet' | 'denied' | 'annoyed' | 'accepted' | 'woken';
 
 const BUSY: readonly AuthState[] = ['checking', 'authorized'];
 // WebM first: it is a fifth of the MP4's size. The MP4 is for browsers
 // without VP9.
 const DEFAULT_CLIPS = {
   idle: [ancarionIdleWebm, ancarionIdleMp4],
+  listening: [ancarionListeningWebm, ancarionListeningMp4],
   denied: [ancarionDeniedWebm, ancarionDeniedMp4],
   annoyed: [ancarionAnnoyedWebm, ancarionAnnoyedMp4],
   accepted: [ancarionAcceptedWebm, ancarionAcceptedMp4],
-} satisfies Partial<Record<PortraitState, ClipSource>>;
+  doze: [ancarionDozeWebm, ancarionDozeMp4],
+  wake: [ancarionWakeWebm, ancarionWakeMp4],
+} satisfies Record<'idle' | Performance, ClipSource>;
+// Played between plain idles so he never visibly loops. Each starts and ends
+// on the still, like every other clip.
+const IDLE_VARIANTS: readonly ClipSource[] = [
+  [ancarionAppraiseWebm, ancarionAppraiseMp4],
+  [ancarionSmokeWebm, ancarionSmokeMp4],
+];
 const REACTION_STATES: ReactionState[] = ['denied', 'annoyed', 'accepted'];
+const PERFORMANCES: Performance[] = [...REACTION_STATES, 'listening', 'doze', 'wake'];
 const IDLE_REPLAY_PAUSE_MS = 2_000;
 // Safety nets for a reaction whose `ended` never arrives; both performances
 // run 5.04 s, and `ended` normally returns him to idle first.
@@ -70,6 +101,36 @@ const ANNOYED_FALLBACK_MS = 5_500;
 // about 3.7 s, and the clip plays on beneath the swinging door.
 const ACCEPTED_STILL_HOLD_MS = 520;
 const ACCEPTED_PERFORMANCE_HOLD_MS = 3_700;
+// Left alone, he nods off; sooner at night, when he is asleep on arrival.
+const DOZE_AFTER_MS = 45_000;
+const NIGHT_DOZE_AFTER_MS = 20_000;
+const STIRRING_EVENTS = ['pointerdown', 'pointermove', 'keydown', 'wheel', 'touchstart', 'focusin'] as const;
+/** Matches Dispatch: a voice carries words, so it sits well above the room tone. */
+const VOICE_VOLUME = 0.85;
+
+// Unlike the covers, the recordings are optional: a line nobody has recorded
+// yet is silence, not a build error.
+const VOICE_FILES = import.meta.glob<string>('../assets/voice/ancarion-*.{ogg,mp3,m4a}', {
+  eager: true,
+  query: '?url',
+  import: 'default',
+});
+
+function voiceLine(line: Line): string | undefined {
+  const match = Object.keys(VOICE_FILES).find((path) =>
+    path.split('/').pop()?.startsWith(`ancarion-${line}.`),
+  );
+  return match ? VOICE_FILES[match] : undefined;
+}
+
+function isNight(date = new Date()) {
+  const hour = date.getHours();
+  return hour >= 23 || hour < 6;
+}
+
+function prefersReducedMotion() {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
 
 function isReactionState(state: PortraitState): state is ReactionState {
   return REACTION_STATES.includes(state as ReactionState);
@@ -113,17 +174,22 @@ function VideoSources({
 }
 
 interface ReactionLayerProps {
-  state: ReactionState;
+  state: Performance;
   source: ClipSource;
   active: boolean;
-  onComplete: (state: ReactionState) => void;
-  onFailure: (state: ReactionState) => void;
+  /** Shown until the clip has a frame: the frame the clip starts on. */
+  poster: string;
+  preload: 'auto' | 'metadata';
+  onComplete: (state: Performance) => void;
+  onFailure: (state: Performance) => void;
 }
 
 function ReactionLayer({
   state,
   source,
   active,
+  poster,
+  preload,
   onComplete,
   onFailure,
 }: ReactionLayerProps) {
@@ -150,9 +216,10 @@ function ReactionLayer({
         key={sourceKey}
         ref={video}
         className="portrait-gate__reaction"
+        poster={poster}
         muted
         playsInline
-        preload="auto"
+        preload={preload}
         aria-hidden="true"
         data-active={active}
         onEnded={() => onComplete(state)}
@@ -192,15 +259,26 @@ export function PortraitGate({
   const root = useRef<HTMLElement>(null);
   const inputId = useId();
   const [authState, setAuthState] = useState<AuthState>('locked');
-  const [portraitState, setPortraitState] = useState<PortraitState>('idle');
+  // At night he is found asleep, as the portraits in the corridors are.
+  const [portraitState, setPortraitState] = useState<PortraitState>(() =>
+    isNight() && !prefersReducedMotion() ? 'asleep' : 'idle',
+  );
   const [phrase, setPhrase] = useState('');
   const [dialogue, setDialogue] = useState('“State the phrase entrusted to you.”');
   const [status, setStatus] = useState('');
   const [canSkip, setCanSkip] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [idleUnavailable, setIdleUnavailable] = useState(false);
-  const [failedReactions, setFailedReactions] = useState<
-    Partial<Record<ReactionState, true>>
+  // 0 is the plain idle; 1.. index IDLE_VARIANTS.
+  const [idleClip, setIdleClip] = useState(0);
+  const [failedIdleVariants, setFailedIdleVariants] = useState<ReadonlySet<number>>(
+    () => new Set(),
+  );
+  // The listening clip plays once when he first notices the reader, not on
+  // every keystroke or after every refusal.
+  const [attentive, setAttentive] = useState(false);
+  const [failedPerformances, setFailedPerformances] = useState<
+    Partial<Record<Performance, true>>
   >({});
   const request = useRef<AbortController | null>(null);
   const openingTimer = useRef<number | null>(null);
@@ -209,16 +287,45 @@ export function PortraitGate({
   const denialCount = useRef(0);
   const input = useRef<HTMLInputElement>(null);
   const idleVideo = useRef<HTMLVideoElement>(null);
+  const voice = useRef<HTMLAudioElement>(null);
+  const greeted = useRef(false);
+  // Stirred while still nodding off: wake as soon as the doze finishes.
+  const wakeAfterDoze = useRef(false);
   const aura = useRef<HTMLSpanElement>(null);
   const finished = useRef(false);
 
-  const idleSources = sourceList(clips.idle ?? DEFAULT_CLIPS.idle);
+  const idlePool = [clips.idle ?? DEFAULT_CLIPS.idle, ...IDLE_VARIANTS];
+  const idleSources = sourceList(idlePool[idleClip] ?? idlePool[0]!);
   const idleKey = idleSources.join('|');
   const acceptedSource = clips.accepted ?? DEFAULT_CLIPS.accepted;
   const activeReaction = isReactionState(portraitState) ? portraitState : null;
+  const canDoze = !failedPerformances.doze && !failedPerformances.wake;
+  const hasVoice = Object.keys(VOICE_FILES).length > 0;
+  const overlaid =
+    portraitState === 'asleep' ||
+    PERFORMANCES.some(
+      (performance) => !failedPerformances[performance] && performanceActive(performance),
+    );
 
-  const markReactionFailed = useCallback((reaction: ReactionState) => {
-    setFailedReactions((current) => ({ ...current, [reaction]: true }));
+  const speak = useCallback((line: Line) => {
+    const audio = voice.current;
+    const source = voiceLine(line);
+    if (!audio || !source || !ambienceWanted()) return;
+    audio.src = source;
+    audio.currentTime = 0;
+    audio.volume = VOICE_VOLUME;
+    // Without a gesture first the browser refuses, and silence is right then.
+    void audio.play().catch(() => {});
+  }, []);
+
+  const markPerformanceFailed = useCallback((performance: Performance) => {
+    setFailedPerformances((current) => ({ ...current, [performance]: true }));
+    if (performance === 'listening') setAttentive(false);
+    if (performance === 'doze' || performance === 'wake') {
+      setPortraitState((current) =>
+        current === 'dozing' || current === 'asleep' || current === 'waking' ? 'idle' : current,
+      );
+    }
   }, []);
 
   const finish = () => {
@@ -244,30 +351,53 @@ export function PortraitGate({
 
   useEffect(() => {
     const query = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const update = () => setReducedMotion(query.matches);
+    const update = () => {
+      setReducedMotion(query.matches);
+      if (query.matches) {
+        setPortraitState((current) =>
+          current === 'dozing' || current === 'asleep' || current === 'waking' ? 'idle' : current,
+        );
+      }
+    };
     update();
     query.addEventListener('change', update);
     return () => query.removeEventListener('change', update);
   }, []);
 
+  // While another clip covers him the idle waits on its first frame, the
+  // still, and starts from there once the cover lifts, so every hand-off is
+  // still to still. Between idles, pauseBeforeIdleReplay decides what plays next.
   useEffect(() => {
     const element = idleVideo.current;
     if (!element) return;
-    if (reducedMotion || idleUnavailable) {
-      if (idleReplayTimer.current !== null) {
-        window.clearTimeout(idleReplayTimer.current);
-        idleReplayTimer.current = null;
-      }
+    if (idleReplayTimer.current !== null) {
+      window.clearTimeout(idleReplayTimer.current);
+      idleReplayTimer.current = null;
+    }
+    if (reducedMotion || idleUnavailable || overlaid) {
       element.pause();
+      if (overlaid) element.currentTime = 0;
       return;
     }
 
+    element.currentTime = 0;
     void element.play().catch(() => setIdleUnavailable(true));
-  }, [idleKey, idleUnavailable, reducedMotion]);
+  }, [idleUnavailable, overlaid, reducedMotion]);
 
+  // Choose the next idle while the last one rests on the still, so a variant
+  // loads during the pause: the plain idle about half the time, otherwise a
+  // variant, never the same variant twice running.
   const pauseBeforeIdleReplay = useCallback(() => {
     if (reducedMotion || idleUnavailable) return;
     if (idleReplayTimer.current !== null) window.clearTimeout(idleReplayTimer.current);
+    const variants = IDLE_VARIANTS.map((_, index) => index + 1).filter(
+      (index) => index !== idleClip && !failedIdleVariants.has(index),
+    );
+    const next =
+      variants.length > 0 && Math.random() >= 0.5
+        ? variants[Math.floor(Math.random() * variants.length)]!
+        : 0;
+    setIdleClip(next);
     idleReplayTimer.current = window.setTimeout(() => {
       idleReplayTimer.current = null;
       const element = idleVideo.current;
@@ -275,7 +405,62 @@ export function PortraitGate({
       element.currentTime = 0;
       void element.play().catch(() => setIdleUnavailable(true));
     }, IDLE_REPLAY_PAUSE_MS);
-  }, [idleUnavailable, reducedMotion]);
+  }, [failedIdleVariants, idleClip, idleUnavailable, reducedMotion]);
+
+  const idleFailed = useCallback(() => {
+    if (idleClip === 0) {
+      setIdleUnavailable(true);
+      return;
+    }
+    // A variant that will not play is dropped; the plain idle carries on.
+    setFailedIdleVariants((current) => new Set(current).add(idleClip));
+    setIdleClip(0);
+  }, [idleClip]);
+
+  // Left alone he dozes off; any stir wakes him.
+  useEffect(() => {
+    if (reducedMotion || !canDoze) return;
+    const after = isNight() ? NIGHT_DOZE_AFTER_MS : DOZE_AFTER_MS;
+    let timer: number | null = null;
+    const arm = () => {
+      if (timer !== null) window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        timer = null;
+        // Nobody watching: he is simply asleep when the reader comes back.
+        const watched = document.visibilityState === 'visible';
+        setPortraitState((current) =>
+          current === 'idle' ? (watched ? 'dozing' : 'asleep') : current,
+        );
+      }, after);
+    };
+    const stir = () => {
+      setPortraitState((current) => {
+        if (current === 'asleep') return 'waking';
+        if (current === 'dozing') wakeAfterDoze.current = true;
+        return current;
+      });
+      arm();
+    };
+    for (const name of STIRRING_EVENTS) window.addEventListener(name, stir, { passive: true });
+    arm();
+    return () => {
+      if (timer !== null) window.clearTimeout(timer);
+      for (const name of STIRRING_EVENTS) window.removeEventListener(name, stir);
+    };
+  }, [canDoze, reducedMotion]);
+
+  useEffect(() => {
+    if (portraitState === 'waking') speak('woken');
+  }, [portraitState, speak]);
+
+  // The roundel in the corner silences him too, mid-sentence if need be.
+  useEffect(() => {
+    const onPreferenceChange = () => {
+      if (!ambienceWanted()) voice.current?.pause();
+    };
+    window.addEventListener(AMBIENCE_CHANGED_EVENT, onPreferenceChange);
+    return () => window.removeEventListener(AMBIENCE_CHANGED_EVENT, onPreferenceChange);
+  }, []);
 
   useEffect(() => {
     if (authState !== 'denied' && authState !== 'error') return;
@@ -347,13 +532,20 @@ export function PortraitGate({
   );
 
   function notice() {
-    setPortraitState((current) =>
-      current === 'idle' || current === 'listening' ? 'listening' : current,
-    );
+    // Asleep, dozing or waking: the stir handler wakes him, and he turns to
+    // the field once the wake has played.
+    if (portraitState !== 'idle') return;
+    setPortraitState('listening');
+    if (!reducedMotion && !failedPerformances.listening) setAttentive(true);
+    if (!greeted.current) {
+      greeted.current = true;
+      speak('greet');
+    }
   }
 
   function settle() {
     if (authState === 'checking') return;
+    setAttentive(false);
     setPortraitState((current) => (current === 'listening' ? 'idle' : current));
   }
 
@@ -365,17 +557,57 @@ export function PortraitGate({
     }, delay);
   }
 
-  const completeReaction = useCallback(
-    (reaction: ReactionState) => {
-      if (reaction === 'accepted' || activeReaction !== reaction) return;
+  const completePerformance = useCallback(
+    (performance: Performance) => {
+      const attending = document.activeElement === input.current;
+      if (performance === 'listening') {
+        setAttentive(false);
+        return;
+      }
+      if (performance === 'doze') {
+        const wake = wakeAfterDoze.current;
+        wakeAfterDoze.current = false;
+        setPortraitState((current) =>
+          current === 'dozing' ? (wake || attending ? 'waking' : 'asleep') : current,
+        );
+        return;
+      }
+      if (performance === 'wake') {
+        setPortraitState((current) =>
+          current === 'waking' ? (attending ? 'listening' : 'idle') : current,
+        );
+        // Woken by a reader at the field: the greeting he slept through.
+        if (attending && !greeted.current) {
+          greeted.current = true;
+          speak('greet');
+        }
+        return;
+      }
+      if (performance === 'accepted' || activeReaction !== performance) return;
       if (reactionTimer.current !== null) {
         window.clearTimeout(reactionTimer.current);
         reactionTimer.current = null;
       }
-      setPortraitState(document.activeElement === input.current ? 'listening' : 'idle');
+      setPortraitState(attending ? 'listening' : 'idle');
     },
-    [activeReaction],
+    [activeReaction, speak],
   );
+
+  function performanceActive(performance: Performance) {
+    switch (performance) {
+      // The accept performance keeps playing while the door swings.
+      case 'accepted':
+        return portraitState === 'accepted' || portraitState === 'opening';
+      case 'listening':
+        return portraitState === 'listening' && attentive;
+      case 'doze':
+        return portraitState === 'dozing';
+      case 'wake':
+        return portraitState === 'waking';
+      default:
+        return portraitState === performance;
+    }
+  }
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -401,6 +633,7 @@ export function PortraitGate({
       controller.abort();
     }, 12_000);
     setAuthState('checking');
+    setAttentive(false);
     setPortraitState('listening');
     setDialogue('“One moment. The register must be consulted.”');
     setStatus('Checking authorization…');
@@ -414,6 +647,7 @@ export function PortraitGate({
         setPhrase('');
         setAuthState('denied');
         setPortraitState(reaction);
+        speak(reaction);
         setDialogue('“That is not the phrase I was given.”');
         setStatus(
           result.retryAfterSeconds
@@ -429,6 +663,7 @@ export function PortraitGate({
 
       setAuthState('authorized');
       setPortraitState('accepted');
+      speak('accepted');
       setDialogue('“You are expected. Enter.”');
       setStatus('Authorization recognized.');
       setCanSkip(true);
@@ -437,7 +672,7 @@ export function PortraitGate({
         finish();
         return;
       }
-      const performs = isVideoAsset(acceptedSource) && !failedReactions.accepted;
+      const performs = isVideoAsset(acceptedSource) && !failedPerformances.accepted;
       openingTimer.current = window.setTimeout(
         () => {
           setPortraitState('opening');
@@ -493,40 +728,47 @@ export function PortraitGate({
                 key={idleKey}
                 className="portrait-gate__idle"
                 poster={ancarion}
-                autoPlay
                 muted
                 playsInline
                 preload="auto"
                 aria-hidden="true"
                 onEnded={pauseBeforeIdleReplay}
-                onError={() => setIdleUnavailable(true)}
+                onError={idleFailed}
               >
-                <VideoSources sources={idleSources} onError={() => setIdleUnavailable(true)} />
+                <VideoSources sources={idleSources} onError={idleFailed} />
               </video>
-              {REACTION_STATES.map((reaction) => {
-                const source = clips[reaction] ?? DEFAULT_CLIPS[reaction];
-                if (!source || failedReactions[reaction]) return null;
+              {PERFORMANCES.map((performance) => {
+                const source = clips[performance] ?? DEFAULT_CLIPS[performance];
+                if (!source || failedPerformances[performance]) return null;
                 return (
                   <ReactionLayer
-                    key={reaction}
-                    state={reaction}
+                    key={performance}
+                    state={performance}
                     source={source}
-                    // The accept performance keeps playing while the door swings.
-                    active={
-                      activeReaction === reaction ||
-                      (reaction === 'accepted' && portraitState === 'opening')
-                    }
-                    onComplete={completeReaction}
-                    onFailure={markReactionFailed}
+                    active={performanceActive(performance)}
+                    poster={performance === 'wake' ? ancarionAsleep : ancarion}
+                    // Doze and wake are needed only after a long quiet; the
+                    // poster covers the moment either takes to load.
+                    preload={performance === 'doze' || performance === 'wake' ? 'metadata' : 'auto'}
+                    onComplete={completePerformance}
+                    onFailure={markPerformanceFailed}
                   />
                 );
               })}
+              <img
+                className="portrait-gate__reaction"
+                src={ancarionAsleep}
+                alt=""
+                aria-hidden="true"
+                data-active={portraitState === 'asleep'}
+              />
               <span ref={aura} className="portrait-gate__aura" />
             </div>
           </div>
           <img className="portrait-gate__frame" src={frame} alt="" />
         </div>
       </div>
+      {hasVoice && <audio ref={voice} preload="auto" aria-hidden="true" />}
 
       {/* The portrait stands alone, with only the field beneath it. The words
           that used to sit beside it — the eyebrow, the description and
@@ -562,7 +804,7 @@ export function PortraitGate({
           </button>
         </form>
         <p className="portrait-gate__status" role="status" aria-live="polite">
-          {status || '\u00a0'}
+          {status || ' '}
         </p>
         {canSkip && (
           <button className="portrait-gate__skip" type="button" onClick={finish}>

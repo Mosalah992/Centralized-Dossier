@@ -1,5 +1,31 @@
 # Decision Log
 
+## 2026-10-09 - Ancarion behaves like a Hogwarts portrait
+
+The gate now gives Ancarion a life between passphrases, all from supplied
+clips (no motion synthesized in code):
+
+- **Idle rotation:** after each idle and its 2 s rest, the plain idle plays about
+  half the time, otherwise an appraising stare or a stirring of the staff's
+  smoke, never the same variant twice running. A sideways-glance variant was
+  generated and dropped: Kling closed his eyes instead of moving his irises.
+- **Notices you:** the first focus on the field plays the listening clip once.
+- **Dozing:** 45 s without pointer, key, scroll or focus (20 s at night) and he
+  nods off, holding asleep until anything stirs, then wakes. Between 23:00 and
+  06:00 local time he is found asleep. Doze and wake meet on an asleep keyframe:
+  frame 53 of the approved accept clip, scaled to 760 px
+  (`Assets/portrait-clips/ancarion-asleep.png`). The painting is untouched.
+- **Hand-offs:** while any clip covers him, the idle layer waits on its first
+  frame, so every change of clip is still to still (or asleep to asleep).
+- **Voice:** optional recordings in `Assets/ancarion-voice/` (`ancarion-greet`,
+  `-denied`, `-annoyed`, `-accepted`, `-woken`) play with the matching moment,
+  only when the archive's sound roundel allows and the browser has a gesture.
+  A missing line is silence, so the voice can ship before every line exists.
+
+Reduced motion sees none of this: the still stays and he never dozes; the
+voice, which is not motion, still follows the roundel. Presentation only:
+adapters, endpoints and writs are untouched.
+
 ## 2026-10-09 - Ancarion's performances regenerated from his painting
 
 The gate's idle, refusal, sigh and accept clips are now AI-generated (Kling,
