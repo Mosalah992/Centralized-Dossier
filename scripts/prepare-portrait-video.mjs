@@ -52,6 +52,12 @@ const asleep = resolve(ROOT, 'web/src/assets/ancarion-asleep.webp');
 await sharp(resolve(sourceDirectory, 'ancarion-asleep.png')).webp({ quality: 90 }).toFile(asleep);
 await report(asleep);
 
+// The Summerset map behind the Chronicles gate. It is drawn darkened behind
+// the portrait, so at most 1600px (never enlarged) and a modest quality.
+const chroniclesMap = resolve(ROOT, 'web/src/assets/chronicles-map.webp');
+await sharp(resolve(ROOT, 'Assets/chronicles-map.png')).resize({ width: 1600, withoutEnlargement: true }).webp({ quality: 72 }).toFile(chroniclesMap);
+await report(chroniclesMap);
+
 // The recorded lines are optional, and so is their folder: a line nobody has
 // recorded yet is silence on the gate.
 const lines = await readdir(voiceDirectory).catch(() => []);

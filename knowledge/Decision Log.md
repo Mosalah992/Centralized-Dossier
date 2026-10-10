@@ -1,5 +1,17 @@
 # Decision Log
 
+## 2026-10-10 - The Chronicles gate stands before a map of Summerset
+
+The Chronicles gate gets its own setting, distinct from the Reports sky: a
+gold-on-dark map of the Summerset Isles, drawn darkened behind the gate and
+darker still behind the portrait and field (`backdrop` prop, Chronicles
+only). It is the owner's AI-generated image with the place names corrected
+and no watermark (`Assets/chronicles-map.png`, 1254 px, a lossless copy of
+the owner's file; an earlier watermarked draft, `informantsBG.png`, is left
+untouched and uncommitted). A replacement only needs that one source file.
+A still, so it also shows for reduced motion. The Chronicles gate still
+draws no sky.
+
 ## 2026-10-10 - He never freezes between idle moments
 
 The 2 s rest on the still between idle clips read as a freeze, so idle clips

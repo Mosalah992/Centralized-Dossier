@@ -29,6 +29,7 @@ import { Consulting, Notice } from '../components/Notice';
 import { PortraitGate } from '../components/PortraitGate';
 import { GuidedToggle, mark, prose, useGuidedReading } from '../reading';
 import sealUrl from '../assets/volumes/informants-seal.webp';
+import chroniclesMap from '../assets/chronicles-map.webp';
 
 /**
  * Roughly how much text a page holds before it has to scroll.
@@ -745,6 +746,7 @@ export function InformantsView() {
       verify={(passphrase, signal) => openChronicle(passphrase, signal)}
       onAuthorized={() => setAuthorized(true)}
       onGranted={() => setUnlocked(true)}
+      backdrop={chroniclesMap}
     />
   );
 

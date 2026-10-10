@@ -112,9 +112,19 @@ describe('interaction boundaries', () => {
     for (const performance of PERFORMANCES) expect(preparation).toContain(`'${performance}'`);
     expect(preparation).toContain("const formats = ['webm', 'mp4'];");
     expect(preparation).toContain('await copyFile(');
-    // Only the asleep keyframe is re-encoded; the clips are copied as they are.
-    expect(preparation.match(/sharp\(/g)).toHaveLength(1);
+    // Only the stills are re-encoded (the asleep keyframe and the Chronicles
+    // map); the clips are copied as they are.
+    expect(preparation.match(/sharp\(/g)).toHaveLength(2);
     expect(preparation).toContain("'ancarion-asleep.png'");
+    expect(preparation).toContain("'Assets/chronicles-map.png'");
+  });
+
+  it('draws the Summerset map behind the Chronicles gate only', () => {
+    expect(read('web/src/views/Informants.tsx')).toMatch(/<PortraitGate[\s\S]*backdrop=\{chroniclesMap\}/);
+    expect(read('web/src/views/Reports.tsx')).not.toContain('backdrop=');
+    const gateCss = read('web/src/styles/portrait-gate.css');
+    expect(gateCss).toContain(".portrait-gate[data-backdrop='true']");
+    expect(gateCss).toContain('.portrait-gate__backdrop::after');
   });
 
   it('offers every Ancarion performance as WebM with an MP4 fallback', () => {

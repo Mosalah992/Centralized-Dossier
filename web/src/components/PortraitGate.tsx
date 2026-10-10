@@ -56,6 +56,8 @@ export interface PortraitGateProps {
   onGranted: () => void;
   /** Draws Nirn, Masser and Secunda behind the gate. Opt-in per volume. */
   sky?: boolean;
+  /** A still painting drawn darkened behind the gate. Opt-in per volume. */
+  backdrop?: string;
 }
 
 type AuthState = 'locked' | 'checking' | 'denied' | 'error' | 'authorized';
@@ -278,6 +280,7 @@ export function PortraitGate({
   onAuthorized,
   onGranted,
   sky = false,
+  backdrop,
 }: PortraitGateProps) {
   const root = useRef<HTMLElement>(null);
   const inputId = useId();
@@ -723,9 +726,15 @@ export function PortraitGate({
       className="portrait-gate"
       data-state={portraitState}
       data-sky={sky ? 'true' : undefined}
+      data-backdrop={backdrop ? 'true' : undefined}
       aria-busy={authState === 'checking'}
     >
       {sky && <NirnSky />}
+      {backdrop && (
+        <div className="portrait-gate__backdrop" aria-hidden="true">
+          <img src={backdrop} alt="" decoding="async" />
+        </div>
+      )}
       <header className="portrait-gate__title">
         <p className="portrait-gate__allegiance">Third Aldmeri Dominion</p>
         <h1>{collection}</h1>
