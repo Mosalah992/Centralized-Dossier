@@ -17,6 +17,8 @@ const sourceDirectory = resolve(ROOT, 'Assets/portrait-clips');
 const voiceDirectory = resolve(ROOT, 'Assets/ancarion-voice');
 const performances = [
   'idle',
+  'idle-breathe',
+  'idle-drowse',
   'idle-appraise',
   'idle-smoke',
   'listening',

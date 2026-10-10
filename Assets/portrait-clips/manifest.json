@@ -231,6 +231,70 @@
       }
     },
     {
+      "name": "idle-drowse",
+      "model": "kling-video-v3_0",
+      "mode": "pro",
+      "mode_parameter": "resolution=1080p (the Kling MCP exposes pro mode as the 1080p resolution tier)",
+      "duration": 5,
+      "cfg_scale": null,
+      "cfg_scale_note": "0.5 requested; the Kling MCP image_to_video schema has no cfg_scale parameter, so none was sent",
+      "prompt": "Painted portrait of a masked high elf mage: long white hair, gold circlet, golden halo, black mask over nose and mouth, black robe with gold trim, gold staff with violet smoke. He breathes slowly and deeply: his chest and shoulders rise gently, then sink, twice. Nothing else moves; his eyes stay open on the viewer, without blinking, and the smoke and halo stay calm. Locked-off static camera. Keep the brushwork, colors and composition exactly; only he moves.",
+      "negative_prompt": "camera movement, zoom, pan, cut, morphing, warping, distorted face, exposed mouth, lips, teeth, talking, extra hands, new objects, text, watermark, color shift, photorealistic, 3D render",
+      "negative_prompt_sent": false,
+      "negative_prompt_note": "the Kling MCP image_to_video schema has no negative_prompt parameter; recorded here as specified but not sent",
+      "other_parameters_sent": {
+        "enable_audio": "false",
+        "prefer_multi_shots": "false",
+        "imageCount": "1"
+      },
+      "first_image": "canonreeve.png (lossless PNG of the source, pixel-identical)",
+      "tail_image": "canonreeve.png (same image as first_image)",
+      "task_id": "AZQ_oZzLDOXxB90osBONwiZCUzjPJ5b2C8lLG9Frqe2kivb7mi0azWIbYQLYixoZSBWwU-nC",
+      "date": "2026-10-10T00:42:16.284Z",
+      "credits": 40,
+      "source_image_sha256": "ef1df50411aab618bf5f1d5add1b8ef0db5ae9ccadad780b1f55806602b57936",
+      "attempt": 1,
+      "note": "generated as a breathing loop; his lids closed at about 2.5-3.7 s and the chest barely moved, so it plays as an occasional idle moment instead",
+      "files": {
+        "raw": "raw/ancarion-idle-drowse.mp4",
+        "raw_sha256": "a69d8a6d6115b9ea5c8449091bcd7c40fed780b1d6416a87afc2f047426b4e2b",
+        "webm": "ancarion-idle-drowse.webm",
+        "mp4": "ancarion-idle-drowse.mp4"
+      }
+    },
+    {
+      "name": "idle-breathe",
+      "model": "kling-video-v3_0",
+      "mode": "pro",
+      "mode_parameter": "resolution=1080p (the Kling MCP exposes pro mode as the 1080p resolution tier)",
+      "duration": 5,
+      "cfg_scale": null,
+      "cfg_scale_note": "0.5 requested; the Kling MCP image_to_video schema has no cfg_scale parameter, so none was sent",
+      "prompt": "Painted portrait of a masked high elf mage: long white hair, gold circlet, golden halo, black mask over nose and mouth, black robe with gold trim, gold staff with violet smoke. He breathes slowly and deeply; his chest and shoulders visibly rise and fall in two calm breaths. Nothing else moves. Locked-off static camera. Keep the brushwork, colors and composition exactly; only he moves.",
+      "negative_prompt": "camera movement, zoom, pan, cut, morphing, warping, distorted face, exposed mouth, lips, teeth, talking, extra hands, new objects, text, watermark, color shift, photorealistic, 3D render",
+      "negative_prompt_sent": false,
+      "negative_prompt_note": "the Kling MCP image_to_video schema has no negative_prompt parameter; recorded here as specified but not sent",
+      "other_parameters_sent": {
+        "enable_audio": "false",
+        "prefer_multi_shots": "false",
+        "imageCount": "1"
+      },
+      "first_image": "canonreeve.png (lossless PNG of the source, pixel-identical)",
+      "tail_image": "canonreeve.png (same image as first_image)",
+      "task_id": "AUDabo12w3xgm5CIxDrYgkejpMVQ0lDmqgG1rfrGEGtUK_8X8txdA1mHa5HdUSl4q8aDWn95",
+      "date": "2026-10-10T00:55:43.085Z",
+      "credits": 40,
+      "source_image_sha256": "ef1df50411aab618bf5f1d5add1b8ef0db5ae9ccadad780b1f55806602b57936",
+      "attempt": 2,
+      "note": "retake of the breathing loop with owner-approved wording (no mention of the eyes); his eyes widen gently and the chest barely moves, so it also plays as an occasional idle moment",
+      "files": {
+        "raw": "raw/ancarion-idle-breathe.mp4",
+        "raw_sha256": "2ffa5c406f83ddd4a98191050521d03b6388eb62181e1deaf5444d1b700393d3",
+        "webm": "ancarion-idle-breathe.webm",
+        "mp4": "ancarion-idle-breathe.mp4"
+      }
+    },
+    {
       "name": "idle-smoke",
       "model": "kling-video-v3_0",
       "mode": "pro",
@@ -362,5 +426,5 @@
       "reason": "for about 1.3-3.8 s his eyes became wide, round and bright lime green, unlike the painting. Regenerated once with identical settings and prompt."
     }
   ],
-  "total_credits": 480
+  "total_credits": 560
 }

@@ -8,6 +8,10 @@ import ancarionDozeMp4 from '../assets/ancarion-doze.mp4';
 import ancarionDozeWebm from '../assets/ancarion-doze.webm';
 import ancarionAppraiseMp4 from '../assets/ancarion-idle-appraise.mp4';
 import ancarionAppraiseWebm from '../assets/ancarion-idle-appraise.webm';
+import ancarionBreatheMp4 from '../assets/ancarion-idle-breathe.mp4';
+import ancarionBreatheWebm from '../assets/ancarion-idle-breathe.webm';
+import ancarionDrowseMp4 from '../assets/ancarion-idle-drowse.mp4';
+import ancarionDrowseWebm from '../assets/ancarion-idle-drowse.webm';
 import ancarionSmokeMp4 from '../assets/ancarion-idle-smoke.mp4';
 import ancarionSmokeWebm from '../assets/ancarion-idle-smoke.webm';
 import ancarionIdleMp4 from '../assets/ancarion-idle.mp4';
@@ -88,15 +92,16 @@ const DEFAULT_CLIPS = {
   doze: [ancarionDozeWebm, ancarionDozeMp4],
   wake: [ancarionWakeWebm, ancarionWakeMp4],
 } satisfies Record<'idle' | Performance, ClipSource>;
-// Played between plain idles so he never visibly loops. Each starts and ends
-// on the still, like every other clip.
+// With the plain idle, the moments he plays back to back while nothing else is
+// happening. Each starts and ends on the still, like every other clip.
 const IDLE_VARIANTS: readonly ClipSource[] = [
   [ancarionAppraiseWebm, ancarionAppraiseMp4],
   [ancarionSmokeWebm, ancarionSmokeMp4],
+  [ancarionBreatheWebm, ancarionBreatheMp4],
+  [ancarionDrowseWebm, ancarionDrowseMp4],
 ];
 const REACTION_STATES: ReactionState[] = ['denied', 'rebuffed', 'annoyed', 'accepted'];
 const PERFORMANCES: Performance[] = [...REACTION_STATES, 'listening', 'doze', 'wake'];
-const IDLE_REPLAY_PAUSE_MS = 2_000;
 // Safety nets for a reaction whose `ended` never arrives; the performances
 // run 4.67-5.04 s, and `ended` normally returns him to idle first.
 const DENIED_FALLBACK_MS = 5_500;
@@ -301,7 +306,6 @@ export function PortraitGate({
   const request = useRef<AbortController | null>(null);
   const openingTimer = useRef<number | null>(null);
   const reactionTimer = useRef<number | null>(null);
-  const idleReplayTimer = useRef<number | null>(null);
   const denialCount = useRef(0);
   const input = useRef<HTMLInputElement>(null);
   const idleVideo = useRef<HTMLVideoElement>(null);
@@ -351,7 +355,6 @@ export function PortraitGate({
     finished.current = true;
     if (openingTimer.current !== null) window.clearTimeout(openingTimer.current);
     if (reactionTimer.current !== null) window.clearTimeout(reactionTimer.current);
-    if (idleReplayTimer.current !== null) window.clearTimeout(idleReplayTimer.current);
     setCanSkip(false);
     setPortraitState('open');
     onGranted();
@@ -362,7 +365,6 @@ export function PortraitGate({
       request.current?.abort();
       if (openingTimer.current !== null) window.clearTimeout(openingTimer.current);
       if (reactionTimer.current !== null) window.clearTimeout(reactionTimer.current);
-      if (idleReplayTimer.current !== null) window.clearTimeout(idleReplayTimer.current);
     },
     [],
   );
@@ -384,14 +386,11 @@ export function PortraitGate({
 
   // While another clip covers him the idle waits on its first frame, the
   // still, and starts from there once the cover lifts, so every hand-off is
-  // still to still. Between idles, pauseBeforeIdleReplay decides what plays next.
+  // still to still. It also starts each newly mounted idle clip; nextIdle
+  // decides which one that is.
   useEffect(() => {
     const element = idleVideo.current;
     if (!element) return;
-    if (idleReplayTimer.current !== null) {
-      window.clearTimeout(idleReplayTimer.current);
-      idleReplayTimer.current = null;
-    }
     if (reducedMotion || idleUnavailable || overlaid) {
       element.pause();
       if (overlaid) element.currentTime = 0;
@@ -400,29 +399,27 @@ export function PortraitGate({
 
     element.currentTime = 0;
     void element.play().catch((error) => cannotPlay(error) && setIdleUnavailable(true));
-  }, [idleUnavailable, overlaid, reducedMotion]);
+  }, [idleKey, idleUnavailable, overlaid, reducedMotion]);
 
-  // Choose the next idle while the last one rests on the still, so a variant
-  // loads during the pause: the plain idle about half the time, otherwise a
-  // variant, never the same variant twice running.
-  const pauseBeforeIdleReplay = useCallback(() => {
+  // He never rests on the still: the next idle moment follows at once, drawn
+  // from all of them but never the one just played, so nothing recurs on a
+  // fixed beat.
+  const nextIdle = useCallback(() => {
     if (reducedMotion || idleUnavailable) return;
-    if (idleReplayTimer.current !== null) window.clearTimeout(idleReplayTimer.current);
-    const variants = IDLE_VARIANTS.map((_, index) => index + 1).filter(
+    const choices = [0, ...IDLE_VARIANTS.map((_, index) => index + 1)].filter(
       (index) => index !== idleClip && !failedIdleVariants.has(index),
     );
     const next =
-      variants.length > 0 && Math.random() >= 0.5
-        ? variants[Math.floor(Math.random() * variants.length)]!
-        : 0;
-    setIdleClip(next);
-    idleReplayTimer.current = window.setTimeout(() => {
-      idleReplayTimer.current = null;
-      const element = idleVideo.current;
-      if (!element) return;
-      element.currentTime = 0;
-      void element.play().catch((error) => cannotPlay(error) && setIdleUnavailable(true));
-    }, IDLE_REPLAY_PAUSE_MS);
+      choices.length > 0 ? choices[Math.floor(Math.random() * choices.length)]! : idleClip;
+    if (next !== idleClip) {
+      // A different clip mounts in its place and the effect above starts it.
+      setIdleClip(next);
+      return;
+    }
+    const element = idleVideo.current;
+    if (!element) return;
+    element.currentTime = 0;
+    void element.play().catch((error) => cannotPlay(error) && setIdleUnavailable(true));
   }, [failedIdleVariants, idleClip, idleUnavailable, reducedMotion]);
 
   const idleFailed = useCallback(() => {
@@ -754,7 +751,7 @@ export function PortraitGate({
                 playsInline
                 preload="auto"
                 aria-hidden="true"
-                onEnded={pauseBeforeIdleReplay}
+                onEnded={nextIdle}
                 onError={idleFailed}
               >
                 <VideoSources sources={idleSources} onError={idleFailed} />

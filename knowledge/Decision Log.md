@@ -1,5 +1,17 @@
 # Decision Log
 
+## 2026-10-10 - He never freezes between idle moments
+
+The 2 s rest on the still between idle clips read as a freeze, so idle clips
+now play back to back. A dedicated breathing loop was tried twice and
+rejected as a loop: Kling closed his eyes in the first take and widened them
+in the second, and barely moved his chest in either, so on a 5 s repeat each
+became a recurring tic. Both takes joined the pool instead (`idle-drowse`, a
+slow lid-close; `idle-breathe`, a calm widening). The next moment is drawn
+from the plain idle and four variants, never the one just played, so nothing
+recurs on a fixed beat. Overlays still pause the idle layer on its first
+frame and restart it from there.
+
 ## 2026-10-10 - Refusals escalate; only an unplayable clip is retired
 
 Wrong passphrases now escalate: the first plays the regenerated refusal

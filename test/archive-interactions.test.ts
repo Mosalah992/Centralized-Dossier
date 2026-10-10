@@ -38,6 +38,8 @@ describe('archive navigation', () => {
 // Every Ancarion clip the gate plays, each shipped as WebM and MP4.
 const PERFORMANCES = [
   'idle',
+  'idle-breathe',
+  'idle-drowse',
   'idle-appraise',
   'idle-smoke',
   'listening',
@@ -88,8 +90,11 @@ describe('interaction boundaries', () => {
     // The idle layer is started and paced by the component (rotation, and a
     // pause on the still while another clip covers it), not by autoPlay.
     expect(gate).not.toContain('autoPlay');
-    expect(gate).toContain('const IDLE_REPLAY_PAUSE_MS = 2_000');
-    expect(gate).toContain('onEnded={pauseBeforeIdleReplay}');
+    // The next idle moment is never the one just played.
+    expect(gate).toContain('(index) => index !== idleClip && !failedIdleVariants.has(index),');
+    expect(gate).toContain('onEnded={nextIdle}');
+    // He breathes without a rest: no pause timer between idle clips.
+    expect(gate).not.toContain('IDLE_REPLAY_PAUSE_MS');
     expect(gate).toContain('onEnded={() => onComplete(state)}');
     expect(gate).toContain('void element.play().catch((error) => cannotPlay(error) && setIdleUnavailable(true));');
     expect(gate).toContain("return error instanceof DOMException && error.name === 'NotSupportedError';");
