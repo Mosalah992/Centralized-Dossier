@@ -270,4 +270,4 @@ On landscape screens 1024px or wider the room now fits exactly one screen and ru
 - **Lectern** is larger: its plate sits on the desk's front, and the bottom row is deeper.
 - **Solar** is now a sealed door, which will later open onto the map and the clerk's desk. It is a button: clicking it makes the doors strain against the seal. It is never a link.
 - **Hall of Honors:** the "500" on `localhost:5173` came from the dev page forwarding `/api` to a Functions server that wasn't running. The Hall now renders whatever the sheet does, since all its honours are kept in the code; the sheet's "Hall of Honor" tab is empty apart from its title.
-- **Fonts:** Cinzel, Cinzel Decorative (for the Embassy's name) and EB Garamond are now self-hosted, under the OFL. The stylesheets had always named them but never loaded them.
+- **Font:** the Embassy's name is now set larger, in Cinzel Decorative, the decorated version of the site's Cinzel. It is self-hosted under the OFL, alongside the Cinzel and EB Garamond the site already self-hosts.

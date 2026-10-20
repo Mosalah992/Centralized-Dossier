@@ -1,41 +1,16 @@
 /* Foundations. The palette leans Altmer rather than Nord: pale stone, thin
    gold inlay and sharp vertical geometry instead of heavy timber. */
 
-/* The archive's faces, served from its own origin (font-src 'self'): Cinzel
-   for the tracked capitals, Cinzel Decorative for the Embassy's name, EB
-   Garamond for reading. Latin subsets of the Google Fonts cuts as packaged by
-   Fontsource, under the SIL Open Font License (OFL-*.txt beside the files).
-   Until 2026-10-20 these were named in the stacks below but never loaded, so
-   most readers saw Georgia. */
-@font-face {
-  font-family: 'Cinzel';
-  src: url('../assets/fonts/cinzel-latin-wght.woff2') format('woff2-variations');
-  font-weight: 400 900;
-  font-style: normal;
-  font-display: swap;
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
+/* The Embassy's name has a face of its own: Cinzel Decorative, the same Roman
+   capital as the archive's Cinzel (main.tsx loads that and EB Garamond from
+   Fontsource) with its swashes. Served from the archive's own origin
+   (font-src 'self'); the Latin cut as packaged by Fontsource, under the SIL
+   Open Font License (OFL-Cinzel-Decorative.txt beside it). */
 @font-face {
   font-family: 'Cinzel Decorative';
   src: url('../assets/fonts/cinzel-decorative-latin-700.woff2') format('woff2');
   font-weight: 700;
   font-style: normal;
-  font-display: swap;
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-@font-face {
-  font-family: 'EB Garamond';
-  src: url('../assets/fonts/eb-garamond-latin-wght.woff2') format('woff2-variations');
-  font-weight: 400 800;
-  font-style: normal;
-  font-display: swap;
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-@font-face {
-  font-family: 'EB Garamond';
-  src: url('../assets/fonts/eb-garamond-latin-wght-italic.woff2') format('woff2-variations');
-  font-weight: 400 800;
-  font-style: italic;
   font-display: swap;
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
