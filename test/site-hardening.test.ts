@@ -36,7 +36,7 @@ describe('public support link', () => {
     expect(app).toContain('https://ko-fi.com/N1B0279SRR');
     expect(app).toContain('rel="noopener noreferrer external"');
     expect(app).toContain('className="support-seal"');
-    expect(read('web/src/styles/archive-navigation.css')).toContain('.support-seal');
+    expect(read('web/src/styles/app-shell.css')).toContain('.support-seal');
     expect(read('index.html')).not.toContain('style=');
   });
 });
@@ -78,19 +78,35 @@ describe('browser security policy', () => {
 describe('initial-load ownership', () => {
   it('keeps route-only styles out of the entry module', () => {
     const entry = read('web/src/main.tsx');
-    for (const sheet of ['chronicle.css', 'enforcement.css', 'orrery.css', 'firmament.css', 'reports.css', 'portrait-gate.css']) {
+    for (const sheet of [
+      'chronicle.css', 'enforcement.css', 'orrery.css', 'reports.css', 'portrait-gate.css',
+      // The room and everything that opens over it, and the hero that became the Gallery.
+      'room.css', 'takeover.css', 'orb.css', 'bookshelf.css', 'board.css', 'ancarion.css', 'gallery.css', 'register.css', 'shelf.css',
+    ]) {
       expect(entry, `${sheet} should load with its route`).not.toContain(sheet);
     }
     expect(read('web/src/views/Reports.tsx')).toContain("../styles/reports.css");
     expect(read('web/src/components/PortraitGate.tsx')).toContain("../styles/portrait-gate.css");
+    expect(read('web/src/room/Room.tsx')).toContain("../styles/room.css");
+    expect(read('web/src/components/useAncarion.tsx')).toContain("../styles/ancarion.css");
+    expect(read('web/src/views/Gallery.tsx')).toContain("../styles/gallery.css");
+    // The room itself is a lazy chunk: App imports it dynamically, never statically.
+    const app = read('web/src/App.tsx');
+    expect(app).toContain("import('./room/Room')");
+    expect(app).not.toMatch(/from '\.\/room\//);
   });
 
-  it('pauses continuous calendar rendering offscreen and under reduced motion', () => {
-    for (const path of ['web/src/components/Firmament.tsx', 'web/src/components/Orrery.tsx']) {
+  it('pauses the orrery offscreen and under reduced motion', () => {
+    for (const path of ['web/src/components/Orrery.tsx']) {
       const source = read(path);
       expect(source).toContain('autoplay: false');
       expect(source).toContain('IntersectionObserver');
       expect(source).toContain('if (still)');
     }
+    // The room's orb is the calendar's own wheel, reached lazily, so anime.js
+    // never rides in the room's chunk.
+    const orb = read('web/src/room/RoomOrb.tsx');
+    expect(orb).toContain("import('../components/Orrery')");
+    expect(orb).not.toContain('animejs');
   });
 });

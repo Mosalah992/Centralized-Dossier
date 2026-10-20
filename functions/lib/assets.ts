@@ -29,3 +29,29 @@ export function guardAssetFallback(request: Request, response: Response): Respon
     },
   });
 }
+
+/**
+ * An /api path with no Function behind it must answer as an API, not as the
+ * app.
+ *
+ * Without this, a request for an endpoint that does not exist falls through to
+ * the SPA's index.html with a 200, and a client asking for JSON is handed a web
+ * page. The Embassy room asks /api/room/* for its board and lectern before the
+ * Librarian backend exists, and reads a 404 as "not yet consecrated" — which it
+ * can only do if a missing endpoint says so.
+ */
+export function guardApiFallback(request: Request, response: Response): Response {
+  const { pathname } = new URL(request.url);
+  if (pathname !== '/api' && !pathname.startsWith('/api/')) return response;
+
+  const type = response.headers.get('Content-Type') ?? '';
+  if (!type.startsWith('text/html')) return response;
+
+  return new Response(JSON.stringify({ error: 'not-found' }), {
+    status: 404,
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': 'no-store',
+    },
+  });
+}

@@ -1,4 +1,4 @@
-// The six published volumes. This registry is the single source of truth for
+// The published volumes. This registry is the single source of truth for
 // the shelf: the Worker resolves tabs from it, the web app renders books from
 // it. `Index` and `Draft` are internal to the sheet and never published.
 //
@@ -32,38 +32,17 @@ export const VOLUMES: readonly VolumeDefinition[] = [
     needsGridData: false,
   },
   {
-    slug: 'ledger',
-    title: 'Ledger',
-    category: 'Finance',
-    tab: { exact: 'Ledger' },
-    range: 'A1:N40',
-    needsGridData: false,
-  },
-  {
-    slug: 'stipends',
-    title: 'Registry',
-    category: 'Finance',
-    tab: { exact: 'Stipends' },
-    range: 'A1:G40',
-    needsGridData: false,
-  },
-  {
     slug: 'honor',
     title: 'Hall of Honors',
-    category: 'Honors & Calendar',
+    category: 'Honors',
     tab: { exact: 'Hall of Honor' },
     range: 'A1:C40',
     needsGridData: false,
   },
-  {
-    slug: 'calendar',
-    title: 'Calendar',
-    category: 'Honors & Calendar',
-    tab: { prefix: 'Tamrielic Calendar' },
-    range: 'A1:AF40',
-    // Day meaning is cell background + note; values alone are bare numbers.
-    needsGridData: true,
-  },
+  // RETIRED 2026-10-20 at the First Emissary's direction: the Ledger and the
+  // Registry (Finance) and the Tamrielic Calendar. Their parsers stay in
+  // shared/parsers/ with their tests, so restoring a volume is a registry
+  // entry, a slug and a view; the sheet's tabs are untouched.
 ] as const;
 
 /**
@@ -171,8 +150,7 @@ export const SHELF: readonly {
   volumes: (VolumeDefinition | KeptVolume | SealedVolume)[];
 }[] = [
   'Personnel',
-  'Finance',
-  'Honors & Calendar',
+  'Honors',
   'Chronicles',
 ].map((category) => ({
   category,

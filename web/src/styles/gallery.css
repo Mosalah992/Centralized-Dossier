@@ -1,0 +1,221 @@
+/* The Gallery: the Embassy's name in torchlight, and the Embassy beneath it.
+   Nothing on the page but the title and the pictures; the Dominion's name in
+   the bar above leads home. */
+
+.hall {
+  --hall-nav-height: 3.5rem;
+  min-height: calc(100vh - 10rem);
+  padding: calc(var(--hall-nav-height) + clamp(0.6rem, 2vw, 1.4rem)) 0 0;
+  position: relative;
+  isolation: isolate;
+}
+
+.hall::before,
+.hall::after {
+  content: '';
+  position: absolute;
+  inset: -2rem calc(50% - 50vw) auto;
+  height: min(45rem, 78vh);
+  pointer-events: none;
+  z-index: -2;
+}
+
+.hall::before {
+  background:
+    radial-gradient(60rem 26rem at 50% 12%, rgba(218, 178, 95, 0.16), transparent 70%),
+    radial-gradient(54rem 38rem at 50% 16%, rgba(230, 220, 198, 0.08), transparent 64%),
+    linear-gradient(180deg, rgba(50, 40, 30, 0.5), transparent 78%);
+  -webkit-mask-image: linear-gradient(180deg, #000 0 72%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0 72%, transparent 100%);
+}
+
+.hall::after {
+  z-index: -1;
+  background:
+    radial-gradient(18rem 18rem at 50% 7rem, rgba(201, 162, 39, 0.08), transparent 68%);
+  opacity: 0.9;
+}
+
+.hall__hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-block: clamp(1.6rem, 5vw, 4rem) clamp(0.4rem, 1.5vw, 1rem);
+  text-align: center;
+}
+
+.hall__title {
+  margin: 0;
+  font-family: var(--title);
+  font-size: clamp(2rem, 5.4vw, 6.2rem);
+  font-weight: 700;
+  line-height: 1.08;
+  color: var(--parchment);
+  letter-spacing: 0.08em;
+  text-shadow: 0 3px 18px rgba(0, 0, 0, 0.7), 0 0 34px rgb(201 162 39 / 0.18);
+}
+
+/* "Gallery", set between two gilt rules as the registers' title pages are. */
+.hall__subtitle {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  width: min(30rem, 100%);
+  margin: clamp(0.9rem, 1.8vw, 1.4rem) 0 0;
+  font-family: var(--display);
+  font-size: clamp(0.9rem, 1.4vw, 1.25rem);
+  font-weight: 600;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.hall__subtitle::before,
+.hall__subtitle::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--gold) 60%, transparent));
+}
+
+.hall__subtitle::after {
+  transform: scaleX(-1);
+}
+
+/* The Embassy assembled. Shown whole and at its own proportions — every figure
+   in it is somebody — with the archive's gilt hairline rather than a new
+   frame, and the same lift a volume takes off the shelf. */
+.hall__portrait,
+.hall__film {
+  width: min(90rem, 100%);
+  margin: 0 auto;
+}
+
+.hall__portrait {
+  margin-top: clamp(1.5rem, 4vw, 3rem);
+  transform-origin: 50% 100%;
+}
+
+.hall__portrait img,
+.hall__film video {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  background: #0d0b09;
+  border: 1px solid color-mix(in srgb, var(--gold) 38%, transparent);
+  box-shadow:
+    0 0 0 0.4rem rgb(16 14 12 / 0.9),
+    0 0 0 calc(0.4rem + 1px) color-mix(in srgb, var(--gold) 18%, transparent),
+    0 1.8rem 3rem rgb(0 0 0 / 0.6);
+}
+
+.hall__film {
+  /* Narrower than the portrait: the footage is 858px wide, and stretched to
+     the hall's full width it would only show how soft it is. */
+  width: min(64rem, 100%);
+  margin-top: clamp(2.5rem, 5vw, 4rem);
+}
+
+/* The rest of the Embassy, two to a row beneath the portrait. An odd one out
+   at the end takes the full row rather than standing alone in half of it. */
+.hall__gallery {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(1.2rem, 2.5vw, 2rem);
+  width: min(90rem, 100%);
+  margin: clamp(2.5rem, 5vw, 4rem) auto 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hall__gallery li:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+.hall__gallery img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  background: #0d0b09;
+  border: 1px solid color-mix(in srgb, var(--gold) 32%, transparent);
+  box-shadow:
+    0 0 0 0.3rem rgb(16 14 12 / 0.9),
+    0 0 0 calc(0.3rem + 1px) color-mix(in srgb, var(--gold) 14%, transparent),
+    0 1.2rem 2rem rgb(0 0 0 / 0.55);
+}
+
+@media (max-width: 720px) {
+  .hall__gallery {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.hall__film video {
+  object-fit: cover;
+}
+
+
+/* The bar: only the Dominion's name, which leads home, on a thin smoked-glass
+   ground fixed over the page. */
+html:has(.hall-nav) {
+  scroll-padding-top: calc(3.5rem + 1.25rem);
+}
+
+.hall-nav {
+  position: fixed;
+  top: 0;
+  inset-inline: 0;
+  z-index: 30;
+  background: rgb(16 14 12 / 0.45);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  border-bottom: 1px solid rgb(201 162 39 / 0.12);
+}
+
+.hall-nav__bar {
+  display: flex;
+  align-items: center;
+  height: var(--hall-nav-height, 3.5rem);
+  padding-inline: clamp(1.25rem, 3vw, 2.5rem);
+}
+
+/* At least 44px tall (WCAG 2.5.5). */
+.hall-nav__brand {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  font-family: var(--display);
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  color: var(--parchment);
+  transition: color 0.22s var(--ease);
+}
+
+.hall-nav__brand:hover,
+.hall-nav__brand:focus-visible {
+  color: var(--gold-bright);
+}
+
+.hall-nav__brand:focus-visible {
+  outline: 1px solid var(--gold-bright);
+  outline-offset: 2px;
+}
+
+@media (max-width: 720px) {
+  .hall {
+    padding-top: calc(var(--hall-nav-height) + 0.5rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hall-nav__brand {
+    transition: none;
+  }
+}

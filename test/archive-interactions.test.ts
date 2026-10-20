@@ -1,39 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
-import {
-  ARCHIVE_NAVIGATION,
-  filterArchiveNavigation,
-  navigationItemIsActive,
-} from '../web/src/archive-navigation';
-import { ALL_SLUGS } from '../shared/volumes';
-
 const read = (path: string) => readFileSync(path, 'utf8');
-
-describe('archive navigation', () => {
-  it('is generated from every published volume and High Command, with home left to the insignia', () => {
-    const hrefs = ARCHIVE_NAVIGATION.map((item) => item.href);
-    expect(new Set(hrefs).size).toBe(hrefs.length);
-    expect(hrefs).not.toContain('/');
-    expect(hrefs).toContain('/reports');
-    for (const slug of ALL_SLUGS) expect(hrefs).toContain(`/archives/${slug}`);
-  });
-
-  it('filters labels and registry groups without searching record bodies', () => {
-    expect(filterArchiveNavigation('finance').map((item) => item.href))
-      .toEqual(['/archives/ledger', '/archives/stipends']);
-    expect(filterArchiveNavigation('high command').map((item) => item.href))
-      .toEqual(['/reports']);
-  });
-
-  it('marks only the current real route', () => {
-    const reports = ARCHIVE_NAVIGATION.find((item) => item.href === '/reports')!;
-    const roster = ARCHIVE_NAVIGATION.find((item) => item.href === '/archives/roster')!;
-    expect(navigationItemIsActive({ name: 'reports' }, reports)).toBe(true);
-    expect(navigationItemIsActive({ name: 'reports' }, roster)).toBe(false);
-    expect(navigationItemIsActive({ name: 'volume', slug: 'roster' }, roster)).toBe(true);
-  });
-});
+// The gate keeps the field and the door; Ancarion's performance lives in
+// useAncarion so the room's Scroll Rack can direct him too. Read as one.
+const gateAndPerformer = () =>
+  read('web/src/components/PortraitGate.tsx') +
+  read('web/src/components/useAncarion.tsx') +
+  read('web/src/components/ancarion-script.ts');
 
 // Every Ancarion clip the gate plays, each shipped as WebM and MP4.
 const PERFORMANCES = [
@@ -78,7 +52,7 @@ describe('interaction boundaries', () => {
     expect(gateCss).toContain('prefers-reduced-motion: reduce');
     expect(gateCss).toContain('@keyframes portrait-gate-attention-cue');
     expect(gateCss).toContain('.portrait-gate__form input, .portrait-gate__status { animation: none; }');
-    const gate = read('web/src/components/PortraitGate.tsx');
+    const gate = gateAndPerformer();
     expect(gate).toContain('clips?: Partial<');
     expect(gate).toContain("ancarion-idle.mp4");
     expect(gate).toContain("ancarion-refusal.webm");
@@ -128,7 +102,7 @@ describe('interaction boundaries', () => {
   });
 
   it('offers every Ancarion performance as WebM with an MP4 fallback', () => {
-    const gate = read('web/src/components/PortraitGate.tsx');
+    const gate = gateAndPerformer();
     for (const performance of PERFORMANCES) {
       expect(gate).toContain(`ancarion-${performance}.webm`);
       expect(gate).toContain(`ancarion-${performance}.mp4`);
@@ -138,7 +112,7 @@ describe('interaction boundaries', () => {
   });
 
   it('lets Ancarion notice the reader, doze when left alone and speak only when sound is wanted', () => {
-    const gate = read('web/src/components/PortraitGate.tsx');
+    const gate = gateAndPerformer();
     expect(gate).toContain("| 'dozing'");
     expect(gate).toContain("| 'asleep'");
     expect(gate).toContain("| 'waking'");
@@ -181,21 +155,10 @@ describe('interaction boundaries', () => {
     }
   });
 
-  it('slides the desktop rail open on hover or focus and keeps mobile dismissal controls', () => {
-    const sidebar = read('web/src/components/ArchiveSidebar.tsx');
-    const navigationCss = read('web/src/styles/archive-navigation.css');
-    expect(sidebar).toContain('onMouseEnter');
-    expect(sidebar).toContain('const expanded = hovered || focused');
-    expect(navigationCss).toContain('--archive-nav-open');
-    expect(sidebar).toContain("event.key === 'Escape'");
-    expect(sidebar).toContain('archive-sidebar__backdrop');
-    expect(sidebar).toContain("document.body.style.overflow = 'hidden'");
-  });
-
-  it('keeps the sidebar scrollable without exposing a native scrollbar track', () => {
-    const navigationCss = read('web/src/styles/archive-navigation.css');
-    expect(navigationCss).toContain('overflow: hidden auto');
-    expect(navigationCss).toContain('scrollbar-width: none');
-    expect(navigationCss).toContain('.archive-sidebar::-webkit-scrollbar');
+  // The navigation rail was retired on 2026-10-20: the room is the way in.
+  it('has no navigation rail to drift from the room', () => {
+    const app = read('web/src/App.tsx');
+    expect(app).not.toContain('ArchiveSidebar');
+    expect(app).toContain('Return to the Embassy');
   });
 });

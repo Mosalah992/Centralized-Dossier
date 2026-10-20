@@ -31,16 +31,6 @@
 /* Measured off portrait-frame.png: its opening runs 2.8% / 5.67% / 4.37% / 4.9% in from
    the top, right, bottom and left. The portrait reaches a little past each edge, under
    the frame, so no background can show between them. */
-.portrait-gate__aperture { position: absolute; inset: 2.3% 5.2% 3.9% 4.4%; overflow: hidden; background: #161510; clip-path: inset(0 round 2%); }
-.portrait-gate__media-stage { position: absolute; inset: 0; overflow: hidden; isolation: isolate; }
-.portrait-gate__portrait, .portrait-gate__idle, .portrait-gate__reaction { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; object-position: 47% 30%; transform: scale(1.015); }
-.portrait-gate__portrait { z-index: 0; }
-.portrait-gate__idle { z-index: 1; opacity: 1; }
-.portrait-gate__media-stage[data-idle-failed='true'] .portrait-gate__idle { opacity: 0; }
-.portrait-gate__reaction { z-index: 2; opacity: 0; pointer-events: none; transition: opacity .22s var(--ease); }
-.portrait-gate__reaction[data-active='true'] { opacity: 1; }
-.portrait-gate__aura { position: absolute; inset: 0; z-index: 3; opacity: .18; pointer-events: none; border: 1px solid rgb(220 190 110 / .08); box-shadow: inset 0 0 1.5rem rgb(207 171 76 / .12); transition: opacity .35s var(--ease), border-color .35s var(--ease), box-shadow .35s var(--ease); }
-.portrait-gate__frame { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .portrait-gate__copy { display: grid; justify-items: center; width: min(100%, 21rem); text-align: center; }
 .portrait-gate__copy h1 { margin: .55rem 0 .75rem; color: var(--gold-bright); font-size: clamp(1.8rem, 5vw, 3.1rem); line-height: 1.05; }
 .portrait-gate__description { margin: 0; color: var(--stone); line-height: 1.5; }

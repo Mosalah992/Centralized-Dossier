@@ -34,14 +34,13 @@ describe('text helpers', () => {
 });
 
 describe('volume registry', () => {
-  it('defines six volumes with unique slugs', () => {
-    expect(VOLUMES).toHaveLength(6);
-    expect(new Set(VOLUMES.map((v) => v.slug)).size).toBe(6);
+  it('publishes the roster, the chain of command and the hall, with unique slugs', () => {
+    // The Ledger, the Registry and the Calendar were retired on 2026-10-20.
+    expect(VOLUMES.map((v) => v.slug)).toEqual(['roster', 'statistics', 'honor']);
   });
 
-  it('only the calendar needs grid formatting', () => {
-    const needing = VOLUMES.filter((v) => v.needsGridData).map((v) => v.slug);
-    expect(needing).toEqual(['calendar']);
+  it('needs grid formatting for none of them since the calendar was retired', () => {
+    expect(VOLUMES.filter((v) => v.needsGridData)).toEqual([]);
   });
 
   it('resolves an exact tab regardless of case and stray spacing', () => {
@@ -49,15 +48,15 @@ describe('volume registry', () => {
     expect(resolveTabTitle(roster, ['Index', 'Roster ', 'Stats'])).toBe('Roster ');
   });
 
-  it('resolves the calendar by prefix, preferring the latest year', () => {
-    const calendar = getVolume('calendar')!;
+  it('resolves a prefixed tab, preferring the latest year', () => {
+    const calendar = { ...getVolume('honor')!, tab: { prefix: 'Tamrielic Calendar' } };
     const titles = ['Tamrielic Calendar 4E 226', 'Tamrielic Calendar 4E 227', 'Draft'];
     expect(resolveTabTitle(calendar, titles)).toBe('Tamrielic Calendar 4E 227');
   });
 
   it('returns null when a tab has been deleted rather than guessing', () => {
-    const ledger = getVolume('ledger')!;
-    expect(resolveTabTitle(ledger, ['Index', 'Roster'])).toBeNull();
+    const honor = getVolume('honor')!;
+    expect(resolveTabTitle(honor, ['Index', 'Roster'])).toBeNull();
   });
 });
 

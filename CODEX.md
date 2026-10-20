@@ -13,14 +13,16 @@ flowchart TB
   Canonical --> App[React archive: web/src/App.tsx]
   App --> Router[router.ts]
   App --> Views[Lazy volume views + shelf]
+  App --> Room[Embassy room: lazy chunk at /]
+  Room --> Takeovers[/bookshelf, /board, /lectern takeovers]
+  Room -->|Scroll Rack, Reports writ| Pages
+  App --> Gallery[/gallery: the former hero]
   App --> PenalCode[/penalcode: bundled, Embassy-kept Code]
   App --> Client[web/src/api.ts]
 
   Client --> Pages[Cloudflare Pages Functions]
   Pages --> SheetRoutes[/api/volumes/*]
   SheetRoutes --> Sheets[Google Sheet: authoritative]
-  Pages --> Register[/api/register/*]
-  Register --> D1[(Register D1)]
   Pages --> Chronicle[/api/chronicle + gate]
   Chronicle --> Writs[Scoped signed cookie]
   Chronicle --> FilingsKV[(CHRONICLE_FILINGS KV)]
@@ -50,7 +52,7 @@ This is the implementation-grounded counterpart to the supplied dossier diagram.
 ## Ownership and data flow
 
 - `shared/` is pure cross-runtime domain logic: volume registry, parsers, types, calendar/reckoning, and filing redaction.
-- `web/` is the browser-only presentation layer. `App.tsx` lazy-loads views and hosts the registry-driven `ArchiveSidebar`; `router.ts` owns URLs; `api.ts` owns request hooks and client contracts. `PortraitGate` is a lazy shared presentation component for Chronicle and Reports, each with its own server adapter and session.
+- `web/` is the browser-only presentation layer. `App.tsx` lazy-loads views (there is no navigation rail: the room is the way into every page, and each page leads back to it); `router.ts` owns URLs; `api.ts` owns request hooks and client contracts. `PortraitGate` is a lazy shared presentation component for Chronicle and Reports, each with its own server adapter and session; Ancarion's performance is `useAncarion`, which the room's Scroll Rack also directs against the Reports gate. `web/src/room/` is the front page (see knowledge/Architecture.md).
 - `functions/` is the same-origin Pages API. It fetches Google Sheets read-only, serves public records, owns the sealed Chronicle and Reports gates, and reads optional filings.
 - `server/` contains server-only Sheets access. It must never gain a write helper.
 - `chronicler/` is a separate Worker because scheduled events cannot run in Pages Functions. It reads Discord nightly and writes redacted, bounded filings to KV.
@@ -72,11 +74,11 @@ All new volumes must be explicitly classified before implementation. Do not add 
 1. The Google Sheet is the data authority; preserve its values and documented contradictions instead of recalculating them.
 2. Pages and server code only read the sheet. The external HR bot alone writes its owned roster columns.
 3. The Chronicle’s protection is route-local: its response is private/no-store and varies by cookie; missing gate secret fails closed.
-4. Optional infrastructure must degrade gracefully: missing filings KV or collector token omits filings, while missing D1 hides the consultation register.
+4. Optional infrastructure must degrade gracefully: missing filings KV or collector token omits filings. (The consultation register, which degraded the same way, was retired 2026-10-20.)
 5. Shared KV IDs in root and `chronicler/wrangler.toml` must match.
 6. No broad CSS/design-system migration: custom CSS remains authoritative; Fluent v9 is limited to interactive controls through `web/src/fluent/`.
-7. Motion uses GSAP via `web/src/motion.ts`; anime.js is only for the calendar instruments and must stay out of the entry chunk.
-8. Browser security headers are applied by root middleware from `functions/lib/security.ts` and mirrored in `public/_headers`; neither layer may overwrite route-owned cache or `Vary` headers. The same middleware turns an HTML fallback under `/assets/` into an uncacheable 404, so a mid-deploy miss is never cached as an immutable asset.
+7. Motion uses GSAP via `web/src/motion.ts`; anime.js is only for the calendar instruments (the room's orb reuses the calendar's wheel lazily) and must stay out of the entry and room chunks.
+8. Browser security headers are applied by root middleware from `functions/lib/security.ts` and mirrored in `public/_headers`; neither layer may overwrite route-owned cache or `Vary` headers. The same middleware turns an HTML fallback under `/assets/` into an uncacheable 404, so a mid-deploy miss is never cached as an immutable asset, and an HTML fallback under `/api/` into a JSON 404, so a missing endpoint never answers with the app shell.
 
 ## Operations
 

@@ -20,17 +20,13 @@ export type VolumeSlug =
   | 'roster'
   | 'enforcement'
   | 'statistics'
-  | 'ledger'
-  | 'stipends'
   | 'honor'
-  | 'calendar'
   | 'history'
   | 'informants';
 
 export type VolumeCategory =
   | 'Personnel'
-  | 'Finance'
-  | 'Honors & Calendar'
+  | 'Honors'
   | 'Chronicles';
 
 /**

@@ -1,0 +1,617 @@
+/* The book press and the reader, ported from the Bruma Joint Archives and
+   re-cut in the Embassy's lacquered wood with gold edging. Route-only:
+   imported by the room's Bookshelf takeover. */
+
+.bookcase {
+  max-width: 1040px;
+  margin: 0 auto;
+}
+.bookcase__frame {
+  position: relative;
+  margin-top: 18px;
+  padding: 22px 24px 14px;
+  background: url('/textures/wood.svg') 0 0 / 480px 480px, #1a110a;
+  box-shadow:
+    inset 0 0 0 12px #2b1b10,
+    inset 0 0 0 14px #1a0f07,
+    0 30px 60px rgba(0, 0, 0, 0.65);
+  transform: rotate(-0.3deg);
+}
+/* Cornice across the top of the press. */
+.bookcase__frame::before {
+  content: '';
+  position: absolute;
+  left: -14px;
+  right: -14px;
+  top: -18px;
+  height: 20px;
+  background: url('/textures/wood.svg') 0 0 / 300px 300px, #4a2c16;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.6);
+}
+.bookcase__shelf {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  min-height: 280px;
+  padding: 26px 18px 0;
+  background: #110904;
+  box-shadow: inset 0 18px 30px rgba(0, 0, 0, 0.8);
+  /* Fillers run past the edge; clip sideways only, so a lifted book and its
+     title plate can still rise above the shelf. */
+  overflow-x: clip;
+}
+.bookcase__shelf + .bookcase__shelf { margin-top: 18px; }
+.bookcase__board {
+  position: absolute;
+  left: -12px;
+  right: -12px;
+  bottom: -16px;
+  height: 18px;
+  z-index: 2;
+  background: url('/textures/wood.svg') 0 0 / 300px 300px, #4a2c16;
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.7);
+}
+/* The iron rod the laws are chained to, as at Hereford. */
+.bookcase__rod {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 6px;
+  height: 3px;
+  z-index: 1;
+  background: #5f5b55;
+  box-shadow: 0 1px 0 #1c1a17;
+}
+
+/* A spine: old calf with raised bands and a tan lettering-piece. */
+.spine {
+  position: relative;
+  flex: none;
+  width: 62px;
+  height: calc(var(--h, 0.9) * 250px);
+  text-decoration: none;
+  transform-origin: bottom center;
+  transition: transform 0.3s var(--ease), filter 0.3s var(--ease);
+}
+.spine__art {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: url('/textures/leather.svg') 0 0 / 512px 512px, var(--leather, #3a2414);
+  /* The rounded back of the spine, in light and shade. */
+  box-shadow:
+    inset 9px 0 10px -4px rgba(0, 0, 0, 0.7),
+    inset -9px 0 10px -4px rgba(0, 0, 0, 0.75),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.6),
+    0 0 6px rgba(0, 0, 0, 0.6);
+}
+.spine__band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: #1a100a;
+  box-shadow: inset 0 1px 0 rgba(190, 140, 90, 0.45), 0 1px 0 rgba(0, 0, 0, 0.6);
+}
+.spine__band--1 { top: 9%; }
+.spine__band--2 { bottom: 22%; }
+.spine__band--3 { bottom: 8%; }
+.spine__label {
+  position: absolute;
+  top: 16%;
+  left: 10px;
+  right: 10px;
+  max-height: 52%;
+  padding: 8px 2px;
+  display: grid;
+  place-items: center;
+  writing-mode: vertical-rl;
+  font-family: var(--display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #1d130a;
+  background: url('/textures/grain.svg') 0 0 / 256px 256px, #bf8a43;
+  box-shadow: inset 0 0 0 1px rgba(60, 35, 10, 0.7), inset 0 0 0 3px rgba(240, 200, 120, 0.35);
+  overflow: hidden;
+}
+/* The chain from the book down to the rod. */
+.spine__chain {
+  position: absolute;
+  left: 50%;
+  bottom: -8px;
+  width: 4px;
+  height: 14px;
+  margin-left: -2px;
+  border-left: 2px dotted #8a857c;
+}
+.spine__title {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: -4px;
+  z-index: 3;
+  width: max-content;
+  max-width: 240px;
+  padding: 0.45rem 0.8rem;
+  font-family: var(--display);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-align: left;
+  color: #1d1408;
+  background: url('/textures/grain.svg') 0 0 / 256px 256px, #b98f2a;
+  border: 1px solid #5a420c;
+  box-shadow: inset 0 1px 0 #e3c46a, 0 6px 14px rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  transform: translateY(6px);
+  pointer-events: none;
+  transition: opacity 0.2s var(--ease), transform 0.2s var(--ease);
+}
+.spine__title em {
+  display: block;
+  font-family: var(--serif);
+  font-size: 0.85rem;
+  letter-spacing: 0;
+}
+.spine:hover,
+.spine:focus-visible {
+  transform: translateY(-14px) rotate(-1.5deg);
+  filter: drop-shadow(0 0 12px rgb(201 162 39 / 0.5));
+  z-index: 4;
+}
+.spine:hover .spine__title,
+.spine:focus-visible .spine__title {
+  opacity: 1;
+  transform: translateY(0);
+}
+.spine--filler {
+  filter: brightness(0.62) saturate(0.8);
+  pointer-events: none;
+}
+
+/* ---------- Reader ---------- */
+
+.reader {
+  min-height: calc(100vh - 4rem);
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 1rem;
+}
+.reader__draft {
+  margin: 0;
+  font-style: italic;
+  color: var(--bruma-yellow);
+}
+
+.openbook {
+  position: relative;
+  width: min(560px, 100%);
+  height: min(74vh, 680px);
+  perspective: 2200px;
+  touch-action: pan-y;
+  user-select: none;
+}
+.openbook--wide {
+  width: min(1080px, 92vw);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 14px;
+  background: url('/textures/leather.svg') 0 0 / 512px 512px, #2a180c;
+  box-shadow: inset 0 0 0 1px #000, 0 30px 70px rgba(0, 0, 0, 0.8);
+}
+.openbook__page {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+}
+.openbook:not(.openbook--wide) .openbook__page {
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75);
+}
+
+.leafpage {
+  position: relative;
+  height: 100%;
+  padding: 2.6rem 2.8rem 3rem;
+  color: var(--ink);
+  background: url('/textures/parchment.svg') 0 0 / 600px 600px, var(--parchment);
+  box-shadow: inset 0 0 40px rgba(110, 70, 20, 0.35);
+  overflow: hidden;
+}
+/* The gutter: shade towards the spine on whichever side it lies. */
+.openbook__page--left .leafpage,
+.leaf--next .leaf__face--back .leafpage,
+.leaf--prev .leaf__face--front .leafpage {
+  box-shadow: inset -46px 0 40px -26px rgba(60, 35, 10, 0.6), inset 0 0 40px rgba(110, 70, 20, 0.3);
+}
+.openbook__page--right .leafpage,
+.leaf--next .leaf__face--front .leafpage,
+.leaf--prev .leaf__face--back .leafpage {
+  box-shadow: inset 46px 0 40px -26px rgba(60, 35, 10, 0.6), inset 0 0 40px rgba(110, 70, 20, 0.3);
+}
+.openbook:not(.openbook--wide) .leafpage {
+  box-shadow: inset 20px 0 26px -16px rgba(60, 35, 10, 0.5), inset 0 0 40px rgba(110, 70, 20, 0.3);
+}
+
+.leafpage h4 {
+  font-size: 1.05rem;
+  letter-spacing: 0.1em;
+  color: #5c3a10;
+  margin-bottom: 0.9rem;
+  text-align: center;
+}
+.leafpage p {
+  margin: 0 0 0.85rem;
+  font-size: 1.08rem;
+  line-height: 1.55;
+  text-align: justify;
+  hyphens: auto;
+}
+.leafpage h4 + p::first-letter {
+  float: left;
+  font-family: var(--display);
+  font-size: 2.7rem;
+  line-height: 0.85;
+  padding: 0.28rem 0.35rem 0 0;
+  color: var(--rubric);
+}
+.leafpage__folio {
+  position: absolute;
+  bottom: 1.1rem;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-style: italic;
+  color: var(--ink-soft);
+}
+.leafpage--title {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 0.8rem;
+  text-align: center;
+}
+.leafpage--title p { text-align: center; }
+.leafpage--title h3 {
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  line-height: 1.2;
+  color: #3a240c;
+}
+.leafpage__subtitle { margin: 0; font-style: italic; color: var(--ink-soft); }
+.leafpage .fleuron { color: var(--rubric); }
+.leafpage__imprint {
+  margin: 1rem 0 0;
+  font-family: var(--display);
+  font-size: 0.7rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* The turning leaf: one card, a page on each face. */
+.leaf {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transform-origin: left center;
+  z-index: 2;
+}
+.leaf--wide {
+  top: 14px;
+  height: calc(100% - 28px);
+  width: calc(50% - 14px);
+}
+.leaf--wide.leaf--next { left: 50%; transform-origin: left center; }
+.leaf--wide.leaf--prev { left: 14px; transform-origin: right center; }
+.leaf__face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+}
+.leaf__face--back { transform: rotateY(180deg); }
+
+.reader__controls {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  font-style: italic;
+  color: var(--stone-dim);
+}
+/* Iron ring pulls. */
+.reader__controls button {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 3px solid #5f5b55;
+  background: url('/textures/grain.svg') 0 0 / 256px 256px, #2a2724;
+  box-shadow: inset 0 0 0 2px #1c1a17, 0 3px 6px rgba(0, 0, 0, 0.6);
+  color: var(--parchment);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.reader__controls button:disabled { opacity: 0.35; cursor: default; }
+
+@media (max-width: 860px) {
+  .bookcase__shelf { min-height: 220px; padding: 22px 8px 0; }
+  .spine { width: 48px; height: calc(var(--h, 0.9) * 190px); }
+  .spine__label { left: 7px; right: 7px; font-size: 0.6rem; letter-spacing: 0.04em; }
+  .leafpage { padding: 2rem 1.6rem 2.6rem; }
+  .leafpage p { font-size: 1.02rem; }
+}
+
+/* ---------- Long books: in-page headings, scrolling, contents ---------- */
+
+/* A page that runs long scrolls rather than clipping its text. */
+.openbook__page .leafpage { overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(90, 70, 48, 0.4) transparent; }
+.leafpage__section {
+  margin: 0.9rem 0 0.5rem;
+  font-family: var(--display);
+  font-size: 0.86rem;
+  letter-spacing: 0.08em;
+  text-align: center;
+  color: #5c3a10;
+}
+.leafpage__article {
+  margin: 0.8rem 0 0.35rem;
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  font-style: italic;
+  font-weight: 600;
+  color: var(--rubric);
+}
+.leafpage__section + p::first-letter,
+.leafpage__article + p::first-letter { float: none; font: inherit; padding: 0; color: inherit; }
+.leafpage__note { font-size: 0.95rem; color: var(--ink-soft); }
+
+.reader__contents-toggle {
+  width: auto !important;
+  border-radius: 0 !important;
+  padding: 0 1rem;
+  font-family: var(--display) !important;
+  font-size: 0.72rem !important;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.contents {
+  width: min(560px, 92vw);
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 1.8rem 1.6rem 1.2rem;
+}
+.contents h3 { text-align: center; font-size: 1rem; letter-spacing: 0.14em; margin-bottom: 0.8rem; }
+.contents ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.15rem; }
+.contents button {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.25rem 0.2rem;
+  border: none;
+  background: none;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.contents button:hover,
+.contents button:focus-visible { background: rgba(184, 138, 10, 0.12); }
+.contents__entry--1 button { font-family: var(--display); font-size: 0.86rem; letter-spacing: 0.06em; margin-top: 0.4rem; }
+.contents__entry--2 button { padding-left: 1.2rem; font-style: italic; }
+.contents__page { color: var(--ink-soft); font-style: italic; }
+
+/* ---------- Reader furniture borrowed from the Chronicles ---------- */
+
+.leafpage--measure {
+  position: absolute;
+  left: -10000px;
+  top: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.leafpage--setting { display: grid; place-items: center; font-style: italic; color: var(--ink-soft); }
+
+/* Click the outer edge of a page to turn it. */
+.page-edge {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 14%;
+  z-index: 3;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.page-edge--left { left: 0; }
+.page-edge--right { right: 0; }
+.page-edge:disabled { cursor: default; }
+
+/* The shadow that sweeps across as a leaf passes over: a blurred band, not a gradient. */
+.leaf-shade {
+  position: absolute;
+  top: 6%;
+  bottom: 6%;
+  width: 18%;
+  z-index: 4;
+  pointer-events: none;
+  background: rgba(24, 16, 6, 0.55);
+  filter: blur(26px);
+  opacity: 0;
+  animation: leaf-shade 0.72s ease-in-out both;
+}
+.leaf-shade--next { left: 52%; }
+.leaf-shade--prev { left: 30%; }
+@keyframes leaf-shade {
+  0% { opacity: 0; transform: translateX(-20%); }
+  50% { opacity: 1; transform: translateX(0); }
+  100% { opacity: 0; transform: translateX(20%); }
+}
+
+/* Guided reading and search marks. */
+.rd-fix { font-weight: 700; }
+.rd-mark {
+  background: rgba(226, 179, 19, 0.38);
+  color: inherit;
+  box-shadow: 0 0 0 1px rgba(124, 31, 36, 0.25);
+  padding: 0 0.08em;
+}
+
+/* The search ("scrying") row above the book. */
+.scry {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  width: min(760px, 100%);
+  margin: 0 auto;
+  padding: 0.6rem 0.9rem;
+  background: url('/textures/grain.svg') 0 0 / 256px 256px, #17100a;
+  border: 1px solid rgba(201, 162, 39, 0.3);
+  box-shadow: inset 0 0 22px rgba(0, 0, 0, 0.6), 0 8px 18px rgba(0, 0, 0, 0.45);
+}
+.scry__field { flex: 1; min-width: 0; }
+.scry__label {
+  display: block;
+  font-family: var(--display);
+  font-size: 0.56rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--bruma-yellow);
+}
+.scry__input {
+  width: 100%;
+  margin-top: 0.15rem;
+  padding: 0;
+  font-family: var(--serif);
+  font-size: 1rem;
+  color: var(--parchment);
+  background: none;
+  border: 0;
+  outline: none;
+}
+.scry__input::placeholder { color: rgba(234, 223, 202, 0.45); font-style: italic; }
+.scry__input::-webkit-search-cancel-button { display: none; }
+.scry:focus-within { border-color: var(--bruma-yellow); }
+.scry__clear {
+  flex: none;
+  width: 1.8rem;
+  height: 1.8rem;
+  font-size: 1.05rem;
+  color: var(--stone-dim);
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  cursor: pointer;
+}
+.scry__answer { width: min(760px, 100%); margin: 0 auto; }
+.scry__count {
+  margin: 0 0 0.4rem;
+  font-family: var(--display);
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--stone-dim);
+}
+.scry__hits {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 15rem;
+  overflow-y: auto;
+  border-top: 1px solid rgba(201, 162, 39, 0.2);
+}
+.scry__hit {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.55rem 0.7rem;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid rgba(201, 162, 39, 0.12);
+  cursor: pointer;
+}
+.scry__hit:hover,
+.scry__hit:focus-visible { background: rgba(201, 162, 39, 0.1); outline: none; }
+.scry__hit-page { font-family: var(--display); font-size: 0.6rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--bruma-yellow); }
+.scry__hit-head { margin-left: 0.7rem; font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--stone-dim); }
+.scry__hit-text { display: block; margin-top: 0.2rem; font-size: 0.92rem; line-height: 1.45; color: var(--stone); }
+.scry__more { margin: 0.4rem 0 0; font-style: italic; color: var(--stone-dim); }
+
+.guide-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex: none;
+  padding: 0.3rem 0.6rem;
+  font: inherit;
+  color: var(--stone-dim);
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  cursor: pointer;
+}
+.guide-toggle--on { color: var(--parchment); border-color: var(--bruma-yellow); }
+.guide-toggle__mark { font-family: var(--serif); font-size: 0.92rem; }
+.guide-toggle__label { font-family: var(--display); font-size: 0.56rem; letter-spacing: 0.2em; text-transform: uppercase; }
+
+/* The pager under the book. */
+.book-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem 0.7rem;
+}
+.book-nav__btn,
+.book-nav__contents {
+  min-width: 2.4rem;
+  height: 2.4rem;
+  padding: 0 0.7rem;
+  font-family: var(--display);
+  font-size: 0.9rem;
+  color: var(--parchment);
+  background: url('/textures/grain.svg') 0 0 / 256px 256px, #2a2724;
+  border: 2px solid #5f5b55;
+  box-shadow: inset 0 0 0 1px #1c1a17, 0 3px 6px rgba(0, 0, 0, 0.55);
+  cursor: pointer;
+}
+.book-nav__contents { font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase; }
+.book-nav__btn:disabled { opacity: 0.35; cursor: default; }
+.book-nav__pages { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0.25rem; margin: 0; padding: 0; list-style: none; }
+.book-nav__num {
+  min-width: 2rem;
+  padding: 0.3rem 0.35rem;
+  font-family: var(--display);
+  font-size: 0.8rem;
+  color: rgba(234, 223, 202, 0.7);
+  background: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+.book-nav__num:hover { color: var(--parchment); border-color: rgba(201, 162, 39, 0.4); }
+.book-nav__num.is-current { color: #141210; background: var(--bruma-yellow); border-color: var(--bruma-yellow); cursor: default; }
+.book-nav__gap { color: rgba(234, 223, 202, 0.45); }
+
+/* Contents as an overlay over the book, so it never opens off screen. */
+.contents-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(8, 5, 2, 0.72);
+}
+.contents-backdrop .contents { max-height: min(80vh, 760px); }
+
+.reader { gap: 0.8rem; }
+@media (max-width: 860px) {
+  .scry { flex-wrap: wrap; }
+  .guide-toggle { margin-left: auto; }
+  .book-nav__pages { order: 3; width: 100%; }
+}
+
+.bookcase__board { border-top: 1.5px solid var(--gold); }
+.spine:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 3px; }
+
