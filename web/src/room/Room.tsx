@@ -4,8 +4,8 @@
 //   Bookshelf   Bulletin Board (announcements)        The hour
 //      │        ┌──────┐ ┌────────┐ ┌──────┐          + orrery
 //      │        │ arch │ │Ancarion│ │ arch │          Scroll Rack
-//   Solar door  └──────┘ └────────┘ └──────┘             │
-//                   torch  Lectern  torch           pinned note
+//   Solar door torch└──────┘ └────────┘ └──────┘torch     │
+//                         Lectern                   pinned note
 //
 // Every object is a link or a button, so it can be focused, opened with the
 // keyboard and addressed by URL. Objects that lead to the archive's existing
@@ -167,6 +167,9 @@ export default function Room({ route, navigate }: { route: RoomRoute; navigate: 
             <RoomOrb />
           </div>
 
+          {/* A torch stands outside each arch, lighting the way into it. */}
+          <Torch side="l" />
+
           <div className="area-arch-l">
             <Archway
               side="left"
@@ -195,25 +198,22 @@ export default function Room({ route, navigate }: { route: RoomRoute; navigate: 
             />
           </div>
 
+          <Torch side="r" />
+
           <div className="area-rack">
             <ScrollRack ancarion={ancarion} field={rackField} />
           </div>
 
           <SolarDoor />
 
-          {/* The lectern stands between two torches, the room's brightest
-              place after Ancarion: it is where a reader acts. */}
-          <div className="area-lectern">
-            <Torch side="l" />
-            <RoomObject
-              id="lectern"
-              href="/lectern"
-              name="Lectern"
-              describer="File reports, bounties and more under your code."
-              art={<LecternArt />}
-            />
-            <Torch side="r" />
-          </div>
+          <RoomObject
+            id="lectern"
+            href="/lectern"
+            name="Lectern"
+            describer="File reports, bounties and more under your code."
+            art={<LecternArt />}
+            className="area-lectern"
+          />
 
           <aside className="area-note note" aria-label="How to file">
             <span className="note__pin" aria-hidden="true" />

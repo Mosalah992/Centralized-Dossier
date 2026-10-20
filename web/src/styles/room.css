@@ -677,36 +677,32 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
   color: var(--ink-soft);
 }
 
-/* ---------- The lectern and its torches ---------- */
+/* ---------- The lectern, and the torches at the arches ---------- */
 
-/* The lectern stands between two torches. Its brass plate is fixed to the
-   desk's front edge rather than hung beneath it, so the whole height of its
-   place goes to the lectern. */
+/* The lectern's brass plate is fixed to the desk's front edge rather than hung
+   beneath it, so the whole height of its place goes to the lectern. */
 .area-lectern {
   grid-area: lectern;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: clamp(0.6rem, 1.6vw, 1.8rem);
   --lectern: min(100%, 360px);
-  --torch-h: 280px;
 }
-.object.object--lectern { width: var(--lectern); }
+.object.object--lectern { width: var(--lectern); justify-self: center; }
 .object--lectern .plaque {
   position: absolute;
   left: 50%;
   top: 48%;
   translate: -50% 0;
 }
+/* A torch stands on the floor outside each arch. They need the one-screen
+   wall's slack beside the arches to stand in, so they are shown only there;
+   narrower walls and phones go without (and fetch neither animated image). */
 .torch {
-  flex: none;
+  display: none;
   width: calc(var(--torch-h, 220px) * 240 / 270);
   height: var(--torch-h, 220px);
-  margin-inline: calc(var(--torch-h, 220px) * -0.18);
   background: url('../assets/torch-left.webp') center bottom / contain no-repeat;
   pointer-events: none;
 }
-/* Mirrored, so the pair leans outward from the lectern. */
+/* Mirrored, so the pair leans outward from the arches. */
 .torch--r { background-image: url('../assets/torch-right.webp'); transform: scaleX(-1); }
 
 /* ---------- Motion ---------- */
@@ -759,7 +755,7 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
   .object--bookshelf .shelf-art--tall { display: none; }
   .object--bookshelf .shelf-art--short { display: block; }
   .area-door { justify-self: center; }
-  .area-lectern { --lectern: min(60%, 270px); --torch-h: 210px; }
+  .area-lectern { --lectern: min(60%, 270px); }
 }
 
 /* Phones: stack, Ancarion first, then the hour, then what a reader acts on. */
@@ -786,8 +782,6 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
   .note { max-width: none; margin: 0 6px; transform: rotate(0.9deg); }
   .plaque { padding: 0.28rem 0.85rem; font-size: 0.62rem; letter-spacing: 0.12em; }
   .describer { display: none; }
-  /* Spares a phone the two animated torches (a hidden box fetches no background). */
-  .torch { display: none; }
   .rack-object .rack-slip { position: relative; left: auto; top: auto; margin-top: 0.8rem; transform: none; animation: none; width: 100%; }
 }
 
@@ -826,10 +820,10 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
       auto minmax(1.5rem, 1fr) auto minmax(1.5rem, 0.72fr) auto minmax(1.5rem, 0.72fr) auto minmax(1.5rem, 1fr) auto;
     grid-template-rows: calc(21 * var(--u)) calc(17 * var(--u)) calc(32 * var(--u)) calc(30 * var(--u));
     grid-template-areas:
-      'shelf . board   board   board    board   board   . instr'
-      'shelf . archL   .       portrait .       archR   . instr'
-      'shelf . archL   .       portrait .       archR   . rack'
-      'door  . lectern lectern lectern  lectern lectern . note';
+      'shelf .      board   board   board    board   board   .      instr'
+      'shelf torchL archL   .       portrait .       archR   torchR instr'
+      'shelf torchL archL   .       portrait .       archR   torchR rack'
+      'door  .      lectern lectern lectern  lectern lectern .      note';
     gap: 0;
     align-items: center;
   }
@@ -876,9 +870,13 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
   /* The rack (32u). */
   .rack { width: calc((32 * var(--u) - 3rem) * 220 / 300); }
 
-  /* The floor (30u): the Solar's door, the lectern between its torches, the note. */
+  /* The floor (30u): the Solar's door, the lectern, the note. */
   .object--door .object__art { width: calc((30 * var(--u) - 3rem) * 140 / 222); }
-  .area-lectern { --lectern: calc(30 * var(--u)); --torch-h: calc(30 * var(--u) * 0.78); }
+  .area-lectern { --lectern: calc(30 * var(--u)); }
+  /* The torches, on the arches' floor line (their plates hang beneath it). */
+  .torch { display: block; align-self: end; justify-self: center; margin-bottom: 2.6rem; --torch-h: calc(26 * var(--u)); }
+  .torch--l { grid-area: torchL; }
+  .torch--r { grid-area: torchR; }
   .note {
     width: calc(38 * var(--u));
     max-width: none;

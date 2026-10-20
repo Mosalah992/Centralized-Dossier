@@ -67,7 +67,7 @@ describe('the room as drawn', () => {
     expect(read('wrangler.toml')).not.toContain('binding = "REGISTER"');
   });
 
-  it('stands the lectern between the torches the candles gave way to', () => {
+  it('stands a torch outside each arch, where the candles once were', () => {
     expect(room.match(/<Torch side="[lr]" \/>/g)).toHaveLength(2);
     expect(room).not.toContain('Candle');
   });

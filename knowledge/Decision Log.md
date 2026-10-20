@@ -1,5 +1,9 @@
 # Decision Log
 
+## 2026-10-20 - The torches stand outside the arches
+
+Of three arrangements mocked on the live room (sconces beside Ancarion; torches outside the arches; torches either side of the board with the bookcase on the floor), the First Emissary chose the torches outside the arches: one stands on the floor line beside each arch, in the slack between it and the furniture at the wall, lighting the way in. The lectern stands alone. The torches are shown only on the one-screen wall, where that slack exists; narrower walls and phones go without them and fetch neither animated image.
+
 ## 2026-10-20 - The visitor counter is retired; the call for recruits is pinned to the board
 
 At the First Emissary's direction the Register of Consultation (visitors counted by province, with flags) is removed entirely: its component, stylesheet, flag sprite and `prepare-flags.mjs`, its two Functions (`/api/register`, `/api/register/entry`) and `functions/lib/register.ts`, its tests, and the `REGISTER` D1 binding. It sat at the room's foot and pushed into the one-screen wall wherever the window was narrow for its height. The `thalmor-register` database and its migration are left untouched in Cloudflare and the repository. The recruitment notice the Gallery shed (the terms, the blessing, "Submit Your Oath" to the Dominion's form) is now a standing proclamation pinned at the head of the bulletin board, kept in the repository (`takeovers/Recruitment.tsx`) so it hangs before any officer has posted anything. The floor row deepened again (30u) so the lectern is larger still; Ancarion's rows gave up 3u for it.

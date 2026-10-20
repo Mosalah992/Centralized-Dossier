@@ -278,3 +278,9 @@ On landscape screens 1024px or wider the room now fits exactly one screen and ru
 - **Recruitment** (the terms, the blessing, **Submit Your Oath**) is now a standing notice pinned at the head of the bulletin board.
 - **Lectern** is larger again: the bottom row went from 26u to 30u.
 - **Checks:** typecheck, build and 401 tests pass. The count dropped because the 22 register and flag tests went with the feature; two new tests guard the recruitment link and the counter's absence.
+
+## Revision 6 (2026-10-20)
+
+- **Torches** now stand outside the arches (option B of the three mock-ups), on the arches' floor line. The lectern stands alone.
+- **Where they show:** only on the one-screen wall (landscape, 1024px and wider). Portrait tablets and phones don't show them or download them.
+- **Checked** at 1920×950, 1366×650, 1024×768 and on a phone.
