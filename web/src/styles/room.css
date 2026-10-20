@@ -1,5 +1,5 @@
 /* The Embassy's room: the front page. Built on the Bruma Joint Archives' room
-   (its candlelight, brass plaques, hand-tilted objects and describer scraps)
+   (its torchlight, brass plaques, hand-tilted objects and describer scraps)
    and hung for the Embassy after the First Emissary's drawing: a dark chamber
    with no frame of its own, lacquered furniture inlaid with gold, two elven
    archways onto Aetherius, and Ancarion lit between them.
@@ -85,8 +85,10 @@
 }
 .room__title h1 {
   margin: 0.25rem 0 0;
-  font-size: clamp(1.4rem, 3vw, 2.1rem);
-  letter-spacing: 0.14em;
+  font-family: var(--title);
+  font-weight: 700;
+  font-size: clamp(1.5rem, 3.4vw, 2.4rem);
+  letter-spacing: 0.08em;
   color: var(--gold-bright);
   text-shadow: 0 2px 0 #000, 0 0 26px rgb(201 162 39 / 0.3);
 }
@@ -94,7 +96,7 @@
 /* ---------- The wall, as drawn ---------- */
 
 /* The tall bookcase stands from the board's top to the arches' feet, so the
-   left wall is furnished as fully as the right (clock, orb, rack); the sign
+   left wall is furnished as fully as the right (clock, orb, rack); the door
    steps down to the floor beside the lectern and the note. Every column may
    shrink below its content except Ancarion's, so a long plaque can never
    squeeze the focal point down to the size of the arches beside him. */
@@ -105,7 +107,7 @@
     'shelf board   board    board  instr'
     'shelf archL   portrait archR  instr'
     'shelf archL   portrait archR  rack'
-    'sign  lectern lectern  lectern note';
+    'door  lectern lectern  lectern note';
   gap: 1.8rem clamp(1.4rem, 2.2vw, 3.4rem);
   align-items: center;
 }
@@ -116,8 +118,7 @@
 .area-portrait { grid-area: portrait; position: relative; }
 .area-arch-r { grid-area: archR; align-self: end; }
 .area-rack { grid-area: rack; align-self: end; }
-.area-sign { grid-area: sign; align-self: end; }
-.area-lectern { grid-area: lectern; }
+.area-door { grid-area: door; align-self: end; }
 .area-note { grid-area: note; align-self: center; }
 
 /* The focal light: a warm pool behind Ancarion, the brightest thing in the
@@ -137,7 +138,7 @@
 .object--board { --tilt: 0.7deg; --shift: -4px; }
 .object--lectern { --tilt: 0.3deg; --shift: 0px; }
 .object--rack { --tilt: -0.4deg; --shift: 6px; }
-.object--sign { --tilt: -2deg; --shift: 0px; }
+.object--door { --tilt: 0deg; --shift: 0px; }
 
 /* ---------- Objects ---------- */
 
@@ -167,14 +168,14 @@
 .object--board .board-art--wide { display: none; }
 .object--board .object__art { aspect-ratio: 360 / 170; }
 .object--lectern .object__art { aspect-ratio: 1; }
-.object--sign .object__art { aspect-ratio: 200 / 240; width: min(100%, 280px); }
+.object--door .object__art { aspect-ratio: 140 / 222; width: min(100%, 190px); }
 /* Sizes that must beat .object's full width. */
 .object.object--board { width: min(100%, 770px); justify-self: center; }
-.object.object--lectern { width: min(100%, 400px); justify-self: center; }
 
 a.object:hover,
 a.object:focus-visible,
-.object--sign:hover {
+.object--door:hover,
+.object--door:focus-visible {
   transform: translateY(calc(var(--shift, 0px) - 6px)) rotate(var(--tilt, 0deg));
   filter: drop-shadow(0 22px 16px rgb(0 0 0 / 0.7)) drop-shadow(0 0 16px rgb(201 162 39 / 0.45)) brightness(1.06);
 }
@@ -610,23 +611,23 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
   transform: rotate(45deg);
 }
 
-/* ---------- The signpost to the Solar ---------- */
+/* ---------- The door to the Solar ---------- */
 
-.object--sign { cursor: default; justify-items: start; }
-.signpost__word {
-  position: absolute;
-  left: 18%;
-  top: 30%;
-  width: 62%;
-  font-family: var(--display);
-  font-size: clamp(1.1rem, 2vw, 1.7rem);
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-align: center;
-  color: var(--gold-bright);
-  text-shadow: 0 2px 0 #000, 0 0 12px rgb(201 162 39 / 0.45);
-  pointer-events: none;
+/* A button that leads nowhere yet: no link cursor, no pressed look. Tried,
+   its leaves strain against the seal and settle. */
+.object--door {
+  font: inherit;
+  background: none;
+  border: 0;
+  cursor: default;
 }
+.object--door:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 4px; }
+.object--door .door__leaf { transform-box: fill-box; }
+.object--door .door__leaf--l { transform-origin: left center; }
+.object--door .door__leaf--r { transform-origin: right center; }
+.object--door[data-trying] .door__leaf--l { animation: door-try-l 0.7s var(--ease); }
+.object--door[data-trying] .door__leaf--r { animation: door-try-r 0.7s var(--ease); }
+.object--door .door__light { animation: room-glow 3.2s infinite ease-in-out; }
 
 /* ---------- The pinned note ---------- */
 
@@ -676,45 +677,37 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
   color: var(--ink-soft);
 }
 
-/* ---------- Candles ---------- */
+/* ---------- The lectern and its torches ---------- */
 
-.candle {
+/* The lectern stands between two torches. Its brass plate is fixed to the
+   desk's front edge rather than hung beneath it, so the whole height of its
+   place goes to the lectern. */
+.area-lectern {
+  grid-area: lectern;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: clamp(0.6rem, 1.6vw, 1.8rem);
+  --lectern: min(100%, 300px);
+  --torch-h: 250px;
+}
+.object.object--lectern { width: var(--lectern); }
+.object--lectern .plaque {
   position: absolute;
-  bottom: 3.2rem;
-  z-index: 1;
-  width: 14px;
-  height: 50px;
-  background: url('/textures/parchment.svg') 0 0 / 200px 200px, #efe3c4;
-  box-shadow: inset -5px 0 6px rgb(120 90 50 / 0.5), 0 8px 0 -2px #22201d, 0 12px 12px rgb(0 0 0 / 0.6);
+  left: 50%;
+  top: 48%;
+  translate: -50% 0;
+}
+.torch {
+  flex: none;
+  width: calc(var(--torch-h, 220px) * 240 / 270);
+  height: var(--torch-h, 220px);
+  margin-inline: calc(var(--torch-h, 220px) * -0.18);
+  background: url('../assets/torch-left.webp') center bottom / contain no-repeat;
   pointer-events: none;
 }
-.candle__flame {
-  position: absolute;
-  left: 50%;
-  bottom: 100%;
-  width: 16px;
-  height: 30px;
-  margin-left: -8px;
-  transform-origin: 50% 90%;
-  animation: room-flicker 2.6s infinite ease-in-out;
-}
-.candle__halo {
-  position: absolute;
-  left: 50%;
-  bottom: 80%;
-  width: 120px;
-  height: 120px;
-  margin-left: -60px;
-  border-radius: 50%;
-  background: #ffb04a;
-  filter: blur(34px);
-  opacity: 0.3;
-  animation: room-glow 2.6s infinite ease-in-out;
-}
-.candle--l { left: 2.5%; }
-.candle--r { right: 2.5%; height: 38px; }
-.candle--r .candle__flame,
-.candle--r .candle__halo { animation-delay: -1.1s; }
+/* Mirrored, so the pair leans outward from the lectern. */
+.torch--r { background-image: url('../assets/torch-right.webp'); transform: scaleX(-1); }
 
 /* ---------- The foot of the room ---------- */
 
@@ -742,6 +735,16 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
   50% { transform: translateX(6%) rotate(4deg) scaleY(1.15); }
   100% { transform: translateX(12%) rotate(-3deg) scaleY(0.9); }
 }
+@keyframes door-try-l {
+  0%, 100% { transform: none; }
+  25% { transform: rotateY(-7deg) translateX(-1px); }
+  55% { transform: rotateY(-3deg); }
+}
+@keyframes door-try-r {
+  0%, 100% { transform: none; }
+  25% { transform: rotateY(7deg) translateX(1px); }
+  55% { transform: rotateY(3deg); }
+}
 @keyframes rack-slip-in {
   from { opacity: 0; transform: translateX(-50%) translateY(10px) rotate(-1.2deg); }
   to { opacity: 1; transform: translateX(-50%) rotate(-1.2deg); }
@@ -756,14 +759,15 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
       'board   board    board'
       'archL   portrait archR'
       'shelf   lectern  instr'
-      'rack    note     sign';
+      'rack    note     door';
     gap: 1.8rem 1.4rem;
   }
   .area-shelf { align-self: center; }
   .object--bookshelf .object__art { aspect-ratio: 220 / 360; }
   .object--bookshelf .shelf-art--tall { display: none; }
   .object--bookshelf .shelf-art--short { display: block; }
-  .area-sign { justify-self: center; width: min(100%, 220px); }
+  .area-door { justify-self: center; }
+  .area-lectern { --lectern: min(56%, 220px); --torch-h: 180px; }
 }
 
 /* Phones: stack, Ancarion first, then the hour, then what a reader acts on. */
@@ -779,7 +783,7 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
       'note     note'
       'shelf    rack'
       'archL    archR'
-      'sign     sign';
+      'door     door';
     gap: 1.6rem 1rem;
   }
   .area-instruments { grid-template-columns: 1fr 1fr; align-items: center; }
@@ -790,7 +794,8 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
   .note { max-width: none; margin: 0 6px; transform: rotate(0.9deg); }
   .plaque { padding: 0.28rem 0.85rem; font-size: 0.62rem; letter-spacing: 0.12em; }
   .describer { display: none; }
-  .candle { display: none; }
+  /* Spares a phone the two animated torches (a hidden box fetches no background). */
+  .torch { display: none; }
   .rack-object .rack-slip { position: relative; left: auto; top: auto; margin-top: 0.8rem; transform: none; animation: none; width: 100%; }
 }
 
@@ -806,10 +811,10 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
    a cell too big for it, and the slack goes where the eye expects it: between
    the furniture at the walls and the arches that frame Ancarion, never in
    black bands at the edges. Rows, in --u: the board's 22, the instruments'
-   lower 18, the rack's 35, and the floor's 25, where the reader acts. */
+   lower 18, the rack's 34, and the floor's 26, where the reader acts. */
 @media (min-width: 1024px) and (orientation: landscape) {
   .room {
-    --chrome: 8.8rem;
+    --chrome: 9.3rem;
     --u: max(5px, min((100dvh - var(--chrome)) / 100, (100vw - 4rem) / 176));
     display: flex;
     flex-direction: column;
@@ -820,7 +825,7 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
   }
   .room__title { margin-bottom: 0.6rem; }
   .room__foot { margin-top: 0; }
-  .room__title h1 { margin-top: 0.1rem; font-size: 1.7rem; }
+  .room__title h1 { margin-top: 0.1rem; font-size: 2.1rem; }
 
   .room__grid {
     height: calc(100 * var(--u));
@@ -828,26 +833,26 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
        ones a little wider than the two that part the arches from Ancarion. */
     grid-template-columns:
       auto minmax(1.5rem, 1fr) auto minmax(1.5rem, 0.72fr) auto minmax(1.5rem, 0.72fr) auto minmax(1.5rem, 1fr) auto;
-    grid-template-rows: calc(22 * var(--u)) calc(18 * var(--u)) calc(35 * var(--u)) calc(25 * var(--u));
+    grid-template-rows: calc(22 * var(--u)) calc(18 * var(--u)) calc(34 * var(--u)) calc(26 * var(--u));
     grid-template-areas:
       'shelf . board   board   board    board   board   . instr'
       'shelf . archL   .       portrait .       archR   . instr'
       'shelf . archL   .       portrait .       archR   . rack'
-      'sign  . lectern lectern lectern  lectern lectern . note';
+      'door  . lectern lectern lectern  lectern lectern . note';
     gap: 0;
     align-items: center;
   }
   .area-shelf,
   .area-instruments,
   .area-rack,
-  .area-sign,
+  .area-door,
   .area-note { align-self: center; }
   /* Plates scale down with a short screen, so a long name wraps to two
      lines at most. */
   .plaque { padding-inline: max(0.7rem, 1.4 * var(--u)); font-size: clamp(0.56rem, 1.3 * var(--u), 0.68rem); letter-spacing: 0.16em; }
 
-  /* The bookcase, from the board's top to the arches' feet (rows 1-3, 75u). */
-  .object--bookshelf .object__art { width: calc((75 * var(--u) - 3rem) * 220 / 436); }
+  /* The bookcase, from the board's top to the arches' feet (rows 1-3, 74u). */
+  .object--bookshelf .object__art { width: calc((74 * var(--u) - 3rem) * 220 / 436); }
 
   /* The long board along the top (22u). */
   .object.object--board { width: auto; }
@@ -855,12 +860,12 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
   .object--board .board-art--narrow { display: none; }
   .object--board .board-art--wide { display: block; }
 
-  /* Ancarion, the tallest thing on the wall (53u, less his plate). */
-  .room-portrait__stage { width: calc((53 * var(--u) - 2.8rem) * 388 / 572); }
+  /* Ancarion, the tallest thing on the wall (52u, less his plate). */
+  .room-portrait__stage { width: calc((52 * var(--u) - 2.8rem) * 388 / 572); }
 
   /* The arches stand a little shorter than he does, their feet on his line. */
   .area-arch-l,
-  .area-arch-r { width: calc((53 * var(--u) - 4rem) * 0.84 * 0.6); }
+  .area-arch-r { width: calc((52 * var(--u) - 4rem) * 0.84 * 0.6); }
   .arch__door { width: 100%; }
   /* A long name may reach past the arch's jambs into the slack beside it. */
   .arch { grid-template-columns: minmax(0, 1fr); }
@@ -877,17 +882,12 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
   .orb__stand { width: calc(9 * var(--u)); }
   .orb__moons { font-size: max(0.66rem, 1.5 * var(--u)); line-height: 1.3; }
 
-  /* The rack (35u). */
-  .rack { width: calc((35 * var(--u) - 3rem) * 220 / 300); }
+  /* The rack (34u). */
+  .rack { width: calc((34 * var(--u) - 3rem) * 220 / 300); }
 
-  /* The floor (25u): the sign, the lectern between two candles, the note. */
-  .object--sign .object__art { width: calc((25 * var(--u) - 1.4rem) * 200 / 240); }
-  .signpost__word { font-size: max(0.8rem, 2.6 * var(--u)); }
-  .object.object--lectern { width: auto; }
-  .object--lectern .object__art { width: calc(25 * var(--u) - 3rem); }
-  .candle { bottom: 3.6rem; }
-  .candle--l { left: calc(50% - 12.5 * var(--u) - 4rem); }
-  .candle--r { right: calc(50% - 12.5 * var(--u) - 4rem); }
+  /* The floor (26u): the Solar's door, the lectern between its torches, the note. */
+  .object--door .object__art { width: calc((26 * var(--u) - 3rem) * 140 / 222); }
+  .area-lectern { --lectern: calc(26 * var(--u)); --torch-h: calc(26 * var(--u) * 0.84); }
   .note {
     width: calc(38 * var(--u));
     max-width: none;
@@ -900,10 +900,13 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
 
 @media (prefers-reduced-motion: reduce) {
   .room__light span,
-  .candle__flame,
-  .candle__halo,
+  .object--door .door__leaf,
+  .object--door .door__light,
   .arch__aurora,
   .rack-slip { animation: none; }
+  /* No CSS stops an animated image: both torches take the still. */
+  .torch,
+  .torch--r { background-image: url('../assets/torch-still.webp'); }
   .object,
   .arch__stars,
   .arch__glow,

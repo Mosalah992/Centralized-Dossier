@@ -2,7 +2,6 @@
 // on 2026-10-20; the in-world hour now stands on the Embassy room's wall.)
 
 import { useVolume } from '../api';
-import { Consulting, Notice } from '../components/Notice';
 import { Page } from '../components/Page';
 import indumoril from '../assets/indumoril.jpg';
 import ganaril from '../assets/ganaril.jpg';
@@ -129,18 +128,18 @@ const HONORED_PAIR: Honoree[] = [
 
 export function HonorView() {
   const volume = useVolume('honor');
-
-  if (volume.state === 'loading') return <Consulting />;
-  if (volume.state === 'error') {
-    return <Notice kind="error" title="The hall could not be read" body={volume.message} />;
-  }
+  // Everything the hall shows is kept here, in the repository; the sheet's
+  // tab only dates the transcription. So the hall stands whatever the sheet
+  // says, and a sheet that cannot be read costs the footnote, not the page.
+  const register = volume.state === 'ready'
+    ? { tab: volume.value.tab, fetchedAtUtc: volume.value.fetchedAtUtc }
+    : {};
 
   return (
     <Page
       title="Hall of Honors"
       subtitle="Those Remembered by the Dominion"
-      tab={volume.value.tab}
-      fetchedAtUtc={volume.value.fetchedAtUtc}
+      {...register}
     >
       {/* "emissaries", not "hall": the shelf owns .hall, and the torches it
           hangs off that class followed it onto this page. */}

@@ -261,18 +261,61 @@ export function LecternArt() {
   );
 }
 
-/** A signpost at the room's edge, its board pointing west. */
-export function SignpostArt() {
+/** The stem of a carved vine up a door panel, its leaves alternating. */
+function DoorVine({ x, top, bottom }: { x: number; top: number; bottom: number }) {
+  const leaves = [];
+  for (let y = bottom - 10, i = 0; y > top + 6; y -= 14, i++) {
+    const side = i % 2 ? -1 : 1;
+    leaves.push(<path key={y} d={`M${x} ${y}q${7 * side} -3 ${9 * side} -10q${-6 * side} 1 ${-9 * side} 10z`} fill={GOLD_DIM} />);
+  }
   return (
-    <svg viewBox="0 0 200 240" aria-hidden="true">
-      <rect x="112" y="40" width="12" height="196" fill={WOOD} />
-      <rect x="112" y="40" width="3" height="196" fill={WOOD_LIGHT} />
-      <path d="M100 236h36l-4-8h-28z" fill={EBONY} />
-      <circle cx="118" cy="34" r="6" fill={GOLD} />
-      {/* the board, an arrow pointing left */}
-      <path d="M16 92 44 64h140v56H44z" fill={WOOD_LIGHT} />
-      <path d="M22 92 46 70h132v44H46z" fill="none" stroke={GOLD} strokeWidth="1.6" />
-      <circle cx="118" cy="92" r="3" fill={GOLD_DIM} />
+    <g>
+      <path d={`M${x} ${bottom}V${top}`} stroke={GOLD_DIM} strokeWidth="1.1" />
+      {leaves}
+    </g>
+  );
+}
+
+/**
+ * The door to the Solar: a pointed Altmer doorway, two lacquered leaves inlaid
+ * with gold vines, and the Embassy's wax seal across the seam until the room
+ * behind it (the map, the clerk's desk) is furnished. A sliver of light under
+ * the leaves says the room is there. The leaves are separate groups, so the
+ * room can try them now and swing them later.
+ */
+export function SolarDoorArt() {
+  return (
+    <svg viewBox="0 0 140 222" aria-hidden="true">
+      {/* the doorway: a dark stone lancet, lined in gold */}
+      <path d="M6 218V92C6 50 34 18 70 3c36 15 64 47 64 89v126z" fill="#1a140f" />
+      <path d="M6 218V92C6 50 34 18 70 3c36 15 64 47 64 89v126" fill="none" stroke={GOLD} strokeWidth="2" />
+      <path d="M15 218V94C15 58 40 30 70 16c30 14 55 42 55 78v124" fill="none" stroke={GOLD_DIM} strokeWidth="1" />
+      <path d="M70 -3l1.8 5.4 5.4 1.8-5.4 1.8L70 11.4l-1.8-5.4-5.4-1.8 5.4-1.8z" fill={GOLD_BRIGHT} />
+      {/* the light beneath the leaves */}
+      <rect className="door__light" x="24" y="213" width="92" height="3" fill="#f2c770" opacity=".6" />
+      <g className="door__leaf door__leaf--l">
+        <path d="M23 214V96C23 64 43 40 70 27V214z" fill={LACQUER} />
+        <path d="M30 206V100C30 74 46 54 64 43V206z" fill="none" stroke={GOLD_DIM} strokeWidth="1.2" />
+        <DoorVine x={47} top={70} bottom={200} />
+        <circle cx="61" cy="168" r="4.2" fill="none" stroke={GOLD} strokeWidth="1.6" />
+      </g>
+      <g className="door__leaf door__leaf--r">
+        <path d="M70 27C97 40 117 64 117 96V214H70z" fill={WOOD} />
+        <path d="M76 43C94 54 110 74 110 100V206H76z" fill="none" stroke={GOLD_DIM} strokeWidth="1.2" />
+        <DoorVine x={93} top={70} bottom={200} />
+        <circle cx="79" cy="168" r="4.2" fill="none" stroke={GOLD} strokeWidth="1.6" />
+      </g>
+      <path d="M70 27V214" stroke={SHADOW} strokeWidth="1.4" />
+      {/* the seal across the seam: a ribbon of parchment and the Embassy's wax */}
+      <g className="door__seal">
+        <path d="M52 146h36l-2 8H54z" fill={PARCH_OLD} />
+        <circle cx="70" cy="150" r="9" fill="#7c1f24" />
+        <circle cx="70" cy="150" r="5.6" fill="none" stroke={GOLD} strokeWidth="1.1" />
+        <path d="M70 145.6l1.2 3.2 3.2 1.2-3.2 1.2-1.2 3.2-1.2-3.2-3.2-1.2 3.2-1.2z" fill={GOLD} />
+      </g>
+      {/* the sill */}
+      <rect x="2" y="216" width="136" height="6" fill={EBONY} />
+      <rect x="2" y="216" width="136" height="1.4" fill={GOLD_DIM} />
     </svg>
   );
 }

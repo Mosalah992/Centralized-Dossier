@@ -262,3 +262,12 @@ On landscape screens 1024px or wider the room now fits exactly one screen and ru
 - **Fixed an older bug:** between about 1200px and 1600px the unwrapping arch name plates had squeezed Ancarion down to the arches' width.
 - **Checks:** typecheck, build and 420/420 tests pass. Entry chunk is 237.14 kB raw / 83.87 kB gzip.
 - Nothing is committed or deployed.
+
+## Revision 4: the First Emissary's review (2026-10-20)
+
+- **`/gallery`** now holds only "Thalmor Embassy Archives", "Gallery" beneath it, and the pictures. "Aldmeri Dominion" in the bar at the top leads to the main page. The Penal Code links are gone; the Code is already a volume on the bookshelf.
+- **Torches** from the Gallery now stand either side of the lectern in place of the candles. On phones they are hidden, so phones don't download the two animated images. Readers who ask for reduced motion get the still image.
+- **Lectern** is larger: its plate sits on the desk's front, and the bottom row is deeper.
+- **Solar** is now a sealed door, which will later open onto the map and the clerk's desk. It is a button: clicking it makes the doors strain against the seal. It is never a link.
+- **Hall of Honors:** the "500" on `localhost:5173` came from the dev page forwarding `/api` to a Functions server that wasn't running. The Hall now renders whatever the sheet does, since all its honours are kept in the code; the sheet's "Hall of Honor" tab is empty apart from its title.
+- **Fonts:** Cinzel, Cinzel Decorative (for the Embassy's name) and EB Garamond are now self-hosted, under the OFL. The stylesheets had always named them but never loaded them.

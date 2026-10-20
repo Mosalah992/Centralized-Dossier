@@ -1,10 +1,11 @@
-/* The home page is staged as a Thalmor administrative chamber: the Embassy's
-   seal and name held in torchlight. The volumes themselves stand in the
-   navigation rail. */
+/* The Gallery: the Embassy's name in torchlight, and the Embassy beneath it.
+   Nothing on the page but the title and the pictures; the Dominion's name in
+   the bar above leads home. */
 
 .hall {
+  --hall-nav-height: 3.5rem;
   min-height: calc(100vh - 10rem);
-  padding: clamp(1.4rem, 3vw, 2.6rem) 0 0;
+  padding: calc(var(--hall-nav-height) + clamp(0.6rem, 2vw, 1.4rem)) 0 0;
   position: relative;
   isolation: isolate;
 }
@@ -36,114 +37,49 @@
 }
 
 .hall__hero {
-  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  /* The first screen, near enough: the portrait's top edge shows at the
-     foot, which is all the invitation to scroll the page needs. */
-  min-height: calc(100svh - 9rem);
-  padding-block: clamp(1rem, 3vw, 2rem);
+  padding-block: clamp(1.6rem, 5vw, 4rem) clamp(0.4rem, 1.5vw, 1rem);
   text-align: center;
 }
 
-/* The insignia is dark pewter and carries its own painted halo, so it needs
-   room to read and only a light shadow on top of the glow it already has. */
-.hall__crest {
-  position: relative;
-  align-self: stretch;
-}
-
-.hall__seal {
-  display: block;
-  width: clamp(7rem, 11vw, 12.5rem);
-  height: auto;
-  opacity: 0.96;
-  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.55));
-}
-
 .hall__title {
-  margin-top: clamp(0.8rem, 1.6vw, 1.3rem);
-  font-size: clamp(2rem, 5.4vw, 6.6rem);
-  line-height: 1.06;
+  margin: 0;
+  font-family: var(--title);
+  font-size: clamp(2rem, 5.4vw, 6.2rem);
+  font-weight: 700;
+  line-height: 1.08;
   color: var(--parchment);
-  letter-spacing: 0.16em;
-  text-shadow: 0 3px 18px rgba(0, 0, 0, 0.7);
+  letter-spacing: 0.08em;
+  text-shadow: 0 3px 18px rgba(0, 0, 0, 0.7), 0 0 34px rgb(201 162 39 / 0.18);
 }
 
+/* "Gallery", set between two gilt rules as the registers' title pages are. */
 .hall__subtitle {
-  margin: clamp(0.8rem, 1.5vw, 1.1rem) 0 0;
-  font-family: var(--display);
-  font-size: clamp(0.66rem, 0.9vw, 0.95rem);
-  letter-spacing: 0.34em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--stone) 78%, #1c1915);
-}
-
-/* Set between two gilt rules, the way the registers' own title pages are. */
-.hall__motto {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  width: min(34rem, 100%);
-  margin: clamp(1.1rem, 2.2vw, 1.6rem) 0 0;
-  font-family: var(--serif);
-  font-size: clamp(0.9rem, 1.3vw, 1.05rem);
-  font-style: italic;
-  color: color-mix(in srgb, var(--gold) 70%, var(--parchment));
+  gap: 1.2rem;
+  width: min(30rem, 100%);
+  margin: clamp(0.9rem, 1.8vw, 1.4rem) 0 0;
+  font-family: var(--display);
+  font-size: clamp(0.9rem, 1.4vw, 1.25rem);
+  font-weight: 600;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: var(--gold);
 }
 
-.hall__motto::before,
-.hall__motto::after {
+.hall__subtitle::before,
+.hall__subtitle::after {
   content: '';
   flex: 1;
   height: 1px;
   background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--gold) 60%, transparent));
 }
 
-.hall__motto::after {
+.hall__subtitle::after {
   transform: scaleX(-1);
-}
-
-/* The Dominion's statement. A measure a reader can hold — this is prose, and a
-   line run the full width of the hall would be a banner instead. */
-.hall__mission {
-  width: min(44rem, 100%);
-  margin: clamp(1.8rem, 3.5vw, 2.6rem) auto 0;
-  font-family: var(--serif);
-  font-size: clamp(1rem, 1.2vw, 1.3rem);
-  line-height: 1.75;
-  color: color-mix(in srgb, var(--parchment) 84%, var(--stone));
-  text-wrap: pretty;
-}
-
-.hall__mission p {
-  margin: 0;
-}
-
-.hall__mission p + p {
-  margin-top: 1.1em;
-}
-
-.hall__mission-lead {
-  font-size: 1.14em;
-  line-height: 1.6;
-  color: var(--parchment);
-}
-
-/* Three maxims, set as an inscription: one to a line, in the display face,
-   closing the statement rather than continuing it. */
-.hall__maxims {
-  display: grid;
-  gap: 0.5rem;
-  padding-top: 1.3rem;
-  font-family: var(--display);
-  font-size: clamp(0.66rem, 0.95vw, 0.76rem);
-  line-height: 1.5;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--gold) 82%, var(--parchment));
 }
 
 /* The Embassy assembled. Shown whole and at its own proportions — every figure
@@ -220,186 +156,17 @@
   object-fit: cover;
 }
 
-/* A gilt rule with a lozenge, the way the registers part their own sections,
-   so the portrait and film close into the archive below rather than stop. */
-.hall__divider {
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-  width: min(30rem, 80%);
-  margin: clamp(3rem, 6vw, 4.5rem) auto 0;
-}
 
-.hall__divider::before,
-.hall__divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--gold) 55%, transparent));
-}
-
-.hall__divider::after {
-  transform: scaleX(-1);
-}
-
-.hall__divider span {
-  width: 0.45rem;
-  height: 0.45rem;
-  border: 1px solid var(--gold);
-  transform: rotate(45deg);
-}
-
-/* Torches flanking the hall: footage of a real flame, cut down to one
-   44-frame loop and stripped of its captions by scripts/prepare-torches.mjs,
-   which also keys it to an alpha channel so the plate's black ground does not
-   box the torch in. Nothing here animates the flame — it animates itself, and
-   it throws its own light, so the glow this rule used to paint underneath is
-   gone with it. The two sides are the same clip started half a loop apart, so
-   they never gutter in lockstep. */
-
-.hall__torch {
-  --torch-width: clamp(5.5rem, 9vw, 12rem);
-  --torch-height: calc(var(--torch-width) * 270 / 240);
-
-  position: absolute;
-  /* Centred on the title, whose band it is placed in. */
-  top: 50%;
-  translate: 0 -50%;
-  width: var(--torch-width);
-  height: var(--torch-height);
-  background-repeat: no-repeat;
-  background-position: center bottom;
-  background-size: contain;
-  pointer-events: none;
-}
-
-.hall__torch--left {
-  left: -1.5rem;
-  background-image: url('../assets/torch-left.webp');
-}
-
-.hall__torch--right {
-  right: -1.5rem;
-  background-image: url('../assets/torch-right.webp');
-  /* Mirrored so the pair leans outward from the hall rather than both
-     the same way. */
-  transform: scaleX(-1);
-}
-
-/* base.css stops every CSS animation for a reader who asks for less motion,
-   but no CSS stops an animated image. Hand both sides the still instead. */
-@media (prefers-reduced-motion: reduce) {
-  .hall__torch--left,
-  .hall__torch--right {
-    background-image: url('../assets/torch-still.webp');
-  }
-}
-
-.hall__dust {
-  position: absolute;
-  inset: 8rem 0 auto;
-  height: 28rem;
-  pointer-events: none;
-  opacity: 0.18;
-  background-image:
-    radial-gradient(circle, rgba(239, 230, 210, 0.7) 0 1px, transparent 1.5px),
-    radial-gradient(circle, rgba(239, 230, 210, 0.4) 0 1px, transparent 1.5px);
-  background-position: 12% 18%, 72% 44%;
-  background-size: 8rem 9rem, 11rem 10rem;
-  /* Driven from Shelf.tsx so it can stop when the shelf is scrolled away, and
-     so reduced motion is decided in the one place the rest of the archive
-     decides it. The keyframes are gone; this is only the rest state. */
-}
-
-/* A guarded doorway, not another volume: High Command's seal is held below
-   the hall so the public registers remain the archive's primary action. */
-.hall__command {
-  display: grid;
-  justify-items: center;
-  margin: clamp(2.3rem, 4vw, 3.5rem) auto 0;
-  text-align: center;
-}
-
-.hall__command-label {
-  margin: 0 0 .2rem;
-  font-family: var(--display);
-  font-size: .58rem;
-  letter-spacing: .24em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--gold) 72%, var(--stone));
-}
-
-.hall__command-seal {
-  display: grid;
-  justify-items: center;
-  gap: .15rem;
-  padding: 0;
-  color: var(--gold-bright);
-  font-family: var(--display);
-  font-size: .62rem;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  background: none;
-  border: 0;
-  cursor: pointer;
-}
-
-.hall__command-seal img {
-  width: clamp(5.5rem, 10vw, 8.25rem);
-  height: auto;
-  filter: drop-shadow(0 .5rem .7rem rgb(0 0 0 / .55));
-  transition: transform .2s var(--ease), filter .2s var(--ease);
-}
-
-.hall__command-seal:hover img,
-.hall__command-seal:focus-visible img {
-  transform: translateY(-.18rem) scale(1.035);
-  filter: drop-shadow(0 .8rem .9rem rgb(0 0 0 / .66));
-}
-
-@media (max-width: 720px) {
-  .hall {
-    padding-top: 1rem;
-  }
-
-  /* Also spares a phone the two heaviest files on the page: a background is
-     not fetched for a box that is never displayed. */
-  .hall__torch {
-    display: none;
-  }
-
-  /* No tall blank band on a phone: the statement is long enough to carry
-     the first screen on its own. */
-  .hall__hero {
-    min-height: 0;
-  }
-}
-
-/* The hall's own shelf: the Dominion's name and three in-page destinations,
-   fixed over the page to the right of the archive rail on a thin,
-   smoked-glass ground, so the torchlight still shows through it.
-
-   One type size for everything in the bar — name and links alike — so it
-   reads as a single line of inscription; the name is set apart by colour,
-   not by scale. */
-.hall {
-  --hall-nav-height: 3.5rem;
-  padding-top: calc(var(--hall-nav-height) + clamp(0.6rem, 2vw, 1.4rem));
-}
-
-/* Jumps — by link, by Tab, by the browser's find — stop clear of the bar
-   instead of under it (WCAG 2.4.11, Focus Not Obscured). */
+/* The bar: only the Dominion's name, which leads home, on a thin smoked-glass
+   ground fixed over the page. */
 html:has(.hall-nav) {
   scroll-padding-top: calc(3.5rem + 1.25rem);
 }
 
 .hall-nav {
-  --hall-nav-type: 0.8rem;
-  --hall-nav-gutter: clamp(1.25rem, 3vw, 2.5rem);
-
   position: fixed;
   top: 0;
-  inset-inline: var(--archive-nav-width, 0px) 0;
+  inset-inline: 0;
   z-index: 30;
   background: rgb(16 14 12 / 0.45);
   -webkit-backdrop-filter: blur(4px);
@@ -410,253 +177,35 @@ html:has(.hall-nav) {
 .hall-nav__bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1.5rem;
-  height: var(--hall-nav-height);
-  padding-inline: var(--hall-nav-gutter);
+  height: var(--hall-nav-height, 3.5rem);
+  padding-inline: clamp(1.25rem, 3vw, 2.5rem);
 }
 
-.hall-nav__links,
-.hall-nav__menu {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.hall-nav__links {
-  display: flex;
-  align-items: center;
-  gap: clamp(0.5rem, 1.5vw, 1.5rem);
-}
-
-/* Every target is at least 44px tall (WCAG 2.5.5); the padding widens the
-   hit area without moving the letters. */
-.hall-nav__brand,
-.hall-nav__links a,
-.hall-nav__menu a {
+/* At least 44px tall (WCAG 2.5.5). */
+.hall-nav__brand {
   display: inline-flex;
   align-items: center;
   min-height: 2.75rem;
   font-family: var(--display);
-  font-size: var(--hall-nav-type);
-  font-weight: 400;
+  font-size: 0.8rem;
+  font-weight: 600;
   line-height: 1;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   text-decoration: none;
   white-space: nowrap;
-}
-
-.hall-nav__brand {
   color: var(--parchment);
-}
-
-.hall-nav__links a,
-.hall-nav__menu a {
-  position: relative;
-  padding-inline: 0.5rem;
-  color: color-mix(in srgb, var(--parchment) 72%, var(--stone));
   transition: color 0.22s var(--ease);
 }
 
-/* The section in view: gold, with a hairline under it. */
-.hall-nav__links a::after {
-  content: '';
-  position: absolute;
-  inset-inline: 0.5rem calc(0.5rem + 0.22em);
-  bottom: 0.6rem;
-  height: 1px;
-  background: currentColor;
-  transform: scaleX(0);
-  transition: transform 0.25s var(--ease);
-}
-
-.hall-nav__links a[aria-current],
-.hall-nav__menu a[aria-current] {
-  color: var(--gold);
-}
-
-.hall-nav__links a[aria-current]::after {
-  transform: scaleX(1);
-}
-
-.hall-nav a:hover,
-.hall-nav a:focus-visible {
+.hall-nav__brand:hover,
+.hall-nav__brand:focus-visible {
   color: var(--gold-bright);
 }
 
-.hall-nav a:focus-visible,
-.hall-nav__toggle:focus-visible {
+.hall-nav__brand:focus-visible {
   outline: 1px solid var(--gold-bright);
   outline-offset: 2px;
-}
-
-.hall-nav__toggle {
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
-  width: 2.75rem;
-  height: 2.75rem;
-  padding: 0;
-  background: none;
-  border: 0;
-  cursor: pointer;
-}
-
-.hall-nav__toggle span {
-  display: block;
-  width: 1.4rem;
-  height: 1px;
-  background: var(--gold);
-}
-
-.hall-nav__menu {
-  display: grid;
-  justify-items: end;
-  gap: 0.25rem;
-  padding: 0 var(--hall-nav-gutter) 0.75rem;
-}
-
-.hall-nav__menu[hidden] {
-  display: none;
-}
-
-/* Sections are focus targets for the bar's links, not controls; the jump is
-   the cue, so they take no ring of their own. */
-.hall [tabindex='-1']:focus {
-  outline: none;
-}
-
-/* The recruiting notice: a short proclamation under the gallery, set in the
-   hall's own type and closed by a sealed, gilt call to the oath. */
-.hall__recruit {
-  display: grid;
-  justify-items: center;
-  width: min(44rem, 100%);
-  margin: 0 auto;
-  text-align: center;
-}
-
-.hall__recruit-label {
-  margin: clamp(2.2rem, 4vw, 3rem) 0 0;
-  font-family: var(--display);
-  font-size: 0.66rem;
-  letter-spacing: 0.34em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--gold) 72%, var(--stone));
-}
-
-.hall__recruit-title {
-  margin: 0.6rem 0 0;
-  font-family: var(--display);
-  font-size: clamp(1.6rem, 3.2vw, 2.6rem);
-  font-weight: 400;
-  letter-spacing: 0.14em;
-  color: var(--parchment);
-  text-shadow: 0 3px 14px rgb(0 0 0 / 0.65);
-}
-
-.hall__recruit-terms {
-  display: grid;
-  gap: 0.9rem;
-  margin: clamp(1.4rem, 3vw, 2rem) 0 0;
-  padding: 0;
-  list-style: none;
-  font-family: var(--serif);
-  font-size: clamp(1rem, 1.2vw, 1.2rem);
-  line-height: 1.6;
-  color: color-mix(in srgb, var(--parchment) 84%, var(--stone));
-  text-wrap: pretty;
-}
-
-/* Each term marked with the registers' gilt lozenge. */
-.hall__recruit-terms li::before {
-  content: '';
-  display: inline-block;
-  width: 0.35rem;
-  height: 0.35rem;
-  margin-inline-end: 0.75rem;
-  vertical-align: 0.2em;
-  border: 1px solid var(--gold);
-  transform: rotate(45deg);
-}
-
-.hall__recruit-blessing {
-  margin: clamp(1.4rem, 3vw, 1.9rem) 0 0;
-  font-family: var(--serif);
-  font-size: clamp(1rem, 1.3vw, 1.15rem);
-  font-style: italic;
-  color: color-mix(in srgb, var(--gold) 70%, var(--parchment));
-}
-
-/* Styled after the Support seal: the archive's one existing gilt pill. */
-.hall__recruit-oath {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 3rem;
-  margin-top: clamp(1.6rem, 3vw, 2.2rem);
-  padding: 0.8rem 2.2rem;
-  color: var(--gold-bright);
-  font-family: var(--display);
-  font-size: 0.78rem;
-  font-weight: 600;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  text-decoration: none;
-  background:
-    radial-gradient(circle at 50% 0%, rgb(232 205 122 / 0.12), transparent 60%),
-    linear-gradient(180deg, #241f19, #16130f);
-  border: 1px solid rgb(201 162 39 / 0.55);
-  box-shadow:
-    0 0 0 0.25rem rgb(16 14 12 / 0.9),
-    0 0 0 calc(0.25rem + 1px) color-mix(in srgb, var(--gold) 22%, transparent),
-    0 0.8rem 1.6rem rgb(0 0 0 / 0.5);
-  transition: color 0.22s var(--ease), border-color 0.22s var(--ease),
-    transform 0.22s var(--ease);
-}
-
-.hall__recruit-oath:hover,
-.hall__recruit-oath:focus-visible {
-  color: #fff3cf;
-  border-color: rgb(232 205 122 / 0.85);
-  transform: translateY(-1px);
-}
-
-@media (max-width: 900px) {
-  /* The rail is a drawer here and its button holds the top-left corner, so
-     the shelf runs the full width and the name gives way to it. */
-  .hall-nav {
-    inset-inline: 0;
-  }
-
-  .hall-nav__bar {
-    justify-content: flex-end;
-  }
-
-  .hall-nav__brand {
-    display: none;
-  }
-}
-
-/* Too narrow for the three destinations beside the drawer button: they fold
-   into a menu under the same smoked-glass shelf. */
-@media (max-width: 800px) {
-  .hall-nav__links {
-    display: none;
-  }
-
-  .hall-nav__toggle {
-    display: flex;
-  }
-}
-
-@media (min-width: 801px) {
-  .hall-nav__menu {
-    display: none;
-  }
 }
 
 @media (max-width: 720px) {
@@ -666,8 +215,7 @@ html:has(.hall-nav) {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hall-nav a,
-  .hall-nav__links a::after {
+  .hall-nav__brand {
     transition: none;
   }
 }

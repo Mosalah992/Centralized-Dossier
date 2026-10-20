@@ -4,21 +4,21 @@
 //   Bookshelf   Bulletin Board (announcements)        The hour
 //      │        ┌──────┐ ┌────────┐ ┌──────┐          + orrery
 //      │        │ arch │ │Ancarion│ │ arch │          Scroll Rack
-//   Solar ←     └──────┘ └────────┘ └──────┘             │
-//               Lectern                             pinned note
+//   Solar door  └──────┘ └────────┘ └──────┘             │
+//                   torch  Lectern  torch           pinned note
 //
 // Every object is a link or a button, so it can be focused, opened with the
 // keyboard and addressed by URL. Objects that lead to the archive's existing
 // pages navigate there; the room's own surfaces (bookshelf, board, lectern)
 // open over it as takeovers with URLs of their own.
 
-import { Suspense, lazy, useMemo, useRef, type ReactNode } from 'react';
+import { Suspense, lazy, useMemo, useRef, useState, type ReactNode } from 'react';
 
 import { Register } from '../components/Register';
 import type { Navigate, Route } from '../router';
 import type { BoardSectionSummary } from '../../../shared/room';
 import { Archway } from './Archway';
-import { BoardArt, BookshelfArt, LecternArt, SignpostArt } from './art';
+import { BoardArt, BookshelfArt, LecternArt, SolarDoorArt } from './art';
 import { readSeen, unseenCount } from './board-seen';
 import { ImageSlot } from './ImageSlot';
 import { Link, NavContext } from './nav';
@@ -63,16 +63,40 @@ function RoomObject({ id, href, name, describer, art, className = '', badge }: O
   );
 }
 
-function Candle({ side }: { side: 'l' | 'r' }) {
+/** A standing torch: footage of a real flame (the Gallery's, before it came here). */
+function Torch({ side }: { side: 'l' | 'r' }) {
+  return <span className={`torch torch--${side}`} aria-hidden="true" />;
+}
+
+/**
+ * The door to the Solar, which will hold the map and the clerk's desk. Until
+ * it is furnished the door is sealed: it can be found, focused and tried, and
+ * it says so, but it leads nowhere and is not dressed as a link.
+ */
+function SolarDoor() {
+  const [trying, setTrying] = useState(false);
+  const tryDoor = () => {
+    if (trying) return;
+    setTrying(true);
+    window.setTimeout(() => setTrying(false), 700);
+  };
   return (
-    <span className={`candle candle--${side}`} aria-hidden="true">
-      <span className="candle__halo" />
-      <svg className="candle__flame" viewBox="0 0 16 30">
-        <path d="M8 0C12 9 15 14 15 20a7 7 0 0 1-14 0C1 14 4 9 8 0z" fill="#ffb347" />
-        <path d="M8 9c2 5 4 8 4 11a4 4 0 0 1-8 0c0-3 2-6 4-11z" fill="#fff2c4" />
-        <rect x="7.3" y="24" width="1.4" height="6" fill="#2a1d12" />
-      </svg>
-    </span>
+    <button
+      type="button"
+      className="area-door object object--door"
+      data-trying={trying || undefined}
+      aria-disabled="true"
+      aria-label="The Solar: the map and the clerk's desk. The door is sealed until the room is furnished."
+      onClick={tryDoor}
+    >
+      <ImageSlot name="solar-door" className="object__art">
+        <SolarDoorArt />
+      </ImageSlot>
+      <span className="plaque">The Solar</span>
+      <span className="describer" aria-hidden="true">
+        The map and the clerk’s desk. Sealed until the room is furnished.
+      </span>
+    </button>
   );
 }
 
@@ -176,24 +200,21 @@ export default function Room({ route, navigate }: { route: RoomRoute; navigate: 
             <ScrollRack ancarion={ancarion} field={rackField} />
           </div>
 
-          <div className="area-sign object object--sign" role="img" aria-label="A signpost pointing west, to the Solar. The way is not yet open.">
-            <ImageSlot name="signpost" className="object__art">
-              <SignpostArt />
-            </ImageSlot>
-            <span className="signpost__word" aria-hidden="true">Solar</span>
-            <span className="describer" aria-hidden="true">
-              The Solar. The way is not yet open.
-            </span>
-          </div>
+          <SolarDoor />
 
-          <RoomObject
-            id="lectern"
-            href="/lectern"
-            name="Lectern"
-            describer="File reports, bounties and more under your code."
-            art={<LecternArt />}
-            className="area-lectern"
-          />
+          {/* The lectern stands between two torches, the room's brightest
+              place after Ancarion: it is where a reader acts. */}
+          <div className="area-lectern">
+            <Torch side="l" />
+            <RoomObject
+              id="lectern"
+              href="/lectern"
+              name="Lectern"
+              describer="File reports, bounties and more under your code."
+              art={<LecternArt />}
+            />
+            <Torch side="r" />
+          </div>
 
           <aside className="area-note note" aria-label="How to file">
             <span className="note__pin" aria-hidden="true" />
@@ -212,8 +233,6 @@ export default function Room({ route, navigate }: { route: RoomRoute; navigate: 
           <Register />
         </footer>
 
-        <Candle side="l" />
-        <Candle side="r" />
       </div>
 
       {route.open === 'bookshelf' && (
@@ -232,7 +251,7 @@ export default function Room({ route, navigate }: { route: RoomRoute; navigate: 
       )}
       {route.open === 'lectern' && (
         <Takeover label="The Lectern" closeTo="/" returnFocus='[data-object="lectern"]'>
-          <Suspense fallback={<p className="loading">Trimming the candle…</p>}>
+          <Suspense fallback={<p className="loading">Lighting the torches…</p>}>
             <Lectern />
           </Suspense>
         </Takeover>

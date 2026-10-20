@@ -47,9 +47,16 @@ describe('the room as drawn', () => {
     expect(room).toContain('To file at the Lectern');
   });
 
-  it('points to the Solar without pretending the way is open', () => {
-    expect(room).toMatch(/className="area-sign[^"]*"\s+role="img"/);
+  it("hangs the Solar's door sealed, without pretending the way is open", () => {
+    // A button that can be found and tried, never a link, until the Solar is built.
+    expect(room).toMatch(/type="button"\s+className="area-door[^"]*"/);
+    expect(room).toContain('aria-disabled="true"');
     expect(room).not.toContain('href="/solar"');
+  });
+
+  it('stands the lectern between the torches the candles gave way to', () => {
+    expect(room.match(/<Torch side="[lr]" \/>/g)).toHaveLength(2);
+    expect(room).not.toContain('Candle');
   });
 
   it('hangs Ancarion as a performer, never as a second gate', () => {

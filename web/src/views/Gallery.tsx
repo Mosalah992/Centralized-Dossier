@@ -1,14 +1,14 @@
-// The Gallery: what used to be the archive's front door, read as one document
-// from the top down — the Embassy's seal and name, the Dominion's statement of
-// why the archive exists, the Embassy itself assembled, recruitment, and High
-// Command's seal. The room took the front door (Decision Log, 2026-10-19); the
-// right-hand archway leads here.
+// The Gallery: the Embassy's name, and beneath it the Embassy itself — the
+// assembled portrait, the film and the pictures. Nothing else: it was the
+// archive's front door until the room took that (Decision Log, 2026-10-19),
+// and its statement, recruitment notice, seal and section bar went with it
+// (2026-10-20). The right-hand archway leads here; the Dominion's name at the
+// top leads back.
 
-import { useEffect, useRef, useState, type MouseEvent } from 'react';
+import { useRef, type MouseEvent } from 'react';
 import { useGSAP } from '@gsap/react';
 
-import { D, failsafe, gsap, revealOnEnter, staged, suspendOffScreen } from '../motion';
-import reportsSealUrl from '../assets/gate-seal.webp';
+import { D, failsafe, gsap, revealOnEnter, staged } from '../motion';
 import portrait1280 from '../assets/hero/embassy-1280.webp';
 import portrait1920 from '../assets/hero/embassy-1920.webp';
 import filmUrl from '../assets/hero/film.mp4';
@@ -34,122 +34,25 @@ const GALLERY = [
   { src: gallery8, alt: 'Hooded agents filing up a snow-dusted stair.' },
 ];
 
-// The Dominion's application form. External, so it opens beside the archive
-// rather than in place of it.
-const APPLICATION_URL =
-  'https://docs.google.com/forms/d/e/1FAIpQLScvhD-8VfQj3tmGSQ0qB7v7z9tfr7XDILvJwl7Ex2ccrF8Cuw/viewform?usp=publish-edito';
-
-// In-page destinations. Real links, so they read as navigation and can be
-// opened or copied, but followed by script: the router owns the URL, and a
-// hash change is not needed to move the reader.
-const SECTIONS = [
-  { id: 'hall-gallery', label: 'Gallery' },
-  { id: 'hall-recruitment', label: 'Recruitment' },
-  { id: 'hall-command', label: 'High Command' },
-] as const;
-
-function goTo(id: string) {
-  const target = document.getElementById(id);
-  if (!target) return;
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  target.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
-  // Keyboard and screen-reader focus follows the reader to the section, or
-  // the next Tab would resume from the bar.
-  target.focus({ preventScroll: true });
-}
-
 interface Props {
   onOpen: (href: string) => void;
 }
 
 export function GalleryView({ onOpen }: Props) {
   const hall = useRef<HTMLDivElement>(null);
-  const dust = useRef<HTMLSpanElement>(null);
   const portrait = useRef<HTMLElement>(null);
   const film = useRef<HTMLVideoElement>(null);
   const gallery = useRef<HTMLUListElement>(null);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [current, setCurrent] = useState<string | null>(null);
 
-  // The drop-down is the phone layout's; widening the window shuts it.
-  useEffect(() => {
-    const wide = window.matchMedia('(min-width: 801px)');
-    const shut = () => { if (wide.matches) setMenuOpen(false); };
-    wide.addEventListener('change', shut);
-    return () => wide.removeEventListener('change', shut);
-  }, []);
-
-  // Escape folds the phone menu, as any disclosure should.
-  useEffect(() => {
-    if (!menuOpen) return;
-    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') setMenuOpen(false); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [menuOpen]);
-
-  // Marks whichever section holds the middle band of the screen, so the bar
-  // shows the reader where they are.
-  useEffect(() => {
-    const targets = SECTIONS
-      .map(({ id }) => document.getElementById(id))
-      .filter((el): el is HTMLElement => el !== null);
-    const observer = new IntersectionObserver((entries) => {
-      for (const entry of entries) {
-        if (entry.isIntersecting) setCurrent(entry.target.id);
-        else setCurrent((id) => (id === entry.target.id ? null : id));
-      }
-    }, { rootMargin: '-45% 0px -50% 0px' });
-    targets.forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
-  }, []);
-
-  const follow = (event: MouseEvent<HTMLAnchorElement>, id: string) => {
+  // The Dominion's name is the way home: a real link, followed by the router.
+  const home = (event: MouseEvent<HTMLAnchorElement>) => {
     // A modified click is the reader asking for a new tab; let it through.
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
     event.preventDefault();
-    setMenuOpen(false);
-    goTo(id);
+    onOpen('/');
   };
 
-  const sectionLinks = SECTIONS.map(({ id, label }) => (
-    <li key={id}>
-      <a
-        href={`#${id}`}
-        aria-current={current === id ? 'location' : undefined}
-        onClick={(event) => follow(event, id)}
-      >
-        {label}
-      </a>
-    </li>
-  ));
-
-  // The Code is a page of its own, not a part of the hall, so this one leaves
-  // through the router rather than scrolling.
-  const leave = (event: MouseEvent<HTMLAnchorElement>, href: string) => {
-    if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
-    event.preventDefault();
-    setMenuOpen(false);
-    onOpen(href);
-  };
-
-  const links = [
-    <li key="room">
-      <a href="/" onClick={(event) => leave(event, '/')}>
-        The Embassy
-      </a>
-    </li>,
-    ...sectionLinks,
-    <li key="penalcode">
-      <a
-        href="/penalcode"
-        onClick={(event) => leave(event, '/penalcode')}
-      >
-        Penal Code
-      </a>
-    </li>,
-  ];
-
-  // The hall comes up out of the dark, seal first. Once, on mount.
+  // The name comes up out of the dark. Once, on mount.
   useGSAP(() => staged(({ moving }) => {
     const root = hall.current;
     if (!moving || !root) return;
@@ -249,90 +152,23 @@ export function GalleryView({ onOpen }: Props) {
     return () => { observer.disconnect(); video.pause(); };
   }), []);
 
-  /*
-   * Motes drifting through the torchlight, suspended once the hall is
-   * scrolled out of view — which CSS keyframes cannot do, since
-   * `animation-play-state` cannot be driven from intersection.
-   */
-  useGSAP(() => staged(({ moving }) => {
-    const motes = dust.current;
-    if (!moving || !motes) return;
-
-    const drift = gsap.fromTo(motes,
-      { y: 0 },
-      { y: '-1.5rem', duration: 14, ease: 'none', repeat: -1 });
-    const watch = suspendOffScreen(motes, drift);
-
-    return () => { watch(); drift.kill(); };
-  }), []);
-
   return (
     <div className="hall" ref={hall}>
-      <nav className="hall-nav" aria-label="Hall sections">
+      <nav className="hall-nav" aria-label="The Embassy">
         <div className="hall-nav__bar">
-          <a className="hall-nav__brand" href="#hall-archive" onClick={(event) => follow(event, 'hall-archive')}>
+          <a className="hall-nav__brand" href="/" onClick={home} aria-label="Aldmeri Dominion: return to the Embassy">
             Aldmeri Dominion
           </a>
-          <ul className="hall-nav__links">{links}</ul>
-          <button
-            className="hall-nav__toggle"
-            type="button"
-            aria-label="Hall sections menu"
-            aria-expanded={menuOpen}
-            aria-controls="hall-nav-menu"
-            onClick={() => setMenuOpen((open) => !open)}
-          >
-            <span /><span /><span />
-          </button>
         </div>
-        <ul className="hall-nav__menu" id="hall-nav-menu" hidden={!menuOpen}>{links}</ul>
       </nav>
 
-      <span className="hall__dust" ref={dust} aria-hidden />
-
-      <header className="hall__hero" id="hall-archive" tabIndex={-1}>
-        {/* The Dominion insignia. Decorative — the heading beneath it already
-            names the archive, so it is not announced a second time. */}
-        <img
-          className="hall__seal"
-          src="/seal.webp"
-          alt=""
-          width={250}
-          height={250}
-          decoding="async"
-          data-rise
-        />
-        {/* The torches flank the title itself, so they stay level with it
-            however the title scales or the hero is laid out. */}
-        <div className="hall__crest">
-          <span className="hall__torch hall__torch--left" aria-hidden />
-          <h1 className="hall__title" data-rise>
-            Thalmor Embassy
-            <br />
-            Archives
-          </h1>
-          <span className="hall__torch hall__torch--right" aria-hidden />
-        </div>
-        <p className="hall__subtitle" data-rise>Official Administrative Registers</p>
-        <p className="hall__motto" data-rise>By Order of the Third Aldmeri Dominion</p>
-
-        <div className="hall__mission" data-rise>
-          <p className="hall__mission-lead">
-            The Dominion does not merely govern the present. It preserves the
-            record by which the future shall understand it.
-          </p>
-          <p>
-            These archives serve as the official repository of Thalmor activity
-            throughout Tamriel, documenting our personnel, operations, hierarchy,
-            judgments, honors, and the events that shape the Dominion’s continued
-            mission.
-          </p>
-          <p className="hall__maxims">
-            <span>Order is maintained through knowledge.</span>
-            <span>Authority is preserved through record.</span>
-            <span>History belongs to those disciplined enough to keep it.</span>
-          </p>
-        </div>
+      <header className="hall__hero">
+        <h1 className="hall__title" data-rise>
+          Thalmor Embassy
+          <br />
+          Archives
+        </h1>
+        <p className="hall__subtitle" data-rise>Gallery</p>
       </header>
 
       <figure className="hall__portrait" ref={portrait}>
@@ -360,51 +196,13 @@ export function GalleryView({ onOpen }: Props) {
         />
       </figure>
 
-      <ul className="hall__gallery" id="hall-gallery" tabIndex={-1} aria-label="Gallery" ref={gallery}>
+      <ul className="hall__gallery" aria-label="The Embassy in pictures" ref={gallery}>
         {GALLERY.map(({ src, alt }) => (
           <li key={src}>
             <img src={src} alt={alt} width={1200} height={675} loading="lazy" decoding="async" />
           </li>
         ))}
       </ul>
-
-      <section className="hall__recruit" id="hall-recruitment" tabIndex={-1} aria-labelledby="hall-recruit-title">
-        <div className="hall__divider" aria-hidden>
-          <span />
-        </div>
-        <p className="hall__recruit-label">Recruitment</p>
-        <h2 className="hall__recruit-title" id="hall-recruit-title">To Join the Thalmor</h2>
-        <ul className="hall__recruit-terms">
-          <li>We accept no AI-made applications.</li>
-          <li>Joining the Thalmor demands a life oath, so prepare to give your life to the Dominion.</li>
-          <li>We do not mind Bosmer or Khajiit applicants.</li>
-          <li>Make sure you don’t write too much, but not too little — in between is good.</li>
-        </ul>
-        <p className="hall__recruit-blessing">May Auri-El bless you and Xarxes guide your word.</p>
-        <a
-          className="hall__recruit-oath"
-          href={APPLICATION_URL}
-          target="_blank"
-          rel="noopener noreferrer external"
-          aria-label="Submit Your Oath (opens the application form in a new tab)"
-        >
-          Submit Your Oath
-        </a>
-      </section>
-
-      <div className="hall__divider" aria-hidden>
-        <span />
-      </div>
-
-      {/* A guarded doorway, not another volume: High Command's seal is held
-          below the hall so the public registers remain the primary action. */}
-      <section className="hall__command" id="hall-command" tabIndex={-1} aria-label="High Command reports">
-        <p className="hall__command-label">For the Eyes of High Command</p>
-        <button className="hall__command-seal" type="button" onClick={() => onOpen('/reports')}>
-          <img src={reportsSealUrl} alt="" width={132} height={132} />
-          <span>Reports</span>
-        </button>
-      </section>
 
     </div>
   );
