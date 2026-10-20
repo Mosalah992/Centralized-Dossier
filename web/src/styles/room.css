@@ -688,8 +688,8 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
   align-items: flex-end;
   justify-content: center;
   gap: clamp(0.6rem, 1.6vw, 1.8rem);
-  --lectern: min(100%, 300px);
-  --torch-h: 250px;
+  --lectern: min(100%, 360px);
+  --torch-h: 280px;
 }
 .object.object--lectern { width: var(--lectern); }
 .object--lectern .plaque {
@@ -708,14 +708,6 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
 }
 /* Mirrored, so the pair leans outward from the lectern. */
 .torch--r { background-image: url('../assets/torch-right.webp'); transform: scaleX(-1); }
-
-/* ---------- The foot of the room ---------- */
-
-.room__foot {
-  position: relative;
-  z-index: 4;
-  margin: 2.4rem auto 0;
-}
 
 /* ---------- Motion ---------- */
 
@@ -767,7 +759,7 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
   .object--bookshelf .shelf-art--tall { display: none; }
   .object--bookshelf .shelf-art--short { display: block; }
   .area-door { justify-self: center; }
-  .area-lectern { --lectern: min(56%, 220px); --torch-h: 180px; }
+  .area-lectern { --lectern: min(60%, 270px); --torch-h: 210px; }
 }
 
 /* Phones: stack, Ancarion first, then the hour, then what a reader acts on. */
@@ -790,7 +782,7 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
   .room-clock { padding: 0.8rem 0.6rem; }
   .room-clock__date { font-size: 0.95rem; }
   .room-portrait__stage { width: min(78vw, 19rem); }
-  .object.object--lectern { width: min(100%, 240px); }
+  .object.object--lectern { width: min(100%, 300px); }
   .note { max-width: none; margin: 0 6px; transform: rotate(0.9deg); }
   .plaque { padding: 0.28rem 0.85rem; font-size: 0.62rem; letter-spacing: 0.12em; }
   .describer { display: none; }
@@ -803,15 +795,15 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
 
    On any landscape screen from a small laptop or a tablet held sideways up,
    the whole room is one screen, wall to wall, with nothing below
-   the fold but the Register and the colophon. Everything is measured in --u,
+   the fold but the colophon. Everything is measured in --u,
    a hundredth of the height the grid may have (the screen less the title and
    the floor kept clear for the fixed seals), unless the window is so narrow
    for its height that the width must govern instead. Each object is sized
    from the rows it stands in, so nothing is left to overflow or to float in
    a cell too big for it, and the slack goes where the eye expects it: between
    the furniture at the walls and the arches that frame Ancarion, never in
-   black bands at the edges. Rows, in --u: the board's 22, the instruments'
-   lower 18, the rack's 34, and the floor's 26, where the reader acts. */
+   black bands at the edges. Rows, in --u: the board's 21, the instruments'
+   lower 17, the rack's 32, and the floor's 30, where the reader acts. */
 @media (min-width: 1024px) and (orientation: landscape) {
   .room {
     --chrome: 9.3rem;
@@ -824,7 +816,6 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
     padding: 0.6rem 0 3.6rem;
   }
   .room__title { margin-bottom: 0.6rem; }
-  .room__foot { margin-top: 0; }
   .room__title h1 { margin-top: 0.1rem; font-size: 2.1rem; }
 
   .room__grid {
@@ -833,7 +824,7 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
        ones a little wider than the two that part the arches from Ancarion. */
     grid-template-columns:
       auto minmax(1.5rem, 1fr) auto minmax(1.5rem, 0.72fr) auto minmax(1.5rem, 0.72fr) auto minmax(1.5rem, 1fr) auto;
-    grid-template-rows: calc(22 * var(--u)) calc(18 * var(--u)) calc(34 * var(--u)) calc(26 * var(--u));
+    grid-template-rows: calc(21 * var(--u)) calc(17 * var(--u)) calc(32 * var(--u)) calc(30 * var(--u));
     grid-template-areas:
       'shelf . board   board   board    board   board   . instr'
       'shelf . archL   .       portrait .       archR   . instr'
@@ -851,43 +842,43 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
      lines at most. */
   .plaque { padding-inline: max(0.7rem, 1.4 * var(--u)); font-size: clamp(0.56rem, 1.3 * var(--u), 0.68rem); letter-spacing: 0.16em; }
 
-  /* The bookcase, from the board's top to the arches' feet (rows 1-3, 74u). */
-  .object--bookshelf .object__art { width: calc((74 * var(--u) - 3rem) * 220 / 436); }
+  /* The bookcase, from the board's top to the arches' feet (rows 1-3, 70u). */
+  .object--bookshelf .object__art { width: calc((70 * var(--u) - 3rem) * 220 / 436); }
 
-  /* The long board along the top (22u). */
+  /* The long board along the top (21u). */
   .object.object--board { width: auto; }
-  .object--board .object__art { aspect-ratio: 540 / 170; width: calc((22 * var(--u) - 3rem) * 540 / 170); }
+  .object--board .object__art { aspect-ratio: 540 / 170; width: calc((21 * var(--u) - 3rem) * 540 / 170); }
   .object--board .board-art--narrow { display: none; }
   .object--board .board-art--wide { display: block; }
 
-  /* Ancarion, the tallest thing on the wall (52u, less his plate). */
-  .room-portrait__stage { width: calc((52 * var(--u) - 2.8rem) * 388 / 572); }
+  /* Ancarion, the tallest thing on the wall (49u, less his plate). */
+  .room-portrait__stage { width: calc((49 * var(--u) - 2.8rem) * 388 / 572); }
 
   /* The arches stand a little shorter than he does, their feet on his line. */
   .area-arch-l,
-  .area-arch-r { width: calc((52 * var(--u) - 4rem) * 0.84 * 0.6); }
+  .area-arch-r { width: calc((49 * var(--u) - 4rem) * 0.84 * 0.6); }
   .arch__door { width: 100%; }
   /* A long name may reach past the arch's jambs into the slack beside it. */
   .arch { grid-template-columns: minmax(0, 1fr); }
   .arch__name { justify-self: stretch; max-width: none; margin-inline: -2.25rem; justify-content: center; }
 
-  /* The hour and the orb (40u together). */
+  /* The hour and the orb (38u together). */
   .area-instruments { width: calc(38 * var(--u)); gap: calc(0.8 * var(--u)); }
   .room-clock { width: 100%; padding: calc(0.9 * var(--u)) 0.8rem; gap: 0; }
   .room-clock__eyebrow { font-size: clamp(0.5rem, 1.1 * var(--u), 0.56rem); letter-spacing: 0.2em; }
   .room-clock__date { font-size: max(0.72rem, 2 * var(--u)); }
   .room-clock__era { font-size: max(0.7rem, 1.75 * var(--u)); line-height: 1.3; }
   .room-clock__time { font-size: max(1.1rem, 3.6 * var(--u)); line-height: 1.15; }
-  .orb__sphere { width: calc(15 * var(--u)); }
+  .orb__sphere { width: calc(14 * var(--u)); }
   .orb__stand { width: calc(9 * var(--u)); }
   .orb__moons { font-size: max(0.66rem, 1.5 * var(--u)); line-height: 1.3; }
 
-  /* The rack (34u). */
-  .rack { width: calc((34 * var(--u) - 3rem) * 220 / 300); }
+  /* The rack (32u). */
+  .rack { width: calc((32 * var(--u) - 3rem) * 220 / 300); }
 
-  /* The floor (26u): the Solar's door, the lectern between its torches, the note. */
-  .object--door .object__art { width: calc((26 * var(--u) - 3rem) * 140 / 222); }
-  .area-lectern { --lectern: calc(26 * var(--u)); --torch-h: calc(26 * var(--u) * 0.84); }
+  /* The floor (30u): the Solar's door, the lectern between its torches, the note. */
+  .object--door .object__art { width: calc((30 * var(--u) - 3rem) * 140 / 222); }
+  .area-lectern { --lectern: calc(30 * var(--u)); --torch-h: calc(30 * var(--u) * 0.78); }
   .note {
     width: calc(38 * var(--u));
     max-width: none;

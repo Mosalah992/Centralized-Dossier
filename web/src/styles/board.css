@@ -34,6 +34,89 @@
   box-shadow: 0 6px 8px rgb(0 0 0 / 0.6);
 }
 
+/* The call for recruits: a standing proclamation pinned at the head of the
+   board, wider than a notice and sealed with the Embassy's gold. */
+.recruit {
+  --hang: -0.8deg;
+  width: min(36rem, 100%);
+  margin: 0 auto 2.4rem;
+  padding: 2rem 1.8rem 1.3rem;
+  text-align: center;
+}
+.recruit__label {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 0.66rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--rubric);
+}
+.recruit__title {
+  margin: 0.35rem 0 0.9rem;
+  font-family: var(--title);
+  font-size: clamp(1.25rem, 2.4vw, 1.6rem);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--ink);
+}
+.recruit__terms {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 1.02rem;
+  line-height: 1.45;
+  text-align: left;
+  text-wrap: pretty;
+}
+.recruit__terms li {
+  position: relative;
+  padding-left: 1.2rem;
+}
+/* Each term marked with the registers' lozenge, in the rubricator's ink. */
+.recruit__terms li::before {
+  content: '';
+  position: absolute;
+  left: 0.15rem;
+  top: 0.55em;
+  width: 0.36rem;
+  height: 0.36rem;
+  border: 1px solid var(--rubric);
+  transform: rotate(45deg);
+}
+.recruit__blessing {
+  margin: 1rem 0 0;
+  font-style: italic;
+  color: var(--ink-soft);
+}
+.recruit__foot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+/* Wax-red, the one call to act on the board. */
+.recruit__oath {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0.6rem 1.4rem;
+  font: 700 0.72rem var(--display);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: #f6e7c4;
+  background: var(--crimson);
+  border: 1px solid #3a0a0c;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18), 0 3px 6px rgb(0 0 0 / 0.45);
+  transition: transform 0.2s var(--ease), background-color 0.2s var(--ease);
+}
+.recruit__oath:hover,
+.recruit__oath:focus-visible { background: #93262c; transform: translateY(-1px); }
+.recruit__oath:focus-visible { outline: 2px solid var(--rubric); outline-offset: 3px; }
+
 .board-unconsecrated {
   max-width: 560px;
   margin: 0 auto 1.8rem;
@@ -227,5 +310,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .board-section { transition: none; }
+  .board-section,
+  .recruit__oath { transition: none; }
 }

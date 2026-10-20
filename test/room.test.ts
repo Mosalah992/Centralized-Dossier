@@ -54,6 +54,19 @@ describe('the room as drawn', () => {
     expect(room).not.toContain('href="/solar"');
   });
 
+  it('pins the call for recruits to the board, opening the form beside the archive', () => {
+    expect(read('web/src/room/takeovers/Board.tsx')).toContain('<RecruitmentNotice />');
+    const notice = read('web/src/room/takeovers/Recruitment.tsx');
+    expect(notice).toContain('https://docs.google.com/forms/d/e/');
+    expect(notice).toContain('target="_blank"');
+    expect(notice).toContain('rel="noopener noreferrer external"');
+  });
+
+  it('keeps no visitor counter', () => {
+    expect(room).not.toContain('Register');
+    expect(read('wrangler.toml')).not.toContain('binding = "REGISTER"');
+  });
+
   it('stands the lectern between the torches the candles gave way to', () => {
     expect(room.match(/<Torch side="[lr]" \/>/g)).toHaveLength(2);
     expect(room).not.toContain('Candle');

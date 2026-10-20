@@ -72,40 +72,6 @@ REPORTS_EPOCH = "1"
 #   REPORTS_PASSPHRASE          - word required to open the Reports gate.
 #   REPORTS_COOKIE_SECRET       - signing secret for Reports-only writs.
 
-# ── The Register of Consultation ────────────────────────────────────────────
-#
-# Counts of readers by province, and nothing else: one row per country, one
-# integer each. No addresses, no user agents, no row per visitor — see
-# functions/lib/register.ts for what is deliberately not stored.
-#
-# ABSENT IS A SUPPORTED STATE, exactly as it is for GATE_ATTEMPTS. With no
-# binding both routes answer as though the register were empty, the block does
-# not render, and nothing else on the shelf notices. An accessory must not be
-# able to take down the page it decorates.
-#
-# D1 RATHER THAN A THIRD KV NAMESPACE, and the reason is the one operation this
-# feature actually is. KV has no atomic increment, so counting means read, add
-# one, write back — and two readers arriving in different colos both read 146
-# and both write 147. The lost update IS the product. D1 does `visits =
-# visits + 1` inside a transaction and the count is never read into JavaScript.
-#
-# THE ID BELOW IS WHERE d1 execute LOOKS. Not the database name beside it — the
-# name is a label and the id is the address, so running the migration while this
-# line still held a placeholder sent that literal string to the API as a uuid and
-# failed with "Invalid property: databaseId". Create, paste, then migrate.
-#
-# --local AND --remote ARE DIFFERENT DATABASES. Neither implies the other, and a
-# schema applied to one is not applied to the other; the route catches the
-# missing table and answers as though the register were empty, so forgetting one
-# looks like nobody has visited rather than like an error:
-#
-#   node node_modules/wrangler/bin/wrangler.js d1 execute thalmor-register --local  --file=./migrations/0001_register.sql
-#   node node_modules/wrangler/bin/wrangler.js d1 execute thalmor-register --remote --file=./migrations/0001_register.sql
-[[d1_databases]]
-binding = "REGISTER"
-database_name = "thalmor-register"
-database_id = "de644d7a-4862-48a8-85a0-36f568dc807d"
-
 # Private, structured Discord reports. The Reports API only reads it after a
 # Reports-only writ; the scheduled collector is its only writer.
 [[d1_databases]]

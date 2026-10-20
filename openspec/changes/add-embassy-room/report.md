@@ -271,3 +271,10 @@ On landscape screens 1024px or wider the room now fits exactly one screen and ru
 - **Solar** is now a sealed door, which will later open onto the map and the clerk's desk. It is a button: clicking it makes the doors strain against the seal. It is never a link.
 - **Hall of Honors:** the "500" on `localhost:5173` came from the dev page forwarding `/api` to a Functions server that wasn't running. The Hall now renders whatever the sheet does, since all its honours are kept in the code; the sheet's "Hall of Honor" tab is empty apart from its title.
 - **Font:** the Embassy's name is now set larger, in Cinzel Decorative, the decorated version of the site's Cinzel. It is self-hosted under the OFL, alongside the Cinzel and EB Garamond the site already self-hosts.
+
+## Revision 5 (2026-10-20)
+
+- **Visitor counter removed entirely:** the front end, both Functions, the flags and the D1 binding. Its Cloudflare database is left untouched.
+- **Recruitment** (the terms, the blessing, **Submit Your Oath**) is now a standing notice pinned at the head of the bulletin board.
+- **Lectern** is larger again: the bottom row went from 26u to 30u.
+- **Checks:** typecheck, build and 401 tests pass. The count dropped because the 22 register and flag tests went with the feature; two new tests guard the recruitment link and the counter's absence.

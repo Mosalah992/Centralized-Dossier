@@ -5,8 +5,9 @@
 //
 // Until the Librarian backend lands there is nothing to read: /api/room/board
 // answers a JSON 404, and the board hangs its six sections empty and says the
-// Embassy has nailed nothing up yet. Sections with something newer than this
-// reader has seen are marked (board-seen.ts).
+// officers have nailed nothing up yet. Sections with something newer than this
+// reader has seen are marked (board-seen.ts). Above them hangs the one standing
+// notice the repository keeps, the call for recruits (Recruitment.tsx).
 
 import { useEffect, useMemo, useState } from 'react';
 
@@ -22,6 +23,7 @@ import { isUnseen, markSeen, readSeen } from '../board-seen';
 import { Link } from '../nav';
 import { useRoomData } from '../room-api';
 import { Poster } from './Poster';
+import { RecruitmentNotice } from './Recruitment';
 import { Stamp } from './Stamp';
 import '../../styles/board.css';
 
@@ -87,10 +89,11 @@ function BoardSections() {
       <h2 className="takeover__heading">The Bulletin Board</h2>
       <p className="takeover__sub">Nailed up by order of the Thalmor Embassy, for all to read</p>
       <div className="planks">
+        <RecruitmentNotice />
         {board.state === 'loading' && <p className="loading">Reading the board…</p>}
         {board.state === 'error' && <p className="loading">The board could not be read. Try again shortly.</p>}
         {board.state === 'absent' && (
-          <p className="board-unconsecrated">The Embassy has nailed nothing up yet. Notices will be posted here by its officers.</p>
+          <p className="board-unconsecrated">The officers have nailed nothing else up yet. Their notices will be posted here.</p>
         )}
         {board.state !== 'loading' && (
           <ul className="board-sections">

@@ -14,7 +14,6 @@
 
 import { Suspense, lazy, useMemo, useRef, useState, type ReactNode } from 'react';
 
-import { Register } from '../components/Register';
 import type { Navigate, Route } from '../router';
 import type { BoardSectionSummary } from '../../../shared/room';
 import { Archway } from './Archway';
@@ -229,9 +228,6 @@ export default function Room({ route, navigate }: { route: RoomRoute; navigate: 
           </aside>
         </div>
 
-        <footer className="room__foot">
-          <Register />
-        </footer>
 
       </div>
 

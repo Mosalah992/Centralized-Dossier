@@ -30,9 +30,9 @@ Category collection policy remains explicit in `reporter/src/config.ts`. Militar
 
 The room adds no endpoint in Phase 1. Its Scroll Rack calls the existing `GET`/`POST /api/reports/gate` through `reportsIsOpen` / `openReports` in `web/src/api.ts`, exactly as the Reports `PortraitGate` does, and then navigates to `/reports`. The board, the lectern and the shelf ask `/api/room/board`, `/api/room/board/:section`, `/api/room/status` and `/api/room/books/:slug` (contract: `shared/room.ts`, `shared/books.ts`); until the Librarian backend (`openspec/changes/add-librarian-backend`) exists, every unknown `/api/*` path answers `404 {"error":"not-found"}` with `Cache-Control: no-store` from the root middleware (`guardApiFallback` in `functions/lib/assets.ts`), which the room reads as "not yet consecrated".
 
-## Consultation register
+## Consultation register (retired)
 
-`POST /api/register/entry` may increment a country aggregate in D1 after the constrained per-day cookie check. `GET /api/register` returns only aggregate totals. Preserve atomic SQL increments and the narrowly scoped cookie path.
+Retired 2026-10-20: `/api/register` and `/api/register/entry` no longer exist and the `REGISTER` D1 binding is gone from `wrangler.toml`. The `thalmor-register` database and `migrations/0001_register.sql` were left in place, untouched; the code is in git history.
 
 ## Secrets
 

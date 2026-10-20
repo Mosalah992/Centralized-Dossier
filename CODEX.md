@@ -23,8 +23,6 @@ flowchart TB
   Client --> Pages[Cloudflare Pages Functions]
   Pages --> SheetRoutes[/api/volumes/*]
   SheetRoutes --> Sheets[Google Sheet: authoritative]
-  Pages --> Register[/api/register/*]
-  Register --> D1[(Register D1)]
   Pages --> Chronicle[/api/chronicle + gate]
   Chronicle --> Writs[Scoped signed cookie]
   Chronicle --> FilingsKV[(CHRONICLE_FILINGS KV)]
@@ -76,7 +74,7 @@ All new volumes must be explicitly classified before implementation. Do not add 
 1. The Google Sheet is the data authority; preserve its values and documented contradictions instead of recalculating them.
 2. Pages and server code only read the sheet. The external HR bot alone writes its owned roster columns.
 3. The Chronicle’s protection is route-local: its response is private/no-store and varies by cookie; missing gate secret fails closed.
-4. Optional infrastructure must degrade gracefully: missing filings KV or collector token omits filings, while missing D1 hides the consultation register.
+4. Optional infrastructure must degrade gracefully: missing filings KV or collector token omits filings. (The consultation register, which degraded the same way, was retired 2026-10-20.)
 5. Shared KV IDs in root and `chronicler/wrangler.toml` must match.
 6. No broad CSS/design-system migration: custom CSS remains authoritative; Fluent v9 is limited to interactive controls through `web/src/fluent/`.
 7. Motion uses GSAP via `web/src/motion.ts`; anime.js is only for the calendar instruments (the room's orb reuses the calendar's wheel lazily) and must stay out of the entry and room chunks.
