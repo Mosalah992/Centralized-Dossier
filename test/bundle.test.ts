@@ -11,9 +11,10 @@ import { describe, expect, it } from 'vitest';
  * is asked for.
  *
  * This used to be measured against a reader stopped at the gate, who paid for
- * all of it to see a seal. The gate is gone and the shelf is the first screen,
+ * all of it to see a seal. The gate is gone and the Embassy's room is the first
+ * screen — itself a lazy chunk, whose import App.tsx starts at module scope —
  * which changes who is being protected but not the number: a static import of
- * Fluent from App.tsx, Shelf.tsx or main.tsx breaks nothing, fails nothing, and
+ * Fluent, or of the room, from App.tsx or main.tsx breaks nothing, fails nothing, and
  * silently adds ~90 KB gzip to that download. So does an animation plugin.
  * CLAUDE.md's invariant 7 said this in prose with a `grep -c griffel` beside it
  * that nobody runs. These tests are that grep, run automatically.
@@ -26,9 +27,18 @@ import { describe, expect, it } from 'vitest';
 
 const DIST = new URL('../dist/assets/', import.meta.url);
 
+/*
+ * The entry is whichever script index.html loads — read from index.html, not
+ * guessed from a filename. Rollup names a shared chunk after the module it
+ * came from, and a lazy chunk's react-dom shim is also called index-*.js; the
+ * first match by name was once that 66-byte shim, and every check below
+ * passed or failed against the wrong file.
+ */
 const entryChunk = (): { name: string; source: string; bytes: number } | null => {
   if (!existsSync(DIST)) return null;
-  const name = readdirSync(DIST).find((f) => /^index-.*\.js$/.test(f));
+  const html = new URL('../index.html', DIST);
+  const loaded = existsSync(html) ? /<script[^>]+src="\/assets\/([^"]+\.js)"/.exec(readFileSync(html, 'utf8'))?.[1] : undefined;
+  const name = loaded ?? readdirSync(DIST).find((f) => /^index-.*\.js$/.test(f));
   if (!name) return null;
   const path = new URL(name, DIST);
   return { name, source: readFileSync(path, 'utf8'), bytes: statSync(path).size };
@@ -65,12 +75,12 @@ describe.skipIf(!entry)('the entry chunk', () => {
   });
 
   /*
-   * GSAP core is here ON PURPOSE — the shelf's books arrive on it, and that is
-   * the first thing anyone sees, so it cannot wait for a lazy chunk. It was the
-   * gate's seal ceremony that earned it this slot; the shelf inherited both the
-   * animation layer and the argument. Asserted positively so that if someone
-   * lazily loads it and the hall silently stops animating, this says so rather
-   * than the change passing unnoticed.
+   * GSAP core is here ON PURPOSE — the archive's notices ride on it from the
+   * first paint, and the room's Ancarion and every volume share the one copy.
+   * It was the gate's seal ceremony that earned it this slot, and the hall
+   * after it. Asserted positively so that if someone lazily loads it and the
+   * first screen silently stops animating, this says so rather than the change
+   * passing unnoticed.
    */
   /*
    * Three.js (~140 KB gzip) exists for the Nirn sky behind the Reports gate and
@@ -81,7 +91,7 @@ describe.skipIf(!entry)('the entry chunk', () => {
     expect(entry!.source).not.toContain('__THREE__');
   });
 
-  it('carries GSAP core, which the shelf needs on first paint', () => {
+  it('carries GSAP core, which the first paint needs', () => {
     expect(entry!.source).toContain('CustomEase');
   });
 
@@ -144,9 +154,9 @@ describe.skipIf(!existsSync(DIST))('the Archives Editor', () => {
  * The archive's motion language is GSAP and stays GSAP; anime.js drives exactly
  * the calendar's instruments, and it is roughly nineteen kilobytes gzipped. The
  * entry chunk had about twenty kilobytes of headroom under its ceiling when the
- * instrument was added, so importing it plainly from Shelf — which App.tsx
- * imports statically — would have spent nearly all of it on an ornament that
- * nobody sees until they open one particular volume.
+ * instrument was added, so importing it plainly from anything App.tsx imports
+ * statically would have spent nearly all of it on an ornament. The room's orb
+ * is the same wheel and reaches it the same lazy way.
  *
  * It reaches readers inside the calendar's own already-lazy view. This is
  * invariant 7 again, and the Editor chunk proved that guarding a render is not
@@ -156,7 +166,6 @@ describe.skipIf(!entry)('anime.js', () => {
   it.each([
     ['the library itself', 'animejs'],
     ['its timer', 'createTimer'],
-    ['the instruments it drives', 'firm-star'],
     ['and the wheel', 'wheel-arm'],
   ])('is absent from the entry chunk: %s', (_what, needle) => {
     expect(entry!.source.includes(needle), `${needle} found in ${entry!.name}`).toBe(false);
@@ -176,7 +185,39 @@ describe.skipIf(!entry)('anime.js', () => {
   it('ships in a lazy chunk rather than not at all', () => {
     const carriers = readdirSync(DIST)
       .filter((f) => f.endsWith('.js') && f !== entry!.name)
-      .filter((f) => readFileSync(new URL(f, DIST), 'utf8').includes('firm-star'));
-    expect(carriers, 'the Firmament is in no chunk at all').not.toHaveLength(0);
+      .filter((f) => readFileSync(new URL(f, DIST), 'utf8').includes('wheel-arm'));
+    // The Firmament this once looked for was retired with the Calendar on
+    // 2026-10-20; the orrery's wheel is the instrument that remains.
+    expect(carriers, 'the orrery is in no chunk at all').not.toHaveLength(0);
+  });
+});
+
+/*
+ * The Embassy's room is the front page, and still a chunk of its own.
+ *
+ * Everything on its wall — the drawn furniture, the arches, Ancarion's media,
+ * the treaty on the shelf — would spend the entry chunk's last ten kilobytes.
+ * App.tsx starts its import at module scope so it arrives alongside React, but
+ * none of it may be IN the entry. And the room's own chunk must not quietly
+ * absorb the orb's anime.js or the Reports sky's three.js.
+ */
+describe.skipIf(!entry)('the room', () => {
+  it.each([
+    ['its grid', 'room__grid'],
+    ['its archways', 'arch__aurora'],
+    ['the book on its shelf', 'white-gold-concordat'],
+    ['the rack ceremony', 'Present your words'],
+  ])('is absent from the entry chunk: %s', (_what, needle) => {
+    expect(entry!.source.includes(needle), `${needle} found in ${entry!.name}`).toBe(false);
+  });
+
+  it('ships in a lazy chunk that carries neither anime.js nor three.js', () => {
+    const carriers = readdirSync(DIST)
+      .filter((f) => f.endsWith('.js') && f !== entry!.name)
+      .map((f) => readFileSync(new URL(f, DIST), 'utf8'))
+      .filter((source) => source.includes('room__grid'));
+    expect(carriers, 'the room is in no chunk at all').toHaveLength(1);
+    expect(carriers[0]).not.toContain('createTimer');
+    expect(carriers[0]).not.toContain('__THREE__');
   });
 });

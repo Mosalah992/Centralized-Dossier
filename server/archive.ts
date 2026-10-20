@@ -12,10 +12,7 @@ import { resolveTabTitle } from '../shared/volumes';
 import { parseRoster, summarize } from '../shared/parsers/roster';
 import { computeStatistics } from '../shared/statistics';
 import { buildHierarchy } from '../shared/hierarchy';
-import { parseLedger } from '../shared/parsers/ledger';
-import { parseStipends } from '../shared/parsers/stipends';
 import { parseHonor } from '../shared/parsers/honor';
-import { parseCalendar } from '../shared/parsers/calendar';
 
 /** Raised when the volume's tab is not in the spreadsheet any more. */
 export class TabMissingError extends Error {
@@ -27,8 +24,8 @@ export class TabMissingError extends Error {
 
 /**
  * Dispatch to the volume's parser. The cast in each branch is safe because the
- * caller picks the fetch by `needsGridData`, and the registry sets that flag on
- * exactly the calendar — the one volume parsed from a FormattedGrid.
+ * caller picks the fetch by `needsGridData`. No published volume sets that flag
+ * since the calendar was retired; the formatted path stays for the next one.
  */
 function parseFor(volume: VolumeDefinition, grid: Grid | FormattedGrid): unknown {
   switch (volume.slug) {
@@ -51,10 +48,7 @@ function parseFor(volume: VolumeDefinition, grid: Grid | FormattedGrid): unknown
         hierarchy: buildHierarchy(members),
       };
     }
-    case 'ledger': return parseLedger(grid as Grid);
-    case 'stipends': return parseStipends(grid as Grid);
     case 'honor': return parseHonor(grid as Grid);
-    case 'calendar': return parseCalendar(grid as FormattedGrid);
   }
 }
 

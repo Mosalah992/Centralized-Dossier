@@ -1,4 +1,4 @@
-// The Register of Consultation, under the cabinet.
+// The Register of Consultation, at the foot of the Embassy's room.
 //
 // A Thalmor archive keeping a note of who has come to read its records is not a
 // widget bolted onto the fiction — it is the sort of thing this office would do
@@ -16,14 +16,15 @@ import type { CSSProperties } from 'react';
 
 import { useRegister } from '../api';
 import { flagRow } from '../flags';
+import '../styles/register.css';
 
 /**
  * The province's name, from the runtime's own table.
  *
  * `Intl.DisplayNames` costs nothing to ship — no country list in the bundle,
- * which matters because this component is reached from Shelf.tsx and therefore
- * lands in the entry chunk that test/bundle.test.ts polices. The fallback is the
- * bare code, which is what an archive would write if it did not know the name.
+ * which mattered while this sat in the entry chunk and still keeps the room's
+ * lazy chunk small. The fallback is the bare code, which is what an archive
+ * would write if it did not know the name.
  */
 function provinceOf(code: string): string {
   if (code === 'XX') return 'Provinces unrecorded';

@@ -1,0 +1,99 @@
+/* One of the room's surfaces taking over the screen. Ported from the Bruma
+   Joint Archives and re-lit for the Embassy: a black chamber, one lamp's worth
+   of gold light, and a close control of gold wax. Route-only. */
+
+html.is-taken-over { overflow: hidden; }
+
+.takeover {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  overflow-y: auto;
+  padding: 1.6rem 1.5rem 2.5rem;
+  color: var(--stone);
+  background: url('/textures/wood.svg') 0 0 / 480px 480px, #0d0a07;
+  background-blend-mode: soft-light;
+  box-shadow: inset 0 0 220px 90px rgb(0 0 0 / 0.9);
+}
+/* One lamp's worth of light over whatever has taken over the screen. */
+.takeover::before {
+  content: '';
+  position: fixed;
+  left: 50%;
+  top: 30%;
+  z-index: -1;
+  width: 60vw;
+  height: 50vh;
+  margin-left: -30vw;
+  border-radius: 50%;
+  background: #d9a441;
+  filter: blur(110px);
+  opacity: 0.12;
+  pointer-events: none;
+}
+.takeover--reading {
+  z-index: 70;
+  background: url('/textures/wood.svg') 0 0 / 480px 480px, #080604;
+  box-shadow: inset 0 0 260px 140px rgb(0 0 0 / 0.92);
+}
+
+/* The close control: a disc of gold wax with a cross pressed into it. */
+.takeover__close {
+  position: fixed;
+  top: 16px;
+  right: 18px;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  color: #2a1d08;
+  background: url('/textures/grain.svg') 0 0 / 256px 256px, var(--brass);
+  border: none;
+  border-radius: 47% 53% 50% 48% / 52% 46% 54% 48%;
+  box-shadow: inset 0 0 0 3px var(--brass-dark), inset 0 0 8px rgb(0 0 0 / 0.5), 0 3px 8px rgb(0 0 0 / 0.6);
+  cursor: pointer;
+  transition: transform 0.2s var(--ease);
+}
+.takeover__close:hover { transform: rotate(12deg) scale(1.05); }
+.takeover__close:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 3px; }
+
+.takeover__heading {
+  margin: 0;
+  font-size: clamp(1.4rem, 3.5vw, 2rem);
+  letter-spacing: 0.14em;
+  text-align: center;
+  color: var(--gold-bright);
+  text-shadow: 0 2px 0 #000;
+}
+.takeover__sub {
+  margin: 0.2rem 0 1.4rem;
+  font-style: italic;
+  text-align: center;
+  color: var(--stone-dim);
+}
+
+.takeover .loading {
+  margin: 3rem auto;
+  font-style: italic;
+  text-align: center;
+  color: var(--stone-dim);
+}
+
+.crumb {
+  margin: 0 0 0.6rem;
+  font-family: var(--display);
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+}
+.crumb a { color: var(--gold-bright); text-decoration: none; }
+.crumb a:hover { text-decoration: underline; }
+
+@media (max-width: 860px) {
+  .takeover { padding: 4.6rem 16px 2rem; }
+  .takeover__close { top: 12px; right: 12px; width: 44px; height: 44px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .takeover__close { transition: none; }
+}

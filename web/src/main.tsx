@@ -31,10 +31,8 @@ import '@fontsource/eb-garamond/latin-ext-400-italic.css';
 import App from './App';
 import { reloadForNewBuild } from './stale-build';
 import './styles/base.css';
-import './styles/shelf.css';
 import './styles/ledger.css';
-import './styles/register.css';
-import './styles/archive-navigation.css';
+import './styles/app-shell.css';
 
 // A volume's chunk failed to load: most likely this tab predates the current
 // deploy. Reload once to fetch it; see stale-build.ts.

@@ -1,13 +1,11 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
 
-import { useRoute } from './router';
+import { parse, useRoute } from './router';
 import { getTitle } from '../../shared/volumes';
 import { bindingVars } from './theme';
 import { Ambience } from './components/Ambience';
-import { Shelf } from './components/Shelf';
 import { Consulting, Notice } from './components/Notice';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { ArchiveSidebar } from './components/ArchiveSidebar';
 import type { VolumeSlug } from '../../shared/types';
 
 /*
@@ -18,7 +16,7 @@ import type { VolumeSlug } from '../../shared/types';
  *
  * The saving used to be argued in terms of a reader stopped at the gate, who
  * paid for all of it to see a seal. There is no gate now and the argument is
- * simply the ordinary one: the shelf is the first screen, it needs none of
+ * simply the ordinary one: the room is the first screen, it needs none of
  * this, and the reader who opens one volume should not fetch the other eight.
  *
  * Views are named exports, so each import is mapped to a default: React.lazy
@@ -27,15 +25,39 @@ import type { VolumeSlug } from '../../shared/types';
  */
 const RosterView = lazy(() => import('./views/Personnel').then((m) => ({ default: m.RosterView })));
 const PrecedenceView = lazy(() => import('./views/Precedence').then((m) => ({ default: m.PrecedenceView })));
-const LedgerView = lazy(() => import('./views/Finance').then((m) => ({ default: m.LedgerView })));
-const StipendsView = lazy(() => import('./views/Finance').then((m) => ({ default: m.StipendsView })));
 const HonorView = lazy(() => import('./views/Honors').then((m) => ({ default: m.HonorView })));
-const CalendarView = lazy(() => import('./views/Honors').then((m) => ({ default: m.CalendarView })));
 const HistoryView = lazy(() => import('./views/History').then((m) => ({ default: m.HistoryView })));
 const InformantsView = lazy(() => import('./views/Informants').then((m) => ({ default: m.InformantsView })));
 const EnforcementView = lazy(() => import('./views/Enforcement').then((m) => ({ default: m.EnforcementView })));
 const ReportsView = lazy(() => import('./views/Reports').then((m) => ({ default: m.ReportsView })));
 const PenalCodeView = lazy(() => import('./views/PenalCode').then((m) => ({ default: m.PenalCodeView })));
+const GalleryView = lazy(() => import('./views/Gallery').then((m) => ({ default: m.GalleryView })));
+
+/*
+ * The Embassy's room, which is the front page — and still lazy.
+ *
+ * The entry chunk has about ten kilobytes of headroom under the ceilings
+ * test/bundle.test.ts sets, and the room (ten objects of drawn art, the arches,
+ * the clock, the rack's ceremony) would spend all of it. So it is a chunk of its
+ * own, and its import is started HERE, at module scope, whenever the reader
+ * arrives at the room: the request then runs alongside React's start-up instead
+ * of after the first render, and the skeleton frame is on screen for the
+ * length of one round trip rather than two.
+ */
+const loadRoom = () => import('./room/Room');
+const Room = lazy(loadRoom);
+if (parse(window.location.pathname).name === 'room') void loadRoom();
+
+const SURFACE_TITLES = { bookshelf: 'Bookshelf', board: 'Bulletin Board', lectern: 'Lectern' } as const;
+
+/** The gold frame the room hangs in, held empty while its chunk arrives. */
+function RoomSkeleton() {
+  return (
+    <div className="room-skeleton" aria-busy="true">
+      <span className="sr-only">The Embassy is being lit…</span>
+    </div>
+  );
+}
 
 /*
  * Fluent's provider, and it is lazy for the same reason the views are — only
@@ -73,10 +95,7 @@ const FluentShell = lazy(() =>
 const VIEWS: Record<VolumeSlug, React.ComponentType> = {
   roster: RosterView,
   statistics: PrecedenceView,
-  ledger: LedgerView,
-  stipends: StipendsView,
   honor: HonorView,
-  calendar: CalendarView,
   history: HistoryView,
   informants: InformantsView,
   enforcement: EnforcementView,
@@ -130,15 +149,18 @@ const PENAL_BINDING = {
 export default function App() {
   const [route, navigate] = useRoute();
 
-  // The archive opens straight onto the shelf. There was a writ to check first
+  // The archive opens straight onto the room. There was a writ to check first
   // and a null state to hold the first paint back while /api/gate answered it;
-  // both are gone with the gate, and the first render is the hall itself.
+  // both are gone with the gate, and the first render is the room itself.
 
   // The tab title should say which volume is open.
   useEffect(() => {
     const name = route.name === 'volume'
       ? getTitle(route.slug)
-      : route.name === 'penalcode' ? 'Penal Code' : null;
+      : route.name === 'penalcode' ? 'Penal Code'
+      : route.name === 'gallery' ? 'Gallery'
+      : route.name === 'room' && route.open ? SURFACE_TITLES[route.open]
+      : null;
     document.title = name
       ? `${name} - Thalmor Embassy Archives`
       : 'Thalmor Embassy Archives';
@@ -171,18 +193,29 @@ export default function App() {
           </a>
         </aside>
 
-        {boundToArchive && (
-          <ArchiveSidebar
-            route={route}
-            onNavigate={navigate}
-          />
-        )}
+        {/* No navigation rail (retired 2026-10-20): the room is the way into
+            every page, and every page's first control leads back to it. */}
 
-        {/* The hall alone may run wider than the reading column: it is a
-            title page and a gallery, not a register to be read across. */}
-        <div className={`shell${route.name === 'shelf' ? ' shell--hall' : ''}`}>
+        {/* The room and the gallery may run wider than the reading column:
+            one is a wall of objects, the other a title page and a gallery,
+            and neither is a register to be read across. */}
+        <div className={`shell${route.name === 'room' ? ' shell--room' : route.name === 'gallery' ? ' shell--hall' : ''}`}>
         <main>
-          {route.name === 'shelf' && <Shelf onOpen={navigate} />}
+          {route.name === 'room' && (
+            <ErrorBoundary resetKey="room">
+              <Suspense fallback={<RoomSkeleton />}>
+                <Room route={route} navigate={navigate} />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+
+          {route.name === 'gallery' && (
+            <ErrorBoundary resetKey="gallery">
+              <Suspense fallback={<Consulting />}>
+                <GalleryView onOpen={navigate} />
+              </Suspense>
+            </ErrorBoundary>
+          )}
 
           {route.name === 'reports' && (
             <ErrorBoundary resetKey="reports">
@@ -208,7 +241,7 @@ export default function App() {
           {route.name === 'penalcode' && (
             <div className="volume volume--penalcode" style={PENAL_BINDING}>
               <button className="volume__back" type="button" onClick={() => navigate('/')}>
-                Return to the cabinet
+                Return to the Embassy
               </button>
               <ErrorBoundary resetKey="penalcode">
                 <Suspense fallback={<Consulting />}>
@@ -221,7 +254,7 @@ export default function App() {
           {route.name === 'volume' && (
             <div className={`volume volume--${route.slug}`} style={bindingVars(route.slug)}>
               <button className="volume__back" type="button" onClick={() => navigate('/')}>
-                Return to the cabinet
+                Return to the Embassy
               </button>
               {/* Remounting per slug restarts the page-opening animation and
                   discards the previous volume's state. The boundary keeps a
@@ -257,7 +290,7 @@ export default function App() {
               />
               <p style={{ textAlign: 'center' }}>
                 <button className="volume__back" type="button" onClick={() => navigate('/')}>
-                  Return to the cabinet
+                  Return to the Embassy
                 </button>
               </p>
             </>

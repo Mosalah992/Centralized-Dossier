@@ -1,5 +1,45 @@
 # Decision Log
 
+## 2026-10-20 - The room is one screen, wall to wall
+
+At the First Emissary's direction the front page fits a single screen with no scrolling and no dark bands at the sides. On landscape screens from 1024px the room's width is the window's less 2rem, and its height is the window's: each object is sized from the rows it stands in, in `--u` (a hundredth of the grid's height, or the width's share when a window is narrow for its height), so nothing overflows and nothing floats in an oversized cell. Objects sit in auto tracks with the slack in flexible tracks between them, the outer ones wider than the two that part the arches from Ancarion. To suit a wide, short wall the bookcase is a five-shelf case standing from the board's top to the arches' feet, and the board is a long one with eleven notices; narrower walls keep the four-shelf case and the square board. The floor row is the deepest after Ancarion's, since the lectern is where a reader acts. The Register and the colophon stay below the fold. Portrait screens and phones keep the scrolling stack.
+
+## 2026-10-20 - The room loses its frame; the rail and the painted covers are retired
+
+The gold frame in the First Emissary's drawing was guidance, not furniture: the room now has no border and its wall fades into the page. The navigation rail is retired on every page, not only the room: the room reaches every remaining destination (archways for Roster, Chain of Command, Gallery and Hall of Honors; the bookshelf for History, Chronicles, Arrests, the Penal Code and the Concordat; the rack for Reports), and every other page leads back with "Return to the Embassy". The nine painted covers went with it (`web/src/covers.ts`, `web/src/assets/volumes/*.webp`, `scripts/prepare-volumes.mjs`); the Chronicles' seal, which never came from the covers, is now cut by `scripts/prepare-seals.mjs`. The bookshelf binds its books as leather spines in each volume's own colour (`theme.ts`).
+
+## 2026-10-20 - The Ledger, the Registry and the Calendar are retired
+
+At the First Emissary's direction the Finance volumes (Ledger, Registry) and the Tamrielic Calendar left the registry, the slug union, the server's parse switch and the app; their URLs now show "No such volume". Their parsers and tests stay in `shared/parsers/`, so restoring one is a registry entry, a slug and a view, and the sheet's tabs are untouched. The Firmament and the hourglass, which lived only in the Calendar, were removed; the orrery remains as the room's orb, which now reads the moons' phases and links nowhere.
+
+## 2026-10-20 - Elven archways, and the eye's path through the room
+
+The archways are redrawn after the high elves' halls of the films: slender lancets on leaf-crowned columns, a band carved with leaves, vines curling up the flanks to a star finial, an inner ogee with a trefoil; the frame keeps its own proportions and the opening is clipped to match. The room is composed for the eye: Ancarion is the focal point (larger, centred, the only object with light of its own), the arches frame him, the clock and orb sit together as one instrument, and the wall reads in a Z from the notices along the top to the rack and lectern where a reader acts.
+
+## 2026-10-19 - The front page is the Embassy's room; the hero becomes the Gallery
+
+Supersedes 2026-10-06 "Home page is a hero; the rail carries the books" and, for placement only, "Hero states the archive's purpose, then shows the Embassy". The front page is now a single room after the First Emissary's drawing, built on the Bruma Joint Archives' room (same owner) and re-hung in black and gold: bookshelf, bulletin board, clock and orb, two archways, Ancarion, the Scroll Rack, the lectern and its note, a signpost to the Solar. The hero's content is unchanged at `/gallery` (reached through the right-hand archway); the register moved to the room's foot. Furniture is drawn SVG with build-time image slots (`web/src/assets/room/{name}.webp` replaces a drawing with no code change) rather than Bruma's runtime probes, which would cost every visitor a request per object, each answered by the app shell. The room is a lazy chunk whose import starts at module scope: the entry chunk had ~10 KB of headroom and the room would have spent it; the entry fell from 254.9 KB to 243.4 KB raw.
+
+## 2026-10-19 - Ancarion is a performer; the Scroll Rack opens on the Reports writ
+
+Ancarion's media, idle rotation, dozing, voice and aura moved out of `PortraitGate` into `useAncarion` (pure rules in `ancarion-script.ts`), so the room can hang him beside the Scroll Rack. The rack asks for the existing Reports passphrase through the existing gate; a wrong word earns the gate's escalating refusals, the right one his nod, and then the rack's doors swing instead of his. A reader already holding the writ gets a nod and the doors. `/reports` and `/reports/:id` reached directly keep the full gate. On the room he loads deferred: the idle after page load, the reactions only when a reader approaches the rack, the doze after 30 s, so the front page does not spend ~2.5 MB of WebM on readers who never knock. Still a shared presentation, never a shared writ (2026-10-01).
+
+## 2026-10-19 - The White-Gold Concordat is kept like the Penal Code
+
+The Concordat (text from the Bruma Joint Archives, `content/books/sources/white-gold-concordat.md`) is Embassy-kept public text: bundled as its own lazy chunk (`web/src/books/`, emitted by `scripts/emit-books.mjs`), in neither VOLUMES nor KEPT, read in the paginated reader ported from Bruma. A KEPT slug would have demanded a painted cover, a rail entry and a volume view; serving it from a Function protects nothing.
+
+## 2026-10-19 - Room surfaces are takeovers; volumes stay routes
+
+Objects leading to existing pages navigate there, so every existing URL is unchanged. The room's own surfaces (bookshelf, board, lectern) open over it as takeovers with real URLs, portalled to <body> with the archive behind made `inert`. Closing steps back through history when opened from the room and replaces the URL with the parent when it was a deep link. A close never waits on its shrink animation alone, because a hidden tab may never finish it.
+
+## 2026-10-19 - Bruma's bulletin board and bounties, brought whole
+
+At the First Emissary's request the board is Bruma's: six sections (Bruma's agenda becomes the Embassy's), notice cards, wanted posters with the race sketches (`public/art/portraits/*-male.webp`, copied from the Bruma project, same owner; the female set is not drawn yet, so a female bounty shows the charcoal silhouette) and Bruma's SVG textures (`public/textures/`). Bruma has no "new" marks; here a per-browser last-seen marker (`thalmor.board.seen`) flags sections with newer notices. Posting arrives with the Librarian backend.
+
+## 2026-10-19 - An unknown /api path answers a JSON 404
+
+Pages answered a request for a missing endpoint with index.html and a 200, so a client asking for JSON was handed the app. The root middleware now turns an HTML answer under `/api/` into `404 {"error":"not-found"}` with `no-store`. The room depends on it to tell an absent backend from data.
+
 ## 2026-10-10 - The Chronicles gate stands before a map of Summerset
 
 The Chronicles gate gets its own setting, distinct from the Reports sky: a
