@@ -20,7 +20,7 @@ const section = (id: BoardSectionSummary['id'], count: number, latestAt?: string
 
 describe("the board's sections", () => {
   it("are Bruma's six, with the Embassy's agenda in place of Bruma's", () => {
-    expect(BOARD_SECTIONS).toEqual(['bounties', 'new-laws', 'figures-of-interest', 'embassy-agenda', 'bread-and-circus', 'news']);
+    expect(BOARD_SECTIONS).toEqual(['propaganda', 'recruitment', 'festivities', 'standing-orders', 'spiritual-guidance', 'bounties']);
     expect(isBoardSection('bruma-agenda')).toBe(false);
     expect(isBoardSection('bounties')).toBe(true);
   });
@@ -29,11 +29,11 @@ describe("the board's sections", () => {
 describe('what this reader has seen', () => {
   it('marks a section new until its newest notice has been read', () => {
     const storage = memory();
-    const news = section('news', 2, '2026-10-19T10:00:00Z');
-    expect(isUnseen(news, readSeen(storage))).toBe(true);
-    markSeen('news', '2026-10-19T10:00:00Z', storage);
-    expect(isUnseen(news, readSeen(storage))).toBe(false);
-    expect(isUnseen(section('news', 3, '2026-10-19T12:00:00Z'), readSeen(storage))).toBe(true);
+    const festivities = section('festivities', 2, '2026-10-19T10:00:00Z');
+    expect(isUnseen(festivities, readSeen(storage))).toBe(true);
+    markSeen('festivities', '2026-10-19T10:00:00Z', storage);
+    expect(isUnseen(festivities, readSeen(storage))).toBe(false);
+    expect(isUnseen(section('festivities', 3, '2026-10-19T12:00:00Z'), readSeen(storage))).toBe(true);
   });
 
   it('never marks an empty section', () => {
@@ -41,11 +41,11 @@ describe('what this reader has seen', () => {
   });
 
   it('counts the sections with something new', () => {
-    const seen = { news: '2026-10-19T10:00:00Z' };
+    const seen = { festivities: '2026-10-19T10:00:00Z' };
     expect(unseenCount([
-      section('news', 1, '2026-10-19T10:00:00Z'),
+      section('festivities', 1, '2026-10-19T10:00:00Z'),
       section('bounties', 1, '2026-10-18T09:00:00Z'),
-      section('new-laws', 0),
+      section('propaganda', 0),
     ], seen)).toBe(1);
   });
 
@@ -55,9 +55,9 @@ describe('what this reader has seen', () => {
       setItem: () => { throw new Error('denied'); },
     };
     expect(readSeen(refusing)).toEqual({});
-    expect(markSeen('news', '2026-10-19T10:00:00Z', refusing)).toEqual({ news: '2026-10-19T10:00:00Z' });
+    expect(markSeen('festivities', '2026-10-19T10:00:00Z', refusing)).toEqual({ festivities: '2026-10-19T10:00:00Z' });
     expect(readSeen(memory({ 'thalmor.board.seen': '{not json' }))).toEqual({});
-    expect(readSeen(memory({ 'thalmor.board.seen': '{"news":4}' }))).toEqual({});
+    expect(readSeen(memory({ 'thalmor.board.seen': '{"festivities":4}' }))).toEqual({});
     expect(readSeen(null)).toEqual({});
   });
 });

@@ -15,7 +15,7 @@ flowchart TB
   App --> Views[Lazy volume views + shelf]
   App --> Room[Embassy room: lazy chunk at /]
   Room --> Takeovers[/bookshelf, /board, /lectern takeovers]
-  Room -->|Scroll Rack, Reports writ| Pages
+  Room -->|The Cabinet, Reports writ| Pages
   App --> Gallery[/gallery: the former hero]
   App --> PenalCode[/penalcode: bundled, Embassy-kept Code]
   App --> Client[web/src/api.ts]
@@ -52,7 +52,7 @@ This is the implementation-grounded counterpart to the supplied dossier diagram.
 ## Ownership and data flow
 
 - `shared/` is pure cross-runtime domain logic: volume registry, parsers, types, calendar/reckoning, and filing redaction.
-- `web/` is the browser-only presentation layer. `App.tsx` lazy-loads views (there is no navigation rail: the room is the way into every page, and each page leads back to it); `router.ts` owns URLs; `api.ts` owns request hooks and client contracts. `PortraitGate` is a lazy shared presentation component for Chronicle and Reports, each with its own server adapter and session; Ancarion's performance is `useAncarion`, which the room's Scroll Rack also directs against the Reports gate. `web/src/room/` is the front page (see knowledge/Architecture.md).
+- `web/` is the browser-only presentation layer. `App.tsx` lazy-loads views (there is no navigation rail: the room is the way into every page, and each page leads back to it); `router.ts` owns URLs; `api.ts` owns request hooks and client contracts. `PortraitGate` is the lazy presentation component for the Chronicles' gate; Ancarion's performance is `useAncarion`, which the room's Cabinet also directs against the Reports gate. The Cabinet (`/reports`, `/reports/:id`) is the Reports register's reader since 2026-10-22. `web/src/room/` is the front page (see knowledge/Architecture.md).
 - `functions/` is the same-origin Pages API. It fetches Google Sheets read-only, serves public records, owns the sealed Chronicle and Reports gates, and reads optional filings.
 - `server/` contains server-only Sheets access. It must never gain a write helper.
 - `chronicler/` is a separate Worker because scheduled events cannot run in Pages Functions. It reads Discord nightly and writes redacted, bounded filings to KV.

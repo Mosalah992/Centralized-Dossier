@@ -29,7 +29,6 @@ const HonorView = lazy(() => import('./views/Honors').then((m) => ({ default: m.
 const HistoryView = lazy(() => import('./views/History').then((m) => ({ default: m.HistoryView })));
 const InformantsView = lazy(() => import('./views/Informants').then((m) => ({ default: m.InformantsView })));
 const EnforcementView = lazy(() => import('./views/Enforcement').then((m) => ({ default: m.EnforcementView })));
-const ReportsView = lazy(() => import('./views/Reports').then((m) => ({ default: m.ReportsView })));
 const PenalCodeView = lazy(() => import('./views/PenalCode').then((m) => ({ default: m.PenalCodeView })));
 const GalleryView = lazy(() => import('./views/Gallery').then((m) => ({ default: m.GalleryView })));
 
@@ -48,7 +47,7 @@ const loadRoom = () => import('./room/Room');
 const Room = lazy(loadRoom);
 if (parse(window.location.pathname).name === 'room') void loadRoom();
 
-const SURFACE_TITLES = { bookshelf: 'Bookshelf', board: 'Bulletin Board', lectern: 'Lectern' } as const;
+const SURFACE_TITLES = { bookshelf: 'Bookshelf', board: 'Bulletin Board', scribe: 'Scribe Table', cabinet: 'The Cabinet' } as const;
 
 /** The gold frame the room hangs in, held empty while its chunk arrives. */
 function RoomSkeleton() {
@@ -213,14 +212,6 @@ export default function App() {
             <ErrorBoundary resetKey="gallery">
               <Suspense fallback={<Consulting />}>
                 <GalleryView onOpen={navigate} />
-              </Suspense>
-            </ErrorBoundary>
-          )}
-
-          {route.name === 'reports' && (
-            <ErrorBoundary resetKey="reports">
-              <Suspense fallback={<Consulting />}>
-                <ReportsView filingId={route.id ?? null} onNavigate={navigate} />
               </Suspense>
             </ErrorBoundary>
           )}

@@ -45,11 +45,28 @@ function bezier(p0: Point, p1: Point, p2: Point, p3: Point, t: number) {
  * column and round each half of the lancet, every leaf turned along the curve
  * and alternating sides of it, as leaves sit on a stem.
  */
-const BAND_LEFT: [Point, Point, Point, Point] = [[19, 83], [19, 49], [39, 25], [60, 11]];
-const BAND_RIGHT: [Point, Point, Point, Point] = [[101, 83], [101, 49], [81, 25], [60, 11]];
+// A sharp lancet (2026-10-22): the arch springs at y 94 and closes high, its
+// curves drawn steeply up to the apex.
+const BAND_LEFT: [Point, Point, Point, Point] = [[19, 93], [19, 58], [36, 30], [60, 8]];
+const BAND_RIGHT: [Point, Point, Point, Point] = [[101, 93], [101, 58], [84, 30], [60, 8]];
+
+/**
+ * The opening, as the portal of starlight is cut to it: one half of the
+ * lancet's inner edge, mirrored. The frame draws the same curve, so the
+ * starlight and its gold edge cannot drift apart.
+ */
+const OPENING_LEFT: [Point, Point, Point, Point] = [[24, 94], [24, 60], [40, 34], [60, 13]];
+const OPENING_PATH = 'M24 200V94C24 60 40 34 60 13C80 34 96 60 96 94V200';
+const PORTAL_CLIP = (() => {
+  const pct = (x: number, y: number) => `${((x / 120) * 100).toFixed(2)}% ${((y / 200) * 100).toFixed(2)}%`;
+  const left = Array.from({ length: 17 }, (_, i) => bezier(...OPENING_LEFT, i / 16));
+  const points = [pct(24, 200), ...left.map((p) => pct(p.x, p.y)), ...left.slice(0, -1).reverse().map((p) => pct(120 - p.x, p.y)), pct(96, 200)];
+  return `polygon(${points.join(', ')})`;
+})();
+
 const LEAVES = (() => {
   const out: { x: number; y: number; angle: number }[] = [];
-  for (let y = 188; y > 92; y -= 13) {
+  for (let y = 188; y > 102; y -= 13) {
     out.push({ x: 19, y, angle: -90 + (out.length % 2 ? 28 : -28) });
     out.push({ x: 101, y, angle: -90 + (out.length % 2 ? 28 : -28) });
   }
@@ -74,9 +91,9 @@ function ElvenFrame({ id }: { id: string }) {
         <path id={`${id}-leaf`} d={LEAF} />
       </defs>
       {/* The outer edge of the band, springing from the columns to the apex. */}
-      <path className="arch__line" d="M14 200V82C14 46 36 20 60 5C84 20 106 46 106 82V200" />
+      <path className="arch__line" d="M14 200V92C14 54 33 25 60 2C87 25 106 54 106 92V200" />
       {/* The opening's own edge. */}
-      <path className="arch__line arch__line--fine" d="M24 200V84C24 52 42 30 60 17C78 30 96 52 96 84V200" />
+      <path className="arch__line arch__line--fine" d={OPENING_PATH} />
       {/* Leaves carved along the band. */}
       <g className="arch__leaves">
         {LEAVES.map((leaf, i) => (
@@ -86,15 +103,15 @@ function ElvenFrame({ id }: { id: string }) {
       {/* Leaf capitals where the arch springs, and flared bases. */}
       {[19, 101].map((x) => (
         <g key={x} className="arch__capital">
-          <path d={`M${x - 7} 92h14l-2 4h-10z`} />
-          <use href={`#${id}-leaf`} transform={`translate(${x} 90) rotate(-90)`} />
-          <use href={`#${id}-leaf`} transform={`translate(${x} 90) rotate(-140)`} />
-          <use href={`#${id}-leaf`} transform={`translate(${x} 90) rotate(-40)`} />
+          <path d={`M${x - 7} 102h14l-2 4h-10z`} />
+          <use href={`#${id}-leaf`} transform={`translate(${x} 100) rotate(-90)`} />
+          <use href={`#${id}-leaf`} transform={`translate(${x} 100) rotate(-140)`} />
+          <use href={`#${id}-leaf`} transform={`translate(${x} 100) rotate(-40)`} />
           <path d={`M${x - 8} 194h16l2 6h-20z`} />
         </g>
       ))}
       {/* Vines curling up the flanks from the capitals. */}
-      <g className="arch__vines">
+      <g className="arch__vines" transform="translate(0 10)">
         <path d="M12 96C3 84 1 64 9 48C15 36 25 28 34 23C38 21 41 23 39 26C37 29 33 27 34 24" />
         <path d="M108 96C117 84 119 64 111 48C105 36 95 28 86 23C82 21 79 23 81 26C83 29 87 27 86 24" />
         <path d="M7 70C2 66 1 60 4 56" />
@@ -105,11 +122,11 @@ function ElvenFrame({ id }: { id: string }) {
         <use href={`#${id}-leaf`} transform="translate(104 38) rotate(-30)" />
       </g>
       {/* An inner ogee of tracery, and the small trefoil where it closes. */}
-      <path className="arch__line arch__line--tracery" d="M31 112V82C31 58 46 40 60 30C74 40 89 58 89 82V112" />
+      <path className="arch__line arch__line--tracery" d="M31 122V92C31 66 44 46 60 33C76 46 89 66 89 92V122" />
       <g className="arch__line arch__line--tracery">
-        <circle cx="60" cy="40" r="3.2" />
-        <circle cx="56.6" cy="45.2" r="3.2" />
-        <circle cx="63.4" cy="45.2" r="3.2" />
+        <circle cx="60" cy="44" r="3.2" />
+        <circle cx="56.6" cy="49.2" r="3.2" />
+        <circle cx="63.4" cy="49.2" r="3.2" />
       </g>
       {/* The star at the apex. */}
       <path className="arch__star" d="M60 -4L61.6 1.4L67 3L61.6 4.6L60 10L58.4 4.6L53 3L58.4 1.4Z" />
@@ -171,7 +188,7 @@ export function Archway({ side, name, describer, ways }: Props) {
       </button>
       <span id={`${navId}-d`} className="sr-only">{describer}</span>
       <div className="arch__door">
-        <div className="arch__portal">
+        <div className="arch__portal" style={{ clipPath: PORTAL_CLIP }}>
           <img className="arch__stars" src={starfield} alt="" aria-hidden="true" decoding="async" />
           <span className="arch__aurora arch__aurora--1" aria-hidden="true" />
           <span className="arch__aurora arch__aurora--2" aria-hidden="true" />

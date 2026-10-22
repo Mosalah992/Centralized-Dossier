@@ -226,6 +226,55 @@ export const useReports = (unlocked: boolean, filters: ReportsFilters, cursor: s
   return useAsync<ReportsResponse>(unlocked ? `/api/reports${query.size ? `?${query}` : ''}` : null);
 };
 
+export interface DrawerState {
+  state: 'loading' | 'ready' | 'error';
+  letters: Report[];
+  /** True while the drawer holds more than has been read from the register. */
+  more: boolean;
+  loadMore: () => void;
+}
+
+/**
+ * One drawer of the Cabinet: the register read by the drawer's date range,
+ * thirty at a time, keeping exactly the drawer's own letters (the range is a
+ * day wider than the drawer at each end). `range` and `keep` come from
+ * web/src/room/cabinet-drawers.ts.
+ */
+export function useDrawer(
+  unlocked: boolean,
+  range: { from: string | null; to: string | null },
+  keep: (report: Report) => boolean,
+): DrawerState {
+  const [letters, setLetters] = useState<Report[]>([]);
+  const [cursor, setCursor] = useState<string | null>(null);
+  const [next, setNext] = useState<string | null>(null);
+  const [state, setState] = useState<DrawerState['state']>('loading');
+  const key = `${range.from ?? ''}|${range.to ?? ''}`;
+
+  // A new range starts the drawer over.
+  useEffect(() => { setLetters([]); setCursor(null); setNext(null); }, [key]);
+
+  useEffect(() => {
+    if (!unlocked) return;
+    const controller = new AbortController();
+    const query = reportsFilterQuery({ ...NO_REPORT_FILTERS, from: range.from, to: range.to });
+    if (cursor) query.set('cursor', cursor);
+    setState('loading');
+    get<ReportsResponse>(`/api/reports${query.size ? `?${query}` : ''}`, controller.signal)
+      .then((page) => {
+        setLetters((held) => [...held, ...page.reports.filter(keep)]);
+        setNext(page.nextCursor);
+        setState('ready');
+      })
+      .catch(() => { if (!controller.signal.aborted) setState('error'); });
+    return () => controller.abort();
+    // `keep` follows the range; the key and the cursor are what change a page.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [unlocked, key, cursor]);
+
+  return { state, letters, more: next !== null, loadMore: () => { if (next) setCursor(next); } };
+}
+
 export const useReport = (unlocked: boolean, id: string | null) =>
   useAsync<{ report: Report }>(unlocked && id ? `/api/reports/${encodeURIComponent(id)}` : null);
 

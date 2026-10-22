@@ -1,4 +1,4 @@
-// The Embassy room's contract: what the bulletin board, the lectern and the
+// The Embassy room's contract: what the bulletin board, the Scribe Table and the
 // shelf exchange with /api/room/*. Ported from the Bruma Joint Archives
 // (shared/api.ts there), which built the board and its bounties first, and
 // re-voiced for the Embassy.
@@ -6,7 +6,7 @@
 // PHASE 1 HAS NO BACKEND. Every /api/room path answers a JSON 404 until the
 // Librarian backend lands (openspec/changes/add-librarian-backend), and the
 // room reads that as "not yet consecrated": the board hangs its six sections
-// with nothing nailed to them, and the lectern waits. The shapes below are the
+// with nothing nailed to them, and the Scribe Table waits. The shapes below are the
 // ones that backend must serve, so the room does not change when it arrives.
 
 /** The Dominion files under the gold eagle; a denial is the red cross. */
@@ -43,16 +43,19 @@ export interface Bounty {
 
 // ---------- Bulletin Board ----------
 
-export const BOARD_SECTIONS = ['bounties', 'new-laws', 'figures-of-interest', 'embassy-agenda', 'bread-and-circus', 'news'] as const;
+// The First Emissary's six sections (2026-10-22). Bounties kept its wanted
+// posters; the five before it replaced New Laws, Figures of Interest, Embassy
+// Agenda, Bread & Circus and News.
+export const BOARD_SECTIONS = ['propaganda', 'recruitment', 'festivities', 'standing-orders', 'spiritual-guidance', 'bounties'] as const;
 export type BoardSection = (typeof BOARD_SECTIONS)[number];
 
 export const BOARD_INFO: Record<BoardSection, { title: string; describer: string }> = {
+  propaganda: { title: 'Propaganda', describer: 'The Dominion’s word, proclaimed for every reader in Skyrim.' },
+  recruitment: { title: 'Recruitment Posters', describer: 'The Embassy calls for those worthy of the oath.' },
+  festivities: { title: 'Festivities', describer: 'Feasts, rites of the season and gatherings of the Embassy.' },
+  'standing-orders': { title: 'Standing Orders', describer: 'Orders in force until the First Emissary rescinds them.' },
+  'spiritual-guidance': { title: 'Spiritual Guidance', describer: 'Counsel in the faith of Auri-El and the Aldmeri gods.' },
   bounties: { title: 'Bounties', describer: 'Wanted, by order of the Third Aldmeri Dominion.' },
-  'new-laws': { title: 'New Laws', describer: 'Edicts, decrees and amendments to the Code lately proclaimed.' },
-  'figures-of-interest': { title: 'Figures of Interest', describer: 'Persons the Justiciars would know more of.' },
-  'embassy-agenda': { title: 'Embassy Agenda', describer: 'What the First Emissary has set before the Embassy.' },
-  'bread-and-circus': { title: 'Bread & Circus', describer: 'Feasts, games, lotteries and entertainments.' },
-  news: { title: 'News', describer: 'Tidings from Skyrim, from Summerset, and beyond.' },
 };
 
 export const isBoardSection = (s: string): s is BoardSection => (BOARD_SECTIONS as readonly string[]).includes(s);
@@ -82,7 +85,7 @@ export interface Notice {
 
 /** GET /api/room/status: which of the room's services are consecrated. */
 export interface RoomStatus {
-  lectern: boolean;
+  scribeTable: boolean;
   clerk: boolean;
   board: boolean;
   books: boolean;

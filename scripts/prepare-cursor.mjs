@@ -17,7 +17,7 @@ import sharp from 'sharp';
 
 const SOURCE = 'Assets/cursor/thalmor gloves cursor.jfif';
 const OUT = 'web/src/assets/cursor';
-const SIZE = 32; // CSS pixels, both ways; Chromium hides larger cursors near its own UI.
+const SIZE = 40; // CSS pixels, both ways. Chromium hides cursors over 32px only where they cross its own UI, at the window's edge.
 const TILT = -28; // degrees, anticlockwise: the lean of an arrow cursor.
 
 const GOLD = [201, 162, 39];

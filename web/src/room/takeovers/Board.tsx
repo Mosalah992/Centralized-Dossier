@@ -6,10 +6,11 @@
 // Until the Librarian backend lands there is nothing to read: /api/room/board
 // answers a JSON 404, and the board hangs its six sections empty and says the
 // officers have nailed nothing up yet. Sections with something newer than this
-// reader has seen are marked (board-seen.ts). Above them hangs the one standing
-// notice the repository keeps, the call for recruits (Recruitment.tsx).
+// reader has seen are marked (board-seen.ts). Recruitment Posters always holds
+// the one standing notice the repository keeps, the call for recruits
+// (Recruitment.tsx), ahead of anything posted.
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ComponentType } from 'react';
 
 import {
   BOARD_INFO,
@@ -28,13 +29,22 @@ import { Stamp } from './Stamp';
 import '../../styles/board.css';
 
 const SYMBOL: Record<BoardSection, string[]> = {
+  // A herald's horn.
+  propaganda: ['M3 10v4h4l9 5V5l-9 5H3Z', 'M19 9a4 4 0 0 1 0 6', 'M7 14l1 5h3l-1-4'],
+  // A quill over a scroll.
+  recruitment: ['M6 5h10a2 2 0 0 1 2 2v13H8a2 2 0 0 1-2-2Z', 'M6 5a2 2 0 0 0-2 2v2h2', 'M9 10h6M9 13h4', 'M21 2c-4 2-7 5-9 10l1.5 1C16 9 18 6 21 2Z'],
+  // A goblet under bunting.
+  festivities: ['M2 4q10 5 20 0', 'M6 6l1 3M12 6.5v3M18 6l-1 3', 'M8 11h8l-1 4a3 3 0 0 1-6 0Z', 'M12 18v3', 'M9 21h6'],
+  // A decree under the Embassy's seal.
+  'standing-orders': ['M5 3h14v12H5Z', 'M8 7h8M8 10h6', 'M12 15a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z', 'M10.5 20.5 9.5 23M13.5 20.5l1 2.5'],
+  // Auri-El's sun.
+  'spiritual-guidance': ['M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z', 'M12 2v3M12 19v3M2 12h3M19 12h3', 'M4.9 4.9 7 7M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1'],
   bounties: ['M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z', 'M5 21c0-5 3-8 7-8s7 3 7 8', 'M3 3l18 18'],
-  'new-laws': ['M12 3v17', 'M7 21h10', 'M4 7h16', 'M6 7 3 14h6Z', 'M18 7l-3 7h6Z'],
-  'figures-of-interest': ['M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z', 'M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z'],
-  // The Dominion's triangle, for the First Emissary's agenda.
-  'embassy-agenda': ['M12 3 21 20H3Z', 'M7 13c2-2 3.5-1 5 1 1.5-2 3-3 5-1'],
-  'bread-and-circus': ['M4 20c0-6 3-11 8-11s8 5 8 11', 'M8 9V5M12 9V3M16 9V5', 'M4 20h16'],
-  news: ['M4 4h16v16H4Z', 'M8 8h8M8 12h8M8 16h5'],
+};
+
+/** Notices the repository keeps standing in a section, ahead of anything posted. */
+const STANDING: Partial<Record<BoardSection, ComponentType>> = {
+  recruitment: RecruitmentNotice,
 };
 
 // Hand-placed: every parchment hangs a little differently.
@@ -82,14 +92,15 @@ export function Board({ section }: { section?: string }) {
 function BoardSections() {
   const board = useRoomData<{ sections: BoardSectionSummary[] }>('/api/room/board');
   const seen = useMemo(() => readSeen(), []);
-  const sections = board.state === 'ok' ? board.data.sections : EMPTY_BOARD;
+  const sections = (board.state === 'ok' ? board.data.sections : EMPTY_BOARD).map((s) =>
+    STANDING[s.id] ? { ...s, count: s.count + 1 } : s,
+  );
 
   return (
     <div className="board-view">
       <h2 className="takeover__heading">The Bulletin Board</h2>
       <p className="takeover__sub">Nailed up by order of the Thalmor Embassy, for all to read</p>
       <div className="planks">
-        <RecruitmentNotice />
         {board.state === 'loading' && <p className="loading">Reading the board…</p>}
         {board.state === 'error' && <p className="loading">The board could not be read. Try again shortly.</p>}
         {board.state === 'absent' && (
@@ -150,6 +161,7 @@ function BoardSectionView({ id }: { id: string }) {
 
   const info = BOARD_INFO[id];
   const notices = res.state === 'ok' ? res.data.notices : [];
+  const Standing = STANDING[id];
   return (
     <div className="board-view">
       <p className="crumb">
@@ -158,12 +170,13 @@ function BoardSectionView({ id }: { id: string }) {
       <h2 className="takeover__heading">{info.title}</h2>
       <p className="takeover__sub">{info.describer}</p>
       <div className="planks">
+        {Standing && <Standing />}
         {res.state === 'loading' ? (
           <p className="loading">Reading the board…</p>
         ) : res.state === 'error' ? (
           <p className="loading">That part of the board could not be read.</p>
         ) : notices.length === 0 ? (
-          <p className="empty-board parchment">Nothing has been nailed here yet.</p>
+          !Standing && <p className="empty-board parchment">Nothing has been nailed here yet.</p>
         ) : (
           <div className="notices">
             {notices.map((n, i) => (

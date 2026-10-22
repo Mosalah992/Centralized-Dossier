@@ -1,10 +1,10 @@
-/* The Bulletin Board and the Lectern, ported from the Bruma Joint Archives'
+/* The Bulletin Board and the Scribe Table, ported from the Bruma Joint Archives'
    views.css: parchments nailed to planking under a pent roof, wanted posters,
    and the stamp each notice was put up under. The planking is the Embassy's
    lacquered wood with a gold rim. Route-only. */
 
 .board-view,
-.lectern-view {
+.scribe-view {
   max-width: 1080px;
   margin: 0 auto;
 }
@@ -281,9 +281,9 @@
 .stamp { display: block; flex: none; }
 .stamp--art { border-radius: 50%; }
 
-/* ---------- The Lectern ---------- */
+/* ---------- The Scribe Table ---------- */
 
-.lectern-wait {
+.scribe-wait {
   display: grid;
   justify-items: center;
   gap: 0.4rem;
@@ -293,11 +293,11 @@
   text-align: center;
   transform: rotate(-0.8deg);
 }
-.lectern-wait .fleuron { color: var(--rubric); }
-.lectern-wait h3 { margin: 0.2rem 0 0.4rem; font-size: 1.05rem; letter-spacing: 0.1em; }
-.lectern-wait p { margin: 0; line-height: 1.45; }
-.lectern-wait p + p { margin-top: 0.6rem; }
-.lectern-wait code {
+.scribe-wait .fleuron { color: var(--rubric); }
+.scribe-wait h3 { margin: 0.2rem 0 0.4rem; font-size: 1.05rem; letter-spacing: 0.1em; }
+.scribe-wait p { margin: 0; line-height: 1.45; }
+.scribe-wait p + p { margin-top: 0.6rem; }
+.scribe-wait code {
   padding: 0 0.3rem;
   font-family: var(--display);
   font-size: 0.85em;

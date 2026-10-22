@@ -1,0 +1,437 @@
+/* The Cabinet, opened (web/src/room/takeovers/Cabinet.tsx): a card catalogue
+   of four drawers after the libraries' own, lacquered wood with brass label
+   holders and cup pulls; inside a drawer the letters stand like index cards;
+   a letter taken out opens in the middle of the room (cabinet/Letter.tsx).
+   Route-only: loaded with the Cabinet's chunk, never from main.tsx. */
+
+.cabinet-view {
+  --brass: #b08a2e;
+  --brass-dark: #5a420c;
+  --brass-light: #e3c46a;
+  --wood: #4a2c16;
+  --wood-light: #6b4020;
+  --lacquer: #2b1b10;
+  display: grid;
+  gap: 1.4rem;
+  width: min(1100px, 100%);
+  margin: 0 auto;
+}
+
+/* ---------- The front: four drawers ---------- */
+
+.cabinet-front {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+  padding: 1rem;
+  background: url('/textures/wood.svg') 0 0 / 300px 300px, var(--lacquer);
+  box-shadow:
+    inset 0 0 0 8px #1a100a,
+    inset 0 0 0 10px rgb(201 162 39 / 0.45),
+    0 22px 40px rgb(0 0 0 / 0.6);
+}
+.drawer-front {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 0.45rem;
+  min-height: 8.5rem;
+  padding: 1rem 1rem 0.8rem;
+  font: inherit;
+  color: var(--stone);
+  background: url('/textures/wood.svg') 40px 20px / 260px 260px, var(--wood);
+  border: 1px solid #120d08;
+  box-shadow: inset 0 0 0 4px rgb(0 0 0 / 0.25), inset 0 0 0 5px rgb(201 162 39 / 0.18), 0 4px 8px rgb(0 0 0 / 0.5);
+  cursor: inherit;
+  transition: transform 0.45s var(--ease-swing), box-shadow 0.35s var(--ease);
+}
+.drawer-front:hover,
+.drawer-front:focus-visible { box-shadow: inset 0 0 0 4px rgb(0 0 0 / 0.25), inset 0 0 0 5px rgb(232 205 122 / 0.5), 0 8px 14px rgb(0 0 0 / 0.55); }
+.drawer-front:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 3px; }
+/* Pulled: out toward the reader. */
+.drawer-front[aria-expanded='true'] {
+  z-index: 1;
+  transform: translateY(6px) scale(1.03);
+  box-shadow: inset 0 0 0 4px rgb(0 0 0 / 0.25), inset 0 0 0 5px rgb(232 205 122 / 0.6), 0 16px 24px rgb(0 0 0 / 0.65);
+}
+/* The brass label holder and its card. */
+.drawer-front__holder {
+  display: grid;
+  place-items: center;
+  min-width: 9.5rem;
+  padding: 0.3rem;
+  background: linear-gradient(180deg, var(--brass-light), var(--brass) 40%, #8c6b1f);
+  border: 1px solid var(--brass-dark);
+  box-shadow: 0 2px 3px rgb(0 0 0 / 0.6);
+}
+.drawer-front__label {
+  display: block;
+  width: 100%;
+  padding: 0.3rem 0.8rem;
+  font: 700 1rem var(--display);
+  letter-spacing: 0.14em;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: url('/textures/parchment.svg') 0 0 / 300px 300px, #e6d6b0;
+}
+/* The cup pull. */
+.drawer-front__pull {
+  width: 3.2rem;
+  height: 1.3rem;
+  border: 1px solid var(--brass-dark);
+  border-top-width: 3px;
+  border-radius: 0 0 2rem 2rem;
+  background: radial-gradient(ellipse at 50% 0%, var(--brass-light), var(--brass) 55%, #7a5c17);
+  box-shadow: 0 3px 4px rgb(0 0 0 / 0.55);
+}
+.drawer-front__count {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.7rem;
+  min-width: 1.6rem;
+  padding: 0.1rem 0.45rem;
+  font: 700 0.72rem var(--display);
+  color: var(--parchment);
+  background: var(--crimson);
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px #3a0a0c;
+}
+.drawer-front[data-drawer='fresh'] .drawer-front__count { box-shadow: 0 0 0 1px #3a0a0c, 0 0 10px rgb(124 31 36 / 0.8); }
+.drawer-front__describer {
+  font-size: 0.92rem;
+  font-style: italic;
+  color: var(--stone-dim);
+}
+
+/* ---------- An open drawer: letters standing like index cards ---------- */
+
+.drawer {
+  padding: 1.4rem 1.2rem 1.6rem;
+  background: #1e130b;
+  box-shadow:
+    inset 0 14px 22px rgb(0 0 0 / 0.75),
+    inset 12px 0 16px -8px rgb(0 0 0 / 0.6),
+    inset -12px 0 16px -8px rgb(0 0 0 / 0.6),
+    inset 0 0 0 6px var(--wood),
+    inset 0 0 0 7px rgb(201 162 39 / 0.35);
+  animation: drawer-out 0.45s var(--ease) both;
+}
+.drawer[hidden] { display: none; }
+.drawer__letters {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 0 1rem;
+  margin: 0;
+  padding: 0.6rem 0 0;
+  list-style: none;
+  perspective: 1100px;
+}
+.envelope-slot { margin-bottom: -1.6rem; }
+.envelope-slot:last-child,
+.envelope-slot:nth-last-child(-n + 4) { margin-bottom: 0.6rem; }
+.drawer__empty {
+  margin: 0.4rem 0;
+  font-style: italic;
+  text-align: center;
+  color: var(--stone-dim);
+}
+.drawer__more { display: block; margin: 1.2rem auto 0; }
+
+/* One letter: a parchment envelope, leaning back in the drawer, its flap's
+   creases drawn in, the title written across it and the wing's wax on it. */
+.envelope {
+  position: relative;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: 0.4rem;
+  aspect-ratio: 3 / 2;
+  padding: 1.6rem 1rem 0.7rem;
+  color: var(--ink);
+  text-decoration: none;
+  background:
+    linear-gradient(to bottom right, transparent calc(50% - 0.6px), rgb(94 66 28 / 0.28) 50%, transparent calc(50% + 0.6px)) 0 0 / 50% 58% no-repeat,
+    linear-gradient(to bottom left, transparent calc(50% - 0.6px), rgb(94 66 28 / 0.28) 50%, transparent calc(50% + 0.6px)) 100% 0 / 50% 58% no-repeat,
+    url('/textures/parchment.svg') 0 0 / 400px 400px, #e9dcbb;
+  box-shadow: inset 0 0 18px rgb(110 70 20 / 0.35), 0 6px 10px rgb(0 0 0 / 0.55);
+  transform: rotateX(16deg);
+  transform-origin: 50% 100%;
+  transition: transform 0.35s var(--ease), box-shadow 0.35s var(--ease);
+  cursor: inherit;
+}
+.envelope:hover,
+.envelope:focus-visible {
+  z-index: 2;
+  transform: translateY(-14px) rotateX(0deg);
+  box-shadow: inset 0 0 18px rgb(110 70 20 / 0.35), 0 16px 20px rgb(0 0 0 / 0.6), 0 0 0 1px rgb(232 205 122 / 0.6);
+}
+.envelope:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 3px; }
+.envelope__title {
+  display: -webkit-box;
+  align-self: center;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  font-size: 1.08rem;
+  font-style: italic;
+  line-height: 1.25;
+  text-align: center;
+  text-wrap: balance;
+}
+.envelope__foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font: 600 0.56rem var(--display);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.envelope__wing { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.envelope__date { flex: none; }
+/* The wax, at the point of the flap, in the wing's colour. */
+.envelope__seal {
+  position: absolute;
+  left: 50%;
+  top: 34%;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  margin: -1rem 0 0 -1rem;
+  color: var(--wax-ink, #f2d27a);
+  background: radial-gradient(circle at 38% 34%, color-mix(in srgb, var(--wax, #7a5a10) 70%, #fff) 0 8%, var(--wax, #7a5a10) 40%, color-mix(in srgb, var(--wax, #7a5a10) 70%, #000));
+  border-radius: 46% 54% 52% 48% / 52% 46% 54% 48%;
+  box-shadow: 0 2px 3px rgb(0 0 0 / 0.5);
+  opacity: 0.92;
+}
+.envelope__title { position: relative; z-index: 1; padding-top: 0.6rem; }
+.describer--letter {
+  bottom: calc(100% + 0.2rem);
+  width: min(280px, 80vw);
+  font-size: 0.95rem;
+}
+.envelope:hover .describer,
+.envelope:focus-visible .describer {
+  opacity: 1;
+  transform: translate(-50%, 0) rotate(-1.5deg);
+}
+
+/* ---------- A letter taken out ---------- */
+
+.letter-scene {
+  --paper-w: min(680px, calc(100vw - 2.5rem));
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  perspective: 1600px;
+}
+.letter-scene__veil {
+  position: absolute;
+  inset: 0;
+  background: rgb(8 6 4 / 0.72);
+  backdrop-filter: blur(2px);
+}
+.letter-measure {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  width: var(--paper-w);
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* The envelope, sized to hold the letter folded in three. */
+.envelope-open {
+  position: relative;
+  width: calc(var(--paper-w) + 30px);
+  height: calc(var(--third) + 56px);
+  transform-style: preserve-3d;
+}
+.letter-scene[data-open] .envelope-open { visibility: hidden; }
+.envelope-open__back,
+.envelope-open__pocket,
+.envelope-open__flap {
+  position: absolute;
+  inset: 0;
+  background: url('/textures/parchment.svg') 0 0 / 500px 500px, #ddcca4;
+}
+.envelope-open__back { background-color: #cdb88c; box-shadow: 0 24px 40px rgb(0 0 0 / 0.6); }
+.envelope-open__pocket {
+  clip-path: polygon(0 18%, 50% 62%, 100% 18%, 100% 100%, 0 100%);
+  box-shadow: inset 0 0 22px rgb(110 70 20 / 0.35);
+}
+.envelope-open__flap {
+  bottom: auto;
+  height: 66%;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  transform-origin: 50% 0;
+  backface-visibility: visible;
+  background-color: #e6d6b0;
+}
+.envelope-open__seal {
+  position: absolute;
+  left: 50%;
+  bottom: 4%;
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  margin-left: -1.3rem;
+  color: var(--wax-ink);
+  background: radial-gradient(circle at 38% 34%, color-mix(in srgb, var(--wax) 70%, #fff) 0 8%, var(--wax) 40%, color-mix(in srgb, var(--wax) 70%, #000));
+  border-radius: 46% 54% 52% 48% / 52% 46% 54% 48%;
+}
+
+/* The letter, folded in three until it opens. */
+.letter-paper {
+  position: absolute;
+  left: 15px;
+  right: 15px;
+  top: 50%;
+  margin-top: calc(var(--third) * -1.5);
+  transform-style: preserve-3d;
+}
+.letter-fold {
+  position: absolute;
+  left: 0;
+  right: 0;
+  transform-style: preserve-3d;
+}
+.letter-fold--top { transform-origin: 50% 100%; transform: rotateX(-178deg); z-index: 2; }
+.letter-fold--bottom { transform-origin: 50% 0; transform: rotateX(178deg); z-index: 2; }
+.letter-fold__face,
+.letter-fold__back {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  backface-visibility: hidden;
+  background: url('/textures/parchment.svg') 0 0 / 600px 600px, var(--parchment);
+}
+.letter-fold__face .letter { position: absolute; left: 0; right: 0; box-shadow: none; }
+.letter-fold__back {
+  transform: rotateX(180deg);
+  background-color: #dccba6;
+  box-shadow: inset 0 0 30px rgb(110 70 20 / 0.4);
+}
+.letter-fold--top .letter-fold__face { box-shadow: inset 0 -10px 12px -10px rgb(94 66 28 / 0.4); }
+.letter-fold--bottom .letter-fold__face { box-shadow: inset 0 10px 12px -10px rgb(94 66 28 / 0.4); }
+
+/* The page itself. */
+.letter {
+  width: var(--paper-w);
+  padding: 2.2rem 2.4rem 2rem;
+  color: var(--ink);
+  background: url('/textures/parchment.svg') 0 0 / 600px 600px, var(--parchment);
+}
+.letter--open {
+  position: relative;
+  z-index: 1;
+  max-height: 78vh;
+  overflow: auto;
+  box-shadow: inset 0 0 30px rgb(110 70 20 / 0.35), 0 26px 50px rgb(0 0 0 / 0.65);
+  animation: letter-settle 0.25s var(--ease) both;
+}
+.letter--open:focus { outline: none; }
+.letter__head {
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid rgb(94 66 28 / 0.3);
+}
+.letter__wing {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.5rem;
+  font: 600 0.66rem var(--display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.letter__wing-seal {
+  display: inline-grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--wax-ink);
+  background: var(--wax);
+  border-radius: 50%;
+}
+.letter__category { font-weight: 400; letter-spacing: 0.08em; }
+.letter__head h2 {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.2rem, 2.4vw, 1.6rem);
+  letter-spacing: 0.06em;
+  color: #2a1f12;
+}
+.letter__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.9rem; font-style: italic; color: #5b4a33; }
+.letter__body { font-size: 1.04rem; line-height: 1.7; }
+.letter__body p { margin: 0 0 1em; white-space: pre-line; }
+.letter__field {
+  display: grid;
+  grid-template-columns: minmax(8rem, 0.36fr) 1fr;
+  gap: 0.2rem 1rem;
+  margin: 0 0 0.4rem;
+}
+.letter__field dt { font: 600 0.72rem var(--display); letter-spacing: 0.1em; text-transform: uppercase; color: #6b5333; }
+.letter__field dd { margin: 0; }
+.letter__author { margin: 1.2rem 0 0; font-style: italic; text-align: right; color: var(--ink-soft); }
+.letter__fold {
+  display: block;
+  margin: 1.4rem auto 0;
+  padding: 0.5rem 1.1rem;
+  font: 700 0.66rem var(--display);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--ink-soft);
+  cursor: inherit;
+}
+.letter__fold:focus-visible { outline: 2px solid var(--rubric); outline-offset: 2px; }
+
+/* The classification, struck as a seal (moved from the retired Reports page). */
+.severity { --severity-ink: var(--ink-soft); display: inline-block; padding: 0.2rem 0.42rem; border: 1px solid color-mix(in srgb, var(--severity-ink) 58%, transparent); color: var(--severity-ink); font-family: var(--display); font-size: 0.54rem; font-weight: 600; font-style: normal; letter-spacing: 0.12em; line-height: 1; text-transform: uppercase; background: color-mix(in srgb, var(--severity-ink) 13%, var(--parchment)); }
+.severity--critical { --severity-ink: #8b251d; }
+.severity--high { --severity-ink: #a85824; }
+.severity--medium { --severity-ink: #8b6c1d; }
+.severity--low { --severity-ink: #58703c; }
+.severity--informational { --severity-ink: #496b76; }
+.severity--unassessed { --severity-ink: #756a5a; }
+
+@keyframes drawer-out {
+  from { opacity: 0; transform: translateY(-14px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes letter-settle {
+  from { opacity: 0.6; }
+  to { opacity: 1; }
+}
+
+@media (max-width: 720px) {
+  .cabinet-front { gap: 0.5rem; padding: 0.6rem; }
+  .drawer-front { min-height: 6.5rem; padding: 0.8rem 0.5rem 0.6rem; }
+  .drawer-front__holder { min-width: 0; width: 100%; }
+  .drawer-front__label { font-size: 0.8rem; letter-spacing: 0.1em; }
+  .drawer-front__describer { display: none; }
+  .drawer { padding: 1rem 0.6rem 1.2rem; }
+  .drawer__letters { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 0.6rem; }
+  .envelope { padding: 1.2rem 0.6rem 0.5rem; }
+  .envelope__title { font-size: 0.92rem; }
+  .envelope__wing { display: none; }
+  .describer--letter { display: none; }
+  .letter { padding: 1.4rem 1.2rem 1.4rem; }
+  .letter--open { max-height: 86vh; }
+  .letter__field { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drawer-front,
+  .envelope { transition: none; }
+  .drawer,
+  .letter--open { animation: none; }
+}

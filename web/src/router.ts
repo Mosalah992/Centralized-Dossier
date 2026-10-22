@@ -11,12 +11,11 @@ import { ALL_SLUGS } from '../../shared/volumes';
  * has a real URL so it can be shared and reloaded, but the room stays mounted
  * beneath (see web/src/room/Takeover.tsx).
  */
-export type RoomSurface = 'bookshelf' | 'board' | 'lectern';
+export type RoomSurface = 'bookshelf' | 'board' | 'scribe' | 'cabinet';
 
 export type Route =
   | { name: 'room'; open?: RoomSurface; sub?: string }
   | { name: 'gallery' }
-  | { name: 'reports'; id?: string }
   | { name: 'penalcode' }
   | { name: 'volume'; slug: VolumeSlug }
   | { name: 'editor' }
@@ -29,14 +28,16 @@ export function parse(pathname: string): Route {
   const path = pathname.replace(/\/+$/, '');
   if (path === '' || path === '/') return { name: 'room' };
   if (path === '/gallery') return { name: 'gallery' };
-  if (path === '/reports') return { name: 'reports' };
+  // The Cabinet keeps the reports: its address is still /reports, and one
+  // report's is still /reports/:id, which opens that letter unfolded.
+  if (path === '/reports') return { name: 'room', open: 'cabinet' };
+  const filing = /^\/reports\/(\d{1,24})$/.exec(path);
+  if (filing) return { name: 'room', open: 'cabinet', sub: filing[1]! };
   // The Code is asked for as "/Penalcode" as often as not; any casing opens it.
   if (path.toLowerCase() === '/penalcode') return { name: 'penalcode' };
-  // One filing, addressed by its id. Opens behind the same gate as the register.
-  const filing = /^\/reports\/(\d{1,24})$/.exec(path);
-  if (filing) return { name: 'reports', id: filing[1]! };
 
-  if (path === '/lectern') return { name: 'room', open: 'lectern' };
+  // The Scribe Table was the Lectern until 2026-10-22; its old address still opens it.
+  if (path === '/scribe-table' || path === '/lectern') return { name: 'room', open: 'scribe' };
   const surface = /^\/(bookshelf|board)(?:\/([^/]{1,80}))?$/.exec(path);
   if (surface) {
     const open = surface[1] as RoomSurface;
@@ -88,8 +89,16 @@ export function openedFromRoom(): boolean {
   return typeof state === 'object' && state !== null && (state as Record<string, unknown>)[FROM_ROOM] === true;
 }
 
+/** Old addresses that still open, and the address they now go by. */
+const RENAMED: Record<string, string> = { '/lectern': '/scribe-table' };
+
 export function useRoute(): [Route, Navigate] {
-  const [route, setRoute] = useState<Route>(() => parse(window.location.pathname));
+  const [route, setRoute] = useState<Route>(() => {
+    // An old address is shown by its new name, without a history entry.
+    const renamed = RENAMED[window.location.pathname.replace(/\/+$/, '')];
+    if (renamed) window.history.replaceState(window.history.state, '', renamed);
+    return parse(window.location.pathname);
+  });
 
   useEffect(() => {
     const onPop = () => setRoute(parse(window.location.pathname));

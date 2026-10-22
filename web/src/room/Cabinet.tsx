@@ -1,14 +1,17 @@
-// The Scroll Rack, which holds High Command's reports, and the word that opens
+// The Cabinet, which keeps the letters to High Command, and the word that opens
 // it. Ancarion keeps it from the wall beside: a wrong word earns the gate's own
-// refusals — narrowed eyes, then the head-shake, then the sigh — and the right
-// one his nod, after which it is the RACK's doors that swing, not his, and the
-// reader goes through to /reports.
+// refusals (narrowed eyes, then the head-shake, then the sigh) and the right
+// one his nod, after which the Cabinet's Fresh! drawer slides out and the
+// reader goes through to it (/reports, the Cabinet's takeover).
 //
 // Authorization is exactly the Reports gate's: the same `openReports` against
 // POST /api/reports/gate, the same Reports-only writ. Nothing new is opened on
-// the server. A reader already holding the writ is let straight through after a
-// nod; /reports and /reports/:id reached any other way still stand behind the
-// full PortraitGate.
+// the server. A reader already holding the writ is let straight through after
+// a nod. A reader who arrives at /reports or /reports/:id without it is sent
+// back to the room with this slip open (`sealed`), so Ancarion still performs,
+// and on his nod goes on to where they were going.
+//
+// It was the Scroll Rack until 2026-10-22.
 
 import { useEffect, useId, useRef, useState, type MouseEvent, type RefObject } from 'react';
 
@@ -19,7 +22,7 @@ import {
   DOOR_SWING_MS,
   refusalFor,
 } from '../components/useAncarion';
-import { RackCornice, RackDoor, RackInside } from './art';
+import { CabinetArt } from './art';
 import { ImageSlot } from './ImageSlot';
 import { plainClick, useNavigate } from './nav';
 import type { AncarionHandle } from './RoomPortrait';
@@ -28,18 +31,20 @@ type Stage = 'shut' | 'asking' | 'checking' | 'accepted' | 'opening';
 
 /** With the writ already held: a nod, not the whole performance. */
 const ACKNOWLEDGE_HOLD_MS = 900;
-/** Reduced motion: the doors are simply open, and the reader goes on. */
+/** Reduced motion: the drawer is simply out, and the reader goes on. */
 const STILL_OPEN_MS = 220;
 
-const preloadReports = () => void import('../views/Reports');
+const preloadCabinet = () => void import('./takeovers/Cabinet');
 
 interface Props {
   ancarion: RefObject<AncarionHandle>;
   /** The slip's field, shared with the portrait so he knows when he is addressed. */
   field: RefObject<HTMLInputElement>;
+  /** Where a reader who arrived without the writ was going; the slip opens for them. */
+  sealed?: { href: string } | null;
 }
 
-export function ScrollRack({ ancarion, field }: Props) {
+export function Cabinet({ ancarion, field, sealed = null }: Props) {
   const navigate = useNavigate();
   const inputId = useId();
   const [stage, setStage] = useState<Stage>('shut');
@@ -49,6 +54,7 @@ export function ScrollRack({ ancarion, field }: Props) {
   const request = useRef<AbortController | null>(null);
   const timers = useRef<number[]>([]);
   const denials = useRef(0);
+  const target = useRef('/reports');
 
   const later = (fn: () => void, ms: number) => {
     timers.current.push(window.setTimeout(fn, ms));
@@ -66,17 +72,27 @@ export function ScrollRack({ ancarion, field }: Props) {
     if (stage === 'asking') window.requestAnimationFrame(() => field.current?.focus());
   }, [stage, field]);
 
-  /** A reader drawing near: wake his reactions, fetch the dossier, ask after the writ once. */
+  // Turned back at the takeover for want of the writ: ask for the word here.
+  useEffect(() => {
+    if (!sealed) return;
+    target.current = sealed.href;
+    writ.current = Promise.resolve(false);
+    ancarion.current?.warm();
+    setStage('asking');
+    setStatus('The Cabinet is sealed. State the word to open it.');
+  }, [sealed, ancarion]);
+
+  /** A reader drawing near: wake his reactions, fetch the Cabinet, ask after the writ once. */
   const approach = () => {
     ancarion.current?.warm();
-    preloadReports();
+    preloadCabinet();
     writ.current ??= reportsIsOpen();
   };
 
-  const enter = () => navigate('/reports');
+  const enter = () => navigate(target.current);
 
-  /** The doors swing, then the reader goes through. */
-  const swing = (hold: number) => {
+  /** The Fresh! drawer slides out, then the reader goes through. */
+  const draw = (hold: number) => {
     const still = ancarion.current?.reducedMotion() ?? false;
     if (still) {
       setStage('opening');
@@ -94,11 +110,12 @@ export function ScrollRack({ ancarion, field }: Props) {
     event.preventDefault();
     if (stage === 'checking' || stage === 'accepted' || stage === 'opening') return;
     approach();
+    target.current = '/reports';
     if (await (writ.current ?? Promise.resolve(false))) {
       setStage('accepted');
       ancarion.current?.accept();
-      setStatus('Ancarion knows you. The rack is opened.');
-      swing(ACKNOWLEDGE_HOLD_MS);
+      setStatus('Ancarion knows you. The Cabinet is opened.');
+      draw(ACKNOWLEDGE_HOLD_MS);
       return;
     }
     setStage('asking');
@@ -154,8 +171,8 @@ export function ScrollRack({ ancarion, field }: Props) {
       writ.current = Promise.resolve(true);
       setStage('accepted');
       const performs = ancarion.current?.accept() ?? false;
-      setStatus('“You are expected.” The rack is unlocked.');
-      swing(performs ? ACCEPTED_PERFORMANCE_HOLD_MS : ACCEPTED_STILL_HOLD_MS);
+      setStatus('“You are expected.” The Cabinet is unlocked.');
+      draw(performs ? ACCEPTED_PERFORMANCE_HOLD_MS : ACCEPTED_STILL_HOLD_MS);
     } catch {
       if (controller.signal.aborted && !timedOut) return;
       setStage('asking');
@@ -175,38 +192,36 @@ export function ScrollRack({ ancarion, field }: Props) {
   const asking = stage === 'asking' || stage === 'checking';
 
   return (
-    <div className="rack-object" data-stage={stage}>
+    <div className="cabinet-object" data-stage={stage}>
       <a
         href="/reports"
-        className="object object--rack"
-        data-object="rack"
-        aria-label="Scroll Rack: High Command's reports, kept behind Ancarion's word."
+        className="object object--cabinet"
+        data-object="cabinet"
+        aria-label="The Cabinet: letters to High Command, filed by when they came, kept behind Ancarion's word."
         aria-expanded={asking}
         onClick={knock}
         onPointerEnter={approach}
         onFocus={approach}
       >
-        <ImageSlot name="rack" className="object__art rack">
-          <RackCornice />
-          <span className="rack__body">
-            <RackInside />
-            <RackDoor side="l" />
-            <RackDoor side="r" />
-          </span>
+        <ImageSlot name="cabinet" className="object__art cabinet">
+          <CabinetArt />
         </ImageSlot>
         <span className="plaque">
           <svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true">
             <path d="M6 11h12v10H6Z M8.5 11V7.5a3.5 3.5 0 0 1 7 0V11" fill="none" stroke="currentColor" strokeWidth="2.2" />
           </svg>
-          Scroll Rack
+          The Cabinet
+        </span>
+        <span className="describer" aria-hidden="true">
+          Letters to High Command, filed by when they came.
         </span>
       </a>
 
       {(asking || stage === 'accepted' || stage === 'opening') && (
-        <div className="rack-slip parchment" role="group" aria-label="The word for the Scroll Rack">
+        <div className="cabinet-slip parchment" role="group" aria-label="The word for the Cabinet">
           {asking && (
-            <form className="rack-slip__form" onSubmit={submit}>
-              <label className="rack-slip__label" htmlFor={inputId}>
+            <form className="cabinet-slip__form" onSubmit={submit}>
+              <label className="cabinet-slip__label" htmlFor={inputId}>
                 State the phrase entrusted to you
               </label>
               <input
@@ -232,7 +247,7 @@ export function ScrollRack({ ancarion, field }: Props) {
                   ancarion.current?.notice();
                 }}
               />
-              <div className="rack-slip__actions">
+              <div className="cabinet-slip__actions">
                 <button type="submit" className="btn" disabled={!phrase.trim() || busy}>
                   {stage === 'checking' ? 'Consulting the seal' : 'Present your words'}
                 </button>
@@ -242,11 +257,11 @@ export function ScrollRack({ ancarion, field }: Props) {
               </div>
             </form>
           )}
-          <p className="rack-slip__status" role="status" aria-live="polite">
+          <p className="cabinet-slip__status" role="status" aria-live="polite">
             {status || ' '}
           </p>
           {busy && stage !== 'checking' && (
-            <button type="button" className="rack-slip__skip" onClick={enter}>
+            <button type="button" className="cabinet-slip__skip" onClick={enter}>
               Skip opening
             </button>
           )}
@@ -255,4 +270,3 @@ export function ScrollRack({ ancarion, field }: Props) {
     </div>
   );
 }
-

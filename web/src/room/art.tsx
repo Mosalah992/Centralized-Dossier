@@ -160,75 +160,61 @@ export function BoardArt({ wide = false, className }: { wide?: boolean; classNam
   );
 }
 
+const BRASS = '#b08a2e';
+const BRASS_DARK = '#5a420c';
+
+/** The Cabinet's drawers, top to bottom, as their labels read. */
+export const CABINET_LABELS = [
+  ['fresh', 'Fresh!'],
+  ['new', 'New'],
+  ['old', 'Old'],
+  ['archive', 'Archive'],
+] as const;
+
 /**
- * The Scroll Rack: an armarium of pigeonholes, each holding tagged rolls, behind
- * two lacquered doors. The doors are separate drawings so the room can swing
- * them open (room.css) when Ancarion lets the reader through.
+ * The Cabinet: a card catalogue of four drawers, each with a brass label
+ * holder and a cup pull, after the libraries' own. Each drawer is its own
+ * group, so the room can draw the Fresh! drawer out when Ancarion lets the
+ * reader through (room.css).
  */
-export function RackInside() {
+export function CabinetArt() {
   return (
-    <svg viewBox="0 0 200 260" aria-hidden="true" className="rack__inside">
-      <rect x="0" y="0" width="200" height="260" fill={EBONY} />
-      {Array.from({ length: 4 }, (_, r) =>
-        Array.from({ length: 2 }, (_, c) => {
-          const x = 10 + c * 92;
-          const y = 10 + r * 61;
-          return (
-            <g key={`${r}-${c}`}>
-              <rect x={x} y={y} width="88" height="56" fill={SHADOW} />
-              <rect x={x} y={y} width="88" height="56" fill="none" stroke={GOLD_DIM} strokeWidth="1.4" />
-              {[0, 1, 2, 3, 4].map((k) => (
-                <g key={k}>
-                  <circle cx={x + 12 + k * 16} cy={y + 40 - (k % 2) * 13} r="7" fill={k % 2 ? PARCH_OLD : PARCH} />
-                  <circle cx={x + 12 + k * 16} cy={y + 40 - (k % 2) * 13} r="2.4" fill={INK} opacity=".4" />
-                </g>
-              ))}
-              <path d={`M${x + 20} ${y + 47}l4 8`} stroke="#7c1f24" strokeWidth="1.4" />
-            </g>
-          );
-        }),
-      )}
-    </svg>
-  );
-}
-
-export function RackDoor({ side }: { side: 'l' | 'r' }) {
-  // Drawn as the left door; the right is its mirror.
-  return (
-    <svg viewBox="0 0 100 260" aria-hidden="true" className={`rack__door rack__door--${side}`} preserveAspectRatio="none">
-      <g transform={side === 'r' ? 'translate(100 0) scale(-1 1)' : undefined}>
-        <rect x="0" y="0" width="100" height="260" fill={WOOD} />
-        <rect x="0" y="0" width="100" height="260" fill="none" stroke={LACQUER} strokeWidth="6" />
-        {[0, 1].map((p) => (
-          <g key={p}>
-            <rect x="14" y={18 + p * 120} width="72" height="104" fill={LACQUER} />
-            <rect x="18" y={22 + p * 120} width="64" height="96" fill="none" stroke={GOLD} strokeWidth="1.3" />
-            <path d={`M50 ${36 + p * 120}l14 34-14 34-14-34z`} fill="none" stroke={GOLD_DIM} strokeWidth="1.2" />
-          </g>
-        ))}
-        {/* gold strap hinges on the outer edge */}
-        {[40, 220].map((y) => (
-          <path key={y} d={`M0 ${y}h30l5 3-5 3H0z`} fill={GOLD_DIM} />
-        ))}
-        {/* half of the lock plate, on the meeting stile */}
-        <rect x="88" y="112" width="12" height="36" fill={GOLD} />
-        <circle cx="96" cy="126" r="2.4" fill={SHADOW} />
-      </g>
-    </svg>
-  );
-}
-
-export function RackCornice() {
-  return (
-    <svg viewBox="0 0 220 34" aria-hidden="true" className="rack__cornice" preserveAspectRatio="none">
+    <svg viewBox="0 0 220 300" aria-hidden="true" className="cabinet__svg">
       <Crest x={20} y={22} w={180} h={14} />
-      <rect x="0" y="22" width="220" height="10" fill={WOOD_LIGHT} />
-      <rect x="0" y="30" width="220" height="2" fill={GOLD} />
+      <rect x="4" y="22" width="212" height="10" fill={WOOD_LIGHT} />
+      <rect x="4" y="30" width="212" height="2" fill={GOLD} />
+      <rect x="10" y="32" width="200" height="252" fill={LACQUER} />
+      <rect x="10" y="32" width="8" height="252" fill={WOOD} />
+      <rect x="202" y="32" width="8" height="252" fill={WOOD} />
+      <rect x="20" y="36" width="180" height="244" fill={SHADOW} />
+      {CABINET_LABELS.map(([id, label], i) => {
+        const y = 40 + i * 60;
+        return (
+          <g key={id} className={`cabinet__drawer cabinet__drawer--${id}`}>
+            <rect x="22" y={y} width="176" height="54" fill={WOOD} />
+            <rect x="22" y={y} width="176" height="54" fill="none" stroke={EBONY} strokeWidth="1.6" />
+            <rect x="26.5" y={y + 4.5} width="167" height="45" fill="none" stroke={GOLD_DIM} strokeWidth=".8" opacity=".55" />
+            {/* the brass label holder and its card */}
+            <rect x="74" y={y + 8} width="72" height="20" fill={BRASS} stroke={BRASS_DARK} strokeWidth="1" />
+            <rect x="77.5" y={y + 11} width="65" height="14" fill={PARCH} />
+            <text x="110" y={y + 21.6} textAnchor="middle" className="cabinet__label">
+              {label}
+            </text>
+            {/* the cup pull */}
+            <path d={`M97 ${y + 33}h26v2.5a13 9 0 0 1-26 0z`} fill={BRASS} stroke={BRASS_DARK} strokeWidth="1" />
+            <path d={`M100 ${y + 35.5}a10 6 0 0 0 20 0`} fill="none" stroke={GOLD_BRIGHT} strokeWidth="1" opacity=".7" />
+          </g>
+        );
+      })}
+      <rect x="4" y="282" width="212" height="8" fill={WOOD} />
+      <rect x="4" y="282" width="212" height="1.6" fill={GOLD} />
+      <path d="M12 290h22l-4 10h-14zM186 290h22l-4 10h-14z" fill={EBONY} />
     </svg>
   );
 }
 
-export function LecternArt() {
+/** The Scribe Table: a writing desk with the register open, ink and quill. */
+export function ScribeTableArt() {
   return (
     <svg viewBox="0 0 260 260" aria-hidden="true">
       {/* cross feet */}

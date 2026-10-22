@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 const read = (path: string) => readFileSync(path, 'utf8');
 // The gate keeps the field and the door; Ancarion's performance lives in
-// useAncarion so the room's Scroll Rack can direct him too. Read as one.
+// useAncarion so the room's Cabinet can direct him too. Read as one.
 const gateAndPerformer = () =>
   read('web/src/components/PortraitGate.tsx') +
   read('web/src/components/useAncarion.tsx') +
@@ -26,17 +26,16 @@ const PERFORMANCES = [
 ];
 
 describe('interaction boundaries', () => {
-  it('uses one PortraitGate for both sealed routes', () => {
-    expect(read('web/src/views/Reports.tsx')).toContain('<PortraitGate');
+  // The Reports register became the Cabinet on 2026-10-22: its word is asked in
+  // the room, before Ancarion, and the PortraitGate keeps the Chronicles alone.
+  it('keeps PortraitGate for the Chronicles, and the Cabinet asks in the room', () => {
     expect(read('web/src/views/Informants.tsx')).toContain('<PortraitGate');
-    expect(read('web/src/views/Reports.tsx')).not.toContain('ArchiveSeal');
+    expect(read('web/src/room/Cabinet.tsx')).not.toContain('PortraitGate');
   });
 
   it('keeps the two gates server-backed and separately adapted', () => {
-    const reports = read('web/src/views/Reports.tsx');
-    const chronicle = read('web/src/views/Informants.tsx');
-    expect(reports).toContain('openReports(passphrase, signal)');
-    expect(chronicle).toContain('openChronicle(passphrase, signal)');
+    expect(read('web/src/room/Cabinet.tsx')).toContain('openReports(passphrase, signal)');
+    expect(read('web/src/views/Informants.tsx')).toContain('openChronicle(passphrase, signal)');
   });
 
   it('uses the existing motion system and keeps Three.js behind the Reports sky', () => {
@@ -46,7 +45,6 @@ describe('interaction boundaries', () => {
     const sky = read('web/src/components/NirnSky.tsx');
     expect(sky).toContain("import('../sky/nirnScene')");
     expect(sky).not.toMatch(/from 'three/);
-    expect(read('web/src/views/Reports.tsx')).toMatch(/<PortraitGate[\s\S]*\bsky\b/);
     expect(read('web/src/views/Informants.tsx')).not.toMatch(/<PortraitGate[^>]*\bsky\b/);
     const gateCss = read('web/src/styles/portrait-gate.css');
     expect(gateCss).toContain('prefers-reduced-motion: reduce');
@@ -95,7 +93,6 @@ describe('interaction boundaries', () => {
 
   it('draws the Summerset map behind the Chronicles gate only', () => {
     expect(read('web/src/views/Informants.tsx')).toMatch(/<PortraitGate[\s\S]*backdrop=\{chroniclesMap\}/);
-    expect(read('web/src/views/Reports.tsx')).not.toContain('backdrop=');
     const gateCss = read('web/src/styles/portrait-gate.css');
     expect(gateCss).toContain(".portrait-gate[data-backdrop='true']");
     expect(gateCss).toContain('.portrait-gate__backdrop::after');
@@ -131,28 +128,24 @@ describe('interaction boundaries', () => {
     expect(gate).toContain('window.addEventListener(AMBIENCE_CHANGED_EVENT, onPreferenceChange);');
   });
 
-  it('moves a CSS-driven Dominion ink marker between Reports filters', () => {
-    const reports = read('web/src/views/Reports.tsx');
-    const reportsCss = read('web/src/styles/reports.css');
-    expect(reports).toContain('function LiquidNav');
-    expect(reports).toContain('ResizeObserver');
-    expect(reports).toContain('aria-pressed={filters.category === name}');
-    expect(reportsCss).toContain('.reports-liquid-nav::before');
-    expect(reportsCss).toContain('@keyframes reports-liquid-settle');
-    expect(reportsCss).toContain('border-radius: 2px');
-    expect(reportsCss).toContain(".reports-liquid-nav[data-tone='critical']");
-    expect(reportsCss).not.toContain('border-radius: 46% 54%');
+  it('seals each letter by its wing, and never lets colour alone name a severity', () => {
+    const letter = read('web/src/room/takeovers/cabinet/Letter.tsx');
+    const css = read('web/src/styles/cabinet.css');
+    expect(letter).toContain('severity severity--${report.severity}');
+    expect(letter).toContain('{SEVERITY_LABEL[report.severity]}');
+    for (const level of ['critical', 'high', 'medium', 'low', 'informational', 'unassessed']) {
+      expect(css).toContain(`.severity--${level}`);
+    }
+    // The wax is the wing's colour, and the wing is named on the envelope too.
+    expect(read('web/src/room/takeovers/Cabinet.tsx')).toContain('<span className="envelope__wing">{wing.name}</span>');
   });
 
-  it('color-codes report cards without making color the only severity label', () => {
-    const reports = read('web/src/views/Reports.tsx');
-    const reportsCss = read('web/src/styles/reports.css');
-    expect(reports).toContain('report report--${report.severity}');
-    expect(reports).toContain('severity severity--${report.severity}');
-    for (const level of ['critical', 'high', 'medium', 'low', 'informational', 'unassessed']) {
-      expect(reportsCss).toContain(`.report--${level}`);
-      expect(reportsCss).toContain(`.severity--${level}`);
-    }
+  it('unfolds a letter on the motion system, and hands it over at once to readers who ask for less motion', () => {
+    const letter = read('web/src/room/takeovers/cabinet/Letter.tsx');
+    expect(letter).toContain("import { gsap, staged } from '../../../motion'");
+    expect(letter).toContain('if (!moving) {');
+    expect(letter).toContain("rotationX: -178");
+    expect(letter).toContain('run.timeScale(1.6).reverse();');
   });
 
   // The navigation rail was retired on 2026-10-20: the room is the way in.

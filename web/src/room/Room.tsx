@@ -3,13 +3,13 @@
 //
 //   Bookshelf   Bulletin Board (announcements)        The hour
 //      │        ┌──────┐ ┌────────┐ ┌──────┐          + orrery
-//      │        │ arch │ │Ancarion│ │ arch │          Scroll Rack
+//      │        │ arch │ │Ancarion│ │ arch │          The Cabinet
 //   Solar door torch└──────┘ └────────┘ └──────┘torch     │
-//                         Lectern                   pinned note
+//                       Scribe Table                pinned note
 //
 // Every object is a link or a button, so it can be focused, opened with the
 // keyboard and addressed by URL. Objects that lead to the archive's existing
-// pages navigate there; the room's own surfaces (bookshelf, board, lectern)
+// pages navigate there; the room's own surfaces (bookshelf, board, Scribe Table, Cabinet)
 // open over it as takeovers with URLs of their own.
 
 import { Suspense, lazy, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -17,7 +17,9 @@ import { Suspense, lazy, useMemo, useRef, useState, type ReactNode } from 'react
 import type { Navigate, Route } from '../router';
 import type { BoardSectionSummary } from '../../../shared/room';
 import { Archway } from './Archway';
-import { BoardArt, BookshelfArt, LecternArt, SolarDoorArt } from './art';
+import { Boughs } from './Boughs';
+import { Cabinet } from './Cabinet';
+import { BoardArt, BookshelfArt, ScribeTableArt, SolarDoorArt } from './art';
 import { readSeen, unseenCount } from './board-seen';
 import { ImageSlot } from './ImageSlot';
 import { Link, NavContext } from './nav';
@@ -25,13 +27,13 @@ import { RoomClock } from './RoomClock';
 import { RoomOrb } from './RoomOrb';
 import { RoomPortrait, type AncarionHandle } from './RoomPortrait';
 import { useRoomData } from './room-api';
-import { ScrollRack } from './ScrollRack';
 import { Takeover } from './Takeover';
 import '../styles/room.css';
 
 const Bookshelf = lazy(() => import('./takeovers/Bookshelf').then((m) => ({ default: m.Bookshelf })));
 const Board = lazy(() => import('./takeovers/Board').then((m) => ({ default: m.Board })));
-const Lectern = lazy(() => import('./takeovers/Lectern').then((m) => ({ default: m.Lectern })));
+const ScribeTable = lazy(() => import('./takeovers/ScribeTable').then((m) => ({ default: m.ScribeTable })));
+const CabinetTakeover = lazy(() => import('./takeovers/Cabinet').then((m) => ({ default: m.Cabinet })));
 
 type RoomRoute = Extract<Route, { name: 'room' }>;
 
@@ -109,6 +111,14 @@ export default function Room({ route, navigate }: { route: RoomRoute; navigate: 
   const ancarion = useRef<AncarionHandle>(null);
   const rackField = useRef<HTMLInputElement>(null);
   const unseen = useUnseenNotices();
+  // A reader who reached the Cabinet without the writ is turned back to the
+  // room, where the Cabinet's slip opens for them and Ancarion performs.
+  const [sealed, setSealed] = useState<{ href: string } | null>(null);
+  const turnBack = () => {
+    const href = window.location.pathname;
+    navigate('/', { replace: true });
+    setSealed({ href });
+  };
 
   return (
     <NavContext.Provider value={navigate}>
@@ -119,6 +129,7 @@ export default function Room({ route, navigate }: { route: RoomRoute; navigate: 
           <span />
           <span />
         </div>
+        <Boughs />
 
         <header className="room__title">
           <p>Third Aldmeri Dominion</p>
@@ -200,24 +211,24 @@ export default function Room({ route, navigate }: { route: RoomRoute; navigate: 
 
           <Torch side="r" />
 
-          <div className="area-rack">
-            <ScrollRack ancarion={ancarion} field={rackField} />
+          <div className="area-cabinet">
+            <Cabinet ancarion={ancarion} field={rackField} sealed={sealed} />
           </div>
 
           <SolarDoor />
 
           <RoomObject
-            id="lectern"
-            href="/lectern"
-            name="Lectern"
+            id="scribe"
+            href="/scribe-table"
+            name="Scribe Table"
             describer="File reports, bounties and more under your code."
-            art={<LecternArt />}
-            className="area-lectern"
+            art={<ScribeTableArt />}
+            className="area-scribe"
           />
 
           <aside className="area-note note" aria-label="How to file">
             <span className="note__pin" aria-hidden="true" />
-            <h2>To file at the Lectern</h2>
+            <h2>To file at the Scribe Table</h2>
             <ol>
               <li>
                 Give your <strong>code</strong>. It names your rank and the office you file from.
@@ -245,10 +256,17 @@ export default function Room({ route, navigate }: { route: RoomRoute; navigate: 
           </Suspense>
         </Takeover>
       )}
-      {route.open === 'lectern' && (
-        <Takeover label="The Lectern" closeTo="/" returnFocus='[data-object="lectern"]'>
+      {route.open === 'cabinet' && (
+        <Takeover label="The Cabinet" closeTo="/" returnFocus='[data-object="cabinet"]' className="takeover--cabinet">
+          <Suspense fallback={<p className="loading">Unlocking the Cabinet…</p>}>
+            <CabinetTakeover letter={route.sub} onSealed={turnBack} />
+          </Suspense>
+        </Takeover>
+      )}
+      {route.open === 'scribe' && (
+        <Takeover label="The Scribe Table" closeTo="/" returnFocus='[data-object="scribe"]'>
           <Suspense fallback={<p className="loading">Lighting the torches…</p>}>
-            <Lectern />
+            <ScribeTable />
           </Suspense>
         </Takeover>
       )}

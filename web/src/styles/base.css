@@ -75,9 +75,9 @@ html {
   /* The archive's cursor: a Thalmor gauntlet, pointing, its fingertip the
      hotspot (cut by scripts/prepare-cursor.mjs). Each declaration falls back
      to the one before where a browser does not know it. */
-  cursor: url('../assets/cursor/gauntlet.png') 2 1, auto;
-  cursor: -webkit-image-set(url('../assets/cursor/gauntlet.png') 1x, url('../assets/cursor/gauntlet@2x.png') 2x) 2 1, auto;
-  cursor: image-set(url('../assets/cursor/gauntlet.png') 1x, url('../assets/cursor/gauntlet@2x.png') 2x) 2 1, auto;
+  cursor: url('../assets/cursor/gauntlet.png') 1 1, auto;
+  cursor: -webkit-image-set(url('../assets/cursor/gauntlet.png') 1x, url('../assets/cursor/gauntlet@2x.png') 2x) 1 1, auto;
+  cursor: image-set(url('../assets/cursor/gauntlet.png') 1x, url('../assets/cursor/gauntlet@2x.png') 2x) 1 1, auto;
 }
 
 /* Every control points with the same hand: the stylesheets say `inherit`

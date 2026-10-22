@@ -36,7 +36,7 @@ export function guardAssetFallback(request: Request, response: Response): Respon
  *
  * Without this, a request for an endpoint that does not exist falls through to
  * the SPA's index.html with a 200, and a client asking for JSON is handed a web
- * page. The Embassy room asks /api/room/* for its board and lectern before the
+ * page. The Embassy room asks /api/room/* for its board and Scribe Table before the
  * Librarian backend exists, and reads a 404 as "not yet consecrated" — which it
  * can only do if a missing endpoint says so.
  */

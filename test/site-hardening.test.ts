@@ -81,11 +81,11 @@ describe('initial-load ownership', () => {
     for (const sheet of [
       'chronicle.css', 'enforcement.css', 'orrery.css', 'reports.css', 'portrait-gate.css',
       // The room and everything that opens over it, and the hero that became the Gallery.
-      'room.css', 'takeover.css', 'orb.css', 'bookshelf.css', 'board.css', 'ancarion.css', 'gallery.css', 'register.css', 'shelf.css',
+      'room.css', 'takeover.css', 'orb.css', 'bookshelf.css', 'board.css', 'ancarion.css', 'gallery.css', 'cabinet.css', 'register.css', 'shelf.css',
     ]) {
       expect(entry, `${sheet} should load with its route`).not.toContain(sheet);
     }
-    expect(read('web/src/views/Reports.tsx')).toContain("../styles/reports.css");
+    expect(read('web/src/room/takeovers/Cabinet.tsx')).toContain("../../styles/cabinet.css");
     expect(read('web/src/components/PortraitGate.tsx')).toContain("../styles/portrait-gate.css");
     expect(read('web/src/room/Room.tsx')).toContain("../styles/room.css");
     expect(read('web/src/components/useAncarion.tsx')).toContain("../styles/ancarion.css");

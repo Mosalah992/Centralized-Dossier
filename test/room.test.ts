@@ -1,7 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
+import { REPORT_CATEGORY_NAMES } from '../shared/reports';
+import { WINGS, WING_INFO, wingOf } from '../shared/wings';
 import { isNight, refusalFor } from '../web/src/components/ancarion-script';
+import { DRAWERS, drawerOf, drawerRange } from '../web/src/room/cabinet-drawers';
 import { parse } from '../web/src/router';
 
 const read = (path: string) => readFileSync(path, 'utf8');
@@ -13,13 +16,17 @@ describe('the room routes', () => {
     expect(parse('/bookshelf/white-gold-concordat')).toEqual({ name: 'room', open: 'bookshelf', sub: 'white-gold-concordat' });
     expect(parse('/board')).toEqual({ name: 'room', open: 'board' });
     expect(parse('/board/bounties')).toEqual({ name: 'room', open: 'board', sub: 'bounties' });
-    expect(parse('/lectern')).toEqual({ name: 'room', open: 'lectern' });
+    expect(parse('/scribe-table')).toEqual({ name: 'room', open: 'scribe' });
+    // The Scribe Table was the Lectern; its old address still opens it.
+    expect(parse('/lectern')).toEqual({ name: 'room', open: 'scribe' });
     expect(parse('/gallery')).toEqual({ name: 'gallery' });
   });
 
   it('keeps every existing address', () => {
-    expect(parse('/reports')).toEqual({ name: 'reports' });
-    expect(parse('/reports/123')).toEqual({ name: 'reports', id: '123' });
+    // The Cabinet keeps the reports' addresses: the register, and one letter in it.
+    expect(parse('/reports')).toEqual({ name: 'room', open: 'cabinet' });
+    expect(parse('/reports/123')).toEqual({ name: 'room', open: 'cabinet', sub: '123' });
+    expect(parse('/reports/abc')).toEqual({ name: 'missing' });
     expect(parse('/archives/roster')).toEqual({ name: 'volume', slug: 'roster' });
     expect(parse('/penalcode')).toEqual({ name: 'penalcode' });
   });
@@ -37,14 +44,15 @@ describe('the room as drawn', () => {
   const room = read('web/src/room/Room.tsx');
 
   it('hangs every object the drawing names, each leading where it says', () => {
-    for (const href of ['/bookshelf', '/board', '/lectern', '/archives/roster', '/archives/statistics', '/gallery', '/archives/honor']) {
+    for (const href of ['/bookshelf', '/board', '/scribe-table', '/archives/roster', '/archives/statistics', '/gallery', '/archives/honor']) {
       expect(room, href).toMatch(new RegExp(`["']${href}["']`));
     }
     // The Calendar was retired; the orb reads the sky and leads nowhere.
     expect(read('web/src/room/RoomOrb.tsx')).not.toContain('href=');
-    expect(read('web/src/room/ScrollRack.tsx')).toContain('href="/reports"');
+    expect(read('web/src/room/Cabinet.tsx')).toContain('href="/reports"');
     expect(room).toContain('<RoomClock />');
-    expect(room).toContain('To file at the Lectern');
+    expect(room).toContain('To file at the Scribe Table');
+    expect(room).not.toMatch(/Lectern|Scroll Rack/);
   });
 
   it("hangs the Solar's door sealed, without pretending the way is open", () => {
@@ -54,8 +62,10 @@ describe('the room as drawn', () => {
     expect(room).not.toContain('href="/solar"');
   });
 
-  it('pins the call for recruits to the board, opening the form beside the archive', () => {
-    expect(read('web/src/room/takeovers/Board.tsx')).toContain('<RecruitmentNotice />');
+  it('stands the call for recruits in Recruitment Posters, opening the form beside the archive', () => {
+    const board = read('web/src/room/takeovers/Board.tsx');
+    expect(board).toContain('recruitment: RecruitmentNotice,');
+    expect(board).not.toContain('<RecruitmentNotice />');
     const notice = read('web/src/room/takeovers/Recruitment.tsx');
     expect(notice).toContain('https://docs.google.com/forms/d/e/');
     expect(notice).toContain('target="_blank"');
@@ -78,12 +88,22 @@ describe('the room as drawn', () => {
     expect(read('web/src/room/RoomPortrait.tsx')).toContain("preload: 'deferred'");
   });
 
-  it('opens the rack on the Reports writ and nothing else', () => {
-    const rack = read('web/src/room/ScrollRack.tsx');
-    expect(rack).toContain('openReports(passphrase, signal)');
-    expect(rack).toContain('reportsIsOpen()');
-    expect(rack).toContain('refusalFor(denials.current)');
-    expect(rack).not.toMatch(/fetch\(/);
+  it('opens the Cabinet on the Reports writ and nothing else', () => {
+    const cabinet = read('web/src/room/Cabinet.tsx');
+    expect(cabinet).toContain('openReports(passphrase, signal)');
+    expect(cabinet).toContain('reportsIsOpen()');
+    expect(cabinet).toContain('refusalFor(denials.current)');
+    expect(cabinet).not.toMatch(/fetch\(/);
+    // A reader who reached it without the writ is turned back to Ancarion.
+    expect(read('web/src/room/takeovers/Cabinet.tsx')).toContain('else onSealed();');
+  });
+
+  it('hangs the Summerset boughs as decoration only, still for readers who ask', () => {
+    const boughs = read('web/src/room/Boughs.tsx');
+    expect(boughs).toContain('<div className="boughs" aria-hidden="true">');
+    expect(room).toContain('<Boughs />');
+    const css = read('web/src/styles/room.css');
+    expect(css).toMatch(/prefers-reduced-motion: reduce\) \{\r?\n  \.bough__sway,/);
   });
 
   it('keeps its motion for readers who want it', () => {
@@ -108,5 +128,39 @@ describe("Ancarion's patience", () => {
   it('sleeps from eleven at night until six', () => {
     const at = (h: number) => new Date(2026, 9, 19, h, 30);
     expect([22, 23, 0, 5, 6].map((h) => isNight(at(h)))).toEqual([false, true, true, true, false]);
+  });
+});
+
+describe('the drawers of the Cabinet', () => {
+  const now = Date.parse('2026-10-22T12:00:00Z');
+  const ago = (hours: number) => new Date(now - hours * 3_600_000).toISOString();
+
+  it('files every letter by its age: under a day, a week, a month, and older', () => {
+    expect(DRAWERS).toEqual(['fresh', 'new', 'old', 'archive']);
+    expect([0, 23.9, 24, 167.9, 168, 719.9, 720, 9000].map((h) => drawerOf(ago(h), now))).toEqual([
+      'fresh', 'fresh', 'new', 'new', 'old', 'old', 'archive', 'archive',
+    ]);
+  });
+
+  it('asks the register for a range a day wider than each drawer', () => {
+    expect(drawerRange('fresh', now)).toEqual({ from: '2026-10-20', to: null });
+    expect(drawerRange('new', now)).toEqual({ from: '2026-10-14', to: '2026-10-22' });
+    expect(drawerRange('old', now)).toEqual({ from: '2026-09-21', to: '2026-10-16' });
+    expect(drawerRange('archive', now)).toEqual({ from: null, to: '2026-09-23' });
+  });
+});
+
+describe('the six wings', () => {
+  it('reads every collector category into a wing', () => {
+    expect(REPORT_CATEGORY_NAMES.map(wingOf)).toEqual([
+      'logistics', 'diplomatic', 'logistics', 'logistics', 'military', 'intelligence',
+    ]);
+  });
+
+  it('gives every wing its own name, wax and emblem', () => {
+    const info = WINGS.map((w) => WING_INFO[w]);
+    for (const key of ['name', 'wax', 'emblem'] as const) {
+      expect(new Set(info.map((i) => i[key])).size, key).toBe(WINGS.length);
+    }
   });
 });

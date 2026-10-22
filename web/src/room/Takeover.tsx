@@ -108,8 +108,9 @@ export function Takeover({ label, closeTo, returnFocus, className = '', children
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      // Only the innermost open takeover answers.
-      if (ref.current?.querySelector('.takeover')) return;
+      // Only the innermost open takeover answers, and only when nothing inside
+      // it (an open letter, an open drawer) has answered first.
+      if (ref.current?.querySelector('.takeover') || e.defaultPrevented) return;
       if (e.key === 'Escape') {
         e.preventDefault();
         close();
