@@ -331,9 +331,9 @@
   color: var(--parchment);
   font-size: 1.5rem;
   line-height: 1;
-  cursor: pointer;
+  cursor: inherit;
 }
-.reader__controls button:disabled { opacity: 0.35; cursor: default; }
+.reader__controls button:disabled { opacity: 0.35; cursor: inherit; }
 
 @media (max-width: 860px) {
   .bookcase__shelf { min-height: 220px; padding: 22px 8px 0; }
@@ -394,7 +394,7 @@
   background: none;
   color: var(--ink);
   text-align: left;
-  cursor: pointer;
+  cursor: inherit;
 }
 .contents button:hover,
 .contents button:focus-visible { background: rgba(184, 138, 10, 0.12); }
@@ -422,11 +422,11 @@
   z-index: 3;
   border: 0;
   background: none;
-  cursor: pointer;
+  cursor: inherit;
 }
 .page-edge--left { left: 0; }
 .page-edge--right { right: 0; }
-.page-edge:disabled { cursor: default; }
+.page-edge:disabled { cursor: inherit; }
 
 /* The shadow that sweeps across as a leaf passes over: a blurred band, not a gradient. */
 .leaf-shade {
@@ -501,7 +501,7 @@
   color: var(--stone-dim);
   background: none;
   border: 1px solid rgba(255, 255, 255, 0.14);
-  cursor: pointer;
+  cursor: inherit;
 }
 .scry__answer { width: min(760px, 100%); margin: 0 auto; }
 .scry__count {
@@ -530,7 +530,7 @@
   background: none;
   border: 0;
   border-bottom: 1px solid rgba(201, 162, 39, 0.12);
-  cursor: pointer;
+  cursor: inherit;
 }
 .scry__hit:hover,
 .scry__hit:focus-visible { background: rgba(201, 162, 39, 0.1); outline: none; }
@@ -549,7 +549,7 @@
   color: var(--stone-dim);
   background: none;
   border: 1px solid rgba(255, 255, 255, 0.14);
-  cursor: pointer;
+  cursor: inherit;
 }
 .guide-toggle--on { color: var(--parchment); border-color: var(--bruma-yellow); }
 .guide-toggle__mark { font-family: var(--serif); font-size: 0.92rem; }
@@ -574,10 +574,10 @@
   background: url('/textures/grain.svg') 0 0 / 256px 256px, #2a2724;
   border: 2px solid #5f5b55;
   box-shadow: inset 0 0 0 1px #1c1a17, 0 3px 6px rgba(0, 0, 0, 0.55);
-  cursor: pointer;
+  cursor: inherit;
 }
 .book-nav__contents { font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase; }
-.book-nav__btn:disabled { opacity: 0.35; cursor: default; }
+.book-nav__btn:disabled { opacity: 0.35; cursor: inherit; }
 .book-nav__pages { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0.25rem; margin: 0; padding: 0; list-style: none; }
 .book-nav__num {
   min-width: 2rem;
@@ -587,10 +587,10 @@
   color: rgba(234, 223, 202, 0.7);
   background: none;
   border: 1px solid transparent;
-  cursor: pointer;
+  cursor: inherit;
 }
 .book-nav__num:hover { color: var(--parchment); border-color: rgba(201, 162, 39, 0.4); }
-.book-nav__num.is-current { color: #141210; background: var(--bruma-yellow); border-color: var(--bruma-yellow); cursor: default; }
+.book-nav__num.is-current { color: #141210; background: var(--bruma-yellow); border-color: var(--bruma-yellow); cursor: inherit; }
 .book-nav__gap { color: rgba(234, 223, 202, 0.45); }
 
 /* Contents as an overlay over the book, so it never opens off screen. */

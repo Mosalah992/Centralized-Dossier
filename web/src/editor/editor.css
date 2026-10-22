@@ -78,7 +78,7 @@
   border-radius: 3px;
   background: linear-gradient(160deg, rgb(58 44 24 / 0.55), rgb(28 22 14 / 0.55));
   color: inherit;
-  cursor: pointer;
+  cursor: inherit;
   transition: border-color var(--dur-hand) var(--ease), transform var(--dur-hand) var(--ease);
 }
 
@@ -87,7 +87,7 @@
   transform: translateY(-2px);
 }
 
-.ed-card:disabled { opacity: 0.4; cursor: default; }
+.ed-card:disabled { opacity: 0.4; cursor: inherit; }
 
 .ed-card__title {
   font-family: var(--display);
@@ -172,12 +172,12 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #b89f6e;
-  cursor: pointer;
+  cursor: inherit;
   transition: color var(--dur-hand) var(--ease), border-color var(--dur-hand) var(--ease);
 }
 
 .ed-btn:hover:not(:disabled) { color: #f3e7c8; border-color: #b89f6e; }
-.ed-btn:disabled { opacity: 0.32; cursor: default; }
+.ed-btn:disabled { opacity: 0.32; cursor: inherit; }
 
 /* Sealing is the only act here that changes a file, so it is the only control
    that carries the gold. */
@@ -260,7 +260,7 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: rgb(184 159 110 / 0.65);
-  cursor: pointer;
+  cursor: inherit;
 }
 
 .ed-tab:hover { color: #e9dcba; }
@@ -314,7 +314,7 @@
   border-left: 2px solid transparent;
   background: none;
   color: inherit;
-  cursor: pointer;
+  cursor: inherit;
 }
 
 .ed-row:hover { background: rgb(184 159 110 / 0.07); }

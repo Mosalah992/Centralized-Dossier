@@ -29,6 +29,7 @@ import '@fontsource/eb-garamond/latin-400-italic.css';
 import '@fontsource/eb-garamond/latin-ext-400-italic.css';
 
 import App from './App';
+import { installClickSpark } from './click-spark';
 import { reloadForNewBuild } from './stale-build';
 import './styles/base.css';
 import './styles/ledger.css';
@@ -39,6 +40,8 @@ import './styles/app-shell.css';
 window.addEventListener('vite:preloadError', (event) => {
   if (reloadForNewBuild()) event.preventDefault();
 });
+
+installClickSpark();
 
 const container = document.getElementById('root');
 if (!container) throw new Error('#root is missing from index.html');

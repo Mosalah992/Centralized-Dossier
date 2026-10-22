@@ -1,5 +1,9 @@
 # Decision Log
 
+## 2026-10-22 - The cursor is a Thalmor gauntlet
+
+The First Emissary's gauntlet (`Assets/cursor/thalmor gloves cursor.jfif`) is the archive's cursor everywhere: on the page and on every control, so links and buttons point with the same hand instead of the system's. The source is a JPEG with a transparency checkerboard painted into it, so `scripts/prepare-cursor.mjs` cuts the gauntlet out by its own dark silhouette and redraws the source's pale outline as a one-pixel rim in the archive's gold; the white glint over the fingertip is left off, and nothing else is added. It leans 28 degrees to the left, as an arrow cursor does, so the fingertip is the top-left point and the hotspot. It fits 32 by 32 (Chromium hides larger cursors near its own UI), with a 2x copy for high-density screens through `image-set()`. Each mouse or pen click strikes a brief gold spark at the fingertip (`web/src/click-spark.ts`, styled in base.css): a span dropped at the pointer and removed after 600ms, never in the way of a click, and not struck at all for readers who ask for less motion. Every `cursor: pointer` and `cursor: default` in the stylesheets became `inherit`; text fields keep their I-beam and disabled controls keep `not-allowed`.
+
 ## 2026-10-20 - The torches stand outside the arches
 
 Of three arrangements mocked on the live room (sconces beside Ancarion; torches outside the arches; torches either side of the board with the bookcase on the floor), the First Emissary chose the torches outside the arches: one stands on the floor line beside each arch, in the slack between it and the furniture at the wall, lighting the way in. The lectern stands alone. The torches are shown only on the one-screen wall, where that slack exists; narrower walls and phones go without them and fetch neither animated image.

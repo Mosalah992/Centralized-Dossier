@@ -46,12 +46,12 @@
 .portrait-gate__form input:focus-visible, .portrait-gate button:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 3px; }
 .portrait-gate__form input::placeholder { color: rgb(207 199 182 / .45); font-family: var(--display); font-size: .7rem; letter-spacing: .2em; text-transform: uppercase; }
 .portrait-gate__form input[aria-invalid='true'] { border-color: #dda2a2; }
-.portrait-gate__form button { justify-self: center; min-height: 2.7rem; padding: .65rem 1rem; color: #19160d; font: 600 .62rem var(--display); letter-spacing: .15em; text-transform: uppercase; background: var(--portrait-gold); border: 1px solid #e0c273; cursor: pointer; transition: color .25s var(--ease), background-color .25s var(--ease), transform .25s var(--ease); }
+.portrait-gate__form button { justify-self: center; min-height: 2.7rem; padding: .65rem 1rem; color: #19160d; font: 600 .62rem var(--display); letter-spacing: .15em; text-transform: uppercase; background: var(--portrait-gold); border: 1px solid #e0c273; cursor: inherit; transition: color .25s var(--ease), background-color .25s var(--ease), transform .25s var(--ease); }
 .portrait-gate__form button:hover:not(:disabled) { color: #0c0d09; background: var(--gold-bright); transform: translateY(-1px); }
 .portrait-gate__form button:disabled { cursor: not-allowed; opacity: .9; }
 .portrait-gate[aria-busy='true'] .portrait-gate__form button:disabled { cursor: wait; }
 .portrait-gate__status { min-height: 1.4rem; margin: .4rem 0 0; color: #e5c9b1; font-size: .88rem; }
-.portrait-gate__skip { padding: 0; color: var(--portrait-gold); font: .62rem var(--display); letter-spacing: .14em; text-decoration: underline; text-underline-offset: .25rem; text-transform: uppercase; background: none; border: 0; cursor: pointer; }
+.portrait-gate__skip { padding: 0; color: var(--portrait-gold); font: .62rem var(--display); letter-spacing: .14em; text-decoration: underline; text-underline-offset: .25rem; text-transform: uppercase; background: none; border: 0; cursor: inherit; }
 .portrait-gate__stage { animation: portrait-gate-arrive .7s var(--ease-swing) both; }
 .portrait-gate__eyebrow, .portrait-gate__copy h1, .portrait-gate__description, .portrait-gate__dialogue, .portrait-gate__form, .portrait-gate__status { animation: portrait-gate-copy-arrive .5s var(--ease) both; }
 .portrait-gate__eyebrow { animation-delay: .08s; }

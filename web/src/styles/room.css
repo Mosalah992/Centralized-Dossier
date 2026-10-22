@@ -339,7 +339,7 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
   justify-items: center;
   gap: 0.8rem;
 }
-.arch__name { grid-area: name; max-width: 100%; white-space: normal; text-align: center; text-wrap: balance; cursor: pointer; }
+.arch__name { grid-area: name; max-width: 100%; white-space: normal; text-align: center; text-wrap: balance; cursor: inherit; }
 .arch__name:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 3px; }
 .arch__door {
   grid-area: door;
@@ -570,7 +570,7 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
   color: var(--rubric);
   background: none;
   border: 0;
-  cursor: pointer;
+  cursor: inherit;
 }
 
 /* ---------- Buttons on parchment ---------- */
@@ -585,7 +585,7 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
   background: url('/textures/grain.svg') 0 0 / 256px 256px, var(--brass);
   border: 1px solid var(--brass-dark);
   box-shadow: inset 0 1px 0 var(--brass-light), 0 2px 4px rgb(0 0 0 / 0.45);
-  cursor: pointer;
+  cursor: inherit;
 }
 .btn:disabled { cursor: not-allowed; opacity: 0.6; }
 .btn:focus-visible { outline: 2px solid var(--rubric); outline-offset: 2px; }
@@ -619,7 +619,7 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
   font: inherit;
   background: none;
   border: 0;
-  cursor: default;
+  cursor: inherit;
 }
 .object--door:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 4px; }
 .object--door .door__leaf { transform-box: fill-box; }

@@ -20,7 +20,7 @@
   border: 1px solid rgba(201, 162, 39, 0.28);
   border-radius: 50%;
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45);
-  cursor: pointer;
+  cursor: inherit;
   /* var(--ease), like every other transition in the archive. This rule used the
      bare `ease` keyword — the only one that did, and an oversight rather than a
      decision: nothing about a roundel button wants a different curve from the

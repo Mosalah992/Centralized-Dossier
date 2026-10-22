@@ -145,7 +145,7 @@
   background: none;
   border: 0;
   border-bottom: 1px solid currentColor;
-  cursor: pointer;
+  cursor: inherit;
 }
 
 .reports-dossier__lagging { margin-top: 1rem; padding-top: 0.9rem; border-top: 1px solid rgb(197 161 105 / 0.22); }
@@ -175,7 +175,7 @@
   background: none;
   border: 0;
   border-bottom: 1px dotted rgb(197 161 105 / 0.25);
-  cursor: pointer;
+  cursor: inherit;
 }
 
 .reports-dossier__lagging button span { font-style: italic; text-transform: none; color: color-mix(in srgb, var(--gold) 70%, var(--stone)); }
@@ -192,7 +192,7 @@
 }
 
 .reports-dossier__standard summary {
-  cursor: pointer;
+  cursor: inherit;
   font-family: var(--display);
   font-size: 0.64rem;
   letter-spacing: 0.18em;
@@ -250,7 +250,7 @@
   text-transform: uppercase;
   background: transparent;
   border: 1px solid rgb(197 161 105 / 0.28);
-  cursor: pointer;
+  cursor: inherit;
 }
 
 .reports-dossier__categories .is-active,
@@ -329,7 +329,7 @@
   text-decoration: none;
   background: transparent;
   border: 0;
-  cursor: pointer;
+  cursor: inherit;
 }
 
 .report:hover,
@@ -390,7 +390,7 @@
   text-transform: uppercase;
   background: none;
   border: 0;
-  cursor: pointer;
+  cursor: inherit;
 }
 
 .report-page__head { padding-bottom: 1.2rem; margin-bottom: 1.2rem; border-bottom: 1px solid rgb(94 66 28 / 0.3); }

@@ -399,11 +399,11 @@
   z-index: 3;
   border: 0;
   background: none;
-  cursor: pointer;
+  cursor: inherit;
 }
 .chron-edge--left { left: 0; }
 .chron-edge--right { right: 0; }
-.chron-edge:disabled { cursor: default; }
+.chron-edge:disabled { cursor: inherit; }
 
 /* ── The turning leaf ─────────────────────────────────────────────────── */
 
@@ -482,13 +482,13 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #b89f6e;
-  cursor: pointer;
+  cursor: inherit;
 }
 .chron-nav__btn:hover:not(:disabled) {
   color: #e9dcba;
   border-color: #b89f6e;
 }
-.chron-nav__btn:disabled { opacity: 0.3; cursor: default; }
+.chron-nav__btn:disabled { opacity: 0.3; cursor: inherit; }
 
 /*
  * The pager. Numerals in the display face, sized to sit under the leaf without
@@ -521,7 +521,7 @@
   font-size: 0.8rem;
   letter-spacing: 0.06em;
   color: rgb(184 159 110 / 0.72);
-  cursor: pointer;
+  cursor: inherit;
 }
 
 .chron-nav__num:hover {
@@ -535,7 +535,7 @@
   color: #f3e7c8;
   border-color: #b89f6e;
   background: rgb(184 159 110 / 0.12);
-  cursor: default;
+  cursor: inherit;
 }
 
 .chron-nav__gap {
@@ -744,7 +744,7 @@
   color: var(--stone-dim);
   background: none;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  cursor: pointer;
+  cursor: inherit;
 }
 
 .scry__clear:hover, .scry__clear:focus-visible { color: var(--foil); }
@@ -782,7 +782,7 @@
   background: none;
   border: 0;
   border-bottom: 1px solid rgba(201, 162, 39, 0.12);
-  cursor: pointer;
+  cursor: inherit;
 }
 
 .scry__hit:hover, .scry__hit:focus-visible {
@@ -863,7 +863,7 @@
   color: var(--stone-dim);
   background: none;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  cursor: pointer;
+  cursor: inherit;
   transition: color 0.2s var(--ease), border-color 0.2s var(--ease);
 }
 
