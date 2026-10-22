@@ -19,6 +19,7 @@ const SOURCE = 'Assets/cursor/thalmor gloves cursor.jfif';
 const OUT = 'web/src/assets/cursor';
 const SIZE = 40; // CSS pixels, both ways. Chromium hides cursors over 32px only where they cross its own UI, at the window's edge.
 const TILT = -28; // degrees, anticlockwise: the lean of an arrow cursor.
+const BROADEN = 1.3; // across the hand, before it leans: a heavier gauntlet than the drawing's slender one.
 
 const GOLD = [201, 162, 39];
 const GOLD_BRIGHT = [232, 205, 122];
@@ -113,7 +114,11 @@ for (let p = 0; p < W * H; p++) {
 
 const pad = 40; // room to turn without clipping
 const box = { left: minX - pad, top: minY - pad, width: maxX - minX + 1 + pad * 2, height: maxY - minY + 1 + pad * 2 };
-const cut = await sharp(rgba, { raw: { width: W, height: H, channels: 4 } }).extract(box).png().toBuffer();
+const cut = await sharp(rgba, { raw: { width: W, height: H, channels: 4 } })
+  .extract(box)
+  .resize(Math.round(box.width * BROADEN), box.height, { fit: 'fill', kernel: 'lanczos3' })
+  .png()
+  .toBuffer();
 
 // 4. Lean it like an arrow, then crop to what is there.
 const { data: turned, info: ti } = await sharp(cut)
@@ -136,25 +141,30 @@ const lh = ty1 - ty0 + 1;
 
 mkdirSync(OUT, { recursive: true });
 for (const scale of [1, 2]) {
-  // Fit inside SIZE x SIZE, a device pixel clear on every side for the rim.
-  const room = SIZE * scale - 2;
+  // Fit inside SIZE x SIZE, clear on every side for the rim.
+  const room = SIZE * scale - 2 * scale;
   const k = Math.min(room / lw, room / lh);
   const iw = Math.max(1, Math.round(lw * k));
   const ih = Math.max(1, Math.round(lh * k));
   const { data: inner } = await sharp(leaned).resize(iw, ih, { kernel: 'lanczos3' }).raw().toBuffer({ resolveWithObject: true });
-  const w = iw + 2;
-  const h = ih + 2;
+  const w = iw + 2 * scale;
+  const h = ih + 2 * scale;
   const data = Buffer.alloc(w * h * 4);
-  for (let y = 0; y < ih; y++) inner.copy(data, ((y + 1) * w + 1) * 4, y * iw * 4, (y + 1) * iw * 4);
+  for (let y = 0; y < ih; y++) inner.copy(data, ((y + scale) * w + scale) * 4, y * iw * 4, (y + 1) * iw * 4);
 
-  // The rim: one device pixel of gold just outside the silhouette.
+  // The rim: one CSS pixel of gold just outside the silhouette (two device
+  // pixels at 2x).
   const a = (x, y) => (x < 0 || y < 0 || x >= w || y >= h ? 0 : data[(y * w + x) * 4 + 3]);
+  const reach = [];
+  for (let dy = -scale; dy <= scale; dy++) {
+    for (let dx = -scale; dx <= scale; dx++) if ((dx || dy) && Math.abs(dx) + Math.abs(dy) <= scale) reach.push([dx, dy]);
+  }
   const out = Buffer.from(data);
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const here = a(x, y);
       if (here > 200) continue;
-      const near = Math.max(a(x - 1, y), a(x + 1, y), a(x, y - 1), a(x, y + 1));
+      const near = Math.max(...reach.map(([dx, dy]) => a(x + dx, y + dy)));
       const rim = Math.max(0, near - here) * 0.85;
       if (rim < 8) continue;
       const i = (y * w + x) * 4;
