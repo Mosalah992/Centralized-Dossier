@@ -23,7 +23,7 @@ import type { Pins } from './usePins';
 /** The combined map's own proportions (1448 x 1086; scripts/prepare-solar-map.mjs). */
 export const MAP_ASPECT = 1448 / 1086;
 const MIN_ZOOM = 1;
-/** As deep as the map's own detail holds up (its image is twice the source's size). */
+/** As deep as the map holds up: its image is three times the source's size (scripts/prepare-solar-map.mjs). */
 const MAX_ZOOM = 4;
 /** Pointer travel, in pixels, before a press becomes a drag. */
 const SLOP = 4;

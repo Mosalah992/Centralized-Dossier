@@ -5,9 +5,11 @@
 // web/src/assets/solar/:
 //
 //   realm-map.webp          the map spread out to pan and zoom (MapViewer).
-//                           Drawn at twice the source's size with a fine
-//                           resampler, so the viewer has pixels to zoom into
-//                           rather than leaving the browser to stretch them.
+//                           Drawn at three times the source's size with a fine
+//                           resampler and a light sharpen, so that even at the
+//                           viewer's deepest zoom (4x) the browser shows these
+//                           pixels nearly one to one rather than stretching
+//                           the source itself.
 //   realm-map-table.webp    the map on the table, at the source's own size.
 //   realm-map-glimpse.webp  what the room sees of the Solar behind Ancarion's
 //                           portrait when it swings open: small, since it is
@@ -30,8 +32,8 @@ mkdirSync(OUT, { recursive: true });
 
 const outputs = [
   // [name, width, quality, sharpen]
-  ['realm-map', width * 2, 84, true],
-  ['realm-map-table', width, 82, false],
+  ['realm-map', width * 3, 90, true],
+  ['realm-map-table', width, 92, false],
   ['realm-map-glimpse', 480, 60, false],
 ];
 
