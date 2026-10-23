@@ -9,7 +9,9 @@
 // change is shared with the rest of the Solar (usePins).
 //
 // Pieces stand at fractions of the map, so they keep their place at any zoom,
-// and are drawn at one size whatever the zoom, as pieces on a table are.
+// and are drawn at one size whatever the zoom, as pieces on a table are. The
+// map is laid out at its zoomed size rather than scaled, so nothing on it is
+// ever an enlarged picture of itself.
 
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type PointerEvent as ReactPointerEvent } from 'react';
 
@@ -18,10 +20,11 @@ import { PIN_INFO, PIN_KINDS, PIN_LIMITS, type PinKind, type SolarPin } from '..
 import { PinMark } from './art';
 import type { Pins } from './usePins';
 
-/** The merged map's own proportions (4096 x 3046). */
-export const MAP_ASPECT = 4096 / 3046;
+/** The combined map's own proportions (1448 x 1086; scripts/prepare-solar-map.mjs). */
+export const MAP_ASPECT = 1448 / 1086;
 const MIN_ZOOM = 1;
-const MAX_ZOOM = 6;
+/** As deep as the map's own detail holds up (its image is twice the source's size). */
+const MAX_ZOOM = 4;
 /** Pointer travel, in pixels, before a press becomes a drag. */
 const SLOP = 4;
 /** A Shift+arrow nudge, as a fraction of the map. */
@@ -298,7 +301,11 @@ export function MapViewer({ pins, focus = null, onClose }: Props) {
   }, [draft, placing, selected, onClose]);
 
   const chosen = selected ? pins.pins.find((p) => p.id === selected) ?? null : null;
-  const layer = { width: base.w, height: base.h, transform: `translate(${view.tx}px, ${view.ty}px) scale(${view.s})` };
+  // The map is laid out at its zoomed size, not stretched by a transform: the
+  // browser then draws it from the full image at every zoom, and the pieces
+  // and their names are drawn afresh at their own size instead of being blown
+  // up with it.
+  const layer = { width: base.w * view.s, height: base.h * view.s, transform: `translate(${view.tx}px, ${view.ty}px)` };
 
   return (
     <div className="map-viewer" role="dialog" aria-modal="true" aria-labelledby={titleId}>
@@ -371,7 +378,7 @@ export function MapViewer({ pins, focus = null, onClose }: Props) {
                   data-kind={pin.kind}
                   data-selected={selected === pin.id || undefined}
                   data-held={held?.id === pin.id || undefined}
-                  style={{ left: `${at.x * 100}%`, top: `${at.y * 100}%`, transform: `translate(-50%, -100%) scale(${1 / view.s})` }}
+                  style={{ left: `${at.x * 100}%`, top: `${at.y * 100}%`, transform: 'translate(-50%, -100%)' }}
                   aria-label={`${PIN_INFO[pin.kind].name}: ${pin.label}`}
                   aria-pressed={selected === pin.id}
                   onPointerDown={(event) => onPieceDown(event, pin)}
@@ -391,7 +398,7 @@ export function MapViewer({ pins, focus = null, onClose }: Props) {
               );
             })}
             {draft && (
-              <span className="map-pin map-pin--draft" style={{ left: `${draft.x * 100}%`, top: `${draft.y * 100}%`, transform: `translate(-50%, -100%) scale(${1 / view.s})` }} aria-hidden="true">
+              <span className="map-pin map-pin--draft" style={{ left: `${draft.x * 100}%`, top: `${draft.y * 100}%`, transform: 'translate(-50%, -100%)' }} aria-hidden="true">
                 <PinMark kind={draft.kind} />
               </span>
             )}

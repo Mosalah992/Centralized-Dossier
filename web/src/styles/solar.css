@@ -88,7 +88,7 @@
 .war-table__map {
   position: relative;
   display: block;
-  width: min(100%, calc((100dvh - 15rem) * 1.345 + 2 * clamp(10px, 1.2vw, 18px)));
+  width: min(100%, calc((100dvh - 15rem) * 1.333 + 2 * clamp(10px, 1.2vw, 18px)));
   min-width: min(100%, 30rem);
   margin-inline: auto;
   padding: clamp(10px, 1.2vw, 18px);
@@ -353,7 +353,6 @@
   left: 0;
   top: 0;
   transform-origin: 0 0;
-  will-change: transform;
 }
 .map-layer__img {
   display: block;
