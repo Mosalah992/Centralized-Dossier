@@ -5,8 +5,9 @@
 // realm's history, the Chronicles, the Arrests under the White-Gold Concordat,
 // the Penal Code, and the Concordat itself. The Roster, the Chain of Command
 // and the Hall of Honors are reached through the archways, so they are not
-// shelved twice. The Concordat opens in the reader over the shelf; the others
-// open their own pages (the Chronicles still behind their own word).
+// shelved twice. Every one of them is bound as a book and read the same way
+// (web/src/books/BoundBook.tsx), and none is sealed (2026-10-23). The
+// Concordat opens over the shelf; the others open as pages of their own.
 
 import { getTitle } from '../../../../shared/volumes';
 import type { VolumeSlug } from '../../../../shared/types';
@@ -14,7 +15,7 @@ import { BUNDLED_BOOKS } from '../../books/registry';
 import { hrefFor } from '../../router';
 import { BINDINGS } from '../../theme';
 import { Link } from '../nav';
-import { BookReader } from './BookReader';
+import { ShelfBook } from './ShelfBook';
 import { Takeover } from '../Takeover';
 import '../../styles/bookshelf.css';
 
@@ -134,7 +135,7 @@ export function Bookshelf({ book }: { book?: string }) {
           returnFocus={`[data-book="/bookshelf/${book}"]`}
           className="takeover--reading"
         >
-          <BookReader slug={book} />
+          <ShelfBook slug={book} />
         </Takeover>
       )}
     </div>

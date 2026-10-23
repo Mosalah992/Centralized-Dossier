@@ -2,30 +2,36 @@
 // Emissary's drawing and built on the Bruma Joint Archives' room.
 //
 //   Bookshelf   Bulletin Board (announcements)        The hour
-//      │        ┌──────┐ ┌────────┐ ┌──────┐          + orrery
+//      │        ┌──────┐ ┌────────┐ ┌──────┐          + the globe
 //      │        │ arch │ │Ancarion│ │ arch │          The Cabinet
-//   Solar door torch└──────┘ └────────┘ └──────┘torch     │
-//                       Scribe Table                pinned note
+//      │        └──────┘ └─plate──┘ └──────┘              │
+//   pinned note   candle  Scribe Table  candle            │
 //
 // Every object is a link or a button, so it can be focused, opened with the
 // keyboard and addressed by URL. Objects that lead to the archive's existing
 // pages navigate there; the room's own surfaces (bookshelf, board, Scribe Table, Cabinet)
-// open over it as takeovers with URLs of their own.
+// open over it as takeovers with URLs of their own. Ancarion keeps the Solar,
+// High Command's room: his plate takes its word and lets the reader through
+// to /solar, a page of its own.
 
-import { Suspense, lazy, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+
+import { clearSolarSealed, solarWasSealed } from '../solar-sealed';
 
 import type { Navigate, Route } from '../router';
 import type { BoardSectionSummary } from '../../../shared/room';
 import { Archway } from './Archway';
 import { Boughs } from './Boughs';
 import { Cabinet } from './Cabinet';
-import { BoardArt, BookshelfArt, ScribeTableArt, SolarDoorArt } from './art';
+import { Candle } from './Candle';
+import { BoardArt, BookshelfArt, ScribeTableArt } from './art';
 import { readSeen, unseenCount } from './board-seen';
 import { ImageSlot } from './ImageSlot';
 import { Link, NavContext } from './nav';
 import { RoomClock } from './RoomClock';
 import { RoomOrb } from './RoomOrb';
 import { RoomPortrait, type AncarionHandle } from './RoomPortrait';
+import { SolarPlate, type PlateHandle } from './SolarPlate';
 import { useRoomData } from './room-api';
 import { Takeover } from './Takeover';
 import '../styles/room.css';
@@ -64,43 +70,6 @@ function RoomObject({ id, href, name, describer, art, className = '', badge }: O
   );
 }
 
-/** A standing torch: footage of a real flame (the Gallery's, before it came here). */
-function Torch({ side }: { side: 'l' | 'r' }) {
-  return <span className={`torch torch--${side}`} aria-hidden="true" />;
-}
-
-/**
- * The door to the Solar, which will hold the map and the clerk's desk. Until
- * it is furnished the door is sealed: it can be found, focused and tried, and
- * it says so, but it leads nowhere and is not dressed as a link.
- */
-function SolarDoor() {
-  const [trying, setTrying] = useState(false);
-  const tryDoor = () => {
-    if (trying) return;
-    setTrying(true);
-    window.setTimeout(() => setTrying(false), 700);
-  };
-  return (
-    <button
-      type="button"
-      className="area-door object object--door"
-      data-trying={trying || undefined}
-      aria-disabled="true"
-      aria-label="The Solar: the map and the clerk's desk. The door is sealed until the room is furnished."
-      onClick={tryDoor}
-    >
-      <ImageSlot name="solar-door" className="object__art">
-        <SolarDoorArt />
-      </ImageSlot>
-      <span className="plaque">The Solar</span>
-      <span className="describer" aria-hidden="true">
-        The map and the clerk’s desk. Sealed until the room is furnished.
-      </span>
-    </button>
-  );
-}
-
 /** How many sections of the board hold something this reader has not seen. */
 function useUnseenNotices(): number {
   const board = useRoomData<{ sections: BoardSectionSummary[] }>('/api/room/board');
@@ -109,10 +78,14 @@ function useUnseenNotices(): number {
 
 export default function Room({ route, navigate }: { route: RoomRoute; navigate: Navigate }) {
   const ancarion = useRef<AncarionHandle>(null);
-  const rackField = useRef<HTMLInputElement>(null);
+  const plate = useRef<PlateHandle>(null);
+  const plateField = useRef<HTMLInputElement>(null);
   const unseen = useUnseenNotices();
+  // Turned back from /solar for want of the writ: the plate waits for the word.
+  const [solarSealed] = useState(solarWasSealed);
+  useEffect(clearSolarSealed, []);
   // A reader who reached the Cabinet without the writ is turned back to the
-  // room, where the Cabinet's slip opens for them and Ancarion performs.
+  // room, where the Cabinet's slip opens for them.
   const [sealed, setSealed] = useState<{ href: string } | null>(null);
   const turnBack = () => {
     const href = window.location.pathname;
@@ -155,7 +128,7 @@ export default function Room({ route, navigate }: { route: RoomRoute; navigate: 
             id="board"
             href="/board"
             name="Bulletin Board"
-            describer="Announcements, bounties, new laws, figures of interest, the Embassy agenda and the news."
+            describer="Propaganda, recruitment posters, festivities, standing orders, spiritual guidance and bounties."
             art={
               <>
                 <BoardArt wide className="board-art board-art--wide" />
@@ -178,9 +151,6 @@ export default function Room({ route, navigate }: { route: RoomRoute; navigate: 
             <RoomOrb />
           </div>
 
-          {/* A torch stands outside each arch, lighting the way into it. */}
-          <Torch side="l" />
-
           <div className="area-arch-l">
             <Archway
               side="left"
@@ -194,7 +164,14 @@ export default function Room({ route, navigate }: { route: RoomRoute; navigate: 
           </div>
 
           <div className="area-portrait">
-            <RoomPortrait ref={ancarion} isAttending={() => document.activeElement === rackField.current} />
+            <RoomPortrait
+              ref={ancarion}
+              isAttending={() => document.activeElement === plateField.current}
+              onSummon={() => plate.current?.knock()}
+              onApproach={() => plate.current?.approach()}
+            >
+              <SolarPlate ref={plate} ancarion={ancarion} field={plateField} sealed={solarSealed} />
+            </RoomPortrait>
           </div>
 
           <div className="area-arch-r">
@@ -209,22 +186,22 @@ export default function Room({ route, navigate }: { route: RoomRoute; navigate: 
             />
           </div>
 
-          <Torch side="r" />
-
           <div className="area-cabinet">
-            <Cabinet ancarion={ancarion} field={rackField} sealed={sealed} />
+            <Cabinet sealed={sealed} />
           </div>
 
-          <SolarDoor />
-
-          <RoomObject
-            id="scribe"
-            href="/scribe-table"
-            name="Scribe Table"
-            describer="File reports, bounties and more under your code."
-            art={<ScribeTableArt />}
-            className="area-scribe"
-          />
+          {/* The Scribe Table, a candle at either hand. */}
+          <div className="area-scribe">
+            <Candle side="l" />
+            <RoomObject
+              id="scribe"
+              href="/scribe-table"
+              name="Scribe Table"
+              describer="File reports, bounties and more under your code."
+              art={<ScribeTableArt />}
+            />
+            <Candle side="r" />
+          </div>
 
           <aside className="area-note note" aria-label="How to file">
             <span className="note__pin" aria-hidden="true" />
@@ -265,7 +242,7 @@ export default function Room({ route, navigate }: { route: RoomRoute; navigate: 
       )}
       {route.open === 'scribe' && (
         <Takeover label="The Scribe Table" closeTo="/" returnFocus='[data-object="scribe"]'>
-          <Suspense fallback={<p className="loading">Lighting the torches…</p>}>
+          <Suspense fallback={<p className="loading">Trimming the candles…</p>}>
             <ScribeTable />
           </Suspense>
         </Takeover>

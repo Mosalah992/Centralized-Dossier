@@ -1,50 +1,43 @@
 // The Cabinet, which keeps the letters to High Command, and the word that opens
-// it. Ancarion keeps it from the wall beside: a wrong word earns the gate's own
-// refusals (narrowed eyes, then the head-shake, then the sigh) and the right
-// one his nod, after which the Cabinet's Fresh! drawer slides out and the
-// reader goes through to it (/reports, the Cabinet's takeover).
+// it: a slip pinned over its drawers. The right word draws the Fresh! drawer
+// out and the reader goes through to it (/reports, the Cabinet's takeover).
 //
 // Authorization is exactly the Reports gate's: the same `openReports` against
-// POST /api/reports/gate, the same Reports-only writ. Nothing new is opened on
-// the server. A reader already holding the writ is let straight through after
-// a nod. A reader who arrives at /reports or /reports/:id without it is sent
-// back to the room with this slip open (`sealed`), so Ancarion still performs,
-// and on his nod goes on to where they were going.
+// POST /api/reports/gate, the same Reports-only writ. A reader already holding
+// the writ is let straight through. A reader who arrives at /reports or
+// /reports/:id without it is sent back to the room with this slip open
+// (`sealed`), and on the right word goes on to where they were going.
 //
-// It was the Scroll Rack until 2026-10-22.
+// It was the Scroll Rack until 2026-10-22. Ancarion kept it from the wall
+// beside until 2026-10-23; he keeps the Solar now (SolarPlate.tsx), and the
+// Cabinet answers to its lock alone.
 
-import { useEffect, useId, useRef, useState, type MouseEvent, type RefObject } from 'react';
+import { useEffect, useId, useRef, useState, type MouseEvent } from 'react';
 
 import { openReports, reportsIsOpen } from '../api';
-import {
-  ACCEPTED_PERFORMANCE_HOLD_MS,
-  ACCEPTED_STILL_HOLD_MS,
-  DOOR_SWING_MS,
-  refusalFor,
-} from '../components/useAncarion';
+import { DOOR_SWING_MS, prefersReducedMotion } from '../components/useAncarion';
 import { CabinetArt } from './art';
 import { ImageSlot } from './ImageSlot';
 import { plainClick, useNavigate } from './nav';
-import type { AncarionHandle } from './RoomPortrait';
 
 type Stage = 'shut' | 'asking' | 'checking' | 'accepted' | 'opening';
 
-/** With the writ already held: a nod, not the whole performance. */
-const ACKNOWLEDGE_HOLD_MS = 900;
+/** The lock gives: a beat before the drawer comes out. */
+const ACCEPTED_HOLD_MS = 700;
+/** With the writ already held: the drawer comes out at once. */
+const ACKNOWLEDGE_HOLD_MS = 250;
 /** Reduced motion: the drawer is simply out, and the reader goes on. */
 const STILL_OPEN_MS = 220;
 
 const preloadCabinet = () => void import('./takeovers/Cabinet');
 
 interface Props {
-  ancarion: RefObject<AncarionHandle>;
-  /** The slip's field, shared with the portrait so he knows when he is addressed. */
-  field: RefObject<HTMLInputElement>;
   /** Where a reader who arrived without the writ was going; the slip opens for them. */
   sealed?: { href: string } | null;
 }
 
-export function Cabinet({ ancarion, field, sealed = null }: Props) {
+export function Cabinet({ sealed = null }: Props) {
+  const field = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const inputId = useId();
   const [stage, setStage] = useState<Stage>('shut');
@@ -77,14 +70,12 @@ export function Cabinet({ ancarion, field, sealed = null }: Props) {
     if (!sealed) return;
     target.current = sealed.href;
     writ.current = Promise.resolve(false);
-    ancarion.current?.warm();
     setStage('asking');
     setStatus('The Cabinet is sealed. State the word to open it.');
-  }, [sealed, ancarion]);
+  }, [sealed]);
 
-  /** A reader drawing near: wake his reactions, fetch the Cabinet, ask after the writ once. */
+  /** A reader drawing near: fetch the Cabinet, ask after the writ once. */
   const approach = () => {
-    ancarion.current?.warm();
     preloadCabinet();
     writ.current ??= reportsIsOpen();
   };
@@ -93,8 +84,7 @@ export function Cabinet({ ancarion, field, sealed = null }: Props) {
 
   /** The Fresh! drawer slides out, then the reader goes through. */
   const draw = (hold: number) => {
-    const still = ancarion.current?.reducedMotion() ?? false;
-    if (still) {
+    if (prefersReducedMotion()) {
       setStage('opening');
       later(enter, STILL_OPEN_MS);
       return;
@@ -113,8 +103,7 @@ export function Cabinet({ ancarion, field, sealed = null }: Props) {
     target.current = '/reports';
     if (await (writ.current ?? Promise.resolve(false))) {
       setStage('accepted');
-      ancarion.current?.accept();
-      setStatus('Ancarion knows you. The Cabinet is opened.');
+      setStatus('The Cabinet knows you. It is open.');
       draw(ACKNOWLEDGE_HOLD_MS);
       return;
     }
@@ -127,7 +116,6 @@ export function Cabinet({ ancarion, field, sealed = null }: Props) {
     setStage('shut');
     setPhrase('');
     setStatus('');
-    ancarion.current?.settle();
   };
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -149,8 +137,7 @@ export function Cabinet({ ancarion, field, sealed = null }: Props) {
       controller.abort();
     }, 12_000);
     setStage('checking');
-    setStatus('Ancarion consults the register…');
-    ancarion.current?.consult();
+    setStatus('The lock is tried…');
 
     try {
       const signal = controller.signal;
@@ -160,7 +147,6 @@ export function Cabinet({ ancarion, field, sealed = null }: Props) {
         denials.current += 1;
         setPhrase('');
         setStage('asking');
-        ancarion.current?.react(refusalFor(denials.current));
         setStatus(
           result.retryAfterSeconds
             ? `The seal requires patience. Try again in ${result.retryAfterSeconds} seconds.`
@@ -170,13 +156,11 @@ export function Cabinet({ ancarion, field, sealed = null }: Props) {
       }
       writ.current = Promise.resolve(true);
       setStage('accepted');
-      const performs = ancarion.current?.accept() ?? false;
-      setStatus('“You are expected.” The Cabinet is unlocked.');
-      draw(performs ? ACCEPTED_PERFORMANCE_HOLD_MS : ACCEPTED_STILL_HOLD_MS);
+      setStatus('The lock gives. The Cabinet is open.');
+      draw(ACCEPTED_HOLD_MS);
     } catch {
       if (controller.signal.aborted && !timedOut) return;
       setStage('asking');
-      ancarion.current?.rest();
       setStatus(
         timedOut
           ? 'The authorization service took too long. Please retry.'
@@ -197,7 +181,7 @@ export function Cabinet({ ancarion, field, sealed = null }: Props) {
         href="/reports"
         className="object object--cabinet"
         data-object="cabinet"
-        aria-label="The Cabinet: letters to High Command, filed by when they came, kept behind Ancarion's word."
+        aria-label="The Cabinet: letters to High Command, filed by when they came, kept under lock and word."
         aria-expanded={asking}
         onClick={knock}
         onPointerEnter={approach}
@@ -234,18 +218,13 @@ export function Cabinet({ ancarion, field, sealed = null }: Props) {
                 spellCheck={false}
                 disabled={stage === 'checking'}
                 aria-invalid={denials.current > 0 && !phrase ? true : undefined}
-                onFocus={() => ancarion.current?.notice()}
-                onBlur={() => stage === 'asking' && ancarion.current?.settle()}
                 onKeyDown={(event) => {
                   if (event.key === 'Escape') {
                     event.stopPropagation();
                     dismiss();
                   }
                 }}
-                onChange={(event) => {
-                  setPhrase(event.target.value);
-                  ancarion.current?.notice();
-                }}
+                onChange={(event) => setPhrase(event.target.value)}
               />
               <div className="cabinet-slip__actions">
                 <button type="submit" className="btn" disabled={!phrase.trim() || busy}>

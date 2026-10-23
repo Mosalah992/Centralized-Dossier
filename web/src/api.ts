@@ -146,16 +146,11 @@ export interface Chronicle {
 }
 
 /**
- * Thalmor Chronicles. Unlike History of the Realm this one is fetched rather
- * than bundled: its text is the Embassy's own intelligence, and a bundled
- * volume is a static asset that the Worker never gets to refuse. That is now
- * the only reason — with the archive open, everything else here is readable by
- * anyone, and this volume's own word is what still separates it from them.
- *
- * Held back until that lock is open — see useChronicle's caller.
+ * Thalmor Chronicles. Fetched rather than bundled, so its text can be corrected
+ * without a rebuild and the nightly filings laid after it. Public since
+ * 2026-10-23, when its own word was retired with Ancarion's gate.
  */
-export const useChronicle = (unlocked: boolean) =>
-  useAsync<Chronicle>(unlocked ? '/api/chronicle' : null);
+export const useChronicle = () => useAsync<Chronicle>('/api/chronicle');
 
 export interface EnforcementEntry {
   date: string;
@@ -328,20 +323,16 @@ export async function openReports(passphrase: string, signal?: AbortSignal): Pro
   return submitGate('/api/reports/gate', passphrase, signal);
 }
 
-/** Whether this browser already holds a writ for the volume itself. */
-export async function chronicleIsOpen(): Promise<boolean> {
+/** Whether this browser holds the Solar's writ (Ancarion's plate). */
+export async function solarIsOpen(): Promise<boolean> {
   try {
-    const res = await fetch('/api/chronicle/gate', { headers: { Accept: 'application/json' } });
-    const body = (await res.json()) as { open?: boolean };
-    return Boolean(body.open);
-  } catch {
-    return false;
-  }
+    const response = await fetch('/api/solar/gate', { headers: { Accept: 'application/json' } });
+    return Boolean(((await response.json()) as { open?: boolean }).open);
+  } catch { return false; }
 }
 
-/** Offer the volume's word. Resolves to null on success, or the refusal. */
-export async function openChronicle(passphrase: string, signal?: AbortSignal): Promise<GateResult> {
-  return submitGate('/api/chronicle/gate', passphrase, signal);
+export async function openSolar(passphrase: string, signal?: AbortSignal): Promise<GateResult> {
+  return submitGate('/api/solar/gate', passphrase, signal);
 }
 
 export function useVolume<S extends FetchableSlug>(

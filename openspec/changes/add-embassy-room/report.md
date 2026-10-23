@@ -284,3 +284,13 @@ On landscape screens 1024px or wider the room now fits exactly one screen and ru
 - **Torches** now stand outside the arches (option B of the three mock-ups), on the arches' floor line. The lectern stands alone.
 - **Where they show:** only on the one-screen wall (landscape, 1024px and wider). Portrait tablets and phones don't show them or download them.
 - **Checked** at 1920×950, 1366×650, 1024×768 and on a phone.
+
+## Revision 7 (2026-10-23)
+
+- **The Solar opens from Ancarion.** His name plate is now where the Solar's word is spoken; his portrait lets a reader who already holds the Solar's writ straight through. The Solar has its own passphrase, separate from the Cabinet's. The door was taken down.
+- **The Cabinet** keeps its lock on its own slip; Ancarion no longer reacts to it. It is taller and fills the right-hand column.
+- **The Solar** (`/solar`): notes, the war-table map (Skyrim with County Bruma at its southern edge), which spreads out to pan and zoom with shared Dominion pawns and points of interest; the Clerk Table and Canonreeve's Desk are furnished but not yet wired.
+- **Candles** replace the torches either side of the Scribe Table, with live three.js flames (still for reduced motion). The pinned note moved to the bottom-left corner.
+- **The orb** is a glass globe in a brass cradle, turning, without its brass rings.
+- **Every volume is a book** read like the Chronicles, and none is sealed: the Chronicles are public, Latest Filings included. The spines are plain.
+- **Before the Solar works in production**, its secrets must be set and its table created (see the Decision Log, 2026-10-23).

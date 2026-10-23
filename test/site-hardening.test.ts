@@ -79,14 +79,18 @@ describe('initial-load ownership', () => {
   it('keeps route-only styles out of the entry module', () => {
     const entry = read('web/src/main.tsx');
     for (const sheet of [
-      'chronicle.css', 'enforcement.css', 'orrery.css', 'reports.css', 'portrait-gate.css',
-      // The room and everything that opens over it, and the hero that became the Gallery.
+      'chronicle.css', 'enforcement.css', 'orrery.css', 'reports.css',
+      // The room and everything that opens over it, the Solar behind it, and
+      // the hero that became the Gallery.
       'room.css', 'takeover.css', 'orb.css', 'bookshelf.css', 'board.css', 'ancarion.css', 'gallery.css', 'cabinet.css', 'register.css', 'shelf.css',
+      'solar.css',
     ]) {
       expect(entry, `${sheet} should load with its route`).not.toContain(sheet);
     }
     expect(read('web/src/room/takeovers/Cabinet.tsx')).toContain("../../styles/cabinet.css");
-    expect(read('web/src/components/PortraitGate.tsx')).toContain("../styles/portrait-gate.css");
+    expect(read('web/src/views/Solar.tsx')).toContain("../styles/solar.css");
+    // The books' leaves bring the Chronicles' stylesheet with the reading helpers.
+    expect(read('web/src/reading.tsx')).toContain("./styles/chronicle.css");
     expect(read('web/src/room/Room.tsx')).toContain("../styles/room.css");
     expect(read('web/src/components/useAncarion.tsx')).toContain("../styles/ancarion.css");
     expect(read('web/src/views/Gallery.tsx')).toContain("../styles/gallery.css");

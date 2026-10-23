@@ -1,15 +1,19 @@
-// The Criminal Code of the Aldmeri Dominion, bound as a decree: the eagle and
-// the Code's own preamble, a table of contents, the punishment guidelines, the
-// seven parts article by article, and the three signatories who set their hand
-// to it. The text is in penal-code-data.ts; this file only lays it out.
+// The Criminal Code of the Aldmeri Dominion, bound as a book like every volume
+// on the shelf (2026-10-23; BoundBook): the Code's own preamble, the
+// punishment guidelines, the seven parts article by article, and the three
+// signatories who set their hand to it. The text is in penal-code-data.ts;
+// this file only binds it. The Dominion's eagle is on the board.
 
-import type { MouseEvent } from 'react';
+import { useCallback } from 'react';
 
-import { Page } from '../components/Page';
 import eagleUrl from '../assets/penal/eagle.webp';
 import lourinienUrl from '../assets/penal/signature-lourinien.webp';
 import aedbinderUrl from '../assets/penal/signature-aedbinder.webp';
 import ganarilUrl from '../assets/penal/signature-ganaril.webp';
+import { bindBlocks, type BookBlock } from '../books/bind';
+import { BoundBook } from '../books/BoundBook';
+import { TitlePage, type Leaf } from '../books/leaves';
+import { mark, prose } from '../reading';
 import {
   AMENDMENT,
   CLASSIFICATION,
@@ -20,8 +24,8 @@ import {
   PROVISIONS,
   PUNISHMENTS,
   SIGNATORIES,
+  type Article,
 } from './penal-code-data';
-import '../styles/penal-code.css';
 
 // Intrinsic sizes, so each signature reserves its own shape before it loads.
 const SIGNATURES = {
@@ -30,142 +34,99 @@ const SIGNATURES = {
   ganaril: { src: ganarilUrl, width: 480, height: 166 },
 } as const;
 
-/** Felony or misdemeanor, for the badge's styling. The words carry the meaning. */
+/** Felony or misdemeanor, for the charge's styling. The words carry the meaning. */
 const kindOf = (charge: string) => (/felony/i.test(charge) ? 'felony' : 'misdemeanor');
 
-const CONTENTS = [
-  { id: 'penal-punishments', label: 'Punishment Guidelines' },
-  ...PARTS.map((part) => ({ id: `penal-${part.id}`, label: `${part.numeral}. ${part.title}` })),
-  { id: 'penal-signatories', label: 'Signatories' },
+function article(a: Article): BookBlock {
+  return {
+    kind: 'custom',
+    weight: 110 + a.title.length + a.text.reduce((sum, line) => sum + line.length + 30, 0),
+    items: [{ label: `${a.code} ${a.title}`, text: `${a.charge}. ${a.text.join(' ')}` }],
+    render: (term, guided) => (
+      <div className="chron-article">
+        <p className="chron-article__head">
+          <span className="chron-article__code">{a.code}</span> {mark(a.title, term)}
+        </p>
+        <p className={`chron-article__charge chron-article__charge--${kindOf(a.charge)}`}>{mark(a.charge, term)}</p>
+        {a.text.map((line) => (
+          <p className="chron-p" key={line.slice(0, 40)}>
+            {prose(line, term, guided)}
+          </p>
+        ))}
+      </div>
+    ),
+  };
+}
+
+const BLOCKS: BookBlock[] = [
+  { kind: 'chapter', text: 'Introduction' },
+  ...PREAMBLE.map((text): BookBlock => ({ kind: 'para', text })),
+  { kind: 'list', ordered: true, items: PROVISIONS },
+  { kind: 'para', text: AMENDMENT },
+  { kind: 'heading', text: 'Disclaimer' },
+  { kind: 'para', aside: true, text: DISCLAIMER },
+
+  { kind: 'chapter', text: 'Punishment Guidelines' },
+  ...PUNISHMENTS.map((p): BookBlock => ({ kind: 'field', label: p.charge, text: p.penalties.join('; ') })),
+  { kind: 'heading', text: 'Common-Law Classifications' },
+  ...CLASSIFICATION.map((text): BookBlock => ({ kind: 'para', text })),
+  { kind: 'heading', text: 'Additional Classifications' },
+  { kind: 'para', text: 'Modifiers that can increase charges, each by one class:' },
+  { kind: 'list', items: MODIFIERS.map((m) => `${m} (+1)`) },
+
+  ...PARTS.flatMap((part): BookBlock[] => [
+    { kind: 'chapter', text: `Part ${part.numeral}. ${part.title}` },
+    ...part.chapters.flatMap((chapter): BookBlock[] => [
+      { kind: 'heading', text: `${chapter.code} ${chapter.title}` },
+      ...chapter.articles.map(article),
+    ]),
+  ]),
+
+  { kind: 'chapter', text: 'Signatories' },
+  {
+    kind: 'custom',
+    weight: 1400,
+    items: SIGNATORIES.map((s) => ({ label: s.name, text: s.office })),
+    render: (term) => (
+      <ul className="chron-signatories">
+        {SIGNATORIES.map(({ name, office, signature }) => (
+          <li key={name}>
+            <img {...SIGNATURES[signature]} alt={`Signature of ${name}`} loading="lazy" decoding="async" />
+            <p className="chron-signatories__name">{mark(name, term)}</p>
+            <p className="chron-signatories__office">Member of the Thalmor · {mark(office, term)}</p>
+          </li>
+        ))}
+      </ul>
+    ),
+  },
 ];
 
-// Contents entries are real links, followed by script so the router keeps the
-// path; focus moves with the reader so the next Tab continues from the part.
-function follow(event: MouseEvent<HTMLAnchorElement>, id: string) {
-  if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
-  const target = document.getElementById(id);
-  if (!target) return;
-  event.preventDefault();
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  target.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
-  target.focus({ preventScroll: true });
+function buildLeaves(term: string, guided: boolean): Leaf[] {
+  return [
+    {
+      head: '',
+      body: (
+        <TitlePage
+          kicker="By Decree of the Aldmeri Dominion"
+          name="The Penal Code"
+          by="The Criminal Code of the Aldmeri Dominion, by Order of the Thalmor."
+          span="Kept by the Ministry of Justice and the Thalmor Council, who alone may amend it."
+        />
+      ),
+    },
+    ...bindBlocks(BLOCKS, term, guided),
+  ];
 }
 
 export function PenalCodeView() {
+  const build = useCallback(buildLeaves, []);
   return (
-    <Page
-      title="Criminal Code of the Aldmeri Dominion"
-      subtitle="By Decree of the Aldmeri Dominion and by Order of the Thalmor"
-      source={
-        <p className="page__source">
-          Kept by the Ministry of Justice and the Thalmor Council, who alone may amend it.
-        </p>
-      }
-    >
-      <div className="penal__eagle" role="img" aria-label="The eagle of the Aldmeri Dominion"
-        style={{ '--eagle': `url(${eagleUrl})` } as React.CSSProperties} />
-
-      <section className="penal__preamble" aria-labelledby="penal-intro">
-        <h2 className="page__heading" id="penal-intro">Introduction</h2>
-        {PREAMBLE.map((line) => <p key={line}>{line}</p>)}
-        <ol className="penal__provisions">
-          {PROVISIONS.map((line) => <li key={line}>{line}</li>)}
-        </ol>
-        <p>{AMENDMENT}</p>
-        <div className="penal__disclaimer" role="note" aria-label="Disclaimer">
-          <p className="penal__disclaimer-label">Disclaimer</p>
-          <p>{DISCLAIMER}</p>
-        </div>
-      </section>
-
-      <nav className="penal__contents" aria-labelledby="penal-contents-title">
-        <h2 className="page__heading" id="penal-contents-title">Table of Contents</h2>
-        <ol>
-          {CONTENTS.map(({ id, label }) => (
-            <li key={id}>
-              <a href={`#${id}`} onClick={(event) => follow(event, id)}>{label}</a>
-            </li>
-          ))}
-        </ol>
-      </nav>
-
-      <section id="penal-punishments" tabIndex={-1} aria-labelledby="penal-punishments-title">
-        <h2 className="page__heading" id="penal-punishments-title">Punishment Guidelines</h2>
-        <ul className="penal__classes">
-          {PUNISHMENTS.map(({ charge, penalties }) => (
-            <li key={charge} className="penal__class">
-              <h3 className={`penal__charge penal__charge--${kindOf(charge)}`}>{charge}</h3>
-              <ul>
-                {penalties.map((penalty) => <li key={penalty}>{penalty}</li>)}
-              </ul>
-            </li>
-          ))}
-        </ul>
-
-        <div className="penal__classification">
-          <h3>Common-Law Classifications</h3>
-          {CLASSIFICATION.map((line) => <p key={line}>{line}</p>)}
-          <h3>Additional Classifications</h3>
-          <p>Modifiers that can increase charges, each by one class:</p>
-          <ul className="penal__modifiers">
-            {MODIFIERS.map((modifier) => <li key={modifier}>{modifier} <span>+1</span></li>)}
-          </ul>
-        </div>
-      </section>
-
-      {PARTS.map((part) => (
-        <section
-          key={part.id}
-          id={`penal-${part.id}`}
-          className="penal__part"
-          tabIndex={-1}
-          aria-labelledby={`penal-${part.id}-title`}
-        >
-          <h2 className="penal__part-title" id={`penal-${part.id}-title`}>
-            <span className="penal__numeral">Part {part.numeral}</span>
-            {part.title}
-          </h2>
-          {part.chapters.map((chapter) => (
-            <div key={chapter.code} className="penal__chapter">
-              <h3 className="penal__chapter-title">
-                <span>{chapter.code}</span> {chapter.title}
-              </h3>
-              <ol className="penal__articles">
-                {chapter.articles.map((article) => (
-                  <li key={article.code} className="penal__article">
-                    <h4 className="penal__article-head">
-                      <span className="penal__article-code">{article.code}</span>
-                      <span className="penal__article-title">{article.title}</span>
-                    </h4>
-                    <p className={`penal__charge penal__charge--${kindOf(article.charge)}`}>
-                      {article.charge}
-                    </p>
-                    {article.text.map((line) => <p key={line}>{line}</p>)}
-                  </li>
-                ))}
-              </ol>
-            </div>
-          ))}
-        </section>
-      ))}
-
-      <section id="penal-signatories" className="penal__seal" tabIndex={-1} aria-labelledby="penal-signatories-title">
-        <h2 className="page__heading" id="penal-signatories-title">Signatories</h2>
-        <ul className="penal__signatories">
-          {SIGNATORIES.map(({ name, office, signature }) => (
-            <li key={name}>
-              <img
-                {...SIGNATURES[signature]}
-                alt={`Signature of ${name}`}
-                loading="lazy"
-                decoding="async"
-              />
-              <p className="penal__signatory-name">{name}</p>
-              <p className="penal__signatory-office">Member of the Thalmor · {office}</p>
-            </li>
-          ))}
-        </ul>
-      </section>
-    </Page>
+    <BoundBook
+      build={build}
+      seal={eagleUrl}
+      scryLabel="Search the Code"
+      placeholder="a crime, a charge, an article…"
+      navLabel="Penal Code navigation"
+    />
   );
 }

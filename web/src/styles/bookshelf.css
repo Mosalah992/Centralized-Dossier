@@ -78,7 +78,9 @@
   position: absolute;
   inset: 0;
   overflow: hidden;
-  background: url('/textures/leather.svg') 0 0 / 512px 512px, var(--leather, #3a2414);
+  /* Plain leather until the volumes have art of their own: the speckled
+     leather texture read as a starry filter (2026-10-23). */
+  background: var(--leather, #3a2414);
   /* The rounded back of the spine, in light and shade. */
   box-shadow:
     inset 9px 0 10px -4px rgba(0, 0, 0, 0.7),

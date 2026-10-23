@@ -31,6 +31,7 @@ const InformantsView = lazy(() => import('./views/Informants').then((m) => ({ de
 const EnforcementView = lazy(() => import('./views/Enforcement').then((m) => ({ default: m.EnforcementView })));
 const PenalCodeView = lazy(() => import('./views/PenalCode').then((m) => ({ default: m.PenalCodeView })));
 const GalleryView = lazy(() => import('./views/Gallery').then((m) => ({ default: m.GalleryView })));
+const SolarView = lazy(() => import('./views/Solar').then((m) => ({ default: m.SolarView })));
 
 /*
  * The Embassy's room, which is the front page — and still lazy.
@@ -158,6 +159,7 @@ export default function App() {
       ? getTitle(route.slug)
       : route.name === 'penalcode' ? 'Penal Code'
       : route.name === 'gallery' ? 'Gallery'
+      : route.name === 'solar' ? 'The Solar'
       : route.name === 'room' && route.open ? SURFACE_TITLES[route.open]
       : null;
     document.title = name
@@ -198,7 +200,7 @@ export default function App() {
         {/* The room and the gallery may run wider than the reading column:
             one is a wall of objects, the other a title page and a gallery,
             and neither is a register to be read across. */}
-        <div className={`shell${route.name === 'room' ? ' shell--room' : route.name === 'gallery' ? ' shell--hall' : ''}`}>
+        <div className={`shell${route.name === 'room' ? ' shell--room' : route.name === 'gallery' ? ' shell--hall' : route.name === 'solar' ? ' shell--solar' : ''}`}>
         <main>
           {route.name === 'room' && (
             <ErrorBoundary resetKey="room">
@@ -212,6 +214,14 @@ export default function App() {
             <ErrorBoundary resetKey="gallery">
               <Suspense fallback={<Consulting />}>
                 <GalleryView onOpen={navigate} />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+
+          {route.name === 'solar' && (
+            <ErrorBoundary resetKey="solar">
+              <Suspense fallback={<Consulting />}>
+                <SolarView navigate={navigate} />
               </Suspense>
             </ErrorBoundary>
           )}

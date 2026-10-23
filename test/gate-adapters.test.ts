@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { openChronicle, openReports } from '../web/src/api';
+import { openReports, openSolar } from '../web/src/api';
 
 const fetchMock = vi.fn();
 
@@ -9,9 +9,9 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe('portrait-gate adapters', () => {
+describe('gate adapters', () => {
   it.each([
-    ['Chronicle', openChronicle, '/api/chronicle/gate'],
+    ['Solar', openSolar, '/api/solar/gate'],
     ['Reports', openReports, '/api/reports/gate'],
   ] as const)('%s sends its phrase only to its own gate', async (_name, open, endpoint) => {
     fetchMock.mockResolvedValue(new Response('{}', { status: 200 }));
@@ -24,7 +24,7 @@ describe('portrait-gate adapters', () => {
     }));
   });
 
-  it('keeps a rate-limit delay visible to the portrait gate', async () => {
+  it('keeps a rate-limit delay visible to the plate', async () => {
     fetchMock.mockResolvedValue(new Response(JSON.stringify({ error: 'Too many attempts.' }), {
       status: 429,
       headers: { 'Retry-After': '18', 'content-type': 'application/json' },
@@ -42,7 +42,7 @@ describe('portrait-gate adapters', () => {
       init.signal?.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')));
     }));
     vi.stubGlobal('fetch', fetchMock);
-    const request = openChronicle('word', controller.signal);
+    const request = openSolar('word', controller.signal);
     controller.abort();
 
     await expect(request).rejects.toMatchObject({ name: 'AbortError' });

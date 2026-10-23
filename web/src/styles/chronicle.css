@@ -596,6 +596,115 @@
   color: rgb(60 44 22 / 0.85);
 }
 
+/* ── The other volumes' type (web/src/books/bind.tsx) ─────────────────────
+ *
+ * Every volume on the shelf is bound as the Chronicles are (2026-10-23), and
+ * each brings a few things the Chronicles never set: sub-headings, asides,
+ * numbered steps, ruled records, articles of law, a document sent to the
+ * Embassy, and signatures. Set in the same inks as the rest of the leaf.
+ */
+.chron-h3 {
+  margin: 1.1rem 0 0.45rem;
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 0.86rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #7a2e1e;
+}
+.chron-text > .chron-h3:first-child,
+.chron-text > div:first-child > .chron-h3:first-child { margin-top: 0; }
+.chron-p--aside {
+  padding-left: 0.8rem;
+  border-left: 2px solid rgb(122 88 40 / 0.35);
+  font-style: italic;
+  color: #4a3a28;
+}
+.chron-steps {
+  margin: 0 0 0.9em;
+  padding-left: 1.3rem;
+  line-height: 1.5;
+  font-size: clamp(0.84rem, 1.3vw, 0.98rem);
+}
+.chron-steps li { margin: 0 0 0.45em; }
+.chron-steps li::marker { font-family: var(--display); color: #7a2e1e; }
+
+/* A record of the Arrests: when, what, and four ruled fields. The rule down
+   the left carries its gravity (a death, a penalty, neither). */
+.chron-record {
+  margin: 0 0 1.1rem;
+  padding: 0 0 0 0.75rem;
+  border-left: 3px solid rgb(122 88 40 / 0.4);
+}
+.chron-record[data-grave='death'] { border-left-color: #7a1e1e; }
+.chron-record[data-grave='none'] { border-left-color: rgb(80 80 70 / 0.35); }
+.chron-record__act {
+  margin: 0 0 0.35rem;
+  font-weight: 600;
+  line-height: 1.4;
+  font-size: clamp(0.86rem, 1.3vw, 0.98rem);
+}
+.chron-record__fields {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.15rem 0.7rem;
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+.chron-record__fields > div { display: contents; }
+.chron-record__fields dt {
+  font-family: var(--display);
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #6a563c;
+  padding-top: 0.15rem;
+}
+.chron-record__fields dd { margin: 0; }
+
+/* An article of the Penal Code: its number and name, then its charge. */
+.chron-article { margin: 0 0 1.1rem; }
+.chron-article__head { margin: 0 0 0.2rem; font-weight: 600; line-height: 1.35; }
+.chron-article__code { font-family: var(--display); font-size: 0.78rem; letter-spacing: 0.08em; color: #7a2e1e; }
+.chron-article__charge {
+  display: inline-block;
+  margin: 0 0 0.45rem;
+  padding: 0.05rem 0.5rem;
+  font-family: var(--display);
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+}
+.chron-article__charge--felony { color: #7a1e1e; }
+.chron-article__charge--misdemeanor { color: #5a4a2c; }
+
+/* A document sent to the Embassy (History's Notice of Recall). */
+.chron-writ {
+  margin: 0 0 1rem;
+  padding: 1rem 1rem 0.8rem;
+  border-top: 1px solid rgb(122 92 46 / 0.3);
+  border-bottom: 1px solid rgb(122 92 46 / 0.3);
+}
+.chron-writ__head { display: grid; gap: 0.1rem; margin: 0 0 0.8rem; text-align: center; }
+.chron-writ__kind { font-family: var(--display); font-size: 0.86rem; letter-spacing: 0.16em; text-transform: uppercase; color: #2a2016; }
+.chron-writ__from { font-style: italic; font-size: 0.86rem; color: #6a563c; }
+.chron-writ__p { margin: 0 0 0.7em; line-height: 1.55; font-size: clamp(0.84rem, 1.3vw, 0.96rem); }
+.chron-writ__p--salutation { font-style: italic; }
+.chron-writ__sign { margin: 0.8rem 0 0; text-align: right; font-size: 0.92rem; }
+
+/* History's presses. */
+.chron-press { margin: 0 0 1rem; }
+.chron-press__span,
+.chron-press__staff { margin: 0 0 0.25rem; font-size: 0.84rem; font-style: italic; color: #6a563c; }
+
+/* The Code's signatories. */
+.chron-signatories { display: grid; gap: 1rem; margin: 0; padding: 0; list-style: none; text-align: center; }
+.chron-signatories img { display: block; width: min(70%, 14rem); height: auto; margin: 0 auto; mix-blend-mode: multiply; }
+.chron-signatories__name { margin: 0.2rem 0 0; font-family: var(--display); font-size: 0.82rem; letter-spacing: 0.08em; }
+.chron-signatories__office { margin: 0; font-size: 0.8rem; font-style: italic; color: #6a563c; }
+
 /* ── The Latest Filings ───────────────────────────────────────────────── */
 
 /*

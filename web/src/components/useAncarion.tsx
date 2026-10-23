@@ -37,10 +37,11 @@ export { isNight, refusalFor, type Refusal } from './ancarion-script';
 /*
  * Ancarion as a performer, apart from any door he keeps.
  *
- * He used to live entirely inside PortraitGate. The Embassy's room now hangs
- * him on the wall beside the Scroll Rack and has him answer for the rack, so
- * everything he DOES — the clips, the idle rotation, dozing, the voice, the
- * aura — is here, and each host decides only what he answers for. A host owns
+ * He used to live entirely inside the volumes' gate (PortraitGate, retired
+ * 2026-10-23). The room now hangs him on its wall, where he keeps the Solar
+ * from his plate (room/SolarPlate.tsx), so everything he DOES — the clips, the
+ * idle rotation, dozing, the voice, the aura — is here, and each host decides
+ * only what he answers for. A host owns
  * its own form, its own `verify` and its own door; nothing here authorizes
  * anything (Decision Log, 2026-10-01: a shared presentation, never a shared
  * writ).

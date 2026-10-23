@@ -18,6 +18,11 @@
   width: min(1600px, calc(100vw - 6rem));
 }
 
+/* The Solar: High Command's chamber, as wide as the Gallery's hall. */
+.archive-app > .shell.shell--solar {
+  width: min(1680px, calc(100vw - 4rem));
+}
+
 /* The room runs to the window's edges at every width, less a 2rem margin:
    a wide screen is furnished, not framed in black (room.css fits it to one
    screen and spreads the slack between the furniture). */

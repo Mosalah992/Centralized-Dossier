@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 import { refuseWithoutReportsWrit, reportsJson } from '../functions/lib/reports';
-import { REPORTS_SCOPE, issueWrit } from '../functions/lib/session';
+import { REPORTS_SCOPE, SOLAR_SCOPE, issueWrit } from '../functions/lib/session';
 
 const SECRET = 'reports-cookie-secret';
 const env = { REPORTS_COOKIE_SECRET: SECRET, REPORTS_EPOCH: '1' };
@@ -30,9 +30,9 @@ describe('Reports responses', () => {
     isPrivate(refusal!);
   });
 
-  it('admit a Reports writ and refuse a Chronicle one', async () => {
+  it('admit a Reports writ and refuse a Solar one', async () => {
     expect(await refuseWithoutReportsWrit(env, await issueWrit(SECRET, 1, REPORTS_SCOPE))).toBeNull();
-    expect((await refuseWithoutReportsWrit(env, await issueWrit(SECRET, 1, 'chronicle')))?.status).toBe(401);
+    expect((await refuseWithoutReportsWrit(env, await issueWrit(SECRET, 1, SOLAR_SCOPE)))?.status).toBe(401);
   });
 
   it('are produced only through the shared gate and helper on every route', () => {

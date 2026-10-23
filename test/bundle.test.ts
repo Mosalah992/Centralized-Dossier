@@ -220,4 +220,31 @@ describe.skipIf(!entry)('the room', () => {
     expect(carriers[0]).not.toContain('createTimer');
     expect(carriers[0]).not.toContain('__THREE__');
   });
+
+  it("lights its candles from a chunk of three.js's own, never the room's or the entry's", () => {
+    expect(entry!.source).not.toContain('__THREE__');
+    const flame = readdirSync(DIST)
+      .filter((f) => f.endsWith('.js'))
+      .map((f) => readFileSync(new URL(f, DIST), 'utf8'))
+      .filter((source) => source.includes('uSeed'));
+    expect(flame, 'the candle flame is in no chunk at all').toHaveLength(1);
+    expect(flame[0]).not.toContain('room__grid');
+  });
+});
+
+/*
+ * The Solar, behind Ancarion: a page of its own, so neither the entry nor the
+ * room carries the war table, and the spread-out map is a chunk again beyond.
+ */
+describe.skipIf(!entry)('the Solar', () => {
+  it('is absent from the entry and the room', () => {
+    const room = readdirSync(DIST)
+      .filter((f) => f.endsWith('.js') && f !== entry!.name)
+      .map((f) => readFileSync(new URL(f, DIST), 'utf8'))
+      .find((source) => source.includes('room__grid'));
+    for (const needle of ['war-table__map', 'map-viewer__bar']) {
+      expect(entry!.source.includes(needle), `${needle} in the entry`).toBe(false);
+      expect(room?.includes(needle), `${needle} in the room`).toBe(false);
+    }
+  });
 });

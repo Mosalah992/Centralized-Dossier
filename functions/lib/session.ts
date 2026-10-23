@@ -1,53 +1,40 @@
-// Signed-cookie session for the one door the archive still keeps.
-// Web Crypto only — runs unchanged on Cloudflare Pages Functions.
+// Signed-cookie writs for the doors the archive still keeps: the Cabinet's
+// (Reports) and the Solar's. Web Crypto only — runs unchanged on Cloudflare
+// Pages Functions.
 //
-// This module used to serve two gates and a Discord login. The archive's own
-// gate is gone — the registers are public — and with it went the identity writ,
-// the OAuth state nonce, and the `thalmor_writ` cookie itself. What remains is
-// the Thalmor Chronicles' own lock, which is a separate secret over a volume
-// that was never part of that decision.
-//
-// READERS STILL HOLD THE OLD COOKIE. `thalmor_writ` was set with a week's
-// Max-Age and nothing clears it; it simply expires. Nothing reads it any more,
-// which is fine — but it is a validly signed token, and a reader can move a
-// cookie's value wherever they like. That is the whole reason the scope check
-// below survives the simplification: an archive writ replayed into the
-// chronicle's cookie must still be refused.
+// This module used to serve the archive's own gate, a Discord login and the
+// Thalmor Chronicles' lock. All three are gone: the registers are public, and
+// the Chronicles were opened on 2026-10-23. Readers may still hold those old
+// cookies (`thalmor_writ`, `thalmor_writ_chronicle`) until they expire. Each is
+// validly signed by its own secret and a cookie's value can be moved, which is
+// why every writ carries its scope inside the signed body and a writ minted for
+// one door never opens another.
 
 const enc = new TextEncoder();
 
-/**
- * The Chronicles' cookie. Named for the volume rather than the archive because
- * it is the volume's writ — it was always separate from the archive's, so that
- * losing one did not cost the reader the other, and now it is the only one.
- */
-export const CHRONICLE_COOKIE_NAME = "thalmor_writ_chronicle";
-/** A separate writ means a Chronicle cookie can never open Reports. */
+/** The Cabinet's writ (the Reports gate). */
 export const REPORTS_COOKIE_NAME = "thalmor_writ_reports";
+/** The Solar's: High Command's room, opened at Ancarion's plate under a word of its own. */
+export const SOLAR_COOKIE_NAME = "thalmor_writ_solar";
 
 export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7; // one week
 
 /**
  * What a writ opens, written into the signed body and therefore covered by the
- * MAC along with everything else.
- *
- * ONE VALUE, AND IT IS STILL CHECKED. With the archive's gate removed this is
- * the only scope that exists, which makes the constant look like ceremony — it
- * is not. Writs minted before the gate came down carry `s: "archive"`, or on
- * the oldest of them no `s` at all, and readers are still holding them. Both
- * must fail here, so the comparison is exact and a missing value is a refusal
- * rather than a default. See readWrit.
+ * MAC along with everything else. The comparison is exact, and there is no
+ * default: old writs carry `s: "archive"` or `s: "chronicle"`, or on the
+ * oldest no `s` at all, and every one of them must fail here. See readWrit.
  */
-const CHRONICLE_SCOPE = "chronicle";
 export const REPORTS_SCOPE = "reports";
-type WritScope = typeof CHRONICLE_SCOPE | typeof REPORTS_SCOPE;
+export const SOLAR_SCOPE = "solar";
+type WritScope = typeof REPORTS_SCOPE | typeof SOLAR_SCOPE;
 
 export interface Writ {
-  /** Rotation epoch. Bump GATE_EPOCH to invalidate every issued cookie at once. */
+  /** Rotation epoch. Bump the door's epoch (REPORTS_EPOCH, SOLAR_EPOCH) to invalidate its writs at once. */
   e: number;
   /** Expiry, seconds since epoch. */
   exp: number;
-  /** Scope. Always SCOPE on anything this module mints today. */
+  /** Scope: the door this writ opens. */
   s?: string;
 }
 
@@ -101,11 +88,11 @@ export async function secretsMatch(
   return constantTimeEqual(a, b);
 }
 
-/** Mint a writ for the volume. One week, matching the cookie it rides in. */
+/** Mint a writ for a door. One week, matching the cookie it rides in. */
 export async function issueWrit(
   secret: string,
   epoch: number,
-  scope: WritScope = CHRONICLE_SCOPE,
+  scope: WritScope,
 ): Promise<string> {
   const writ: Writ = {
     e: epoch,
@@ -121,7 +108,7 @@ export async function readWrit(
   secret: string,
   epoch: number,
   token: string | null,
-  scope: WritScope = CHRONICLE_SCOPE,
+  scope: WritScope,
 ): Promise<Writ | null> {
   if (!token) return null;
 
@@ -151,8 +138,8 @@ export async function readWrit(
   if (writ.e !== epoch) return null; // rotated out
   if (writ.exp < Math.floor(Date.now() / 1000)) return null;
   // A writ minted for another door does not open this one, and an old archive
-  // writ moved into this cookie is exactly that. No default: `s` absent is a
-  // pre-scope archive writ and must fail here too.
+  // or Chronicle writ moved into this cookie is exactly that. No default: `s`
+  // absent is a pre-scope archive writ and must fail here too.
   if (writ.s !== scope) return null;
 
   return writ;
@@ -175,7 +162,7 @@ export function readCookie(request: Request, name: string): string | null {
  */
 export function writCookie(
   token: string,
-  name: string = CHRONICLE_COOKIE_NAME,
+  name: string,
   maxAge: number = SESSION_TTL_SECONDS,
 ): string {
   return [
@@ -188,6 +175,6 @@ export function writCookie(
   ].join("; ");
 }
 
-export function clearedCookie(name: string = CHRONICLE_COOKIE_NAME): string {
+export function clearedCookie(name: string): string {
   return `${name}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`;
 }

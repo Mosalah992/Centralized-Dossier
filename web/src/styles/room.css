@@ -96,10 +96,10 @@
 /* ---------- The wall, as drawn ---------- */
 
 /* The tall bookcase stands from the board's top to the arches' feet, so the
-   left wall is furnished as fully as the right (clock, orb, Cabinet); the door
-   steps down to the floor beside the Scribe Table and the note. Every column may
-   shrink below its content except Ancarion's, so a long plaque can never
-   squeeze the focal point down to the size of the arches beside him. */
+   left wall is furnished as fully as the right (clock, orb, Cabinet); the note
+   is pinned beneath it beside the Scribe Table. Every column may shrink below
+   its content except Ancarion's, so a long plaque can never squeeze the focal
+   point down to the size of the arches beside him. */
 .room__grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 0.85fr) minmax(17rem, 1.45fr) minmax(0, 0.85fr) minmax(0, 1fr);
@@ -107,7 +107,7 @@
     'shelf board   board    board  instr'
     'shelf archL   portrait archR  instr'
     'shelf archL   portrait archR  cabinet'
-    'door  scribe   scribe    scribe   note';
+    'note  scribe  scribe   scribe cabinet';
   gap: 1.8rem clamp(1.4rem, 2.2vw, 3.4rem);
   align-items: center;
 }
@@ -118,7 +118,6 @@
 .area-portrait { grid-area: portrait; position: relative; }
 .area-arch-r { grid-area: archR; align-self: end; }
 .area-cabinet { grid-area: cabinet; align-self: end; }
-.area-door { grid-area: door; align-self: end; }
 .area-note { grid-area: note; align-self: center; }
 
 /* The focal light: a warm pool behind Ancarion, the brightest thing in the
@@ -138,7 +137,6 @@
 .object--board { --tilt: 0.7deg; --shift: -4px; }
 .object--scribe { --tilt: 0.3deg; --shift: 0px; }
 .object--cabinet { --tilt: -0.4deg; --shift: 6px; }
-.object--door { --tilt: 0deg; --shift: 0px; }
 
 /* ---------- Objects ---------- */
 
@@ -168,14 +166,11 @@
 .object--board .board-art--wide { display: none; }
 .object--board .object__art { aspect-ratio: 360 / 170; }
 .object--scribe .object__art { aspect-ratio: 1; }
-.object--door .object__art { aspect-ratio: 140 / 222; width: min(100%, 190px); }
 /* Sizes that must beat .object's full width. */
 .object.object--board { width: min(100%, 770px); justify-self: center; }
 
 a.object:hover,
-a.object:focus-visible,
-.object--door:hover,
-.object--door:focus-visible {
+a.object:focus-visible {
   transform: translateY(calc(var(--shift, 0px) - 6px)) rotate(var(--tilt, 0deg));
   filter: drop-shadow(0 22px 16px rgb(0 0 0 / 0.7)) drop-shadow(0 0 16px rgb(201 162 39 / 0.45)) brightness(1.06);
 }
@@ -311,12 +306,90 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
   gap: 0.7rem;
   margin: 0;
 }
+/* The portrait is pressed to go through to the Solar. */
 .room-portrait__stage {
   position: relative;
+  display: block;
   width: min(100%, 27rem);
   aspect-ratio: 388 / 572;
+  padding: 0;
+  font: inherit;
+  background: none;
+  border: 0;
+  cursor: inherit;
   filter: drop-shadow(0.7rem 1.1rem 1.1rem rgb(0 0 0 / 0.6));
+  transition: filter 0.35s var(--ease);
 }
+.room-portrait__stage:hover,
+.room-portrait__stage:focus-visible {
+  filter: drop-shadow(0 0 0.8rem rgb(201 162 39 / 0.35)) drop-shadow(0.7rem 1.1rem 1.1rem rgb(0 0 0 / 0.6));
+}
+.room-portrait__stage:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 4px; }
+.room-portrait__caption { display: grid; justify-items: center; }
+
+/* Where his name hung: a brass plate with the word's slot let into it. */
+.solar-plate { display: grid; justify-items: center; gap: 0.2rem; }
+.solar-plate__form {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.24rem 0.3rem 0.24rem 1rem;
+  background: url('/textures/grain.svg') 0 0 / 256px 256px, var(--brass);
+  border: 1px solid var(--brass-dark);
+  box-shadow: inset 0 1px 0 var(--brass-light), inset 0 -1px 0 #7a5a12, 0 2px 3px rgb(0 0 0 / 0.7);
+}
+.solar-plate__form::before {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  margin-top: -2px;
+  border-radius: 50%;
+  background: #3a2a08;
+}
+.solar-plate__field {
+  width: 11.5rem;
+  min-height: 1.7rem;
+  padding: 0.15rem 0.6rem;
+  font: 600 0.72rem var(--display);
+  letter-spacing: 0.16em;
+  text-align: center;
+  color: var(--gold-bright);
+  background: #120d07;
+  border: 1px solid #3a2a08;
+  box-shadow: inset 0 1px 3px rgb(0 0 0 / 0.8);
+}
+.solar-plate__field::placeholder { color: rgb(201 162 39 / 0.55); letter-spacing: 0.2em; text-transform: uppercase; font-size: 0.6rem; }
+.solar-plate__field:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 2px; }
+.solar-plate__field[aria-invalid='true'] { border-color: var(--crimson); }
+.solar-plate__seal {
+  display: grid;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  padding: 0;
+  color: #1d1408;
+  background: radial-gradient(circle at 35% 30%, var(--brass-light), var(--brass) 60%, var(--brass-dark));
+  border: 1px solid #3a2a08;
+  border-radius: 50%;
+  cursor: inherit;
+}
+.solar-plate__seal:disabled { opacity: 0.55; cursor: not-allowed; }
+.solar-plate__seal:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 2px; }
+.solar-plate__status {
+  min-height: 1.1rem;
+  max-width: 22rem;
+  margin: 0;
+  font-size: 0.86rem;
+  font-style: italic;
+  line-height: 1.25;
+  text-align: center;
+  color: var(--stone);
+}
+.solar-plate[data-stage='accepted'] .solar-plate__form { box-shadow: inset 0 1px 0 var(--brass-light), 0 0 14px rgb(232 205 122 / 0.55); }
 /* His aura answers him, as it does at the gates. */
 .room-portrait[data-state='listening'] .portrait-gate__aura { opacity: 0.36; border-color: rgb(220 190 110 / 0.16); box-shadow: inset 0 0 1.6rem rgb(207 171 76 / 0.18); }
 .room-portrait[data-state='denied'] .portrait-gate__aura,
@@ -485,8 +558,8 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
   justify-items: center;
 }
 .cabinet {
-  width: min(100%, 290px);
-  aspect-ratio: 220 / 300;
+  width: min(100%, 250px);
+  aspect-ratio: 220 / 380;
 }
 .cabinet__svg { display: block; width: 100%; height: 100%; overflow: visible; }
 .cabinet__label {
@@ -494,7 +567,7 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
   letter-spacing: 0.08em;
   fill: #4d3b26;
 }
-/* The Fresh! drawer, drawn out toward the reader when Ancarion nods. */
+/* The Fresh! drawer, drawn out toward the reader when the word is accepted. */
 .cabinet__drawer {
   transform-box: fill-box;
   transform-origin: 50% 100%;
@@ -603,24 +676,6 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
   transform: rotate(45deg);
 }
 
-/* ---------- The door to the Solar ---------- */
-
-/* A button that leads nowhere yet: no link cursor, no pressed look. Tried,
-   its leaves strain against the seal and settle. */
-.object--door {
-  font: inherit;
-  background: none;
-  border: 0;
-  cursor: inherit;
-}
-.object--door:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 4px; }
-.object--door .door__leaf { transform-box: fill-box; }
-.object--door .door__leaf--l { transform-origin: left center; }
-.object--door .door__leaf--r { transform-origin: right center; }
-.object--door[data-trying] .door__leaf--l { animation: door-try-l 0.7s var(--ease); }
-.object--door[data-trying] .door__leaf--r { animation: door-try-r 0.7s var(--ease); }
-.object--door .door__light { animation: room-glow 3.2s infinite ease-in-out; }
-
 /* ---------- The pinned note ---------- */
 
 .note {
@@ -631,7 +686,7 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
   color: var(--ink);
   background: url('/textures/parchment.svg') 120px 40px / 600px 600px, var(--parchment);
   box-shadow: inset 0 0 26px rgb(110 70 20 / 0.5), 0 12px 22px rgb(0 0 0 / 0.65);
-  transform: rotate(2.2deg);
+  transform: rotate(-1.8deg);
   clip-path: polygon(0 1%, 4% 0, 30% 1.5%, 60% 0, 96% 1%, 100% 4%, 99% 50%, 100% 96%, 94% 100%, 60% 98.5%, 30% 100%, 3% 99%, 0 95%, 1% 50%);
 }
 .note__pin {
@@ -669,33 +724,72 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
   color: var(--ink-soft);
 }
 
-/* ---------- The Scribe Table, and the torches at the arches ---------- */
+/* ---------- The Scribe Table, and its candles ---------- */
 
 /* The Scribe Table's brass plate is fixed to the desk's front edge rather than hung
-   beneath it, so the whole height of its place goes to the Scribe Table. */
+   beneath it, so the whole height of its place goes to the Scribe Table. A
+   candle stands on the floor at either side of it (Candle.tsx). */
 .area-scribe {
   grid-area: scribe;
   --scribe: min(100%, 360px);
+  --candle-h: calc(var(--scribe) * 0.6);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: clamp(0.4rem, 1.2vw, 1.4rem);
 }
-.object.object--scribe { width: var(--scribe); justify-self: center; }
+.object.object--scribe { flex: none; width: var(--scribe); }
 .object--scribe .plaque {
   position: absolute;
   left: 50%;
   top: 48%;
   translate: -50% 0;
 }
-/* A torch stands on the floor outside each arch. They need the one-screen
-   wall's slack beside the arches to stand in, so they are shown only there;
-   narrower walls and phones go without (and fetch neither animated image). */
-.torch {
-  display: none;
-  width: calc(var(--torch-h, 220px) * 240 / 270);
-  height: var(--torch-h, 220px);
-  background: url('../assets/torch-left.webp') center bottom / contain no-repeat;
+
+/* The candle and holder (painted), the flame over its wick (live, or the
+   painted one held still), and the light it throws on the wall. The flame's
+   box is drawn from the wick: candle.webp's frame puts the wick at 47.8%
+   across and 20.2% down (scripts/prepare-candle.mjs). */
+.candle {
+  position: relative;
+  flex: none;
+  display: block;
+  height: var(--candle-h);
+  aspect-ratio: 690 / 1610;
+  margin-bottom: 0.2rem;
   pointer-events: none;
+  --glow: 0.9;
 }
-/* Mirrored, so the pair leans outward from the arches. */
-.torch--r { background-image: url('../assets/torch-right.webp'); transform: scaleX(-1); }
+.candle__body,
+.candle__still {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.candle__flame {
+  position: absolute;
+  left: calc(47.8% - 60%);
+  top: 0;
+  width: 120%;
+  height: 24%;
+  opacity: 0;
+  transition: opacity 0.8s var(--ease);
+}
+.candle[data-live] .candle__flame { opacity: 1; }
+.candle[data-live] .candle__still { opacity: 0; transition: opacity 0.8s var(--ease); }
+.candle__glow {
+  position: absolute;
+  left: 47.8%;
+  top: 14%;
+  width: 360%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(255 190 90 / 0.32), rgb(255 170 70 / 0.1) 38%, transparent 68%);
+  opacity: var(--glow);
+  transform: translate(-50%, -50%);
+  mix-blend-mode: screen;
+}
 
 /* ---------- Motion ---------- */
 
@@ -714,16 +808,6 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
   0% { transform: translateX(-8%) rotate(-8deg) scaleY(0.8); }
   50% { transform: translateX(6%) rotate(4deg) scaleY(1.15); }
   100% { transform: translateX(12%) rotate(-3deg) scaleY(0.9); }
-}
-@keyframes door-try-l {
-  0%, 100% { transform: none; }
-  25% { transform: rotateY(-7deg) translateX(-1px); }
-  55% { transform: rotateY(-3deg); }
-}
-@keyframes door-try-r {
-  0%, 100% { transform: none; }
-  25% { transform: rotateY(7deg) translateX(1px); }
-  55% { transform: rotateY(3deg); }
 }
 @keyframes cabinet-slip-in {
   from { opacity: 0; transform: translateX(-50%) translateY(10px) rotate(-1.2deg); }
@@ -771,16 +855,16 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
     grid-template-areas:
       'board   board    board'
       'archL   portrait archR'
-      'shelf   scribe    instr'
-      'cabinet note     door';
+      'scribe  scribe   scribe'
+      'shelf   instr    cabinet'
+      'note    note     note';
     gap: 1.8rem 1.4rem;
   }
   .area-shelf { align-self: center; }
   .object--bookshelf .object__art { aspect-ratio: 220 / 360; }
   .object--bookshelf .shelf-art--tall { display: none; }
   .object--bookshelf .shelf-art--short { display: block; }
-  .area-door { justify-self: center; }
-  .area-scribe { --scribe: min(60%, 270px); }
+  .area-scribe { --scribe: min(36vw, 270px); }
 }
 
 /* Phones: stack, Ancarion first, then the hour, then what a reader acts on. */
@@ -792,18 +876,17 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
       'portrait portrait'
       'instr    instr'
       'board    board'
-      'scribe    scribe  '
+      'scribe   scribe'
       'note     note'
       'shelf    cabinet'
-      'archL    archR'
-      'door     door';
+      'archL    archR';
     gap: 1.6rem 1rem;
   }
   .area-instruments { grid-template-columns: 1fr 1fr; align-items: center; }
   .room-clock { padding: 0.8rem 0.6rem; }
   .room-clock__date { font-size: 0.95rem; }
   .room-portrait__stage { width: min(78vw, 19rem); }
-  .object.object--scribe { width: min(100%, 300px); }
+  .area-scribe { --scribe: min(56vw, 260px); --candle-h: min(22vw, 6rem); }
   .note { max-width: none; margin: 0 6px; transform: rotate(0.9deg); }
   .plaque { padding: 0.28rem 0.85rem; font-size: 0.62rem; letter-spacing: 0.12em; }
   .describer { display: none; }
@@ -821,10 +904,11 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
    walls and the arches that frame Ancarion, never into black bands.
 
    Six rows, in --u: 20 / 16 / 28 / 4 / 4 / 28, so each column can part where
-   the First Emissary's sketch parts it (2026-10-22):
-     centre  the board 0-20, Ancarion and the arches 20-72, the Scribe Table 72-100
-     left    the bookcase 0-64, the Solar's door 64-100
-     right   the hour and the orb 0-36, the Cabinet 36-68, the note 68-100
+   the First Emissary's sketch parts it (2026-10-22, rearranged 2026-10-23):
+     centre  the board 0-20, Ancarion and the arches 20-72, the Scribe Table
+             and its candles 72-100
+     left    the bookcase 0-64, the pinned note 64-100
+     right   the hour and the orb 0-36, the Cabinet 36-100
    The grid runs to the floor; only the two corner columns keep clear of the
    fixed seals in the corners. */
 @media (min-width: 1024px) and (orientation: landscape) {
@@ -851,26 +935,25 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
     grid-template-rows:
       calc(20 * var(--u)) calc(16 * var(--u)) calc(28 * var(--u)) calc(4 * var(--u)) calc(4 * var(--u)) calc(28 * var(--u));
     grid-template-areas:
-      'shelf .      board   board   board    board   board   .      instr'
-      'shelf torchL archL   .       portrait .       archR   torchR instr'
-      'shelf torchL archL   .       portrait .       archR   torchR cabinet'
-      'door  torchL archL   .       portrait .       archR   torchR cabinet'
-      'door  torchL archL   .       portrait .       archR   torchR note'
-      'door  .      scribe  scribe  scribe   scribe  scribe  .      note';
+      'shelf . board  board  board    board  board  . instr'
+      'shelf . archL  .      portrait .      archR  . instr'
+      'shelf . archL  .      portrait .      archR  . cabinet'
+      'note  . archL  .      portrait .      archR  . cabinet'
+      'note  . archL  .      portrait .      archR  . cabinet'
+      'note  . scribe scribe scribe   scribe scribe . cabinet';
     gap: 0;
     align-items: center;
   }
   .area-shelf { align-self: start; }
-  .area-instruments,
-  .area-cabinet { align-self: center; }
+  .area-instruments { align-self: center; }
   /* The corner columns stand clear of the fixed seals. */
-  .area-door,
+  .area-cabinet,
   .area-note { align-self: end; margin-bottom: var(--seals); }
   /* Plates scale down with a short screen, so a long name wraps to two
      lines at most. */
   .plaque { padding-inline: max(0.7rem, 1.4 * var(--u)); font-size: clamp(0.56rem, 1.3 * var(--u), 0.68rem); letter-spacing: 0.16em; }
 
-  /* The bookcase, from the board's top down to the door (64u). */
+  /* The bookcase, from the board's top down to the note (64u). */
   .object--bookshelf .object__art { width: calc((64 * var(--u) - 3rem) * 220 / 436); }
 
   /* The long board along the top (20u). */
@@ -879,8 +962,9 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
   .object--board .board-art--narrow { display: none; }
   .object--board .board-art--wide { display: block; }
 
-  /* Ancarion, the tallest thing on the wall (52u, less his plate). */
-  .room-portrait__stage { width: calc((52 * var(--u) - 2.8rem) * 388 / 572); }
+  /* Ancarion, the tallest thing on the wall (52u, less his plate and its word). */
+  .room-portrait { gap: calc(0.6 * var(--u)); }
+  .room-portrait__stage { width: calc((52 * var(--u) - 4.3rem) * 388 / 572); }
 
   /* The arches nearly as tall as he is, their feet on his line. */
   .area-arch-l,
@@ -901,23 +985,16 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
   .orb__stand { width: calc(8.5 * var(--u)); }
   .orb__moons { font-size: max(0.66rem, 1.5 * var(--u)); line-height: 1.3; }
 
-  /* The Cabinet (32u). */
-  .cabinet { width: calc((32 * var(--u) - 3.4rem) * 220 / 300); }
+  /* The Cabinet, down to the sound seal (64u, less the seals' corner). */
+  .cabinet { width: calc((64 * var(--u) - 3.4rem - var(--seals)) * 220 / 380); }
 
-  /* The Solar's door (36u, less the seals' corner). */
-  .object--door .object__art { width: calc((36 * var(--u) - 2.9rem - var(--seals)) * 140 / 222); }
+  /* The Scribe Table, on the floor (28u; its plate is on the desk), a
+     candle at either hand. */
+  .area-scribe { --scribe: calc(28 * var(--u)); --candle-h: calc(17 * var(--u)); gap: calc(1.6 * var(--u)); align-self: end; }
 
-  /* The Scribe Table, on the floor (28u; its plate is on the desk). */
-  .area-scribe { --scribe: calc(28 * var(--u)); align-self: end; }
-
-  /* The torches, on the arches' floor line (their plates hang beneath it). */
-  .torch { display: block; align-self: end; justify-self: center; margin-bottom: 2.6rem; --torch-h: calc(27 * var(--u)); }
-  .torch--l { grid-area: torchL; }
-  .torch--r { grid-area: torchR; }
-
-  /* The pinned note, in the corner above the sound seal. */
+  /* The pinned note, in the corner above the Support seal. */
   .note {
-    width: calc(41 * var(--u));
+    width: calc(36 * var(--u));
     max-width: none;
     padding: max(1.15rem, 2 * var(--u)) calc(1.7 * var(--u)) calc(1 * var(--u));
   }
@@ -929,13 +1006,8 @@ a.object:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 
 @media (prefers-reduced-motion: reduce) {
   .bough__sway,
   .room__light span,
-  .object--door .door__leaf,
-  .object--door .door__light,
   .arch__aurora,
   .cabinet-slip { animation: none; }
-  /* No CSS stops an animated image: both torches take the still. */
-  .torch,
-  .torch--r { background-image: url('../assets/torch-still.webp'); }
   .object,
   .arch__stars,
   .arch__glow,

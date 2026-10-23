@@ -1,0 +1,542 @@
+/* The Solar: High Command's chamber behind Ancarion (web/src/views/Solar.tsx),
+   after the First Emissary's sketch: a room framed in thick gold, the notes
+   pinned at its left, the war table with the realm map filling its head, the
+   Clerk Table and Canonreeve's Desk along its foot. And the map itself, taken
+   up and spread out over everything (MapViewer.tsx).
+
+   Route-only: imported by the Solar view, never by main.tsx
+   (test/site-hardening.test.ts). The brass, parchment and button furniture it
+   shares with the room is restated here rather than imported, so the Solar's
+   chunk does not have to bring the room's stylesheet with it. */
+
+.solar-page {
+  --brass: #b8902a;
+  --brass-dark: #5a420c;
+  --brass-light: #e3c46a;
+  padding: 2.2rem 0 1rem;
+}
+
+.solar__title {
+  margin: 0 auto 1.2rem;
+  text-align: center;
+}
+.solar__title p {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 0.66rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.solar__title h1 {
+  margin: 0.2rem 0 0;
+  font-family: var(--title);
+  font-weight: 700;
+  font-size: clamp(1.5rem, 3vw, 2.3rem);
+  letter-spacing: 0.08em;
+  color: var(--gold-bright);
+  text-shadow: 0 2px 0 #000, 0 0 26px rgb(201 162 39 / 0.3);
+}
+
+/* ---------- The chamber ---------- */
+
+/* Thick rounded gold, dark within: the frame of the sketch. */
+.solar__chamber {
+  display: grid;
+  grid-template-columns: minmax(13rem, 0.85fr) minmax(0, 1fr) minmax(0, 1.35fr);
+  grid-template-areas:
+    'notes map  map'
+    'clerk .    desk';
+  gap: clamp(1.2rem, 2.4vw, 2.6rem);
+  padding: clamp(1.2rem, 2.6vw, 2.6rem);
+  background: url('/textures/wood.svg') 0 0 / 520px 520px, #0b0806;
+  border: clamp(10px, 1.1vw, 16px) solid transparent;
+  border-radius: 26px;
+  background-clip: padding-box;
+  box-shadow:
+    0 0 0 clamp(10px, 1.1vw, 16px) #b8902a,
+    0 0 0 calc(clamp(10px, 1.1vw, 16px) + 2px) #5a420c,
+    inset 0 0 0 2px #5a420c,
+    inset 0 0 60px rgb(0 0 0 / 0.85),
+    0 24px 50px rgb(0 0 0 / 0.7);
+  margin: clamp(10px, 1.1vw, 16px);
+}
+
+.solar-heading {
+  margin: 0 0 0.8rem;
+  font-family: var(--title);
+  font-size: clamp(1.1rem, 1.8vw, 1.6rem);
+  letter-spacing: 0.06em;
+  text-align: center;
+  color: var(--gold-bright);
+}
+.solar-heading span {
+  display: block;
+  font-family: var(--display);
+  font-size: 0.62rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--stone);
+}
+.solar-quiet { margin: 0.6rem 0 0; font-style: italic; text-align: center; color: var(--stone); }
+
+/* ---------- The war table ---------- */
+
+.war-table { grid-area: map; min-width: 0; }
+/* The table is as wide as the map on it, and the map no taller than leaves
+   the tables beneath it in reach. */
+.war-table__map {
+  position: relative;
+  display: block;
+  width: min(100%, calc((100dvh - 15rem) * 1.345 + 2 * clamp(10px, 1.2vw, 18px)));
+  min-width: min(100%, 30rem);
+  margin-inline: auto;
+  padding: clamp(10px, 1.2vw, 18px);
+  font: inherit;
+  color: inherit;
+  background: url('/textures/wood.svg') 0 0 / 300px 300px, #3b2414;
+  border: 1px solid #5a420c;
+  box-shadow: inset 0 0 0 4px #1a110a, inset 0 0 0 5px rgb(201 162 39 / 0.5), 0 18px 30px rgb(0 0 0 / 0.65);
+  cursor: inherit;
+  transition: transform 0.35s var(--ease), box-shadow 0.35s var(--ease);
+}
+.war-table__sheet { position: relative; display: block; }
+.war-table__sheet img { display: block; width: 100%; height: auto; filter: drop-shadow(0 6px 8px rgb(0 0 0 / 0.55)); }
+.war-table__map:hover,
+.war-table__map:focus-visible {
+  transform: translateY(-3px);
+  box-shadow: inset 0 0 0 4px #1a110a, inset 0 0 0 5px rgb(232 205 122 / 0.8), 0 22px 34px rgb(0 0 0 / 0.7), 0 0 22px rgb(201 162 39 / 0.3);
+}
+.war-table__map:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 4px; }
+.war-table__pin {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  pointer-events: none;
+  line-height: 0;
+}
+.war-table__invite {
+  position: absolute;
+  right: 1.6rem;
+  bottom: 1.4rem;
+  padding: 0.35rem 0.9rem;
+  font: 700 0.62rem var(--display);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #1d1408;
+  background: url('/textures/grain.svg') 0 0 / 256px 256px, var(--brass);
+  border: 1px solid var(--brass-dark);
+  box-shadow: inset 0 1px 0 var(--brass-light), 0 3px 8px rgb(0 0 0 / 0.6);
+  opacity: 0.88;
+}
+
+/* ---------- The notes ---------- */
+
+.parchment {
+  position: relative;
+  color: var(--ink);
+  background: url('/textures/parchment.svg') 0 0 / 600px 600px, var(--parchment);
+  box-shadow: inset 0 0 26px rgb(110 70 20 / 0.45), 0 12px 22px rgb(0 0 0 / 0.6);
+  clip-path: polygon(0 1%, 4% 0, 30% 1%, 60% 0, 96% 1%, 100% 3%, 99% 50%, 100% 97%, 95% 100%, 60% 99%, 30% 100%, 3% 99%, 0 96%, 1% 50%);
+}
+.pin {
+  position: absolute;
+  top: 9px;
+  left: 48%;
+  width: 9px;
+  height: 9px;
+  background: var(--gold);
+  box-shadow: 0 0 0 2px #3a2a08, 1px 2px 2px rgb(0 0 0 / 0.5);
+  transform: rotate(45deg);
+}
+.solar-notes {
+  grid-area: notes;
+  align-self: start;
+  display: grid;
+  align-content: start;
+  max-height: min(70vh, 640px);
+  padding: 1.7rem 1rem 1rem;
+  transform: rotate(-1deg);
+}
+.solar-notes__title {
+  margin: 0 0 0.6rem;
+  font-family: var(--display);
+  font-size: 0.86rem;
+  letter-spacing: 0.24em;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.solar-notes__empty { margin: 0; font-style: italic; line-height: 1.35; color: var(--ink-soft); }
+.solar-notes__list {
+  display: grid;
+  gap: 0.15rem;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+.solar-notes__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.4rem 0.3rem;
+  font: inherit;
+  text-align: left;
+  color: var(--ink);
+  background: none;
+  border: 0;
+  border-bottom: 1px dashed rgb(77 59 38 / 0.35);
+  cursor: inherit;
+}
+.solar-notes__item:hover,
+.solar-notes__item:focus-visible { background: rgb(201 162 39 / 0.16); }
+.solar-notes__item:focus-visible { outline: 2px solid var(--rubric); outline-offset: 1px; }
+.solar-notes__item .pin-mark { flex: none; margin-top: 0.1rem; }
+.solar-notes__text { display: grid; gap: 0.1rem; min-width: 0; }
+.solar-notes__name { font-family: var(--display); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.06em; }
+.solar-notes__note { font-size: 0.92rem; line-height: 1.25; color: var(--ink-soft); overflow-wrap: anywhere; }
+
+/* ---------- The Clerk Table and Canonreeve's Desk ---------- */
+
+.solar-furniture {
+  display: grid;
+  justify-items: center;
+  align-content: end;
+  gap: 0.7rem;
+}
+.solar-furniture--clerk { grid-area: clerk; }
+.solar-furniture--desk { grid-area: desk; }
+.solar-furniture__art { position: relative; width: min(100%, 22rem); filter: drop-shadow(0 16px 12px rgb(0 0 0 / 0.7)); }
+.solar-furniture--desk .solar-furniture__art { width: min(100%, 30rem); }
+.solar-art { display: block; width: 100%; height: auto; }
+.solar-furniture__stamps {
+  position: absolute;
+  right: 4%;
+  bottom: 58%;
+  display: flex;
+  align-items: flex-end;
+  gap: 0.3rem;
+  transform: rotate(-6deg);
+}
+.stamp { display: block; flex: none; }
+.stamp--art { border-radius: 50%; }
+
+.plaque {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.28rem 1.1rem;
+  font-family: var(--display);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: #1d1408;
+  background: url('/textures/grain.svg') 0 0 / 256px 256px, var(--brass);
+  border: 1px solid var(--brass-dark);
+  box-shadow: inset 0 1px 0 var(--brass-light), inset 0 -1px 0 #7a5a12, 0 2px 3px rgb(0 0 0 / 0.7);
+}
+.solar-card {
+  width: min(100%, 26rem);
+  padding: 1rem 1.2rem 0.9rem;
+  text-align: center;
+}
+.solar-card .fleuron { display: block; margin: 0 auto 0.2rem; color: var(--rubric); }
+.solar-card h3 { margin: 0 0 0.4rem; font-size: 0.82rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink); }
+.solar-card p { margin: 0; line-height: 1.35; }
+.solar-card ul { display: grid; gap: 0.2rem; margin: 0 auto; padding-left: 1.1rem; text-align: left; width: fit-content; line-height: 1.3; }
+.solar-card li::marker { color: var(--rubric); }
+.solar-card__wait { margin-top: 0.5rem !important; font-style: italic; color: var(--ink-soft); }
+
+/* ---------- Buttons on parchment ---------- */
+
+.btn {
+  min-height: 2.3rem;
+  padding: 0.45rem 0.95rem;
+  font: 700 0.62rem var(--display);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #1d1408;
+  background: url('/textures/grain.svg') 0 0 / 256px 256px, var(--brass);
+  border: 1px solid var(--brass-dark);
+  box-shadow: inset 0 1px 0 var(--brass-light), 0 2px 4px rgb(0 0 0 / 0.45);
+  cursor: inherit;
+}
+.btn:disabled { cursor: not-allowed; opacity: 0.6; }
+.btn:focus-visible { outline: 2px solid var(--rubric); outline-offset: 2px; }
+.btn--quiet { color: var(--ink); background: transparent; border-color: var(--ink-soft); box-shadow: none; }
+
+/* ---------- The map, spread out ---------- */
+
+.map-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  background: url('/textures/wood.svg') 0 0 / 480px 480px, #0d0a07;
+  animation: map-viewer-in 0.35s var(--ease) both;
+}
+.map-viewer__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1.2rem;
+  padding: 0.7rem 1rem;
+  background: rgb(8 6 4 / 0.92);
+  border-bottom: 1px solid rgb(201 162 39 / 0.45);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.6);
+}
+.map-viewer__title {
+  margin: 0 auto 0 0;
+  font-family: var(--title);
+  font-size: 1.2rem;
+  letter-spacing: 0.06em;
+  color: var(--gold-bright);
+}
+.map-viewer__title span {
+  margin-left: 0.6rem;
+  font-family: var(--display);
+  font-size: 0.6rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--stone);
+}
+.map-tray,
+.map-zoom { display: flex; gap: 0.4rem; }
+.map-tray__piece,
+.map-zoom button,
+.map-viewer__close {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.4rem;
+  padding: 0.3rem 0.8rem;
+  font: 700 0.62rem var(--display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold-bright);
+  background: #15100a;
+  border: 1px solid rgb(201 162 39 / 0.55);
+  cursor: inherit;
+}
+.map-zoom button { justify-content: center; min-width: 2.4rem; padding: 0; font-size: 1.1rem; letter-spacing: 0; }
+.map-tray__piece[aria-pressed='true'] {
+  color: #1d1408;
+  background: url('/textures/grain.svg') 0 0 / 256px 256px, var(--brass);
+  border-color: var(--brass-dark);
+  box-shadow: 0 0 14px rgb(232 205 122 / 0.5);
+}
+.map-zoom button:disabled { opacity: 0.4; cursor: not-allowed; }
+.map-viewer__close { justify-content: center; min-width: 2.4rem; padding: 0; font-size: 1.4rem; line-height: 1; }
+.map-tray__piece:focus-visible,
+.map-zoom button:focus-visible,
+.map-viewer__close:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 2px; }
+
+.map-viewer__body { position: relative; display: flex; min-height: 0; }
+.map-stage {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+}
+.map-stage:active { cursor: grabbing; }
+.map-stage[data-placing] { cursor: crosshair; }
+.map-stage:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: -4px; }
+.map-layer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+.map-layer__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  filter: drop-shadow(0 10px 18px rgb(0 0 0 / 0.6));
+}
+.map-stage__hint {
+  position: absolute;
+  left: 50%;
+  top: 0.9rem;
+  margin: 0;
+  padding: 0.35rem 0.9rem;
+  font-style: italic;
+  color: var(--parchment);
+  background: rgb(8 6 4 / 0.82);
+  border: 1px solid rgb(201 162 39 / 0.5);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+/* A piece: its foot on the place, drawn at one size at any zoom (MapViewer
+   scales it by the inverse of the map's zoom about that foot). */
+.map-pin {
+  position: absolute;
+  display: block;
+  padding: 0;
+  line-height: 0;
+  background: none;
+  border: 0;
+  transform-origin: 50% 100%;
+  cursor: inherit;
+  touch-action: none;
+  filter: drop-shadow(0 2px 2px rgb(0 0 0 / 0.6));
+}
+.map-pin:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 2px; }
+.map-pin[data-selected] { filter: drop-shadow(0 0 6px rgb(255 226 140 / 0.95)) drop-shadow(0 2px 2px rgb(0 0 0 / 0.6)); }
+.map-pin[data-held] { cursor: grabbing; filter: drop-shadow(0 8px 6px rgb(0 0 0 / 0.55)); }
+.map-pin--draft { pointer-events: none; opacity: 0.8; animation: map-pin-draft 1.2s ease-in-out infinite alternate; }
+.map-pin__label {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  margin-top: 3px;
+  padding: 0.18rem 0.5rem;
+  font: 700 0.6rem/1.2 var(--display);
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  color: var(--gold-bright);
+  background: rgb(14 10 6 / 0.88);
+  border: 1px solid rgb(201 162 39 / 0.5);
+  transform: translateX(-50%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s var(--ease);
+}
+.map-pin:hover .map-pin__label,
+.map-pin:focus-visible .map-pin__label,
+.map-pin[data-selected] .map-pin__label,
+.map-stage[data-zoomed] .map-pin__label { opacity: 1; }
+
+/* The ledger laid over the map's edge: a new piece's name and note, or the
+   chosen one's. Over the map, not beside it, so opening it never moves the
+   map under the reader. */
+.map-card {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 2;
+  width: min(21rem, 92vw);
+  max-height: calc(100% - 2rem);
+  margin: 1rem;
+  padding: 1.1rem 1.1rem 1rem;
+  overflow-y: auto;
+}
+.map-card__form { display: grid; gap: 0.35rem; }
+.map-card__kind {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.3rem;
+  font: 700 0.62rem var(--display);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.map-card__name { margin: 0 0 0.3rem; font-size: 1.05rem; letter-spacing: 0.04em; color: var(--ink); overflow-wrap: anywhere; }
+.map-card__note { margin: 0 0 0.6rem; line-height: 1.35; white-space: pre-line; overflow-wrap: anywhere; }
+.map-card__note--none { font-style: italic; color: var(--ink-soft); }
+.map-card__label { font: 700 0.6rem var(--display); letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink); }
+.map-card__label span { font-weight: 400; letter-spacing: 0.06em; text-transform: none; color: var(--ink-soft); }
+.map-card__input {
+  width: 100%;
+  padding: 0.4rem 0.5rem;
+  font: inherit;
+  color: var(--ink);
+  background: rgb(255 250 235 / 0.55);
+  border: 1px solid rgb(77 59 38 / 0.45);
+}
+.map-card__input--note { resize: vertical; min-height: 5rem; }
+.map-card__input:focus-visible { outline: 2px solid var(--rubric); outline-offset: 1px; }
+.map-card__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.45rem; margin-top: 0.5rem; }
+.map-card__ask { flex-basis: 100%; font-style: italic; color: var(--ink-soft); }
+
+.map-viewer__notice {
+  position: fixed;
+  left: 50%;
+  bottom: 1.2rem;
+  z-index: 81;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin: 0;
+  padding: 0.55rem 0.9rem;
+  color: var(--parchment);
+  background: #3a0d0f;
+  border: 1px solid #7c1f24;
+  box-shadow: 0 8px 20px rgb(0 0 0 / 0.6);
+  transform: translateX(-50%);
+}
+.map-viewer__notice button {
+  font: 700 0.58rem var(--display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold-bright);
+  background: none;
+  border: 1px solid rgb(201 162 39 / 0.5);
+  padding: 0.25rem 0.5rem;
+  cursor: inherit;
+}
+.solar__loading { position: fixed; inset: auto 0 2rem; z-index: 80; text-align: center; }
+
+@keyframes map-viewer-in {
+  from { opacity: 0; transform: scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+/* Opacity only: the piece's transform is its place and its size. */
+@keyframes map-pin-draft {
+  from { opacity: 0.55; }
+  to { opacity: 0.95; }
+}
+
+/* ---------- Narrower screens ---------- */
+
+@media (max-width: 1100px) {
+  .solar__chamber {
+    grid-template-columns: minmax(12rem, 0.8fr) minmax(0, 1.6fr);
+    grid-template-areas:
+      'notes map'
+      'clerk desk';
+  }
+}
+
+/* Phones: the map first, then the notes, then the two tables. */
+@media (max-width: 760px) {
+  .solar-page { padding-top: 1.4rem; }
+  .solar__chamber {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'map' 'notes' 'clerk' 'desk';
+    padding: 0.9rem;
+    border-radius: 16px;
+  }
+  .solar-notes { max-height: none; transform: none; }
+  .war-table__invite { right: 0.9rem; bottom: 0.8rem; }
+  .map-viewer__title span { display: none; }
+  .map-tray__piece { padding-inline: 0.55rem; }
+  .map-viewer__body { flex-direction: column; }
+  .map-card {
+    position: absolute;
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    max-height: 55%;
+    margin: 0.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-viewer,
+  .map-pin--draft { animation: none; }
+  .war-table__map,
+  .map-pin__label { transition: none; }
+}

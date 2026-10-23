@@ -1,11 +1,11 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 const read = (path: string) => readFileSync(path, 'utf8');
-// The gate keeps the field and the door; Ancarion's performance lives in
-// useAncarion so the room's Cabinet can direct him too. Read as one.
+// The plate keeps the field and the door to the Solar; Ancarion's performance
+// lives in useAncarion. Read as one.
 const gateAndPerformer = () =>
-  read('web/src/components/PortraitGate.tsx') +
+  read('web/src/room/SolarPlate.tsx') +
   read('web/src/components/useAncarion.tsx') +
   read('web/src/components/ancarion-script.ts');
 
@@ -26,32 +26,33 @@ const PERFORMANCES = [
 ];
 
 describe('interaction boundaries', () => {
-  // The Reports register became the Cabinet on 2026-10-22: its word is asked in
-  // the room, before Ancarion, and the PortraitGate keeps the Chronicles alone.
-  it('keeps PortraitGate for the Chronicles, and the Cabinet asks in the room', () => {
-    expect(read('web/src/views/Informants.tsx')).toContain('<PortraitGate');
+  // The volumes' gate (PortraitGate) came down on 2026-10-23: every volume is
+  // open, and the two words left are asked in the room, the Cabinet's on its
+  // slip and the Solar's at Ancarion's plate.
+  it('opens every volume without a gate, and asks the two words left in the room', () => {
+    expect(existsSync('web/src/components/PortraitGate.tsx')).toBe(false);
+    for (const view of ['Informants', 'History', 'Enforcement', 'PenalCode']) {
+      expect(read(`web/src/views/${view}.tsx`)).not.toContain('PortraitGate');
+      expect(read(`web/src/views/${view}.tsx`)).toContain('<BoundBook');
+    }
     expect(read('web/src/room/Cabinet.tsx')).not.toContain('PortraitGate');
+    expect(read('web/src/room/SolarPlate.tsx')).not.toContain('PortraitGate');
   });
 
   it('keeps the two gates server-backed and separately adapted', () => {
     expect(read('web/src/room/Cabinet.tsx')).toContain('openReports(passphrase, signal)');
-    expect(read('web/src/views/Informants.tsx')).toContain('openChronicle(passphrase, signal)');
+    expect(read('web/src/room/SolarPlate.tsx')).toContain('openSolar(passphrase, controller.signal)');
   });
 
-  it('uses the existing motion system and keeps Three.js behind the Reports sky', () => {
-    // Three.js is allowed for one thing only: the Nirn sky behind the Reports
-    // gate, loaded through a dynamic import (Decision Log, 2026-10-06). Nothing
-    // else may import it statically; the bundle test checks the entry chunk.
-    const sky = read('web/src/components/NirnSky.tsx');
-    expect(sky).toContain("import('../sky/nirnScene')");
-    expect(sky).not.toMatch(/from 'three/);
-    expect(read('web/src/views/Informants.tsx')).not.toMatch(/<PortraitGate[^>]*\bsky\b/);
-    const gateCss = read('web/src/styles/portrait-gate.css');
-    expect(gateCss).toContain('prefers-reduced-motion: reduce');
-    expect(gateCss).toContain('@keyframes portrait-gate-attention-cue');
-    expect(gateCss).toContain('.portrait-gate__form input, .portrait-gate__status { animation: none; }');
+  it('uses the existing motion system and keeps Three.js behind the candles alone', () => {
+    // Three.js is allowed for one thing: the candles' flames, loaded through a
+    // dynamic import once the room is up (Decision Log, 2026-10-23). Nothing
+    // else may import it; the bundle test checks the entry and room chunks.
+    const candle = read('web/src/room/Candle.tsx');
+    expect(candle).toContain("import('./candle-flame')");
+    expect(candle).not.toMatch(/from 'three/);
+    expect(read('web/src/room/candle-flame.ts')).toMatch(/from 'three'/);
     const gate = gateAndPerformer();
-    expect(gate).toContain('clips?: Partial<');
     expect(gate).toContain("ancarion-idle.mp4");
     expect(gate).toContain("ancarion-refusal.webm");
     expect(gate).toContain("ancarion-sigh.webm");
@@ -73,7 +74,7 @@ describe('interaction boundaries', () => {
     const idleVideo = gate.match(/<video\s+ref=\{idleVideo\}[\s\S]*?\/>/)?.[0] ?? '';
     expect(idleVideo).not.toContain('loop');
     expect(gate).toContain("setPortraitState('accepted')");
-    expect(gate).toContain('onFocus={notice}');
+    expect(gate).toContain('ancarion.current?.notice();');
     expect(gate).toContain('const passphrase = phrase;');
     expect(gate).not.toContain('const passphrase = phrase.trim();');
   });
@@ -84,18 +85,10 @@ describe('interaction boundaries', () => {
     for (const performance of PERFORMANCES) expect(preparation).toContain(`'${performance}'`);
     expect(preparation).toContain("const formats = ['webm', 'mp4'];");
     expect(preparation).toContain('await copyFile(');
-    // Only the stills are re-encoded (the asleep keyframe and the Chronicles
-    // map); the clips are copied as they are.
-    expect(preparation.match(/sharp\(/g)).toHaveLength(2);
+    // Only the asleep keyframe is re-encoded; the clips are copied as they are.
+    expect(preparation.match(/sharp\(/g)).toHaveLength(1);
     expect(preparation).toContain("'ancarion-asleep.png'");
-    expect(preparation).toContain("'Assets/chronicles-map.png'");
-  });
-
-  it('draws the Summerset map behind the Chronicles gate only', () => {
-    expect(read('web/src/views/Informants.tsx')).toMatch(/<PortraitGate[\s\S]*backdrop=\{chroniclesMap\}/);
-    const gateCss = read('web/src/styles/portrait-gate.css');
-    expect(gateCss).toContain(".portrait-gate[data-backdrop='true']");
-    expect(gateCss).toContain('.portrait-gate__backdrop::after');
+    expect(preparation).not.toContain('chronicles-map');
   });
 
   it('offers every Ancarion performance as WebM with an MP4 fallback', () => {

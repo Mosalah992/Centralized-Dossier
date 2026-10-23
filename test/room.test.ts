@@ -31,9 +31,12 @@ describe('the room routes', () => {
     expect(parse('/penalcode')).toEqual({ name: 'penalcode' });
   });
 
+  it('opens the Solar as a page of its own, behind Ancarion', () => {
+    expect(parse('/solar')).toEqual({ name: 'solar' });
+  });
+
   it('opens nothing it does not have', () => {
-    // The Solar is a later page; the clerk's table comes with the Librarian.
-    expect(parse('/solar')).toEqual({ name: 'missing' });
+    // The clerk's table is furnished in the Solar; its work comes with the Librarian.
     expect(parse('/clerk')).toEqual({ name: 'missing' });
     expect(parse('/bookshelf/Not A Slug')).toEqual({ name: 'missing' });
     expect(parse('/board/a/b')).toEqual({ name: 'missing' });
@@ -55,11 +58,24 @@ describe('the room as drawn', () => {
     expect(room).not.toMatch(/Lectern|Scroll Rack/);
   });
 
-  it("hangs the Solar's door sealed, without pretending the way is open", () => {
-    // A button that can be found and tried, never a link, until the Solar is built.
-    expect(room).toMatch(/type="button"\s+className="area-door[^"]*"/);
-    expect(room).toContain('aria-disabled="true"');
-    expect(room).not.toContain('href="/solar"');
+  it('opens the Solar from Ancarion, not from a door', () => {
+    // The door came down on 2026-10-23: the portrait and its plate are the way in.
+    expect(room).not.toMatch(/SolarDoor|area-door/);
+    expect(room).toContain('<SolarPlate');
+    expect(room).toContain('onSummon={() => plate.current?.knock()}');
+    const portrait = read('web/src/room/RoomPortrait.tsx');
+    expect(portrait).toContain('className="room-portrait__stage"');
+    expect(portrait).not.toContain('<span className="plaque">Ancarion</span>');
+    expect(read('web/src/styles/room.css')).not.toContain('.object--door');
+  });
+
+  it("takes the Solar's own word at the plate, and nothing of the Cabinet's", () => {
+    const plate = read('web/src/room/SolarPlate.tsx');
+    expect(plate).toContain('openSolar(passphrase, controller.signal)');
+    expect(plate).toContain('solarIsOpen()');
+    expect(plate).toContain('refusalFor(denials.current)');
+    expect(plate).toContain("navigate('/solar')");
+    expect(plate).not.toMatch(/openReports|reportsIsOpen|fetch\(/);
   });
 
   it('stands the call for recruits in Recruitment Posters, opening the form beside the archive', () => {
@@ -77,9 +93,30 @@ describe('the room as drawn', () => {
     expect(read('wrangler.toml')).not.toContain('binding = "REGISTER"');
   });
 
-  it('stands a torch outside each arch, where the candles once were', () => {
-    expect(room.match(/<Torch side="[lr]" \/>/g)).toHaveLength(2);
-    expect(room).not.toContain('Candle');
+  it('stands a candle at either hand of the Scribe Table, where the torches were', () => {
+    expect(room).not.toMatch(/Torch|torch--/);
+    expect(room.match(/<Candle side="[lr]" \/>/g)).toHaveLength(2);
+    const candle = read('web/src/room/Candle.tsx');
+    // The flame is drawn live only for a reader who has not asked for stillness,
+    // and the painted one stands in otherwise.
+    expect(candle).toContain("prefers-reduced-motion: reduce");
+    expect(candle).toContain('className="candle__still"');
+    expect(candle).toContain("import('./candle-flame')");
+    expect(read('web/src/styles/room.css')).not.toContain('torch-left.webp');
+  });
+
+  it('turns the orb as a glass globe in a cradle, without its brass rings', () => {
+    expect(read('web/src/room/RoomOrb.tsx')).not.toContain('orb__band');
+    const css = read('web/src/styles/orb.css');
+    expect(css).not.toMatch(/inset 0 0 0 \dpx #(8a6d1c|e8cd7a)/);
+    expect(css).toContain('@keyframes orb-spin');
+    expect(css).toMatch(/prefers-reduced-motion: reduce\) \{\s+\.orb__sky,/);
+  });
+
+  it('pins the note in the corner the Solar door left, and lets the Cabinet fill the other', () => {
+    const css = read('web/src/styles/room.css');
+    expect(css).toContain("'note  . scribe scribe scribe   scribe scribe . cabinet'");
+    expect(css).toContain("'shelf . archL  .      portrait .      archR  . cabinet'");
   });
 
   it('hangs Ancarion as a performer, never as a second gate', () => {
@@ -88,13 +125,15 @@ describe('the room as drawn', () => {
     expect(read('web/src/room/RoomPortrait.tsx')).toContain("preload: 'deferred'");
   });
 
-  it('opens the Cabinet on the Reports writ and nothing else', () => {
+  it('opens the Cabinet on the Reports writ and nothing else, without Ancarion', () => {
     const cabinet = read('web/src/room/Cabinet.tsx');
     expect(cabinet).toContain('openReports(passphrase, signal)');
     expect(cabinet).toContain('reportsIsOpen()');
-    expect(cabinet).toContain('refusalFor(denials.current)');
     expect(cabinet).not.toMatch(/fetch\(/);
-    // A reader who reached it without the writ is turned back to Ancarion.
+    // Ancarion keeps the Solar now; the Cabinet answers to its lock alone.
+    expect(cabinet).not.toMatch(/ancarion\.current|refusalFor/);
+    expect(room).toContain('<Cabinet sealed={sealed} />');
+    // A reader who reached it without the writ is turned back to its slip.
     expect(read('web/src/room/takeovers/Cabinet.tsx')).toContain('else onSealed();');
   });
 

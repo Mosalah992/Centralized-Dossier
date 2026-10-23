@@ -1,7 +1,7 @@
 # Invariants
 
 1. **Read-only records:** The archive displays the sheet’s own values. It does not reconcile ledger or roster inconsistencies, and it never writes to Sheets.
-2. **Sealed Chronicle:** Chronicle text stays server-side; valid access needs its scoped signed cookie. The response must be `private, no-store` and `Vary: Cookie`.
+2. **Gated doors protect themselves:** the Cabinet (Reports) and the Solar each check their own scoped signed cookie on every route, answer `private, no-store` and `Vary: Cookie` at every status, and fail closed without their secrets. Solar writes must also be same-site JSON. The Chronicle is public since 2026-10-23: its text stays server-side so it can be corrected without a rebuild, not to seal it.
 3. **Public is not private:** `noindex` avoids search indexing; it is not authorization. Consider member-data exposure before adding fields or routes.
 4. **Optional services fail quietly:** a missing collector token, KV binding, or D1 database must remove only its optional feature, not blank the archive.
 5. **Shared storage identity:** `CHRONICLE_FILINGS` uses one KV namespace bound by both Pages and the Chronicler Worker.

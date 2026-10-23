@@ -1,12 +1,17 @@
-/* The Orrery as a brass orb beside the room's clock: the Wheel of Mundus seen
-   through a glass sphere on a gold stand, the moons' phases lettered beneath.
-   The wheel brings its own stylesheet (orrery.css) when its chunk arrives;
-   this is only the sphere around it. */
+/* The Orrery as a glass globe in a brass cradle beside the room's clock: the
+   Wheel of Mundus turning inside a globe that turns slowly itself, the moons'
+   phases lettered beneath. The wheel brings its own stylesheet (orrery.css)
+   when its chunk arrives; this is only the globe around it.
+
+   The globe has no rim of its own (its brass rings came off on 2026-10-23):
+   it is glass, lit from the upper left and shaded to its far side. It turns
+   because the stars behind the wheel drift across it and two faint meridians
+   sweep round, as lines of longitude do on a spinning globe. */
 
 .orb {
   display: grid;
   justify-items: center;
-  gap: 0.2rem;
+  gap: 0.1rem;
   margin: 0;
 }
 .orb__sphere {
@@ -15,33 +20,47 @@
   width: min(100%, 12rem);
   aspect-ratio: 1;
   border-radius: 50%;
-  background: #07060a;
-  box-shadow:
-    inset 0 0 0 5px #8a6d1c,
-    inset 0 0 0 7px #e8cd7a,
-    inset 0 0 0 9px #5a420c,
-    inset 0 0 40px 10px rgb(0 0 0 / 0.85),
-    0 0 26px rgb(201 162 39 / 0.25);
+  background: #05050a;
+  box-shadow: 0 0 22px rgb(150 180 230 / 0.12), 0 12px 18px rgb(0 0 0 / 0.55);
 }
 .orb__glass {
   position: absolute;
-  inset: 9px;
+  inset: 0;
   display: grid;
   place-items: center;
   overflow: hidden;
   border-radius: 50%;
-  background: url('../assets/mundus/starfield.webp') center / cover;
 }
-/* The wheel is wider than it is tall; inside the sphere it is seen whole,
-   tilted, with the glass cutting its rim. */
-.orb__glass .wheel__face { width: 150%; max-width: none; height: auto; }
-/* A brass meridian band across the sphere. */
-.orb__band {
+/* The stars, twice as wide as the globe so they can drift round it. */
+.orb__sky {
   position: absolute;
-  inset: 9px;
+  inset: 0 auto 0 0;
+  width: 200%;
+  background: url('../assets/mundus/starfield.webp') 0 0 / 50% 100% repeat-x;
+  animation: orb-spin 48s linear infinite;
+}
+/* The wheel is wider than it is tall; inside the globe it is seen whole,
+   tilted, with the glass cutting its rim. */
+.orb__glass .wheel__face { position: relative; width: 150%; max-width: none; height: auto; }
+/* Lines of longitude, sweeping across as the globe turns: each is the near
+   half of an ellipse through the poles, narrowing to a straight line as it
+   crosses the middle and widening again toward the other limb. */
+.orb__meridian {
+  position: absolute;
+  inset: 0;
   border-radius: 50%;
-  border: 2px solid rgb(201 162 39 / 0.65);
-  transform: rotateX(72deg) rotate(-12deg);
+  border-left: 1px solid rgb(200 220 255 / 0.24);
+  animation: orb-meridian 12s linear infinite;
+  pointer-events: none;
+}
+.orb__meridian--late { animation-delay: -6s; }
+/* The glass: dark toward its far side, a cool rim of light, no brass. */
+.orb__shade {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, transparent 38%, rgb(0 0 0 / 0.38) 72%, rgb(0 0 0 / 0.78) 100%);
+  box-shadow: inset 0 0 0 1px rgb(200 220 255 / 0.18), inset -6px -8px 16px rgb(0 0 0 / 0.6), inset 4px 5px 12px rgb(200 220 255 / 0.12);
   pointer-events: none;
 }
 .orb__shine {
@@ -51,16 +70,18 @@
   width: 34%;
   height: 22%;
   border-radius: 50%;
-  background: rgb(255 248 225 / 0.16);
+  background: rgb(255 252 240 / 0.2);
   filter: blur(6px);
   transform: rotate(-24deg);
   pointer-events: none;
 }
-.orb__stand { display: block; width: min(56%, 6.5rem); margin-top: -0.4rem; }
+/* The cradle comes up under the globe and cups it. */
+.orb__stand { display: block; width: min(64%, 7.5rem); margin-top: -28%; position: relative; z-index: 1; }
 .orb__moons {
   display: grid;
   justify-items: center;
   gap: 0.05rem;
+  margin-top: 0.2rem;
   font-size: 0.86rem;
   font-style: italic;
   color: var(--stone);
@@ -74,6 +95,27 @@
   color: var(--gold);
 }
 
+@keyframes orb-spin {
+  to { transform: translateX(-50%); }
+}
+/* The surface drifts leftward with the stars, so a meridian comes round the
+   right limb, crosses, and goes round the left (scaleX following a cosine). */
+@keyframes orb-meridian {
+  0% { transform: scaleX(-1); opacity: 0; }
+  10% { opacity: 1; }
+  25% { transform: scaleX(-0.707); }
+  50% { transform: scaleX(0); }
+  75% { transform: scaleX(0.707); }
+  90% { opacity: 1; }
+  100% { transform: scaleX(1); opacity: 0; }
+}
+
 @media (max-width: 860px) {
   .orb__sphere { width: min(100%, 8.5rem); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orb__sky,
+  .orb__meridian { animation: none; }
+  .orb__meridian--late { display: none; }
 }

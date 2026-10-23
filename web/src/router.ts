@@ -16,6 +16,7 @@ export type RoomSurface = 'bookshelf' | 'board' | 'scribe' | 'cabinet';
 export type Route =
   | { name: 'room'; open?: RoomSurface; sub?: string }
   | { name: 'gallery' }
+  | { name: 'solar' }
   | { name: 'penalcode' }
   | { name: 'volume'; slug: VolumeSlug }
   | { name: 'editor' }
@@ -28,6 +29,8 @@ export function parse(pathname: string): Route {
   const path = pathname.replace(/\/+$/, '');
   if (path === '' || path === '/') return { name: 'room' };
   if (path === '/gallery') return { name: 'gallery' };
+  // High Command's room, behind Ancarion's plate (web/src/views/Solar.tsx).
+  if (path === '/solar') return { name: 'solar' };
   // The Cabinet keeps the reports: its address is still /reports, and one
   // report's is still /reports/:id, which opens that letter unfolded.
   if (path === '/reports') return { name: 'room', open: 'cabinet' };

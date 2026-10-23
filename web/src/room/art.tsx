@@ -172,43 +172,47 @@ export const CABINET_LABELS = [
 ] as const;
 
 /**
- * The Cabinet: a card catalogue of four drawers, each with a brass label
- * holder and a cup pull, after the libraries' own. Each drawer is its own
- * group, so the room can draw the Fresh! drawer out when Ancarion lets the
- * reader through (room.css).
+ * The Cabinet: a tall card catalogue of four drawers, each with a brass label
+ * holder and a cup pull, after the libraries' own, standing on a plinth on
+ * turned feet. Each drawer is its own group, so the room can draw the Fresh!
+ * drawer out when the word is accepted (room.css).
  */
 export function CabinetArt() {
   return (
-    <svg viewBox="0 0 220 300" aria-hidden="true" className="cabinet__svg">
+    <svg viewBox="0 0 220 380" aria-hidden="true" className="cabinet__svg">
       <Crest x={20} y={22} w={180} h={14} />
       <rect x="4" y="22" width="212" height="10" fill={WOOD_LIGHT} />
       <rect x="4" y="30" width="212" height="2" fill={GOLD} />
-      <rect x="10" y="32" width="200" height="252" fill={LACQUER} />
-      <rect x="10" y="32" width="8" height="252" fill={WOOD} />
-      <rect x="202" y="32" width="8" height="252" fill={WOOD} />
-      <rect x="20" y="36" width="180" height="244" fill={SHADOW} />
+      <rect x="10" y="32" width="200" height="312" fill={LACQUER} />
+      <rect x="10" y="32" width="8" height="312" fill={WOOD} />
+      <rect x="202" y="32" width="8" height="312" fill={WOOD} />
+      <rect x="20" y="36" width="180" height="304" fill={SHADOW} />
       {CABINET_LABELS.map(([id, label], i) => {
-        const y = 40 + i * 60;
+        const y = 40 + i * 75;
         return (
           <g key={id} className={`cabinet__drawer cabinet__drawer--${id}`}>
-            <rect x="22" y={y} width="176" height="54" fill={WOOD} />
-            <rect x="22" y={y} width="176" height="54" fill="none" stroke={EBONY} strokeWidth="1.6" />
-            <rect x="26.5" y={y + 4.5} width="167" height="45" fill="none" stroke={GOLD_DIM} strokeWidth=".8" opacity=".55" />
+            <rect x="22" y={y} width="176" height="69" fill={WOOD} />
+            <rect x="22" y={y} width="176" height="69" fill="none" stroke={EBONY} strokeWidth="1.6" />
+            <rect x="26.5" y={y + 4.5} width="167" height="60" fill="none" stroke={GOLD_DIM} strokeWidth=".8" opacity=".55" />
             {/* the brass label holder and its card */}
-            <rect x="74" y={y + 8} width="72" height="20" fill={BRASS} stroke={BRASS_DARK} strokeWidth="1" />
-            <rect x="77.5" y={y + 11} width="65" height="14" fill={PARCH} />
-            <text x="110" y={y + 21.6} textAnchor="middle" className="cabinet__label">
+            <rect x="70" y={y + 11} width="80" height="22" fill={BRASS} stroke={BRASS_DARK} strokeWidth="1" />
+            <rect x="73.5" y={y + 14} width="73" height="16" fill={PARCH} />
+            <text x="110" y={y + 25.6} textAnchor="middle" className="cabinet__label">
               {label}
             </text>
             {/* the cup pull */}
-            <path d={`M97 ${y + 33}h26v2.5a13 9 0 0 1-26 0z`} fill={BRASS} stroke={BRASS_DARK} strokeWidth="1" />
-            <path d={`M100 ${y + 35.5}a10 6 0 0 0 20 0`} fill="none" stroke={GOLD_BRIGHT} strokeWidth="1" opacity=".7" />
+            <path d={`M96 ${y + 42}h28v2.8a14 10 0 0 1-28 0z`} fill={BRASS} stroke={BRASS_DARK} strokeWidth="1" />
+            <path d={`M99 ${y + 44.8}a11 6.6 0 0 0 22 0`} fill="none" stroke={GOLD_BRIGHT} strokeWidth="1" opacity=".7" />
           </g>
         );
       })}
-      <rect x="4" y="282" width="212" height="8" fill={WOOD} />
-      <rect x="4" y="282" width="212" height="1.6" fill={GOLD} />
-      <path d="M12 290h22l-4 10h-14zM186 290h22l-4 10h-14z" fill={EBONY} />
+      {/* the plinth, and its turned feet */}
+      <rect x="4" y="342" width="212" height="12" fill={WOOD} />
+      <rect x="4" y="342" width="212" height="1.6" fill={GOLD} />
+      <rect x="10" y="352" width="200" height="4" fill={LACQUER} />
+      <path d="M14 356h24l-3 6h-18zM182 356h24l-3 6h-18z" fill={WOOD_LIGHT} />
+      <path d="M17 362h18l-4 18h-10zM185 362h18l-4 18h-10z" fill={EBONY} />
+      <path d="M17 362h18M185 362h18" stroke={GOLD_DIM} strokeWidth="1" />
     </svg>
   );
 }
@@ -243,65 +247,6 @@ export function ScribeTableArt() {
       <path d="M184 90C194 62 212 38 238 20c-8 20-22 46-50 72z" fill="#efe6d2" />
       <path d="M186 90 234 24" stroke="#9a8a6a" strokeWidth="1.2" />
       <path d="M200 66l-8-2M206 56l-8-2M212 46l-8-2" stroke="#9a8a6a" strokeWidth="1" />
-    </svg>
-  );
-}
-
-/** The stem of a carved vine up a door panel, its leaves alternating. */
-function DoorVine({ x, top, bottom }: { x: number; top: number; bottom: number }) {
-  const leaves = [];
-  for (let y = bottom - 10, i = 0; y > top + 6; y -= 14, i++) {
-    const side = i % 2 ? -1 : 1;
-    leaves.push(<path key={y} d={`M${x} ${y}q${7 * side} -3 ${9 * side} -10q${-6 * side} 1 ${-9 * side} 10z`} fill={GOLD_DIM} />);
-  }
-  return (
-    <g>
-      <path d={`M${x} ${bottom}V${top}`} stroke={GOLD_DIM} strokeWidth="1.1" />
-      {leaves}
-    </g>
-  );
-}
-
-/**
- * The door to the Solar: a pointed Altmer doorway, two lacquered leaves inlaid
- * with gold vines, and the Embassy's wax seal across the seam until the room
- * behind it (the map, the clerk's desk) is furnished. A sliver of light under
- * the leaves says the room is there. The leaves are separate groups, so the
- * room can try them now and swing them later.
- */
-export function SolarDoorArt() {
-  return (
-    <svg viewBox="0 0 140 222" aria-hidden="true">
-      {/* the doorway: a dark stone lancet, lined in gold */}
-      <path d="M6 218V92C6 50 34 18 70 3c36 15 64 47 64 89v126z" fill="#1a140f" />
-      <path d="M6 218V92C6 50 34 18 70 3c36 15 64 47 64 89v126" fill="none" stroke={GOLD} strokeWidth="2" />
-      <path d="M15 218V94C15 58 40 30 70 16c30 14 55 42 55 78v124" fill="none" stroke={GOLD_DIM} strokeWidth="1" />
-      <path d="M70 -3l1.8 5.4 5.4 1.8-5.4 1.8L70 11.4l-1.8-5.4-5.4-1.8 5.4-1.8z" fill={GOLD_BRIGHT} />
-      {/* the light beneath the leaves */}
-      <rect className="door__light" x="24" y="213" width="92" height="3" fill="#f2c770" opacity=".6" />
-      <g className="door__leaf door__leaf--l">
-        <path d="M23 214V96C23 64 43 40 70 27V214z" fill={LACQUER} />
-        <path d="M30 206V100C30 74 46 54 64 43V206z" fill="none" stroke={GOLD_DIM} strokeWidth="1.2" />
-        <DoorVine x={47} top={70} bottom={200} />
-        <circle cx="61" cy="168" r="4.2" fill="none" stroke={GOLD} strokeWidth="1.6" />
-      </g>
-      <g className="door__leaf door__leaf--r">
-        <path d="M70 27C97 40 117 64 117 96V214H70z" fill={WOOD} />
-        <path d="M76 43C94 54 110 74 110 100V206H76z" fill="none" stroke={GOLD_DIM} strokeWidth="1.2" />
-        <DoorVine x={93} top={70} bottom={200} />
-        <circle cx="79" cy="168" r="4.2" fill="none" stroke={GOLD} strokeWidth="1.6" />
-      </g>
-      <path d="M70 27V214" stroke={SHADOW} strokeWidth="1.4" />
-      {/* the seal across the seam: a ribbon of parchment and the Embassy's wax */}
-      <g className="door__seal">
-        <path d="M52 146h36l-2 8H54z" fill={PARCH_OLD} />
-        <circle cx="70" cy="150" r="9" fill="#7c1f24" />
-        <circle cx="70" cy="150" r="5.6" fill="none" stroke={GOLD} strokeWidth="1.1" />
-        <path d="M70 145.6l1.2 3.2 3.2 1.2-3.2 1.2-1.2 3.2-1.2-3.2-3.2-1.2 3.2-1.2z" fill={GOLD} />
-      </g>
-      {/* the sill */}
-      <rect x="2" y="216" width="136" height="6" fill={EBONY} />
-      <rect x="2" y="216" width="136" height="1.4" fill={GOLD_DIM} />
     </svg>
   );
 }

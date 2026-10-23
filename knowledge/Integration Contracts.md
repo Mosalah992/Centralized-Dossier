@@ -14,7 +14,13 @@ The `chronicler` Worker runs nightly at 04:00 UTC. It reads Discord Informants c
 
 `POST /api/reports/gate` validates `REPORTS_PASSPHRASE` in constant time using `REPORTS_COOKIE_SECRET`, then issues an HttpOnly Reports-only writ. `GET /api/reports`, `GET /api/reports/:id` and `GET /api/reports/summary` verify that writ on every call through one helper (`refuseWithoutReportsWrit` in `functions/lib/reports.ts`) and answer only through `reportsJson`, so every status — including 401, 404 and empty results — carries the sealed headers.
 
-`REPORTS_EPOCH` revokes Reports sessions without touching Chronicle sessions. Failed attempts use the existing `GATE_ATTEMPTS` binding under the `reports:` key prefix, so the two doors cannot exhaust each other’s throttle. Both routes answer `private, no-store` and `Vary: Cookie`; absent Reports secrets fail closed.
+`REPORTS_EPOCH` revokes Reports sessions without touching Solar sessions. Failed attempts use the existing `GATE_ATTEMPTS` binding under the `reports:` key prefix, so the doors cannot exhaust each other’s throttle. Both routes answer `private, no-store` and `Vary: Cookie`; absent Reports secrets fail closed.
+
+## Solar gate and the war table
+
+`POST /api/solar/gate` validates `SOLAR_PASSPHRASE` in constant time using `SOLAR_COOKIE_SECRET` and issues an HttpOnly Solar-only writ (`thalmor_writ_solar`, scope `solar`); `GET` reports whether the reader holds it and `DELETE` clears it. `SOLAR_EPOCH` revokes Solar writs alone; failures are throttled in `GATE_ATTEMPTS` under `solar:`. Without its secrets every Solar route answers 503.
+
+`GET /api/solar/pins` lists the war table's pieces; `POST` sets one down; `PATCH /api/solar/pins/:id` moves or renames one (a partial body keeps the rest); `DELETE` takes it up. Every call needs the Solar writ and answers `private, no-store`, `Vary: Cookie`. Writes must be same-site (`Sec-Fetch-Site`, else `Origin`) and JSON. A piece is `{ kind: 'pawn' | 'interest', x, y, label, note }`: `x` and `y` are fractions (0–1) of the merged realm map, so the table's map and the enlarged one agree; label 1–60 characters, note at most 280, at most 300 pieces. They are kept in `solar_pins` (`migrations/0005_solar_pins.sql`) in the `thalmor-reports` D1 database, through the `REPORTS` binding; nothing about them touches the reports. The shape and its checks are shared by browser and server (`shared/solar.ts`).
 
 ## Reports ingestion and storage
 

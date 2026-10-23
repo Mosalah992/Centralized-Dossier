@@ -45,35 +45,27 @@ id = "e5d0df6b87984e46b38fc498bebb1b69"
 SHEET_ID = "1KS__WJoqI_o3esXxO3Ei3L6SlJwJnOXQrjEr-FCPEZ0"
 
 
-# Writ rotation, and it now governs the chronicle's writ alone — it is the only
-# one left. Every writ carries the epoch it was signed under and one signed
-# under a different number is refused, so raising this shuts the volume on
-# everyone currently inside it, at once.
-#
-# DELIBERATELY NOT RAISED WHEN THE ARCHIVE'S GATE CAME DOWN. Raising it would
-# have closed the Chronicles on every reader holding a good volume writ, to no
-# purpose: what changed was that the registers around it became public, which
-# takes nothing away from a word that still opens exactly what it always did.
-# The stale archive writs the change did leave behind are refused on their
-# scope instead — see the note in functions/lib/session.ts.
-#
-# It was raised to 2 when Discord briefly became the door.
-GATE_EPOCH = "2"
-
-# Reports has an entirely separate session epoch. Raising this value revokes
-# only Reports sessions, never the Chronicle writs.
+# Writ rotation, one epoch per door. Every writ carries the epoch it was
+# signed under and one signed under a different number is refused, so raising
+# a value shuts that door on everyone currently through it, at once. (The
+# Chronicles' GATE_EPOCH went with their gate on 2026-10-23.)
 REPORTS_EPOCH = "1"
+SOLAR_EPOCH = "1"
 
 # Secret (set with `npx wrangler pages secret put GOOGLE_SERVICE_ACCOUNT_JSON`):
 #   GOOGLE_SERVICE_ACCOUNT_JSON - contents of the service-account key shared
 #                                 with the spreadsheet. For local development
 #                                 put it in .dev.vars instead, which is
 #                                 git-ignored.
-#   REPORTS_PASSPHRASE          - word required to open the Reports gate.
+#   REPORTS_PASSPHRASE          - word required to open the Reports gate (the Cabinet).
 #   REPORTS_COOKIE_SECRET       - signing secret for Reports-only writs.
+#   SOLAR_PASSPHRASE            - word spoken at Ancarion's plate to open the Solar.
+#   SOLAR_COOKIE_SECRET         - signing secret for Solar-only writs.
 
 # Private, structured Discord reports. The Reports API only reads it after a
-# Reports-only writ; the scheduled collector is its only writer.
+# Reports-only writ; the scheduled collector is its only writer. The Solar's
+# war-table pieces (solar_pins, migrations/0005) are kept here too, behind the
+# Solar writ.
 [[d1_databases]]
 binding = "REPORTS"
 database_name = "thalmor-reports"
