@@ -16,8 +16,9 @@ import { forwardRef, useEffect, useId, useImperativeHandle, useRef, useState, ty
 
 import { openSolar, solarIsOpen } from '../api';
 import { ACCEPTED_PERFORMANCE_HOLD_MS, ACCEPTED_STILL_HOLD_MS, refusalFor } from '../components/useAncarion';
+import { mark } from '../solar-sealed';
 import { useNavigate } from './nav';
-import type { AncarionHandle } from './RoomPortrait';
+import { DOOR_SWING_OPEN_MS, type AncarionHandle } from './RoomPortrait';
 
 type Stage = 'idle' | 'checking' | 'accepted';
 
@@ -80,7 +81,19 @@ export const SolarPlate = forwardRef<PlateHandle, Props>(function SolarPlate({ a
     writ.current ??= solarIsOpen();
   };
 
-  const enter = (hold: number) => later(() => navigate('/solar'), hold);
+  /**
+   * Through to the Solar, once he has nodded: the painting swings open on its
+   * hinge, and while it is still swinging the reader goes through the opening
+   * (the scene change, "through"). The Solar is told he has already let them
+   * in, so it opens at once. Without motion, the reader simply goes through.
+   */
+  const enter = (hold: number) =>
+    later(() => {
+      mark('admitted');
+      if (ancarion.current?.reducedMotion() ?? true) return navigate('/solar');
+      ancarion.current?.openDoor();
+      later(() => navigate('/solar'), DOOR_SWING_OPEN_MS * 0.7);
+    }, hold);
 
   useImperativeHandle(ref, () => ({
     approach,

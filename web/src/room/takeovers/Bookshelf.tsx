@@ -14,6 +14,7 @@ import type { VolumeSlug } from '../../../../shared/types';
 import { BUNDLED_BOOKS } from '../../books/registry';
 import { hrefFor } from '../../router';
 import { BINDINGS } from '../../theme';
+import { nameForTransition } from '../../transitions';
 import { Link } from '../nav';
 import { ShelfBook } from './ShelfBook';
 import { Takeover } from '../Takeover';
@@ -90,6 +91,11 @@ export function Bookshelf({ book }: { book?: string }) {
                 href={b.href}
                 className="spine"
                 data-book={b.href}
+                // A volume opened as a page of its own: the spine opens out
+                // into the book (a shelf book opens over the shelf instead).
+                onClick={(event) => {
+                  if (!b.href.startsWith('/bookshelf/')) nameForTransition(event.currentTarget, 'open-book');
+                }}
                 style={{ ['--leather' as string]: b.leather, ['--h' as string]: b.height }}
                 aria-label={`${b.title}${b.subtitle ? `: ${b.subtitle}` : ''}`}
               >

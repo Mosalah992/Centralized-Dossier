@@ -20,7 +20,7 @@ import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { solarIsOpen } from '../api';
 import type { Navigate } from '../router';
 import { Consulting } from '../components/Notice';
-import { markSolarSealed } from '../solar-sealed';
+import { clear, markSolarSealed, peek } from '../solar-sealed';
 import { Fleuron } from '../room/art';
 import { Stamp } from '../room/takeovers/Stamp';
 import { CanonreeveDeskArt, ClerkTableArt } from './solar/art';
@@ -119,9 +119,12 @@ function Chamber({ navigate }: { navigate: Navigate }) {
 }
 
 export function SolarView({ navigate }: { navigate: Navigate }) {
-  const [admitted, setAdmitted] = useState<boolean | null>(null);
+  // Ancarion has just let the reader through: open at once, so his portrait
+  // can open out into the chamber, and confirm with the server meanwhile.
+  const [admitted, setAdmitted] = useState<boolean | null>(() => (peek('admitted') ? true : null));
 
   useEffect(() => {
+    clear('admitted');
     let live = true;
     void solarIsOpen().then((open) => {
       if (!live) return;

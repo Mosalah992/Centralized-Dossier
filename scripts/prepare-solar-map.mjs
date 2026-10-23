@@ -76,7 +76,9 @@ const map = await sharp({ create: { width: SKY_W, height: H, channels: 4, backgr
   .toBuffer();
 
 mkdirSync(OUT, { recursive: true });
-for (const [name, width, quality] of [['realm-map', 4096, 74], ['realm-map-table', 1600, 78]]) {
+// The glimpse is what the room sees of the Solar behind Ancarion's portrait when
+// it swings open (room.css): small, since it is only ever seen dim and tilted.
+for (const [name, width, quality] of [['realm-map', 4096, 74], ['realm-map-table', 1600, 78], ['realm-map-glimpse', 480, 60]]) {
   const file = `${OUT}/${name}.webp`;
   const info = await sharp(map).resize({ width, kernel: 'lanczos3' }).webp({ quality, alphaQuality: 80, effort: 6 }).toFile(file);
   console.log(`${file}: ${info.width}x${info.height}, ${(info.size / 1024).toFixed(0)} KB`);

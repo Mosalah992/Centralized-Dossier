@@ -48,7 +48,9 @@
 
 /* ── The book ─────────────────────────────────────────────────────────── */
 
+/* A spine taken from the shelf opens out into this (base.css). */
 .chron-book {
+  view-transition-name: open-book;
   position: relative;
   display: flex;
   perspective: 2400px;

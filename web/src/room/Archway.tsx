@@ -15,6 +15,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 
 import starfield from '../assets/mundus/starfield.webp';
+import { nameForTransition } from '../transitions';
 import { Link } from './nav';
 
 interface Way {
@@ -197,7 +198,13 @@ export function Archway({ side, name, describer, ways }: Props) {
         <ElvenFrame id={frameId} />
         <nav id={navId} className="arch__ways" aria-label={name}>
           {ways.map((way) => (
-            <Link key={way.href} href={way.href} className="arch__way">
+            <Link
+              key={way.href}
+              href={way.href}
+              className="arch__way"
+              // The reader steps through the doorway into the place beyond it.
+              onClick={(event) => nameForTransition(event.currentTarget.closest('.arch__door'), 'arch-way')}
+            >
               {way.label}
             </Link>
           ))}

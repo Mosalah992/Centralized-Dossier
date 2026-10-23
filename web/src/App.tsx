@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
 
-import { parse, useRoute } from './router';
+import { lazyView } from './lazyView';
+import { parse, setRoutePreparer, useRoute, type Route } from './router';
 import { getTitle } from '../../shared/volumes';
 import { bindingVars } from './theme';
 import { Ambience } from './components/Ambience';
@@ -19,19 +20,20 @@ import type { VolumeSlug } from '../../shared/types';
  * simply the ordinary one: the room is the first screen, it needs none of
  * this, and the reader who opens one volume should not fetch the other eight.
  *
- * Views are named exports, so each import is mapped to a default: React.lazy
- * takes a module whose `default` is the component, and re-exporting here keeps
- * the views themselves free of a default export they have no other use for.
+ * Each is a lazyView rather than a bare React.lazy, so the router can fetch a
+ * place before changing scene to it and the place then renders at once, with
+ * no loading notice in the middle of the transition (see setRoutePreparer
+ * below and web/src/transitions.ts).
  */
-const RosterView = lazy(() => import('./views/Personnel').then((m) => ({ default: m.RosterView })));
-const PrecedenceView = lazy(() => import('./views/Precedence').then((m) => ({ default: m.PrecedenceView })));
-const HonorView = lazy(() => import('./views/Honors').then((m) => ({ default: m.HonorView })));
-const HistoryView = lazy(() => import('./views/History').then((m) => ({ default: m.HistoryView })));
-const InformantsView = lazy(() => import('./views/Informants').then((m) => ({ default: m.InformantsView })));
-const EnforcementView = lazy(() => import('./views/Enforcement').then((m) => ({ default: m.EnforcementView })));
-const PenalCodeView = lazy(() => import('./views/PenalCode').then((m) => ({ default: m.PenalCodeView })));
-const GalleryView = lazy(() => import('./views/Gallery').then((m) => ({ default: m.GalleryView })));
-const SolarView = lazy(() => import('./views/Solar').then((m) => ({ default: m.SolarView })));
+const RosterView = lazyView(() => import('./views/Personnel').then((m) => m.RosterView));
+const PrecedenceView = lazyView(() => import('./views/Precedence').then((m) => m.PrecedenceView));
+const HonorView = lazyView(() => import('./views/Honors').then((m) => m.HonorView));
+const HistoryView = lazyView(() => import('./views/History').then((m) => m.HistoryView));
+const InformantsView = lazyView(() => import('./views/Informants').then((m) => m.InformantsView));
+const EnforcementView = lazyView(() => import('./views/Enforcement').then((m) => m.EnforcementView));
+const PenalCodeView = lazyView(() => import('./views/PenalCode').then((m) => m.PenalCodeView));
+const GalleryView = lazyView(() => import('./views/Gallery').then((m) => m.GalleryView));
+const SolarView = lazyView(() => import('./views/Solar').then((m) => m.SolarView));
 
 /*
  * The Embassy's room, which is the front page — and still lazy.
@@ -44,9 +46,8 @@ const SolarView = lazy(() => import('./views/Solar').then((m) => ({ default: m.S
  * of after the first render, and the skeleton frame is on screen for the
  * length of one round trip rather than two.
  */
-const loadRoom = () => import('./room/Room');
-const Room = lazy(loadRoom);
-if (parse(window.location.pathname).name === 'room') void loadRoom();
+const Room = lazyView(() => import('./room/Room').then((m) => m.default));
+if (parse(window.location.pathname).name === 'room') void Room.preload();
 
 const SURFACE_TITLES = { bookshelf: 'Bookshelf', board: 'Bulletin Board', scribe: 'Scribe Table', cabinet: 'The Cabinet' } as const;
 
@@ -88,11 +89,9 @@ const EditorView = import.meta.env.DEV
   ? lazy(() => import('./editor/Editor').then((m) => ({ default: m.EditorView })))
   : null;
 
-const FluentShell = lazy(() =>
-  import('./fluent/Shell').then((m) => ({ default: m.FluentShell })),
-);
+const FluentShell = lazyView(() => import('./fluent/Shell').then((m) => m.FluentShell));
 
-const VIEWS: Record<VolumeSlug, React.ComponentType> = {
+const VIEWS: Record<VolumeSlug, typeof RosterView> = {
   roster: RosterView,
   statistics: PrecedenceView,
   honor: HonorView,
@@ -100,6 +99,18 @@ const VIEWS: Record<VolumeSlug, React.ComponentType> = {
   informants: InformantsView,
   enforcement: EnforcementView,
 };
+
+/** What each place needs before the scene changes to it (router.ts). */
+setRoutePreparer((route: Route) => {
+  switch (route.name) {
+    case 'room': return Room.preload();
+    case 'volume': return Promise.all([VIEWS[route.slug].preload(), FluentShell.preload()]);
+    case 'penalcode': return PenalCodeView.preload();
+    case 'gallery': return GalleryView.preload();
+    case 'solar': return SolarView.preload();
+    default: return undefined;
+  }
+});
 
 interface Track {
   url: string;

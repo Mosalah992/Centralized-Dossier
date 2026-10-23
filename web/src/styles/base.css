@@ -316,6 +316,87 @@ a {
   line-height: inherit;
 }
 
+/* ── Moving between places ───────────────────────────────────────────────── */
+
+/* The scene changes of web/src/transitions.ts (2026-10-23). The room, a volume,
+   the Gallery and the Solar pass into one another rather than cutting: going
+   deeper, the place left behind drifts toward the reader and fades while the
+   next settles in from a little way off; coming back out, the reverse. Entry
+   CSS, because the first change can come from any page. Never run under
+   reduced motion: transitions.ts changes at once for those readers. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.55s;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  animation-fill-mode: both;
+}
+html[data-nav='forward']::view-transition-old(root) { animation-name: place-leave-deeper; }
+html[data-nav='forward']::view-transition-new(root) { animation-name: place-enter-deeper; }
+html[data-nav='back']::view-transition-old(root) { animation-name: place-leave-outward; }
+html[data-nav='back']::view-transition-new(root) { animation-name: place-enter-outward; }
+@keyframes place-leave-deeper { to { opacity: 0; transform: scale(1.04); filter: blur(3px) brightness(0.7); } }
+@keyframes place-enter-deeper { from { opacity: 0; transform: scale(0.975); filter: blur(2px); } }
+@keyframes place-leave-outward { to { opacity: 0; transform: scale(0.97); filter: blur(2px) brightness(0.7); } }
+@keyframes place-enter-outward { from { opacity: 0; transform: scale(1.035); filter: blur(3px); } }
+
+/* The two seals in the corners stay put while the scene changes about them. */
+.support-seal { view-transition-name: support-seal; }
+.ambience { view-transition-name: sound-seal; }
+
+/* Through Ancarion's portrait into the Solar. The painting has swung open on
+   its hinge (room.css); the reader goes through the opening behind it: the
+   room rushes past about the doorway (--door-x, --door-y, set by
+   transitions.ts) as the passage's light floods in, and the Solar comes up out
+   of that light. Coming back, the Solar falls away into the light and the room
+   draws back out of the doorway, where the painting swings shut. */
+html[data-nav='through']::view-transition-old(root) {
+  transform-origin: var(--door-x, 50%) var(--door-y, 45%);
+  animation: through-the-door 1s cubic-bezier(0.55, 0, 0.3, 1) both;
+}
+html[data-nav='through']::view-transition-new(root) {
+  animation: into-the-solar 1s cubic-bezier(0.25, 0, 0.2, 1) both;
+}
+html[data-nav='return']::view-transition-old(root) {
+  animation: out-of-the-solar 0.8s cubic-bezier(0.5, 0, 0.75, 0) both;
+}
+html[data-nav='return']::view-transition-new(root) {
+  transform-origin: var(--door-x, 50%) var(--door-y, 45%);
+  animation: back-through-the-door 1s cubic-bezier(0.2, 0, 0.2, 1) both;
+}
+@keyframes through-the-door {
+  0% { opacity: 1; filter: none; }
+  65% { opacity: 1; filter: brightness(1.5) sepia(0.25); }
+  100% { opacity: 0; transform: scale(5); filter: brightness(2.4) sepia(0.4) blur(4px); }
+}
+@keyframes into-the-solar {
+  0%, 45% { opacity: 0; transform: scale(1.06); filter: brightness(2) sepia(0.4); }
+  100% { opacity: 1; transform: none; filter: none; }
+}
+@keyframes out-of-the-solar {
+  to { opacity: 0; transform: scale(0.94); filter: brightness(2) sepia(0.4); }
+}
+@keyframes back-through-the-door {
+  0% { opacity: 0; transform: scale(5); filter: brightness(2.4) sepia(0.4) blur(4px); }
+  35% { opacity: 1; }
+  100% { opacity: 1; transform: none; filter: none; }
+}
+
+/* A spine taken from the shelf opens out into its book. */
+::view-transition-group(open-book) {
+  animation-duration: 0.75s;
+  animation-timing-function: cubic-bezier(0.65, 0, 0.25, 1);
+}
+::view-transition-old(open-book),
+::view-transition-new(open-book) { height: 100%; object-fit: cover; }
+
+/* An archway stepped through: the doorway comes up to meet the reader and its
+   light washes over them as the next place appears beyond it. */
+::view-transition-old(arch-way) { animation: arch-through 0.7s cubic-bezier(0.5, 0, 0.75, 0) both; }
+@keyframes arch-through {
+  60% { opacity: 1; }
+  to { opacity: 0; transform: scale(2.8); filter: brightness(2.4) blur(2px); }
+}
+
 /* ── Reduced motion ──────────────────────────────────────────────────────── */
 
 /* The global switch, and it STAYS even though GSAP now owns most of the motion

@@ -2,9 +2,10 @@
 // and a dozen pages. History API so URLs are shareable, with a Pages _redirects
 // rule serving index.html for every path.
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { VolumeSlug } from '../../shared/types';
 import { ALL_SLUGS } from '../../shared/volumes';
+import { transition, type Direction } from './transitions';
 
 /**
  * The room's own surfaces, which open over it rather than replacing it. Each
@@ -95,6 +96,37 @@ export function openedFromRoom(): boolean {
 /** Old addresses that still open, and the address they now go by. */
 const RENAMED: Record<string, string> = { '/lectern': '/scribe-table' };
 
+/*
+ * Getting the next place ready before the scene changes.
+ *
+ * Every place but the room's surfaces is its own lazy chunk. Changing scene
+ * before its code has arrived would animate into a loading notice and then cut
+ * to the place, which is the stiffness the transitions exist to remove. App
+ * registers how to fetch each place; a change waits for it, but never long:
+ * past the patience below it goes on regardless.
+ */
+type Preparer = (route: Route) => Promise<unknown> | undefined;
+let prepare: Preparer = () => undefined;
+export const setRoutePreparer = (fn: Preparer) => {
+  prepare = fn;
+};
+const PATIENCE_MS = 700;
+const ready = (route: Route): Promise<unknown> => {
+  const loading = prepare(route);
+  if (!loading) return Promise.resolve();
+  return Promise.race([loading.catch(() => undefined), new Promise((resolve) => window.setTimeout(resolve, PATIENCE_MS))]);
+};
+
+/**
+ * Out to the room is coming back and anywhere else is going deeper, except
+ * the Solar, which is entered through Ancarion's portrait and left by it.
+ */
+export const directionOf = (from: Route, next: Route): Direction => {
+  if (next.name === 'solar') return 'through';
+  if (from.name === 'solar' && next.name === 'room') return 'return';
+  return next.name === 'room' ? 'back' : 'forward';
+};
+
 export function useRoute(): [Route, Navigate] {
   const [route, setRoute] = useState<Route>(() => {
     // An old address is shown by its new name, without a history entry.
@@ -102,9 +134,25 @@ export function useRoute(): [Route, Navigate] {
     if (renamed) window.history.replaceState(window.history.state, '', renamed);
     return parse(window.location.pathname);
   });
+  // The place on screen, for the Back button's handler (the URL has already
+  // moved on by the time it runs).
+  const shown = useRef(route);
+  shown.current = route;
+  // Only the latest request changes the scene: a second click while the first
+  // place is still loading wins.
+  const latest = useRef(0);
 
   useEffect(() => {
-    const onPop = () => setRoute(parse(window.location.pathname));
+    const onPop = () => {
+      const next = parse(window.location.pathname);
+      const from = shown.current;
+      if (from.name === 'room' && next.name === 'room') return setRoute(next);
+      const ticket = ++latest.current;
+      void ready(next).then(() => {
+        if (ticket !== latest.current) return;
+        transition(() => setRoute(parse(window.location.pathname)), directionOf(from, next));
+      });
+    };
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
   }, []);
@@ -114,17 +162,24 @@ export function useRoute(): [Route, Navigate] {
     const from = parse(window.location.pathname);
     const next = parse(href);
     // Within the room — opening or closing one of its surfaces — the reader
-    // stays where they are on the wall; anywhere else is a new page.
+    // stays where they are on the wall, and the takeover animates itself.
     const withinRoom = from.name === 'room' && next.name === 'room';
     const state = withinRoom && next.open ? { [FROM_ROOM]: true } : null;
-    if (options.replace) window.history.replaceState(state, '', href);
-    else window.history.pushState(state, '', href);
-    setRoute(next);
-    if (withinRoom) return;
-    // A new volume is a new page: start it at the top, but respect a reader
-    // who has asked for less motion.
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
+    const go = () => {
+      if (options.replace) window.history.replaceState(state, '', href);
+      else window.history.pushState(state, '', href);
+      setRoute(next);
+    };
+    const ticket = ++latest.current;
+    if (withinRoom) return go();
+    // Anywhere else is a new place, entered at its top, as one scene.
+    void ready(next).then(() => {
+      if (ticket !== latest.current) return;
+      transition(() => {
+        go();
+        window.scrollTo({ top: 0, behavior: 'auto' });
+      }, directionOf(from, next));
+    });
   }, []);
 
   return [route, navigate];

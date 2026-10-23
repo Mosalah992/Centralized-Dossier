@@ -5,9 +5,44 @@ import { REPORT_CATEGORY_NAMES } from '../shared/reports';
 import { WINGS, WING_INFO, wingOf } from '../shared/wings';
 import { isNight, refusalFor } from '../web/src/components/ancarion-script';
 import { DRAWERS, drawerOf, drawerRange } from '../web/src/room/cabinet-drawers';
-import { parse } from '../web/src/router';
+import { directionOf, parse } from '../web/src/router';
 
 const read = (path: string) => readFileSync(path, 'utf8');
+
+describe('moving between places', () => {
+  it('goes deeper into a place, back out to the room, and through Ancarion into the Solar', () => {
+    const room = parse('/');
+    expect(directionOf(room, parse('/archives/history'))).toBe('forward');
+    expect(directionOf(parse('/archives/history'), room)).toBe('back');
+    expect(directionOf(room, parse('/solar'))).toBe('through');
+    expect(directionOf(parse('/solar'), room)).toBe('return');
+  });
+
+  it('changes scene as one transition, never for a reader who asks for stillness', () => {
+    const transitions = read('web/src/transitions.ts');
+    expect(transitions).toContain('startViewTransition(() => flushSync(update))');
+    expect(transitions).toContain("matchMedia('(prefers-reduced-motion: reduce)')");
+    // The room's own surfaces animate themselves (Takeover.tsx); only a change
+    // of place goes through the transition, after its code has arrived.
+    const router = read('web/src/router.ts');
+    expect(router).toContain('if (withinRoom) return go();');
+    expect(router).toContain('void ready(next).then(');
+    expect(read('web/src/App.tsx')).toContain('setRoutePreparer(');
+  });
+
+  it('opens the painting on its hinge onto the passage, and walks the reader through', () => {
+    const portrait = read('web/src/room/RoomPortrait.tsx');
+    expect(portrait).toContain('className="room-portrait__passage"');
+    expect(portrait).toContain('data-door={door}');
+    expect(portrait).toContain("document.documentElement.dataset.nav === 'return' ? 'open' : 'shut'");
+    expect(read('web/src/room/SolarPlate.tsx')).toContain('ancarion.current?.openDoor();');
+    const room = read('web/src/styles/room.css');
+    expect(room).toContain(".room-portrait[data-door='open'] .room-portrait__stage");
+    const base = read('web/src/styles/base.css');
+    expect(base).toContain("html[data-nav='through']::view-transition-old(root)");
+    expect(base).toContain("html[data-nav='return']::view-transition-new(root)");
+  });
+});
 
 describe('the room routes', () => {
   it('opens the room at the front door and its surfaces over it', () => {
