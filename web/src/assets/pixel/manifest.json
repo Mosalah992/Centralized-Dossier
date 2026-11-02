@@ -1,0 +1,80 @@
+{
+  "scene": {
+    "w": 880,
+    "h": 300
+  },
+  "bookshelf": {
+    "w": 56,
+    "h": 106
+  },
+  "board": {
+    "w": 116,
+    "h": 30
+  },
+  "arch": {
+    "w": 384,
+    "h": 92,
+    "frames": 8,
+    "fw": 48
+  },
+  "portrait": {
+    "w": 64,
+    "h": 77
+  },
+  "portrait-plate": {
+    "w": 64,
+    "h": 13
+  },
+  "cabinet": {
+    "w": 168,
+    "h": 90,
+    "frames": 3,
+    "fw": 56
+  },
+  "globe-stand": {
+    "w": 30,
+    "h": 34
+  },
+  "scribe": {
+    "w": 76,
+    "h": 42
+  },
+  "candle": {
+    "w": 48,
+    "h": 38,
+    "frames": 4,
+    "fw": 12
+  },
+  "sconce": {
+    "w": 40,
+    "h": 18,
+    "frames": 4,
+    "fw": 10
+  },
+  "bough-l": {
+    "w": 96,
+    "h": 44
+  },
+  "bough-r": {
+    "w": 96,
+    "h": 44
+  },
+  "note": {
+    "w": 64,
+    "h": 46
+  },
+  "clock": {
+    "w": 62,
+    "h": 32
+  },
+  "plaque": {
+    "w": 12,
+    "h": 10,
+    "slice": 3
+  },
+  "plaque-small": {
+    "w": 8,
+    "h": 8,
+    "slice": 2
+  }
+}

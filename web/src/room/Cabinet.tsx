@@ -15,9 +15,11 @@
 import { useEffect, useId, useRef, useState, type MouseEvent } from 'react';
 
 import { openReports, reportsIsOpen } from '../api';
+import cabinetArt from '../assets/pixel/cabinet.png';
 import { DOOR_SWING_MS, prefersReducedMotion } from '../components/useAncarion';
-import { CabinetArt } from './art';
-import { ImageSlot } from './ImageSlot';
+import { PLACES } from '../pixel/layout';
+import { at } from '../pixel/place';
+import { Sprite } from '../pixel/Sprite';
 import { plainClick, useNavigate } from './nav';
 
 type Stage = 'shut' | 'asking' | 'checking' | 'accepted' | 'opening';
@@ -176,7 +178,7 @@ export function Cabinet({ sealed = null }: Props) {
   const asking = stage === 'asking' || stage === 'checking';
 
   return (
-    <div className="cabinet-object" data-stage={stage}>
+    <div className="cabinet-object px-at" style={at(PLACES.cabinet)} data-stage={stage}>
       <a
         href="/reports"
         className="object object--cabinet"
@@ -187,13 +189,9 @@ export function Cabinet({ sealed = null }: Props) {
         onPointerEnter={approach}
         onFocus={approach}
       >
-        <ImageSlot name="cabinet" className="object__art cabinet">
-          <CabinetArt />
-        </ImageSlot>
+        {/* Three frames: shut, the Fresh! drawer half out, and out (room.css). */}
+        <Sprite src={cabinetArt} frames={3} className="object__art cabinet" />
         <span className="plaque">
-          <svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true">
-            <path d="M6 11h12v10H6Z M8.5 11V7.5a3.5 3.5 0 0 1 7 0V11" fill="none" stroke="currentColor" strokeWidth="2.2" />
-          </svg>
           The Cabinet
         </span>
         <span className="describer" aria-hidden="true">

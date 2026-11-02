@@ -44,14 +44,10 @@ describe('interaction boundaries', () => {
     expect(read('web/src/room/SolarPlate.tsx')).toContain('openSolar(passphrase, controller.signal)');
   });
 
-  it('uses the existing motion system and keeps Three.js behind the candles alone', () => {
-    // Three.js is allowed for one thing: the candles' flames, loaded through a
-    // dynamic import once the room is up (Decision Log, 2026-10-23). Nothing
-    // else may import it; the bundle test checks the entry and room chunks.
-    const candle = read('web/src/room/Candle.tsx');
-    expect(candle).toContain("import('./candle-flame')");
-    expect(candle).not.toMatch(/from 'three/);
-    expect(read('web/src/room/candle-flame.ts')).toMatch(/from 'three'/);
+  it('uses the existing motion system, and no three.js', () => {
+    // The candles' three.js flames gave way to drawn frames with the pixel
+    // room (2026-11-02); three.js is no longer a dependency.
+    expect(read('package.json')).not.toMatch(/"three"/);
     const gate = gateAndPerformer();
     expect(gate).toContain("ancarion-idle.mp4");
     expect(gate).toContain("ancarion-refusal.webm");

@@ -203,8 +203,8 @@ describe.skipIf(!entry)('anime.js', () => {
  */
 describe.skipIf(!entry)('the room', () => {
   it.each([
-    ['its grid', 'room__grid'],
-    ['its archways', 'arch__aurora'],
+    ['its stage', 'room__stage'],
+    ['its archways', 'arch__ways'],
     ['the book on its shelf', 'white-gold-concordat'],
     ['the rack ceremony', 'Present your words'],
   ])('is absent from the entry chunk: %s', (_what, needle) => {
@@ -215,20 +215,19 @@ describe.skipIf(!entry)('the room', () => {
     const carriers = readdirSync(DIST)
       .filter((f) => f.endsWith('.js') && f !== entry!.name)
       .map((f) => readFileSync(new URL(f, DIST), 'utf8'))
-      .filter((source) => source.includes('room__grid'));
+      .filter((source) => source.includes('room__stage'));
     expect(carriers, 'the room is in no chunk at all').toHaveLength(1);
     expect(carriers[0]).not.toContain('createTimer');
     expect(carriers[0]).not.toContain('__THREE__');
   });
 
-  it("lights its candles from a chunk of three.js's own, never the room's or the entry's", () => {
-    expect(entry!.source).not.toContain('__THREE__');
-    const flame = readdirSync(DIST)
+  // The candles' flames are drawn frames since the pixel room (2026-11-02):
+  // three.js ships nowhere.
+  it('ships no three.js at all', () => {
+    const carriers = readdirSync(DIST)
       .filter((f) => f.endsWith('.js'))
-      .map((f) => readFileSync(new URL(f, DIST), 'utf8'))
-      .filter((source) => source.includes('uSeed'));
-    expect(flame, 'the candle flame is in no chunk at all').toHaveLength(1);
-    expect(flame[0]).not.toContain('room__grid');
+      .filter((f) => readFileSync(new URL(f, DIST), 'utf8').includes('__THREE__'));
+    expect(carriers).toEqual([]);
   });
 });
 
@@ -241,7 +240,7 @@ describe.skipIf(!entry)('the Solar', () => {
     const room = readdirSync(DIST)
       .filter((f) => f.endsWith('.js') && f !== entry!.name)
       .map((f) => readFileSync(new URL(f, DIST), 'utf8'))
-      .find((source) => source.includes('room__grid'));
+      .find((source) => source.includes('room__stage'));
     for (const needle of ['war-table__map', 'map-viewer__bar']) {
       expect(entry!.source.includes(needle), `${needle} in the entry`).toBe(false);
       expect(room?.includes(needle), `${needle} in the room`).toBe(false);

@@ -1,7 +1,9 @@
+/// <reference types="vitest/config" />
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 import { defineConfig } from 'vite';
+import { configDefaults } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 
 import { archivesEditor } from './editor/vite-plugin-editor';
@@ -25,6 +27,11 @@ export default defineConfig({
     // Matches pages_build_output_dir in wrangler.toml.
     outDir: 'dist',
     emptyOutDir: true,
+  },
+  test: {
+    // Other sessions' worktrees live under .claude/worktrees; their tests read
+    // their own checkouts, not this one.
+    exclude: [...configDefaults.exclude, '.claude/**'],
   },
   server: {
     port: 5173,

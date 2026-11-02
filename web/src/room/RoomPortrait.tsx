@@ -1,9 +1,13 @@
 // Ancarion on the room's wall: the same performer as the gates (useAncarion),
-// in the same frame. He keeps the Solar: pressing his portrait goes through
-// for a reader who holds its writ, and the plate beneath him, where his name
-// once hung, takes the word from one who does not (SolarPlate.tsx). The plate
-// directs him through the handle below; nothing he does here authorizes
-// anything.
+// in the same painted frame. He keeps the Solar: pressing his portrait goes
+// through for a reader who holds its writ, and the plate beneath him, where
+// his name once hung, takes the word from one who does not (SolarPlate.tsx).
+// The plate directs him through the handle below; nothing he does here
+// authorizes anything.
+//
+// HE STAYS PAINTED. When the room was redrawn in pixels (2026-11-02) the
+// First Emissary kept Ancarion as he was, the one painting on a pixel wall,
+// in a gold frame and over a plate drawn with the room.
 //
 // THE PORTRAIT IS THE SOLAR'S DOOR (2026-10-23). Once he lets the reader
 // through, the painting swings open on its hinge onto a dim glimpse of the
@@ -13,9 +17,13 @@
 
 import { forwardRef, useImperativeHandle, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 
-import frame from '../assets/portrait-frame.png';
+import frameArt from '../assets/pixel/portrait.png';
+import plateArt from '../assets/pixel/portrait-plate.png';
 import glimpse from '../assets/solar/realm-map-glimpse.webp';
 import { useAncarion, type Refusal } from '../components/useAncarion';
+import { PLACES } from '../pixel/layout';
+import { at } from '../pixel/place';
+import { Sprite } from '../pixel/Sprite';
 import { setDoorway } from '../transitions';
 
 /** How long the painting takes to swing; the scene goes through before it is fully open. */
@@ -90,7 +98,7 @@ export const RoomPortrait = forwardRef<AncarionHandle, Props>(function RoomPortr
   );
 
   return (
-    <figure ref={root} className="room-portrait" data-state={ancarion.portraitState} data-door={door}>
+    <figure ref={root} className="room-portrait px-at" style={at(PLACES.portrait)} data-state={ancarion.portraitState} data-door={door}>
       <div ref={doorway} className="room-portrait__doorway">
         {/* What the painting hides: a dim glimpse of the Solar beyond, its war
             table with the realm map laid on it, and its furniture in the dark
@@ -112,9 +120,10 @@ export const RoomPortrait = forwardRef<AncarionHandle, Props>(function RoomPortr
           <span className="portrait-gate__aperture" aria-hidden="true">
             {ancarion.media}
           </span>
-          <img className="portrait-gate__frame" src={frame} alt="" />
+          <Sprite src={frameArt} className="room-portrait__frame" />
         </button>
       </div>
+      <Sprite src={plateArt} className="room-portrait__plate" />
       {ancarion.voice}
       <figcaption className="room-portrait__caption">{children}</figcaption>
     </figure>
