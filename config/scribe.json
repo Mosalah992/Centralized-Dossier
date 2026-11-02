@@ -8,25 +8,205 @@
     "List the server's roles and channels with: node scripts/discord-setup.mjs roles"
   ],
   "roles": {
-    "REPLACE_WITH_FIRST_EMISSARY_ROLE_ID": { "rank": "First Emissary", "office": "High Command", "precedence": 100 },
-    "REPLACE_WITH_JUSTICIAR_ROLE_ID": { "rank": "Justiciar", "office": "Thalmor Embassy", "precedence": 50 },
-    "REPLACE_WITH_AGENT_ROLE_ID": { "rank": "Agent", "office": "Thalmor Embassy", "precedence": 10 }
+    "1498145138369761480": {
+      "rank": "First Emissary",
+      "office": "High Command",
+      "precedence": 100
+    },
+    "1551004932923064433": {
+      "rank": "Second Emissary",
+      "office": "High Command",
+      "precedence": 99
+    },
+    "1532010143103848499": {
+      "rank": "Battlereeve",
+      "office": "High Command",
+      "precedence": 98
+    },
+    "1523057761825587362": {
+      "rank": "Canonreeve",
+      "office": "High Command",
+      "precedence": 97
+    },
+    "1551036546436694076": {
+      "rank": "Bureaureeve",
+      "office": "High Command",
+      "precedence": 96
+    },
+    "1498145571167539301": {
+      "rank": "High Justiciar",
+      "office": "High Command",
+      "precedence": 95
+    },
+    "1562001468465356851": {
+      "rank": "Advisor",
+      "office": "High Command",
+      "precedence": 94
+    },
+    "1498145702918881361": {
+      "rank": "Justiciar",
+      "office": "Thalmor Embassy",
+      "precedence": 93
+    },
+    "1551632814603108424": {
+      "rank": "Archbard of the Dominion",
+      "office": "Thalmor Embassy",
+      "precedence": 92
+    },
+    "1551563333956534282": {
+      "rank": "Lieutenant",
+      "office": "Military Wing",
+      "precedence": 91
+    },
+    "1505708272391290891": {
+      "rank": "Ensign",
+      "office": "Military Wing",
+      "precedence": 90
+    },
+    "1505708220906471456": {
+      "rank": "Sergeant",
+      "office": "Military Wing",
+      "precedence": 89
+    },
+    "1498146135888625694": {
+      "rank": "Private",
+      "office": "Military Wing",
+      "precedence": 88
+    },
+    "1551619932410609684": {
+      "rank": "Recruit",
+      "office": "Military Wing",
+      "precedence": 87
+    },
+    "1552102403065520228": {
+      "rank": "Deputy of Intelligence",
+      "office": "Bureau of Intelligence",
+      "precedence": 86
+    },
+    "1552102079156322304": {
+      "rank": "Handler",
+      "office": "Bureau of Intelligence",
+      "precedence": 85
+    },
+    "1552103087181791294": {
+      "rank": "Shade",
+      "office": "Bureau of Intelligence",
+      "precedence": 84
+    },
+    "1552102816514973776": {
+      "rank": "Analyst",
+      "office": "Bureau of Intelligence",
+      "precedence": 83
+    },
+    "1552103002473635880": {
+      "rank": "Observer",
+      "office": "Bureau of Intelligence",
+      "precedence": 82
+    },
+    "1532758895498625175": {
+      "rank": "Custodian",
+      "office": "Thalmor Embassy",
+      "precedence": 81
+    },
+    "1498145862675726446": {
+      "rank": "Ambassador",
+      "office": "Diplomatic Wing",
+      "precedence": 80
+    },
+    "1553405196288131132": {
+      "rank": "High Warden",
+      "office": "Auxiliary Wing",
+      "precedence": 79
+    },
+    "1553405207436861651": {
+      "rank": "First Warden",
+      "office": "Auxiliary Wing",
+      "precedence": 78
+    },
+    "1553405210557288489": {
+      "rank": "Warden Auxilia",
+      "office": "Auxiliary Wing",
+      "precedence": 77
+    },
+    "1552501603276169387": {
+      "rank": "Veteran Auxilia",
+      "office": "Auxiliary Wing",
+      "precedence": 76
+    },
+    "1553403468914368512": {
+      "rank": "Sergeant Auxilia",
+      "office": "Auxiliary Wing",
+      "precedence": 75
+    },
+    "1553403464841695342": {
+      "rank": "Armsmer Auxilia",
+      "office": "Auxiliary Wing",
+      "precedence": 74
+    },
+    "1551590905985892493": {
+      "rank": "Sworn Auxilia",
+      "office": "Auxiliary Wing",
+      "precedence": 73
+    },
+    "1554917085329621012": {
+      "rank": "Grand Magister",
+      "office": "Magister Sanctum",
+      "precedence": 72
+    },
+    "1554917300157546506": {
+      "rank": "Magister Preceptor",
+      "office": "Magister Sanctum",
+      "precedence": 71
+    },
+    "1560924095653089441": {
+      "rank": "Arcane Proctor",
+      "office": "Magister Sanctum",
+      "precedence": 70
+    },
+    "1557239284656906300": {
+      "rank": "Apprentice",
+      "office": "Magister Sanctum",
+      "precedence": 69
+    },
+    "1562453621839503451": {
+      "rank": "Grand Procurator",
+      "office": "Logistics Wing",
+      "precedence": 68
+    }
   },
   "summons": {
-    "command": ["REPLACE_WITH_JUSTICIARS_ROLE_ID", "REPLACE_WITH_DEPARTMENT_HEADS_ROLE_ID"],
-    "all": ["REPLACE_WITH_ALL_MEMBERS_ROLE_ID", "REPLACE_WITH_HIGH_COMMAND_ROLE_ID"]
+    "command": [
+      "1498145702918881361",
+      "1498145571167539301",
+      "1532010143103848499",
+      "1523057761825587362",
+      "1551036546436694076",
+      "1552102403065520228",
+      "1554917085329621012",
+      "1553405196288131132",
+      "1498145862675726446",
+      "1562453621839503451"
+    ],
+    "all": [
+      "1551214283222818826",
+      "1526753934419562627",
+      "1500195296800407725",
+      "1553603940463943753",
+      "1551562831709737010",
+      "1554489885899886723"
+    ]
   },
   "channels": {
-    "bulletin": "REPLACE_WITH_BULLETIN_CHANNEL_ID",
-    "troops": "REPLACE_WITH_TROOPS_REPORTS_CHANNEL_ID",
-    "logistics": "REPLACE_WITH_LOGISTICS_REPORTS_CHANNEL_ID",
-    "bureau": "REPLACE_WITH_BUREAU_REPORTS_CHANNEL_ID",
-    "embassy": "REPLACE_WITH_EMBASSY_REPORTS_CHANNEL_ID",
-    "patrol": "REPLACE_WITH_PATROL_LOGS_CHANNEL_ID",
-    "training": "REPLACE_WITH_TRAINING_LOGS_CHANNEL_ID",
-    "lesson-magic": "REPLACE_WITH_MAGIC_LESSON_LOGS_CHANNEL_ID",
-    "lesson-language": "REPLACE_WITH_LANGUAGE_LESSON_LOGS_CHANNEL_ID",
-    "application": "REPLACE_WITH_APPLICATIONS_CHANNEL_ID",
-    "public-request": "REPLACE_WITH_PUBLIC_REQUESTS_CHANNEL_ID"
+    "bulletin": "1511078787004240105",
+    "troops": "1553839057950351540",
+    "logistics": "1556143527426269255",
+    "bureau": "1551053776960356362",
+    "embassy": "1527724048283603054",
+    "patrol": "1537488961495113839",
+    "training": "1537463344624181368",
+    "lesson-magic": "1554926912420315186",
+    "lesson-language": "1564581419349581894",
+    "application": "1498145033176617000",
+    "public-request": "1551633292837523557"
   }
 }
