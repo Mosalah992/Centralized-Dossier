@@ -67,8 +67,19 @@ describe('the role map', () => {
     expect([...config.roles.keys()]).toEqual([ROLE.justiciar, ROLE.agent]);
     expect(config.summons.command).toEqual([ROLE.command]);
     expect(config.channels).toEqual({ troops: CHANNEL, application: CHANNEL });
-    // The committed configuration is all placeholders until the team fills it in.
-    expect(scribeConfig().roles.size).toBe(0);
+  });
+
+  it('commits only Discord ids or REPLACE_WITH_ placeholders, so nothing is dropped by mistake', () => {
+    const raw = JSON.parse(readFileSync('config/scribe.json', 'utf8')) as {
+      roles: Record<string, unknown>;
+      summons: Record<string, string[]>;
+      channels: Record<string, string>;
+    };
+    const ids = [...Object.keys(raw.roles), ...Object.values(raw.summons).flat(), ...Object.values(raw.channels)];
+    for (const id of ids) expect(id).toMatch(/^(\d{17,20}|REPLACE_WITH_[A-Z_]+)$/);
+    const parsed = scribeConfig();
+    expect(parsed.roles.size).toBe(Object.keys(raw.roles).filter((id) => /^\d+$/.test(id)).length);
+    for (const role of parsed.roles.values()) expect(role.rank.length).toBeGreaterThan(0);
   });
 
   it('gives a member the rank of their highest role, and none without a mapped role', () => {
