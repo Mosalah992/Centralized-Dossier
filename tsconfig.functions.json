@@ -7,7 +7,7 @@
     "lib": ["ES2022"],
     "types": ["@cloudflare/workers-types"]
   },
-  // The scheduled Workers run on the same runtime and share domain logic, so
-  // both unattended collectors belong in the server-side verification gate.
-  "include": ["functions", "server", "shared", "chronicler", "reporter"]
+  // The scheduled Workers and the Scribe run on the same runtime and share
+  // domain logic, so they belong in the server-side verification gate too.
+  "include": ["functions", "server", "shared", "chronicler", "reporter", "scribe"]
 }

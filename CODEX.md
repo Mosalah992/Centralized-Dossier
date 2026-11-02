@@ -61,6 +61,7 @@ This is the implementation-grounded counterpart to the supplied dossier diagram.
 - `server/` contains server-only Sheets access. It must never gain a write helper.
 - `chronicler/` is a separate Worker because scheduled events cannot run in Pages Functions. It reads Discord nightly and writes redacted, bounded filings to KV.
 - `reporter/` is the separate Reports collector. It reads configured Discord categories/channels/forums, applies `shared/reports.ts` privacy filters and explicit severity metadata, resolves each filer to an in-world roster name (never storing the handle), and is the only D1 writer.
+- `scribe/` is the Scribe, a Worker reached only by service binding (`workers_dev = false`, no route). It draws a filing's parchment PNG from its fields (`shared/filing.ts`, checked by `checkParchmentRequest`) with satori and statically imported resvg-wasm, on a sheet made by `scripts/make-scribe-parchment.mjs`. It holds no secret and touches no D1, KV or Discord. Not yet bound to Pages or deployed (2026-11-02).
 - `scripts/` creates committed derived assets. `Assets/` is source art; never replace reproducible preparation with one-off exports.
 
 ## Volume model

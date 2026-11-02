@@ -1,0 +1,23 @@
+name = "thalmor-scribe"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+
+# REACHED ONLY BY SERVICE BINDING. The Pages project binds this Worker as
+# SCRIBE and calls POST /render; nothing else should. No workers.dev address
+# and no route, so the renderer has no public door to guard.
+workers_dev = false
+
+# The fonts and the sheet are bundled as bytes. WebAssembly (satori's layout
+# engine, resvg) needs no rule: Wrangler compiles .wasm imports by default.
+[[rules]]
+type = "Data"
+globs = ["**/*.woff", "**/*.jpg", "**/*.png"]
+fallthrough = true
+
+# SIZE. resvg is most of this Worker (about 1 MB of the compressed bundle). The
+# free Workers plan caps a Worker at 3 MB compressed; check with
+#   npx wrangler deploy --dry-run --outdir .wrangler/scribe-dry -c scribe/wrangler.toml
+#
+# CPU. Drawing one parchment takes 0.5 to 0.9 s of CPU once warm, far beyond the
+# free plan's 10 ms a request. The archive caches every parchment it serves, so
+# each one is drawn once per stamp; the paid plan is still what this assumes.
