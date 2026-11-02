@@ -1,0 +1,32 @@
+{
+  "$comment": [
+    "The Scribe's Discord configuration (functions/lib/discord.ts reads it; bundled at build).",
+    "Every id is a Discord snowflake (17 to 20 digits). A value that is not one, such as the REPLACE_WITH_ placeholders below, is ignored, so the Scribe works without a channel or a ping until it is filled in.",
+    "roles: role id -> { rank, office, precedence }. A member's code fills in the rank of their highest-precedence mapped role. A member with no mapped role is not issued a code and may file only Applications and Public Requests.",
+    "summons: who is pinged. command = Strategic (the Justiciars and the department heads); all = Cataclysm (every member and High Command).",
+    "channels: the archive channel each category posts to. The Clerk's verdict on an Application or Public Request is posted to that category's channel too.",
+    "List the server's roles and channels with: node scripts/discord-setup.mjs roles"
+  ],
+  "roles": {
+    "REPLACE_WITH_FIRST_EMISSARY_ROLE_ID": { "rank": "First Emissary", "office": "High Command", "precedence": 100 },
+    "REPLACE_WITH_JUSTICIAR_ROLE_ID": { "rank": "Justiciar", "office": "Thalmor Embassy", "precedence": 50 },
+    "REPLACE_WITH_AGENT_ROLE_ID": { "rank": "Agent", "office": "Thalmor Embassy", "precedence": 10 }
+  },
+  "summons": {
+    "command": ["REPLACE_WITH_JUSTICIARS_ROLE_ID", "REPLACE_WITH_DEPARTMENT_HEADS_ROLE_ID"],
+    "all": ["REPLACE_WITH_ALL_MEMBERS_ROLE_ID", "REPLACE_WITH_HIGH_COMMAND_ROLE_ID"]
+  },
+  "channels": {
+    "bulletin": "REPLACE_WITH_BULLETIN_CHANNEL_ID",
+    "troops": "REPLACE_WITH_TROOPS_REPORTS_CHANNEL_ID",
+    "logistics": "REPLACE_WITH_LOGISTICS_REPORTS_CHANNEL_ID",
+    "bureau": "REPLACE_WITH_BUREAU_REPORTS_CHANNEL_ID",
+    "embassy": "REPLACE_WITH_EMBASSY_REPORTS_CHANNEL_ID",
+    "patrol": "REPLACE_WITH_PATROL_LOGS_CHANNEL_ID",
+    "training": "REPLACE_WITH_TRAINING_LOGS_CHANNEL_ID",
+    "lesson-magic": "REPLACE_WITH_MAGIC_LESSON_LOGS_CHANNEL_ID",
+    "lesson-language": "REPLACE_WITH_LANGUAGE_LESSON_LOGS_CHANNEL_ID",
+    "application": "REPLACE_WITH_APPLICATIONS_CHANNEL_ID",
+    "public-request": "REPLACE_WITH_PUBLIC_REQUESTS_CHANNEL_ID"
+  }
+}

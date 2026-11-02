@@ -52,6 +52,17 @@ SHEET_ID = "1KS__WJoqI_o3esXxO3Ei3L6SlJwJnOXQrjEr-FCPEZ0"
 REPORTS_EPOCH = "1"
 SOLAR_EPOCH = "1"
 
+# The Scribe's Discord application (functions/api/discord/interactions.ts).
+# Both are public values from the Developer Portal's General Information page;
+# the placeholders are refused as they stand, so until they are filled in the
+# bot's endpoint answers every request 401 and nothing else changes. Set the
+# application's Interactions Endpoint URL to
+#   https://thalmor-archives.com/api/discord/interactions
+DISCORD_APP_ID = "REPLACE_WITH_DISCORD_APPLICATION_ID"
+DISCORD_PUBLIC_KEY = "REPLACE_WITH_DISCORD_PUBLIC_KEY"
+# The Embassy's own server, the same one the collectors read.
+DISCORD_GUILD_ID = "1498139135758831749"
+
 # Secret (set with `npx wrangler pages secret put GOOGLE_SERVICE_ACCOUNT_JSON`):
 #   GOOGLE_SERVICE_ACCOUNT_JSON - contents of the service-account key shared
 #                                 with the spreadsheet. For local development
@@ -61,6 +72,12 @@ SOLAR_EPOCH = "1"
 #   REPORTS_COOKIE_SECRET       - signing secret for Reports-only writs.
 #   SOLAR_PASSPHRASE            - word spoken at Ancarion's plate to open the Solar.
 #   SOLAR_COOKIE_SECRET         - signing secret for Solar-only writs.
+#   DISCORD_BOT_TOKEN           - the Scribe's bot: re-checks a code holder's
+#                                 roles and posts filings to their channels.
+#   CODE_PEPPER                 - any long random string. Codes are stored as
+#                                 HMAC(CODE_PEPPER, code) and the Scribe Table's
+#                                 seal is signed under a key derived from it;
+#                                 changing it retires every code and seal.
 
 # Private, structured Discord reports. The Reports API only reads it after a
 # Reports-only writ; the scheduled collector is its only writer. The Solar's
@@ -70,3 +87,12 @@ SOLAR_EPOCH = "1"
 binding = "REPORTS"
 database_name = "thalmor-reports"
 database_id = "edbd9716-5154-4e93-84bd-4768f8d23ce8"
+
+# The Scribe (scribe/), which draws every filing's parchment. A Worker of its
+# own, reached only through this binding. DEPLOY IT FIRST:
+#   npx wrangler deploy -c scribe/wrangler.toml
+# Without it the Scribe Table cannot preview and parchments answer 503; the
+# filings themselves are still recorded.
+[[services]]
+binding = "SCRIBE"
+service = "thalmor-scribe"

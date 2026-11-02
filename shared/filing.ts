@@ -338,3 +338,19 @@ export function checkParchmentRequest(input: unknown): ParchmentRequestCheck {
   }
   return { ok: true, value: { filing: filing.value, serial, stamp } };
 }
+
+// ── What the website's Scribe routes answer ─────────────────────────────────
+
+/** /api/scribe/seal: the member a code names, filled in on their filings. */
+export interface ScribeHolder {
+  rank: string;
+  office: string;
+  name: string;
+}
+
+/** POST /api/scribe/file: the entry number it was filed under. */
+export interface FiledAnswer {
+  id: number;
+  /** Where the filing can be seen: the board, the Cabinet, or the Clerk Table. */
+  destination: Destination['kind'];
+}
