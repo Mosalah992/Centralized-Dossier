@@ -52,8 +52,10 @@ SHEET_ID = "1KS__WJoqI_o3esXxO3Ei3L6SlJwJnOXQrjEr-FCPEZ0"
 REPORTS_EPOCH = "1"
 SOLAR_EPOCH = "1"
 
-# The Scribe's Discord application (functions/api/discord/interactions.ts).
-# Both are public values from the Developer Portal's General Information page;
+# The Scribe's Discord application (functions/api/discord/interactions.ts):
+# the collector's own (thalmor-reporter), so one bot reads the reports and
+# posts the filings. `node scripts/discord-setup.mjs app` prints both values.
+# They are public (the Developer Portal's General Information page);
 # the placeholders are refused as they stand, so until they are filled in the
 # bot's endpoint answers every request 401 and nothing else changes. Set the
 # application's Interactions Endpoint URL to
@@ -72,8 +74,11 @@ DISCORD_GUILD_ID = "1498139135758831749"
 #   REPORTS_COOKIE_SECRET       - signing secret for Reports-only writs.
 #   SOLAR_PASSPHRASE            - word spoken at Ancarion's plate to open the Solar.
 #   SOLAR_COOKIE_SECRET         - signing secret for Solar-only writs.
-#   DISCORD_BOT_TOKEN           - the Scribe's bot: re-checks a code holder's
-#                                 roles and posts filings to their channels.
+#   DISCORD_BOT_TOKEN           - the Scribe's bot, the collector's token: re-checks
+#                                 a code holder's roles and posts filings. It needs
+#                                 View Channel, Send Messages and Attach Files in
+#                                 the archive channels, and Mention All Roles where
+#                                 a summoned role is not mentionable.
 #   CODE_PEPPER                 - any long random string. Codes are stored as
 #                                 HMAC(CODE_PEPPER, code) and the Scribe Table's
 #                                 seal is signed under a key derived from it;
