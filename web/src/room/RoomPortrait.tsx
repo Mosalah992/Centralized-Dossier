@@ -117,6 +117,10 @@ export const RoomPortrait = forwardRef<AncarionHandle, Props>(function RoomPortr
           onPointerEnter={onApproach}
           onFocus={onApproach}
         >
+          {/* The frame's silhouette again, beneath the painting: it carries the
+              hover outline, so no filter ever touches the layer his videos play
+              in (a filter there makes them jump as it comes and goes). */}
+          <Sprite src={frameArt} className="room-portrait__halo" />
           <span className="portrait-gate__aperture" aria-hidden="true">
             {ancarion.media}
           </span>

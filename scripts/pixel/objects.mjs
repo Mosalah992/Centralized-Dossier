@@ -389,7 +389,7 @@ function portraitFrame() {
   const [top, bottom] = [o.y - 6, o.y + o.h + 5];
   bevel(r, 0, top, W - 1, bottom, {
     lit: ['g', 'G', 'y', 'Y', 'y', 'g'],
-    shade: ['g', 'g', 'G', 'y', 'G', 'k'],
+    shade: ['g', 'g', 'G', 'y', 'G', 'g'],
   });
   // A beaded moulding along the middle of the band.
   for (let y = top; y <= bottom; y++)
