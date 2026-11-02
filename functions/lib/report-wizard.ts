@@ -18,7 +18,7 @@ import {
   FILING_CATEGORIES,
   FILING_LIMITS,
   IMPORTANCE_INFO,
-  checkFiling,
+  checkFilingSoFar,
   importanceFor,
   incidentClock,
   incidentDate,
@@ -158,26 +158,11 @@ export function modalValues(data: { components?: { components?: { custom_id: str
   return values;
 }
 
-/**
- * The fields given so far, checked by the shared model, reporting only a
- * problem with one of `fields`: the steps not yet reached are filled with
- * stand-ins that pass, so a draft is judged by what it has.
- */
+/** A step's fields, checked by the shared model (shared/filing.ts checkFilingSoFar). */
 export function checkSoFar(draft: Draft, fields: readonly FilingField[]): { ok: true; filing: Filing } | { ok: false; error: string } {
-  const stand: Filing = {
-    category: draft.category ?? 'troops',
-    importance: draft.importance ?? 'routine',
-    section: draft.section ?? (draft.category === 'bulletin' ? 'propaganda' : null),
-    rank: draft.rank ?? 'Agent',
-    name: draft.name ?? 'Scribe',
-    superior: draft.superior ?? null,
-    title: draft.title ?? 'Untitled',
-    time: draft.time ?? incidentNow(),
-    body: draft.body ?? 'x'.repeat(FILING_LIMITS.bodyMinimum),
-  };
-  const checked = checkFiling({ ...stand, ...draft });
-  if (checked.ok) return { ok: true, filing: checked.value };
-  return fields.includes(checked.field) ? { ok: false, error: checked.error } : { ok: true, filing: stand };
+  const { id: _id, ...given } = draft;
+  const checked = checkFilingSoFar(given, fields);
+  return checked.ok ? { ok: true, filing: checked.value } : { ok: false, error: checked.error };
 }
 
 /** When a modal's answers fail: what was wrong, and a way back into the same modal. */
@@ -253,7 +238,7 @@ export function readHour(values: Record<string, string>, now: IncidentTime): Inc
 export function stepBody(draft: Draft): Record<string, unknown> {
   const name = draft.category ? CATEGORY_INFO[draft.category].name : 'filing';
   return {
-    content: `**The Scribe** · 4 of 5 · Write the ${name.toLowerCase()} itself.`,
+    content: `**The Scribe** · 4 of 5 · Now write the ${name} itself.`,
     flags: EPHEMERAL,
     components: [row(button('Write it', customId('write', draft.id), 1), cancel(draft.id))],
     attachments: [],
@@ -283,7 +268,7 @@ export function stepPreview(draft: Draft, drawn: boolean): Record<string, unknow
   const name = draft.category ? CATEGORY_INFO[draft.category].name : 'filing';
   return {
     content: drawn
-      ? `**The Scribe** · 5 of 5 · Your ${name.toLowerCase()}, as it will be filed.`
+      ? `**The Scribe** · 5 of 5 · Your ${name}, as it will be filed.`
       : '**The Scribe** · 5 of 5 · The parchment could not be drawn just now, but it can still be filed.',
     flags: EPHEMERAL,
     components: [

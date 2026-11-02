@@ -83,12 +83,14 @@ describe('initial-load ownership', () => {
       // The room and everything that opens over it, the Solar behind it, and
       // the hero that became the Gallery.
       'room.css', 'takeover.css', 'orb.css', 'bookshelf.css', 'board.css', 'ancarion.css', 'gallery.css', 'cabinet.css', 'register.css', 'shelf.css',
-      'solar.css',
+      'solar.css', 'scribe.css', 'clerk.css',
     ]) {
       expect(entry, `${sheet} should load with its route`).not.toContain(sheet);
     }
     expect(read('web/src/room/takeovers/Cabinet.tsx')).toContain("../../styles/cabinet.css");
     expect(read('web/src/views/Solar.tsx')).toContain("../styles/solar.css");
+    expect(read('web/src/room/takeovers/ScribeTable.tsx')).toContain("../../styles/scribe.css");
+    expect(read('web/src/views/solar/ClerkTable.tsx')).toContain("../../styles/clerk.css");
     // The books' leaves bring the Chronicles' stylesheet with the reading helpers.
     expect(read('web/src/reading.tsx')).toContain("./styles/chronicle.css");
     expect(read('web/src/room/Room.tsx')).toContain("../styles/room.css");

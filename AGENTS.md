@@ -9,7 +9,7 @@ Start every task with [CODEX.md](CODEX.md), then open only the linked note(s) in
 - The spreadsheet is authoritative. `server/` and `functions/api/volumes/` only read it. The separate `Thalmor-HR-` bot owns Roster columns G, H, J and K.
 - Public means anyone with the link can read the regular volumes. `noindex` is not access control.
 - `chronicle` is the sole word-protected volume. Its server response must retain `Cache-Control: private, no-store` and `Vary: Cookie`; its text must never enter the browser bundle.
-- `CHRONICLE_FILINGS` is written only by `chronicler/` and read only by Pages Functions. The collector reads Discord; it never posts to Discord.
+- `CHRONICLE_FILINGS` is written only by `chronicler/` and read only by Pages Functions. The collector reads Discord; it never posts to Discord. The Scribe's bot (`functions/api/discord/`, `functions/lib/scribe.ts`) is the only code that posts, and it pings only the roles `config/scribe.json` maps to a level.
 - The consultation register is intentionally minimal: country totals only, with atomic D1 increments. Do not turn it into visitor tracking.
 - Never commit secrets, private chronicle/enforcement source, sheet dumps, or unlicensed assets. `.env`, `.dev.vars`, `credentials/`, `tmp/`, and the ignored content files are sensitive.
 

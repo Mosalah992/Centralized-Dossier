@@ -183,7 +183,7 @@ export async function editOriginal(
   payload: Record<string, unknown>,
   file?: Attachment,
 ): Promise<boolean> {
-  if (!env.DISCORD_APP_ID) return false;
+  if (!env.DISCORD_APP_ID || !SNOWFLAKE.test(env.DISCORD_APP_ID)) return false;
   const { body, headers } = messageBody(file ? payload : { attachments: [], ...payload }, file);
   try {
     const res = await fetch(`${API}/webhooks/${env.DISCORD_APP_ID}/${token}/messages/@original`, { method: 'PATCH', headers, body });

@@ -1,0 +1,73 @@
+/* The Clerk Table's work in the Solar (views/solar/ClerkTable.tsx): the list
+   of filings waiting on the parchment card, and one laid open over the room
+   with its two stamps. Route-only, with the Solar. */
+
+.clerk { text-align: left; }
+.clerk h3 { text-align: center; }
+.clerk .fleuron { display: block; margin: 0 auto 0.2rem; }
+
+.clerk__notice { margin: 0 0 0.5rem !important; color: var(--crimson); }
+
+.clerk__list { display: grid; gap: 0.2rem; margin: 0; padding: 0; list-style: none; width: auto; max-height: 18rem; overflow: auto; }
+.clerk__list li::marker { content: none; }
+
+.clerk__item {
+  display: grid;
+  gap: 0.05rem;
+  width: 100%;
+  padding: 0.4rem 0.5rem;
+  font: inherit;
+  text-align: left;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgb(36 29 20 / 0.15);
+  cursor: inherit;
+}
+.clerk__item:hover { background: rgb(201 162 39 / 0.15); }
+.clerk__item:focus-visible { outline: 2px solid var(--rubric); outline-offset: -2px; }
+.clerk__kind { font: 700 0.58rem var(--display); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); }
+.clerk__kind[data-level='strategic'] { color: #a85824; }
+.clerk__kind[data-level='cataclysm'] { color: #8b251d; }
+.clerk__title { font-weight: 600; line-height: 1.25; }
+.clerk__by { font-size: 0.82rem; font-style: italic; color: var(--ink-soft); }
+
+.clerk__stamped { margin-top: 0.6rem; }
+.clerk__stamped summary { font: 700 0.6rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; cursor: inherit; }
+
+/* ---------- One filing, laid open ---------- */
+
+.clerk-reading {
+  width: min(94vw, 760px);
+  max-height: 94vh;
+  padding: 0;
+  color: var(--stone);
+  background: url('/textures/wood.svg') 0 0 / 480px 480px, #0d0a07;
+  border: 1px solid rgb(201 162 39 / 0.5);
+  box-shadow: 0 30px 60px rgb(0 0 0 / 0.8);
+}
+.clerk-reading::backdrop { background: rgb(5 4 3 / 0.75); }
+.clerk-reading[open] { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
+
+.clerk-reading__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  padding: 0.7rem 1rem;
+  background: rgb(8 6 4 / 0.92);
+}
+.clerk-reading__bar h2 {
+  margin: 0 auto 0 0;
+  font: 400 1rem var(--display);
+  letter-spacing: 0.1em;
+  color: var(--gold-bright);
+}
+.clerk-reading__bar .btn { display: inline-flex; align-items: center; gap: 0.4rem; }
+.clerk-reading__bar .btn--quiet { color: var(--stone); border-color: rgb(207 199 182 / 0.5); }
+
+.clerk-reading__sheet { overflow: auto; padding: 1rem; }
+.clerk-reading__sheet img { display: block; width: 100%; max-width: 620px; height: auto; margin: 0 auto; }
+
+.clerk-reading__verdict { display: flex; align-items: center; gap: 0.6rem; margin: 0 auto 0 0; font-style: italic; }

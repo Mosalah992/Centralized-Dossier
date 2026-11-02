@@ -1,6 +1,8 @@
 // The Scribe's server side, without Cloudflare: Discord's signatures and role
 // map, codes and the seal, the /report wizard's steps, and filing.
 
+import { readFileSync } from 'node:fs';
+
 import { describe, expect, it } from 'vitest';
 
 import { incidentNow, type Filing, type FilingStamp } from '../shared/filing';
@@ -42,6 +44,8 @@ import {
   type FilingStore,
 } from '../functions/lib/scribe';
 import type { AttemptStore } from '../functions/lib/reports';
+import { boardSummary, noticeOf } from '../functions/lib/board';
+import { clerkTable } from '../functions/lib/clerk';
 import { SAMPLES } from '../scribe/samples';
 
 const ROLE = { justiciar: '111111111111111111', agent: '222222222222222222', command: '333333333333333333', all: '444444444444444444' };
@@ -322,5 +326,70 @@ describe('filing', () => {
     expect(first).toMatchObject({ ok: true, record: { stamp: { mark: 'approved', at: incidentNow(at.getTime()) } } });
     expect(await stampFiling({ filings }, id, 'denied', at)).toMatchObject({ ok: false, status: 409 });
     expect(await stampFiling({ filings }, 99, 'denied', at)).toMatchObject({ ok: false, status: 404 });
+  });
+});
+
+describe('the board and the Clerk Table', () => {
+  const record = (over: Partial<FilingRecord> = {}): FilingRecord => ({
+    id: 5,
+    filing: { ...troops, category: 'bulletin', section: 'festivities' },
+    door: 'web',
+    filerDiscordId: '666666666666666666',
+    stamp: null,
+    stampedAt: null,
+    filedAt: '2026-11-02T19:45:00.000Z',
+    discordChannelId: null,
+    discordMessageId: null,
+    reportId: null,
+    ...over,
+  });
+
+  it('hangs every section, counting the Scribe’s posts, and signs a notice in-world', async () => {
+    const sections = await boardSummary({ boardCounts: async () => [{ section: 'festivities', count: 2, latestAt: '2026-11-02T19:45:00.000Z' }] });
+    expect(sections.map((s) => s.id)).toEqual(['propaganda', 'recruitment', 'festivities', 'standing-orders', 'spiritual-guidance', 'bounties']);
+    expect(sections.find((s) => s.id === 'festivities')).toMatchObject({ count: 2, latestAt: '2026-11-02T19:45:00.000Z' });
+    const notice = noticeOf(record(), 'festivities');
+    expect(notice).toMatchObject({ id: 5, postedBy: `${troops.rank} ${troops.name}`, stamp: 'aldmeri', parchment: '/api/filings/5/parchment.png' });
+    expect(JSON.stringify(notice)).not.toContain('666666666666666666');
+  });
+
+  it('asks the Clerk Table for open filings and summoning reports, and never shows a Discord id', async () => {
+    let asked: unknown[] = [];
+    const table = await clerkTable({
+      unstamped: async (categories, levels) => {
+        asked = [categories, levels];
+        return [record({ filing: { ...troops, category: 'application', rank: '' } })];
+      },
+      recentlyStamped: async () => [record({ stamp: { mark: 'denied', at: troops.time }, stampedAt: '2026-11-02T20:00:00.000Z' })],
+    });
+    expect(asked).toEqual([['application', 'public-request'], ['strategic', 'cataclysm']]);
+    expect(table.waiting[0]).toMatchObject({ id: 5, signed: troops.name, stamp: null, parchment: '/api/filings/5/parchment.png' });
+    expect(table.stamped[0]).toMatchObject({ stamp: 'denied', parchment: '/api/filings/5/parchment.png?stamp=denied' });
+    expect(JSON.stringify(table)).not.toContain('666666666666666666');
+  });
+});
+
+describe('the Scribe’s routes', () => {
+  const source = (path: string) => readFileSync(path, 'utf8');
+
+  it('answer privately, and write only same-site JSON', () => {
+    for (const file of ['seal.ts', 'preview.ts', 'file.ts']) {
+      const text = source(`functions/api/scribe/${file}`);
+      expect(text, file).toContain('refuseForeignWrite(request)');
+      expect(text, file).toContain('scribeJson(');
+    }
+    expect(source('functions/api/solar/clerk/[id].ts')).toMatch(/refuseWithoutSolarWrit[\s\S]*refuseForeignWrite\(request\)/);
+    expect(source('functions/api/solar/clerk/index.ts')).toContain('refuseWithoutSolarWrit(');
+  });
+
+  it('check a sealed parchment’s writ before the shared cache is consulted', () => {
+    const text = source('functions/api/filings/[id]/parchment.png.ts');
+    expect(text.indexOf('hasSolarWrit(')).toBeLessThan(text.indexOf('cache.match('));
+    expect(text).toContain("'cache-control': 'private, no-store'");
+  });
+
+  it('verify Discord’s signature before reading an interaction', () => {
+    const text = source('functions/api/discord/interactions.ts');
+    expect(text.indexOf('verifyDiscord(')).toBeLessThan(text.indexOf('JSON.parse(body)'));
   });
 });

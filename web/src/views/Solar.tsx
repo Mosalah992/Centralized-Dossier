@@ -7,10 +7,10 @@
 //   │ Clerk Table + stamps  │  Canonreeve's Desk   │
 //   └──────────────────────────────────────────────┘
 //
-// The map and its pieces work now, shared by everyone admitted (usePins). The
-// Clerk Table and Canonreeve's Desk are furnished but not yet consecrated:
-// their work (filings stamped, notices nailed up, decrees, books, new pieces
-// for the table) comes with the Librarian backend, as the Scribe Table's does.
+// The map and its pieces work now, shared by everyone admitted (usePins), and
+// so does the Clerk Table, where High Command stamps what the Scribe has filed
+// (solar/ClerkTable.tsx). Canonreeve's Desk is furnished but not yet
+// consecrated: its work (decrees, books, new pieces for the table) is to come.
 //
 // It is reached only through Ancarion's plate. A reader who arrives without
 // the Solar's writ is sent back to the room, where the plate waits for them.
@@ -24,6 +24,7 @@ import { clear, markSolarSealed, peek } from '../solar-sealed';
 import { Fleuron } from '../room/art';
 import { Stamp } from '../room/takeovers/Stamp';
 import { CanonreeveDeskArt, ClerkTableArt } from './solar/art';
+import { ClerkTable } from './solar/ClerkTable';
 import { Notes } from './solar/Notes';
 import { usePins } from './solar/usePins';
 import { WarTable } from './solar/WarTable';
@@ -78,14 +79,7 @@ function Chamber({ navigate }: { navigate: Navigate }) {
           <span className="plaque" id="clerk-title">
             Clerk Table
           </span>
-          <div className="solar-card parchment">
-            <Fleuron />
-            <h3>The stamps await their consecration</h3>
-            <p>
-              Filings will be stamped here once the Scribe Table opens: <strong>Approved</strong> under the Dominion’s
-              gold seal, or <strong>Denied</strong>.
-            </p>
-          </div>
+          <ClerkTable />
         </section>
 
         <section className="solar-furniture solar-furniture--desk" aria-labelledby="desk-title">

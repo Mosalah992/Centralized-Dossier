@@ -286,7 +286,7 @@ export function checkFiling(input: unknown): FilingCheck {
 
   const body = prose(raw.body);
   if (!body || body.length < FILING_LIMITS.bodyMinimum) {
-    return fail('body', `Write the ${info.name.toLowerCase()} itself, ${FILING_LIMITS.bodyMinimum} letters at least.`);
+    return fail('body', `Write the ${info.name} itself, ${FILING_LIMITS.bodyMinimum} letters at least.`);
   }
   if (body.length > FILING_LIMITS.body) return fail('body', `It runs to ${FILING_LIMITS.body} letters at most.`);
 
@@ -294,6 +294,35 @@ export function checkFiling(input: unknown): FilingCheck {
     ok: true,
     value: { category, importance, section, rank, name, superior: superior || null, title, time, body },
   };
+}
+
+/**
+ * A filing given step by step (the bot's wizard and the Scribe Table's), judged
+ * by what it has so far: the fields not yet reached are filled with stand-ins
+ * that pass, and only a problem with one of `fields` is reported. On success
+ * the value is the cleaned filing, stand-ins included; take only the fields
+ * the step asked for.
+ */
+export function checkFilingSoFar(
+  draft: Partial<Filing>,
+  fields: readonly FilingField[],
+  now: IncidentTime = incidentNow(),
+): { ok: true; value: Filing } | { ok: false; field: FilingField; error: string } {
+  const stand: Filing = {
+    category: 'troops',
+    importance: 'routine',
+    section: draft.category === 'bulletin' ? 'propaganda' : null,
+    rank: 'Agent',
+    name: 'Scribe',
+    superior: null,
+    title: 'Untitled',
+    time: now,
+    body: 'x'.repeat(FILING_LIMITS.bodyMinimum),
+  };
+  const given = Object.fromEntries(Object.entries(draft).filter(([, v]) => v !== undefined));
+  const checked = checkFiling({ ...stand, ...given });
+  if (checked.ok || fields.includes(checked.field)) return checked;
+  return { ok: true, value: { ...stand, ...(given as Partial<Filing>) } };
 }
 
 // ── The Clerk's stamp, and what the renderer is asked to draw ───────────────
@@ -353,4 +382,20 @@ export interface FiledAnswer {
   id: number;
   /** Where the filing can be seen: the board, the Cabinet, or the Clerk Table. */
   destination: Destination['kind'];
+}
+
+/** GET /api/solar/clerk: a filing at the Clerk Table, waiting for or bearing High Command's stamp. */
+export interface ClerkFiling {
+  id: number;
+  category: FilingCategory;
+  importance: Importance;
+  title: string;
+  /** Rank and name as signed. */
+  signed: string;
+  /** In-world: "4th of Heartfire, 4E 226, 6:04 PM". */
+  incident: string;
+  filedAt: string;
+  stamp: StampMark | null;
+  stampedAt: string | null;
+  parchment: string;
 }
