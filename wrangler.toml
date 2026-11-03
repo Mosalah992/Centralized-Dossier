@@ -97,12 +97,3 @@ QUARTERMASTER_INTERACTIONS_URL = "https://thalmor-quartermaster.salaz4r.workers.
 binding = "REPORTS"
 database_name = "thalmor-reports"
 database_id = "edbd9716-5154-4e93-84bd-4768f8d23ce8"
-
-# The Scribe (scribe/), which draws every filing's parchment. A Worker of its
-# own, reached only through this binding. DEPLOY IT FIRST:
-#   npx wrangler deploy -c scribe/wrangler.toml
-# Without it the Scribe Table cannot preview and parchments answer 503; the
-# filings themselves are still recorded.
-[[services]]
-binding = "SCRIBE"
-service = "thalmor-scribe"

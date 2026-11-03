@@ -1,5 +1,5 @@
 // The Scribe Table: the website's door to the Scribe, the same five steps as
-// the bot's /report, one at a time, ending in the parchment the server draws.
+// the bot's /report, one at a time, ending in the parchment as it will be filed.
 //
 //   the seal   a member gives the code the bot issued (/archives code), which
 //              fills in their rank and name; anyone may instead file an
@@ -9,7 +9,8 @@
 //   2 who      rank, name, the superior answered to, the title
 //   3 when     now, or an in-world month, day and hour
 //   4 body
-//   5 the parchment, drawn by the server, with File it / Edit / Cancel
+//   5 the parchment, drawn here in the browser (web/src/scribe/Parchment.tsx),
+//     with File it / Edit / Cancel
 //
 // Each step is checked by the shared model (shared/filing.ts) before the next,
 // and the server checks the whole again. Until /api/scribe answers, the table
@@ -39,7 +40,8 @@ import { MONTHS } from '../../../../shared/parsers/calendar';
 import { MONTH_LENGTHS } from '../../../../shared/reckoning';
 import { BOARD_INFO } from '../../../../shared/room';
 import { WING_INFO } from '../../../../shared/wings';
-import { fileFiling, giveCode, previewParchment, returnSeal, sealHolder } from '../../scribe-api';
+import { fileFiling, giveCode, returnSeal, sealHolder } from '../../scribe-api';
+import { Parchment } from '../../scribe/Parchment';
 import { Fleuron } from '../art';
 import '../../styles/board.css';
 import '../../styles/scribe.css';
@@ -345,7 +347,16 @@ function Wizard({ initial, notice }: { initial: ScribeHolder | null; notice?: st
             {filed.destination === 'cabinet' && `It is entered in the Cabinet. ${whereTo(draft.category)}.`}
             {filed.destination === 'clerk' && 'It lies on the Clerk Table until High Command stamps it.'}
           </p>
-          <p>The Embassy’s bot posts it to Discord as well.</p>
+          <p>
+            The Embassy’s bot posts it to Discord as well
+            {filed.destination === 'board' ? (
+              <>
+                , and its parchment can be read at <a href={`/filings/${filed.id}`}>Entry No. {filed.id}</a>.
+              </>
+            ) : (
+              '.'
+            )}
+          </p>
           <div className="scribe-actions">
             <button type="button" className="scribe-button scribe-button--primary" onClick={reset}>
               File another
@@ -585,40 +596,23 @@ function ParchmentStep({
   onRefused: (message: string, field?: FilingField, status?: number) => void;
   onFiled: (answer: FiledAnswer) => void;
 }) {
-  const [src, setSrc] = useState<string | null>(null);
-  const [state, setState] = useState<'drawing' | 'drawn' | 'undrawn' | 'filing'>('drawing');
+  const [filing, setFiling] = useState(false);
   const checked = checkFiling(draft);
+  // The draft does not change while this step is shown, so neither does the request.
+  const [request] = useState(() => (checked.ok ? { filing: checked.value, serial: null, stamp: null } : null));
 
   useEffect(() => {
-    if (!checked.ok) {
-      onRefused(checked.error, checked.field);
-      return;
-    }
-    let live = true;
-    void previewParchment(checked.value).then((answer) => {
-      if (!live) return;
-      if (answer.ok) {
-        setSrc(answer.src);
-        setState('drawn');
-      } else if (answer.field || answer.status === 401) {
-        onRefused(answer.error, answer.field, answer.status);
-      } else {
-        setState('undrawn');
-      }
-    });
-    return () => {
-      live = false;
-    };
-    // Drawn once per visit to this step: the draft does not change while it is shown.
+    if (!checked.ok) onRefused(checked.error, checked.field);
+    // Checked once per visit to this step.
   }, []);
 
   const file = async () => {
     if (!checked.ok) return;
-    setState('filing');
+    setFiling(true);
     const answer = await fileFiling(checked.value);
     if (answer.ok) onFiled(answer.filed);
     else {
-      setState(src ? 'drawn' : 'undrawn');
+      setFiling(false);
       onRefused(answer.error, answer.field, answer.status);
     }
   };
@@ -628,20 +622,16 @@ function ParchmentStep({
       <h3 ref={heading} tabIndex={-1}>
         The parchment, as it will be filed
       </h3>
-      <div className="scribe-parchment" aria-busy={state === 'drawing'}>
-        {state === 'drawing' && <p>The Scribe is writing it out…</p>}
-        {state === 'undrawn' && <p>The Scribe could not draw it just now. It can still be filed, and will be drawn when it is.</p>}
-        {src && <img src={src} alt={`The parchment: ${draft.title ?? ''}`} />}
-      </div>
+      <div className="scribe-parchment">{request && <Parchment request={request} />}</div>
       <div className="scribe-actions">
-        <button type="button" className="scribe-button" onClick={onCancel} disabled={state === 'filing'}>
+        <button type="button" className="scribe-button" onClick={onCancel} disabled={filing}>
           Cancel
         </button>
-        <button type="button" className="scribe-button" onClick={onEdit} disabled={state === 'filing'}>
+        <button type="button" className="scribe-button" onClick={onEdit} disabled={filing}>
           Edit
         </button>
-        <button type="button" className="scribe-button scribe-button--primary" onClick={() => void file()} disabled={state === 'drawing' || state === 'filing'}>
-          {state === 'filing' ? 'Filing…' : 'File it'}
+        <button type="button" className="scribe-button scribe-button--primary" onClick={() => void file()} disabled={filing || !request}>
+          {filing ? 'Filing…' : 'File it'}
         </button>
       </div>
     </section>

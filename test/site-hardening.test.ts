@@ -83,10 +83,13 @@ describe('initial-load ownership', () => {
       // The room and everything that opens over it, the Solar behind it, and
       // the hero that became the Gallery.
       'room.css', 'takeover.css', 'orb.css', 'bookshelf.css', 'board.css', 'ancarion.css', 'gallery.css', 'cabinet.css', 'register.css', 'shelf.css',
-      'solar.css', 'scribe.css', 'clerk.css',
+      'solar.css', 'scribe.css', 'clerk.css', 'parchment.css',
     ]) {
       expect(entry, `${sheet} should load with its route`).not.toContain(sheet);
     }
+    // The parchment, its faces and its paper arrive only with what shows one.
+    expect(read('web/src/scribe/Parchment.tsx')).toContain("../styles/parchment.css");
+    expect(entry).not.toMatch(/caveat|im-fell|mr-de-haviland|scribe\/Parchment/);
     expect(read('web/src/room/takeovers/Cabinet.tsx')).toContain("../../styles/cabinet.css");
     expect(read('web/src/views/Solar.tsx')).toContain("../styles/solar.css");
     expect(read('web/src/room/takeovers/ScribeTable.tsx')).toContain("../../styles/scribe.css");

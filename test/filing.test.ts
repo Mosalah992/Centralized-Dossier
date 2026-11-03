@@ -1,3 +1,6 @@
+import fs from 'node:fs';
+import path from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -8,14 +11,16 @@ import {
   IMPORTANCE_LEVELS,
   OPEN_IMPORTANCE,
   checkFiling,
-  checkParchmentRequest,
+  destinationLabel,
   importanceFor,
   incidentClock,
   incidentDate,
   incidentNow,
 } from '../shared/filing';
 import { reckon } from '../shared/reckoning';
-import { SAMPLES } from '../scribe/samples';
+import { BOARD_INFO } from '../shared/room';
+import { WING_INFO } from '../shared/wings';
+import { SAMPLES } from './scribe-samples';
 
 const valid = SAMPLES[0]!.request.filing;
 
@@ -126,11 +131,17 @@ describe('the filing model', () => {
     expect(incidentNow(at)).toEqual({ year, monthIndex, day, hour, minute });
   });
 
-  it('checks what the renderer is asked to draw', () => {
-    expect(checkParchmentRequest(SAMPLES[5]!.request)).toMatchObject({ ok: true });
-    expect(checkParchmentRequest({ filing: valid })).toMatchObject({ ok: true, value: { serial: null, stamp: null } });
-    expect(checkParchmentRequest({ filing: valid, serial: 0 }).ok).toBe(false);
-    expect(checkParchmentRequest({ filing: valid, stamp: { mark: 'sealed', at: valid.time } }).ok).toBe(false);
-    expect(checkParchmentRequest({ filing: { ...valid, title: '' } })).toMatchObject({ ok: false, error: /^title:/ });
+  it('says where a filing goes in the same words on the parchment and in the post', () => {
+    expect(destinationLabel({ category: 'bulletin', section: 'propaganda' })).toBe(`For the Board · ${BOARD_INFO.propaganda.title}`);
+    expect(destinationLabel({ category: 'troops', section: null })).toBe(`To the ${WING_INFO.military.name}`);
+    expect(destinationLabel({ category: 'application', section: null })).toBe('For the Clerk’s Table');
+  });
+
+  it('inks each level as the Cabinet and the Scribe Table do', () => {
+    const css = fs.readFileSync(path.resolve(__dirname, '../web/src/styles/scribe.css'), 'utf8');
+    for (const level of IMPORTANCE_LEVELS) {
+      expect(IMPORTANCE_INFO[level].ink).toMatch(/^#[0-9a-f]{6}$/);
+      expect(css).toContain(`[data-level='${level}'] { --level: ${IMPORTANCE_INFO[level].ink}; }`);
+    }
   });
 });

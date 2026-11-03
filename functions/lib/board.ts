@@ -26,6 +26,5 @@ export function noticeOf(record: FilingRecord, section: BoardSection): Notice {
     postedBy: [filing.rank, filing.name].filter(Boolean).join(' '),
     stamp: 'aldmeri',
     postedAt: record.filedAt,
-    parchment: `/api/filings/${record.id}/parchment.png`,
   };
 }

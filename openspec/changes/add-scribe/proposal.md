@@ -1,20 +1,20 @@
-# The Scribe: a report writer with two doors and one renderer
+# The Scribe: a report writer with two doors and one drawing
 
 ## Outcome
 
 Members and High Command write formatted reports, logs, board posts,
 applications and public requests through a Discord slash command (`/report`)
-and the website's Scribe Table. Both produce the same parchment PNG, drawn in
-code by a dedicated Worker, posted to the category's archive channel and
-shown on the site: board posts on the bulletin board, reports in the Cabinet,
+and the website's Scribe Table. Both file the same parchment, drawn in the
+reader's browser from the filing's fields and posted to the category's
+archive channel as an embed linking to it on the site: board posts on the bulletin board, reports in the Cabinet,
 applications and public requests at the Clerk Table for High Command to stamp.
 
 ## Scope and boundaries
 
-- New Worker `scribe/` (`thalmor-scribe`), reached only by service binding.
+- The parchment is drawn in the reader's browser (`web/src/scribe/`); nothing is drawn on the server, which the Workers Free plan's CPU limit rules out.
 - Archivist Ancarion's interactions endpoint moves to the archive, which relays every non-Scribe interaction to the quartermaster Worker unchanged; clock-ins then depend on the archive.
-- New Pages routes: `/api/discord/interactions`, `/api/scribe/{seal,preview,file}`,
-  `/api/filings/:id/parchment.png`, `/api/room/{status,board,board/:section}`,
+- New Pages routes: `/api/discord/interactions`, `/api/scribe/{seal,file}`,
+  `/api/filings/:id`, `/api/room/{status,board,board/:section}`,
   `/api/solar/clerk` and `/api/solar/clerk/:id`.
 - New D1 tables in `thalmor-reports` (`codes`, `filings`, `filing_drafts`,
   migrations/0006) and new rows in the existing `reports` table.

@@ -189,7 +189,5 @@ export async function count(store: AttemptStore | undefined, key: string, window
 
 /** Wrong codes: eight in ten minutes per address, as the archive's other gates. */
 export const CODE_ATTEMPTS = { max: 8, window: 600, key: (ip: string) => `scribe-code:${ip}` } as const;
-/** Previews drawn, per address or code: each costs the Scribe real work. */
-export const PREVIEWS = { max: 30, window: 600, key: (who: string) => `scribe-preview:${who}` } as const;
 /** Open filings (Applications, Public Requests) per address. */
 export const OPEN_FILINGS = { max: 3, window: 3600, key: (ip: string) => `scribe-open:${ip}` } as const;

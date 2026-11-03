@@ -30,15 +30,21 @@ import {
   modalWho,
   readCustomId,
   readHour,
+  stepPreview,
   stepWhat,
+  stepWhen,
 } from '../functions/lib/report-wizard';
 import {
+  announceStamp,
   announcement,
   cabinetEntry,
+  filingEmbed,
   plain,
+  prose,
   publish,
   record,
   stampFiling,
+  verdict,
   type CabinetEntry,
   type FilingRecord,
   type FilingStore,
@@ -47,10 +53,11 @@ import type { AttemptStore } from '../functions/lib/reports';
 import { boardSummary, noticeOf } from '../functions/lib/board';
 import { clerkTable } from '../functions/lib/clerk';
 import { QUARTERMASTER_DOWN, RELAY_TIMEOUT_MS, forwardInteraction, isScribeInteraction } from '../functions/lib/interactions-relay';
-import { SAMPLES } from '../scribe/samples';
+import { SAMPLES } from './scribe-samples';
 
 const ROLE = { justiciar: '111111111111111111', agent: '222222222222222222', command: '333333333333333333', all: '444444444444444444' };
 const CHANNEL = '555555555555555555';
+const ORIGIN = 'https://thalmor-archives.com';
 const config = scribeConfig({
   roles: {
     [ROLE.justiciar]: { rank: 'Justiciar', office: 'Thalmor Embassy', precedence: 50 },
@@ -295,39 +302,102 @@ describe('filing', () => {
       discordMessageId: null,
       reportId: null,
     };
-    const post = announcement(base, config) as { content: string; allowed_mentions: { parse: string[]; roles: string[] } };
+    const post = announcement(base, config, ORIGIN) as { content: string; allowed_mentions: { parse: string[]; roles: string[] }; embeds: { title: string }[] };
     expect(post.allowed_mentions).toEqual({ parse: [], roles: [ROLE.command] });
     expect(post.content.startsWith(`<@&${ROLE.command}>`)).toBe(true);
     expect(post.content).toContain('Filed by <@666666666666666666>.');
-    expect(post.content).not.toContain('@everyone');
+    expect(JSON.stringify(post)).not.toContain('@everyone');
+    expect(post.embeds[0]!.title).toBe('@​everyone \\*\\*look\\*\\* <@​&1\\>');
     expect(plain('**a** @here')).toBe('\\*\\*a\\*\\* @​here');
-    const routine = announcement({ ...base, filing: troops, filerDiscordId: null, door: 'web' }, config) as { allowed_mentions: { roles: string[] } };
+    const routine = announcement({ ...base, filing: troops, filerDiscordId: null, door: 'web' }, config, ORIGIN) as { allowed_mentions: { roles: string[] } };
     expect(routine.allowed_mentions.roles).toEqual([]);
+  });
+
+  it('posts the filing as an embed of its parchment’s parts, linked to the parchment on the site', () => {
+    const filed: FilingRecord = {
+      id: 12,
+      filing: { ...troops, body: 'First [click](https://evil.example) @here.\n\n\n\nSecond.' },
+      door: 'discord',
+      filerDiscordId: '666666666666666666',
+      stamp: null,
+      stampedAt: null,
+      filedAt: '2026-11-02T12:00:00.000Z',
+      discordChannelId: null,
+      discordMessageId: null,
+      reportId: null,
+    };
+    const post = announcement(filed, config, ORIGIN) as {
+      embeds: Record<string, unknown>[];
+      components: { components: { style: number; url: string }[] }[];
+    };
+    const embed = post.embeds[0] as { author: { name: string }; url: string; description: string; color: number; fields: { name: string; value: string }[]; timestamp: string };
+    expect(embed.author.name).toBe('Thalmor Embassy · Entry No. 12');
+    expect(embed.url).toBe(`${ORIGIN}/filings/12`);
+    expect(post.components[0]!.components[0]).toMatchObject({ style: 5, url: `${ORIGIN}/filings/12` });
+    // The body keeps its paragraphs, but no masked link and no mention survive.
+    expect(embed.description).toBe('First \\[click\\](https://evil.example) @​here.\n\nSecond.');
+    expect(embed.color).toBe(0x58703c);
+    expect(embed.timestamp).toBe(filed.filedAt);
+    expect(Object.fromEntries(embed.fields.map((f) => [f.name, f.value]))).toMatchObject({
+      'Troops Report': 'To the Military Wing',
+      Importance: 'Standard Routine',
+      Signed: `${troops.rank} ${troops.name}`,
+      'Answering to': troops.superior,
+    });
+    expect(prose('a\n\n\n\nb')).toBe('a\n\nb');
+    // A preview is a draft, linked to nothing yet; a stamped filing shows the Clerk's seal.
+    const draft = filingEmbed({ filing: troops, serial: null, stamp: null }, null) as { author: { name: string }; url?: string };
+    expect(draft.author.name).toBe('Thalmor Embassy · Draft');
+    expect(draft.url).toBeUndefined();
+    const stamped = filingEmbed({ filing: troops, serial: 12, stamp: { mark: 'denied', at: troops.time } }, null) as { fields: { name: string; value: string }[] };
+    expect(stamped.fields.at(-1)).toEqual({ name: 'The Clerk’s seal', value: expect.stringMatching(/^Denied, /), inline: true });
+  });
+
+  it('previews the post in the wizard’s last step, and clears it on any other', () => {
+    const draft = { id: 'd1a2f3e4-5678', ...troops };
+    const last = stepPreview(draft, troops) as { embeds: unknown[]; components: { components: { label: string }[] }[] };
+    expect(last.embeds).toHaveLength(1);
+    expect(last.components[0]!.components.map((c) => c.label)).toEqual(['File it', 'Edit', 'Cancel']);
+    expect(stepWhat(draft, true)).toMatchObject({ embeds: [] });
+    expect(stepWhen(draft, troops.time)).toMatchObject({ embeds: [] });
   });
 
   it('records, enters and posts a report, and posts nothing where no channel is set', async () => {
     const filings = memoryFilings();
-    const posts: { channel: string; payload: Record<string, unknown>; file?: unknown }[] = [];
+    const posts: { channel: string; payload: Record<string, unknown> }[] = [];
     const deps = {
       filings,
       config,
-      render: async () => new Uint8Array([137, 80, 78, 71]),
-      post: async (channel: string, payload: Record<string, unknown>, file?: unknown) => {
-        posts.push({ channel, payload, file });
+      origin: ORIGIN,
+      post: async (channel: string, payload: Record<string, unknown>) => {
+        posts.push({ channel, payload });
         return '777777777777777777';
       },
     };
     const id = await record(deps, troops, 'web', '666666666666666666');
     expect(filings.entries).toHaveLength(1);
     expect(await publish(deps, id)).toBe(true);
-    expect(posts[0]).toMatchObject({ channel: CHANNEL, file: { name: `thalmor-entry-${id}.png`, type: 'image/png' } });
+    expect(posts[0]).toMatchObject({ channel: CHANNEL, payload: { embeds: [{ url: `${ORIGIN}/filings/${id}` }] } });
     expect(filings.rows[0]).toMatchObject({ discordChannelId: CHANNEL, discordMessageId: '777777777777777777' });
+
+    // The verdict answers the filing's own post, and links to the stamped parchment.
+    expect(await stampFiling(deps, id, 'approved', new Date('2026-11-02T18:00:00.000Z'))).toMatchObject({ ok: true });
+    expect(await announceStamp(deps, filings.rows[0]!)).toBe(true);
+    expect(posts[1]).toMatchObject({
+      channel: CHANNEL,
+      payload: {
+        content: expect.stringContaining('Approved by High Command'),
+        message_reference: { message_id: '777777777777777777' },
+        components: [{ components: [{ url: `${ORIGIN}/filings/${id}` }] }],
+      },
+    });
+    expect(verdict({ ...filings.rows[0]!, discordMessageId: null }, ORIGIN)).not.toHaveProperty('message_reference');
 
     const post: Filing = { ...troops, category: 'bulletin', section: 'propaganda' };
     const second = await record(deps, post, 'web', '666666666666666666');
     expect(filings.entries).toHaveLength(1);
     expect(await publish(deps, second)).toBe(false);
-    expect(posts).toHaveLength(1);
+    expect(posts).toHaveLength(2);
   });
 
   it('presses a stamp once, at the realm’s hour', async () => {
@@ -361,7 +431,7 @@ describe('the board and the Clerk Table', () => {
     expect(sections.map((s) => s.id)).toEqual(['propaganda', 'recruitment', 'festivities', 'standing-orders', 'spiritual-guidance', 'bounties']);
     expect(sections.find((s) => s.id === 'festivities')).toMatchObject({ count: 2, latestAt: '2026-11-02T19:45:00.000Z' });
     const notice = noticeOf(record(), 'festivities');
-    expect(notice).toMatchObject({ id: 5, postedBy: `${troops.rank} ${troops.name}`, stamp: 'aldmeri', parchment: '/api/filings/5/parchment.png' });
+    expect(notice).toMatchObject({ id: 5, postedBy: `${troops.rank} ${troops.name}`, stamp: 'aldmeri' });
     expect(JSON.stringify(notice)).not.toContain('666666666666666666');
   });
 
@@ -375,8 +445,9 @@ describe('the board and the Clerk Table', () => {
       recentlyStamped: async () => [record({ stamp: { mark: 'denied', at: troops.time }, stampedAt: '2026-11-02T20:00:00.000Z' })],
     });
     expect(asked).toEqual([['application', 'public-request'], ['strategic', 'cataclysm']]);
-    expect(table.waiting[0]).toMatchObject({ id: 5, signed: troops.name, stamp: null, parchment: '/api/filings/5/parchment.png' });
-    expect(table.stamped[0]).toMatchObject({ stamp: 'denied', parchment: '/api/filings/5/parchment.png?stamp=denied' });
+    // Each with what its parchment is drawn from, stamp and all.
+    expect(table.waiting[0]).toMatchObject({ id: 5, signed: troops.name, stamp: null, parchment: { serial: 5, stamp: null, filing: { category: 'application' } } });
+    expect(table.stamped[0]).toMatchObject({ stamp: 'denied', parchment: { serial: 5, stamp: { mark: 'denied' } } });
     expect(JSON.stringify(table)).not.toContain('666666666666666666');
   });
 });
@@ -385,7 +456,7 @@ describe('the Scribe’s routes', () => {
   const source = (path: string) => readFileSync(path, 'utf8');
 
   it('answer privately, and write only same-site JSON', () => {
-    for (const file of ['seal.ts', 'preview.ts', 'file.ts']) {
+    for (const file of ['seal.ts', 'file.ts']) {
       const text = source(`functions/api/scribe/${file}`);
       expect(text, file).toContain('refuseForeignWrite(request)');
       expect(text, file).toContain('scribeJson(');
@@ -394,10 +465,19 @@ describe('the Scribe’s routes', () => {
     expect(source('functions/api/solar/clerk/index.ts')).toContain('refuseWithoutSolarWrit(');
   });
 
-  it('check a sealed parchment’s writ before the shared cache is consulted', () => {
-    const text = source('functions/api/filings/[id]/parchment.png.ts');
-    expect(text.indexOf('hasSolarWrit(')).toBeLessThan(text.indexOf('cache.match('));
+  it('check a sealed filing’s writ before answering it, and never let a sealed answer be cached', () => {
+    const text = source('functions/api/filings/[id].ts');
+    expect(text.indexOf('hasSolarWrit(')).toBeLessThan(text.indexOf('const view'));
     expect(text).toContain("'cache-control': 'private, no-store'");
+    expect(text).toMatch(/shown \? \{ 'cache-control': 'public, max-age=60' \} : PRIVATE/);
+    expect(text).not.toContain('caches.default');
+  });
+
+  it('draw nothing on the server: no drawing Worker is bound or called', () => {
+    expect(source('wrangler.toml')).not.toMatch(/\[\[services\]\]|thalmor-scribe/);
+    for (const file of ['functions/lib/scribe.ts', 'functions/lib/scribe-env.ts', 'functions/api/discord/interactions.ts']) {
+      expect(source(file), file).not.toMatch(/SCRIBE\b|render|\.png/);
+    }
   });
 
   it('verify Discord’s signature before reading an interaction', () => {

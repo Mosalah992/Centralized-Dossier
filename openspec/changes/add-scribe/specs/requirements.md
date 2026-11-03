@@ -1,10 +1,12 @@
 # Requirements
 
-## One model, one renderer
+## One model, one drawing
 
 Both doors SHALL check a filing with `shared/filing.ts` `checkFiling`, and the
-parchment SHALL be drawn only by the `scribe/` Worker from the stored fields,
-so the same filing always draws the same parchment and stamping re-draws it.
+parchment SHALL be drawn only by `web/src/scribe/Parchment.tsx`, in the
+reader's browser, from the stored fields, so the same filing always draws the
+same parchment and a stamp appears wherever it is next drawn. No route SHALL
+draw, and the bot SHALL post no image.
 
 ## Summons
 
@@ -22,8 +24,9 @@ Discord id SHALL NOT be served by any route.
 
 ## Access
 
-A Bulletin Post's parchment MAY be public until Denied. A report's parchment
-SHALL need the Reports or Solar writ, and an Application's or Public
-Request's the Solar writ, checked before the edge cache. Every `/api/scribe`
+A Bulletin Post's fields MAY be public until Denied. A report's SHALL need the
+Reports or Solar writ, and an Application's or Public Request's the Solar
+writ; a sealed filing SHALL be answered as an unknown number, and never
+cached. Every `/api/scribe`
 and Clerk Table response SHALL be `private, no-store` with `Vary: Cookie`, and
 every write SHALL be same-site JSON.

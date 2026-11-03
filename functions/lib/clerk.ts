@@ -4,7 +4,7 @@
 // Behind the Solar writ (lib/solar.ts); pure over the filing store.
 
 import { incidentClock, incidentDate, type ClerkFiling } from '../../shared/filing';
-import { CLERK_CATEGORIES, CLERK_LEVELS, type FilingRecord, type FilingStore } from './scribe';
+import { CLERK_CATEGORIES, CLERK_LEVELS, parchmentOf, type FilingRecord, type FilingStore } from './scribe';
 
 export const CLERK_PAGE = 50;
 
@@ -20,7 +20,7 @@ export function clerkFiling(record: FilingRecord): ClerkFiling {
     filedAt: record.filedAt,
     stamp: record.stamp?.mark ?? null,
     stampedAt: record.stampedAt,
-    parchment: `/api/filings/${record.id}/parchment.png${record.stamp ? `?stamp=${record.stamp.mark}` : ''}`,
+    parchment: parchmentOf(record),
   };
 }
 

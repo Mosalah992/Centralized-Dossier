@@ -3,7 +3,7 @@
 // answers) and given the Scribe's two commands:
 //
 //   /archives code   a personal code for the Scribe Table, shown only to the member
-//   /report          the wizard: what, who, when, the body, then the parchment
+//   /report          the wizard: what, who, when, the body, then the filing as it will be posted
 //
 // Every other interaction (/clockin, /stock and the quartermaster's others) is
 // handed on unchanged to the quartermaster Worker (lib/interactions-relay.ts),
@@ -17,7 +17,7 @@
 
 import { CATEGORY_INFO, checkFiling, incidentNow } from '../../../shared/filing';
 import { codeHash, newCode, normalizeCode } from '../../lib/codes';
-import { editOriginal, grantFor, verifyDiscord, type Attachment } from '../../lib/discord';
+import { editOriginal, grantFor, verifyDiscord } from '../../lib/discord';
 import { forwardInteraction, isScribeInteraction } from '../../lib/interactions-relay';
 import {
   EPHEMERAL,
@@ -37,8 +37,8 @@ import {
   stepWhen,
   working,
 } from '../../lib/report-wizard';
-import { DRAFT_LIFETIME_MS, parchmentFile, publish, record, type Draft } from '../../lib/scribe';
-import { codeStore, draftStore, renderWith, rosterName, scribeDeps, scribeSettings, type ScribeEnv } from '../../lib/scribe-env';
+import { DRAFT_LIFETIME_MS, publish, record, type Draft } from '../../lib/scribe';
+import { codeStore, draftStore, rosterName, scribeDeps, scribeSettings, type ScribeEnv } from '../../lib/scribe-env';
 
 interface User {
   id: string;
@@ -72,8 +72,7 @@ const answer = (type: number, data?: Record<string, unknown>) => Response.json(d
 const say = (content: string) => answer(RESPOND.message, working(content));
 const update = (payload: Record<string, unknown>) => answer(RESPOND.update, unflagged(payload));
 const modal = (payload: Record<string, unknown>) => answer(RESPOND.modal, payload);
-const edit = (env: ScribeEnv, token: string, payload: Record<string, unknown>, file?: Attachment) =>
-  editOriginal(env, token, unflagged(payload), file);
+const edit = (env: ScribeEnv, token: string, payload: Record<string, unknown>) => editOriginal(env, token, unflagged(payload));
 
 const LAPSED = 'This draft has lapsed: drafts keep for an hour. Begin again with /report.';
 
@@ -105,6 +104,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, waitUnti
   if (!env.REPORTS) return say('The Scribe is not yet consecrated. Ask an administrator.');
   if (!i.member || i.guild_id !== env.DISCORD_GUILD_ID) return say('Use the Scribe inside the Embassy’s own server, where your roles can be read.');
   const db = env.REPORTS;
+  // The site's own address, as Discord reached it: the posts link to each parchment there.
+  const origin = new URL(request.url).origin;
   const user = i.member.user;
   const grant = grantFor(i.member.roles, scribeSettings().roles);
   const member = grant !== null;
@@ -120,7 +121,6 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, waitUnti
       );
     }
     const pepper = env.CODE_PEPPER;
-    const origin = new URL(request.url).origin;
     // Reading the roster for the member's in-world name can outlast Discord's
     // three seconds: say "thinking" now and give the code when it is made.
     waitUntil(
@@ -190,14 +190,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, waitUnti
       }
       draft = { ...draft, ...checked.value };
       await keep(draft);
-      const filing = checked.value;
-      waitUntil(
-        (async () => {
-          const png = await renderWith(env.SCRIBE, { filing, serial: null, stamp: null });
-          await edit(env, i.token, stepPreview(draft, Boolean(png)), png ? parchmentFile(png, 0) : undefined);
-        })(),
-      );
-      return answer(RESPOND.deferredUpdate);
+      return update(stepPreview(draft, checked.value));
     }
     return update(working(LAPSED));
   }
@@ -238,7 +231,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, waitUnti
       let entry = 0;
       waitUntil(
         (async () => {
-          const deps = scribeDeps({ ...env, REPORTS: db });
+          const deps = scribeDeps({ ...env, REPORTS: db }, origin);
           entry = await record(deps, filing, 'discord', user.id);
           await drafts.remove(draft.id);
           const posted = await publish(deps, entry);

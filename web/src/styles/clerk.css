@@ -68,6 +68,6 @@
 .clerk-reading__bar .btn--quiet { color: var(--stone); border-color: rgb(207 199 182 / 0.5); }
 
 .clerk-reading__sheet { overflow: auto; padding: 1rem; }
-.clerk-reading__sheet img { display: block; width: 100%; max-width: 620px; height: auto; margin: 0 auto; }
+.clerk-reading__sheet .scribe-paper { max-width: 620px; margin: 0 auto; }
 
 .clerk-reading__verdict { display: flex; align-items: center; gap: 0.6rem; margin: 0 auto 0 0; font-style: italic; }

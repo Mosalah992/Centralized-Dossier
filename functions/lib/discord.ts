@@ -130,40 +130,20 @@ export async function memberRoles(env: DiscordEnv, userId: string): Promise<Memb
   }
 }
 
-export interface Attachment {
-  name: string;
-  type: string;
-  bytes: Uint8Array;
-}
-
 /**
- * A message body, as JSON or (with a file) as the multipart form Discord takes
- * attachments in. Mentions are never parsed from the text: only the roles in
+ * A message body. Mentions are never parsed from the text: only the roles in
  * `allowed_mentions` can ping, whatever a filer typed.
  */
-function messageBody(payload: Record<string, unknown>, file?: Attachment): { body: BodyInit; headers: Record<string, string> } {
-  const withMentions = { allowed_mentions: { parse: [] }, ...payload };
-  if (!file) return { body: JSON.stringify(withMentions), headers: { 'Content-Type': 'application/json' } };
-  const form = new FormData();
-  form.set('payload_json', JSON.stringify({ ...withMentions, attachments: [{ id: 0, filename: file.name }] }));
-  form.set('files[0]', new Blob([new Uint8Array(file.bytes)], { type: file.type }), file.name);
-  return { body: form, headers: {} };
-}
+const messageBody = (payload: Record<string, unknown>): string => JSON.stringify({ allowed_mentions: { parse: [] }, ...payload });
 
 /** Post to a channel as the bot. Returns the message id, or null when it could not. */
-export async function postMessage(
-  env: DiscordEnv,
-  channelId: string,
-  payload: Record<string, unknown>,
-  file?: Attachment,
-): Promise<string | null> {
+export async function postMessage(env: DiscordEnv, channelId: string, payload: Record<string, unknown>): Promise<string | null> {
   if (!env.DISCORD_BOT_TOKEN || !SNOWFLAKE.test(channelId)) return null;
-  const { body, headers } = messageBody(payload, file);
   try {
     const res = await fetch(`${API}/channels/${channelId}/messages`, {
       method: 'POST',
-      headers: { ...headers, Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` },
-      body,
+      headers: { 'Content-Type': 'application/json', Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` },
+      body: messageBody(payload),
     });
     if (!res.ok) {
       console.warn('scribe: post refused', res.status, await res.text().catch(() => ''));
@@ -177,16 +157,14 @@ export async function postMessage(
 }
 
 /** Replace the answer to an interaction (after a deferred reply, or a step of the wizard). */
-export async function editOriginal(
-  env: DiscordEnv,
-  token: string,
-  payload: Record<string, unknown>,
-  file?: Attachment,
-): Promise<boolean> {
+export async function editOriginal(env: DiscordEnv, token: string, payload: Record<string, unknown>): Promise<boolean> {
   if (!env.DISCORD_APP_ID || !SNOWFLAKE.test(env.DISCORD_APP_ID)) return false;
-  const { body, headers } = messageBody(file ? payload : { attachments: [], ...payload }, file);
   try {
-    const res = await fetch(`${API}/webhooks/${env.DISCORD_APP_ID}/${token}/messages/@original`, { method: 'PATCH', headers, body });
+    const res = await fetch(`${API}/webhooks/${env.DISCORD_APP_ID}/${token}/messages/@original`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: messageBody({ embeds: [], ...payload }),
+    });
     if (!res.ok) console.warn('scribe: answer refused', res.status, await res.text().catch(() => ''));
     return res.ok;
   } catch (error) {

@@ -79,8 +79,6 @@ export interface Notice {
   postedBy: string;
   stamp: Stamp;
   postedAt: string;
-  /** The notice as the Scribe drew it (/api/filings/:id/parchment.png), for one filed at the Scribe Table or with /report. */
-  parchment?: string;
 }
 
 // ---------- What the room can do ----------

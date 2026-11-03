@@ -51,24 +51,6 @@ export async function returnSeal(): Promise<void> {
   await call('/api/scribe/seal', 'DELETE');
 }
 
-/**
- * The parchment as a data: URL. The archive's content policy admits images
- * from the site and from data: only, so the drawing is read into one rather
- * than shown through a blob: address.
- */
-export async function previewParchment(filing: Filing): Promise<{ ok: true; src: string } | Refusal> {
-  const res = await call('/api/scribe/preview', 'POST', { filing });
-  if (!res?.ok || !(res.headers.get('content-type') ?? '').startsWith('image/')) return refusal(res);
-  const blob = await res.blob();
-  const src = await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(blob);
-  });
-  return { ok: true, src };
-}
-
 export async function fileFiling(filing: Filing): Promise<{ ok: true; filed: FiledAnswer } | Refusal> {
   const res = await call('/api/scribe/file', 'POST', { filing });
   if (!res?.ok) return refusal(res);

@@ -1,7 +1,8 @@
 // The Clerk Table's work: the filings waiting for High Command's stamp, each
-// read as its parchment and stamped Approved (the Dominion's gold seal) or
-// Denied. Stamping draws the parchment again with the stamp on it, and the
-// Embassy's bot posts the verdict to the filing's channel (functions/api/solar/clerk).
+// read as its parchment (drawn here, web/src/scribe/Parchment.tsx) and stamped
+// Approved (the Dominion's gold seal) or Denied. The parchment is drawn again
+// with the stamp on it, and the Embassy's bot posts the verdict to the
+// filing's channel (functions/api/solar/clerk).
 //
 // Applications to the Thalmor and Public Requests wait here, and any report
 // that summoned High Command (Strategic or Cataclysm) until it is seen. Until
@@ -13,6 +14,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { CATEGORY_INFO, IMPORTANCE_INFO, type ClerkFiling, type StampMark } from '../../../../shared/filing';
 import { Fleuron } from '../../room/art';
 import { Stamp } from '../../room/takeovers/Stamp';
+import { Parchment } from '../../scribe/Parchment';
 import '../../styles/clerk.css';
 
 type Table = { waiting: ClerkFiling[]; stamped: ClerkFiling[] };
@@ -150,7 +152,7 @@ function Reading({ filing, onStamp, onClose }: { filing: ClerkFiling; onStamp: (
         </button>
       </header>
       <div className="clerk-reading__sheet">
-        <img src={filing.parchment} alt={`The parchment: ${filing.title}. Signed ${filing.signed}, ${filing.incident}.`} />
+        <Parchment request={filing.parchment} />
       </div>
       <footer className="clerk-reading__bar">
         {filing.stamp ? (

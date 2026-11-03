@@ -20,6 +20,8 @@ export type Route =
   | { name: 'solar' }
   | { name: 'penalcode' }
   | { name: 'volume'; slug: VolumeSlug }
+  /** One of the Scribe's filings, drawn as its parchment (web/src/views/Filing.tsx). */
+  | { name: 'filing'; id: number }
   | { name: 'editor' }
   | { name: 'missing' };
 
@@ -42,6 +44,9 @@ export function parse(pathname: string): Route {
 
   // The Scribe Table was the Lectern until 2026-10-22; its old address still opens it.
   if (path === '/scribe-table' || path === '/lectern') return { name: 'room', open: 'scribe' };
+  // The Embassy's bot links each filing it posts here.
+  const entry = /^\/filings\/([1-9]\d{0,7})$/.exec(path);
+  if (entry) return { name: 'filing', id: Number(entry[1]) };
   const surface = /^\/(bookshelf|board)(?:\/([^/]{1,80}))?$/.exec(path);
   if (surface) {
     const open = surface[1] as RoomSurface;

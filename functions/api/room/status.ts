@@ -11,7 +11,7 @@ interface Env extends ScribeEnv {
 
 export const onRequestGet: PagesFunction<Env> = ({ env }) => {
   const status: RoomStatus = {
-    scribeTable: Boolean(env.REPORTS && env.CODE_PEPPER && env.SCRIBE),
+    scribeTable: Boolean(env.REPORTS && env.CODE_PEPPER),
     clerk: Boolean(env.REPORTS && env.SOLAR_COOKIE_SECRET),
     board: Boolean(env.REPORTS),
     books: false,

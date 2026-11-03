@@ -7,7 +7,7 @@
 //   2  who files it, and its title              modal       (scribe:who)
 //   3  when it happened                          Now, or a modal (scribe:now|hour)
 //   4  the body                                  modal       (scribe:body)
-//   5  the parchment, with File it / Edit / Cancel
+//   5  the filing as it will be posted, with File it / Edit / Cancel
 //
 // Every custom_id is `scribe:<step>:<draft id>`. The message is ephemeral, so
 // only its member can press it; the route also checks the draft is theirs.
@@ -31,7 +31,7 @@ import {
 import { BOARD_INFO } from '../../shared/room';
 import { MONTH_LENGTHS } from '../../shared/reckoning';
 import { MONTHS } from '../../shared/parsers/calendar';
-import type { Draft } from './scribe';
+import { filingEmbed, type Draft } from './scribe';
 
 export const EPHEMERAL = 1 << 6;
 
@@ -98,7 +98,7 @@ export function stepWhat(draft: Draft, member: boolean, note?: string): Record<s
     content: [note ? `> ${note}` : null, '**The Scribe** · 1 of 5 · What are you filing, and how much does it matter?'].filter(Boolean).join('\n'),
     flags: EPHEMERAL,
     components: rows,
-    attachments: [],
+    embeds: [],
   };
 }
 
@@ -172,7 +172,7 @@ export function retry(draft: Draft, error: string, step: 'who' | 'hour' | 'body'
     content: `> ${error}`,
     flags: EPHEMERAL,
     components: [row(button(labels[step], customId(`re${step}`, draft.id), 1), cancel(draft.id))],
-    attachments: [],
+    embeds: [],
   };
 }
 
@@ -185,7 +185,7 @@ export function stepWhen(draft: Draft, now: IncidentTime): Record<string, unknow
     components: [
       row(button('Now', customId('now', draft.id), 1), button('Another hour…', customId('hour', draft.id)), cancel(draft.id)),
     ],
-    attachments: [],
+    embeds: [],
   };
 }
 
@@ -241,7 +241,7 @@ export function stepBody(draft: Draft): Record<string, unknown> {
     content: `**The Scribe** · 4 of 5 · Now write the ${name} itself.`,
     flags: EPHEMERAL,
     components: [row(button('Write it', customId('write', draft.id), 1), cancel(draft.id))],
-    attachments: [],
+    embeds: [],
   };
 }
 
@@ -262,14 +262,13 @@ export function modalBody(draft: Draft): Record<string, unknown> {
   };
 }
 
-// ── Step 5: the parchment ───────────────────────────────────────────────────
+// ── Step 5: as it will be posted ────────────────────────────────────────────
 
-export function stepPreview(draft: Draft, drawn: boolean): Record<string, unknown> {
-  const name = draft.category ? CATEGORY_INFO[draft.category].name : 'filing';
+/** The checked filing as the bot will post it. Its parchment is drawn on the site once it is filed. */
+export function stepPreview(draft: Draft, filing: Filing): Record<string, unknown> {
   return {
-    content: drawn
-      ? `**The Scribe** · 5 of 5 · Your ${name}, as it will be filed.`
-      : '**The Scribe** · 5 of 5 · The parchment could not be drawn just now, but it can still be filed.',
+    content: `**The Scribe** · 5 of 5 · Your ${CATEGORY_INFO[filing.category].name}, as it will be filed. Its parchment is drawn on the archive’s site once it is.`,
+    embeds: [filingEmbed({ filing, serial: null, stamp: null }, null)],
     flags: EPHEMERAL,
     components: [
       row(button('File it', customId('file', draft.id), 3), button('Edit', customId('edit', draft.id)), cancel(draft.id)),
@@ -277,4 +276,4 @@ export function stepPreview(draft: Draft, drawn: boolean): Record<string, unknow
   };
 }
 
-export const working = (text: string): Record<string, unknown> => ({ content: text, flags: EPHEMERAL, components: [], attachments: [] });
+export const working = (text: string): Record<string, unknown> => ({ content: text, flags: EPHEMERAL, components: [], embeds: [] });

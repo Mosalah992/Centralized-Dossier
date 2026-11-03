@@ -2,8 +2,8 @@
 //
 //   node scripts/make-scribe-parchment.mjs
 //
-// Writes scribe/assets/parchment-<height>.jpg, the sheet every filing is drawn on,
-// and scribe/assets/seal-aldmeri.png, the Clerk's gold seal at the size the
+// Writes web/src/assets/scribe/parchment-<height>.jpg, the sheet every filing is drawn on,
+// and web/src/assets/scribe/seal-aldmeri.png, the Clerk's gold seal at the size the
 // renderer presses it.
 //
 // WHY ARITHMETIC. The renderer is not allowed AI or stock art (the team's
@@ -13,7 +13,7 @@
 //
 // WHY A JPEG. resvg decodes PNG and JPEG; the texture is opaque and noisy, which
 // is the case a JPEG is for. The renderer clips the sheet to a torn edge itself
-// (scribe/src/render.ts), so the transparency around it costs nothing here.
+// (web/src/scribe/Parchment.tsx), so the transparency around it costs nothing here.
 //
 // WHY THE FINE GRAIN IS FAINT. The renderer's output is a PNG, and a PNG pays
 // for every bit of high-frequency noise in the picture. The sheet's character
@@ -27,11 +27,11 @@ import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const OUT_DIR = path.join(ROOT, 'scribe/assets');
+const OUT_DIR = path.join(ROOT, 'web/src/assets/scribe');
 const SEAL_SRC = path.join(ROOT, 'web/src/assets/gate-seal.webp');
 
 /**
- * The renderer's page sizes (scribe/src/render.ts, FITS). One sheet is made
+ * The renderer's page sizes (web/src/scribe/Parchment.tsx, FITS). One sheet is made
  * for each so it is drawn at 1:1: resampling a stretched sheet was two thirds
  * of resvg's time on every parchment.
  */
@@ -194,5 +194,5 @@ await sharp(SEAL_SRC)
 
 for (const name of [...written, 'seal-aldmeri.png']) {
   const { size } = fs.statSync(path.join(OUT_DIR, name));
-  console.log(`scribe/assets/${name}: ${(size / 1024).toFixed(0)} KB`);
+  console.log(`web/src/assets/scribe/${name}: ${(size / 1024).toFixed(0)} KB`);
 }

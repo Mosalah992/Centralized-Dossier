@@ -2,7 +2,6 @@
 // only module that names Cloudflare's types; the policy (scribe.ts, codes.ts,
 // report-wizard.ts) sees interfaces and is tested in Node.
 
-import type { ParchmentRequest } from '../../shared/filing';
 import { buildFilerIndex, resolveFiler } from '../../shared/reports';
 import { grantFor, memberRoles, postMessage, scribeConfig, type DiscordEnv, type ScribeConfig } from './discord';
 import { admitHolder, codeHash, normalizeCode, type Admission } from './codes';
@@ -13,8 +12,6 @@ import { d1CodeStore, d1DraftStore, d1FilingStore } from './scribe-d1';
 export interface ScribeEnv extends DiscordEnv {
   /** thalmor-reports: codes, filings, drafts, and the Cabinet's reports. */
   REPORTS?: D1Database;
-  /** The thalmor-scribe Worker, by service binding. */
-  SCRIBE?: Fetcher;
   /** Secret pepper for code hashes, and (derived) the seal's signing key. */
   CODE_PEPPER?: string;
   /** The gates' attempts KV, for the Scribe's throttles. */
@@ -24,32 +21,13 @@ export interface ScribeEnv extends DiscordEnv {
 let config: ScribeConfig | null = null;
 export const scribeSettings = (): ScribeConfig => (config ??= scribeConfig());
 
-/** The Scribe Worker, through its service binding. Null when it is not bound or cannot draw. */
-export async function renderWith(scribe: Fetcher | undefined, request: ParchmentRequest): Promise<Uint8Array | null> {
-  if (!scribe) return null;
-  try {
-    const res = await scribe.fetch('https://scribe/render', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(request),
-    });
-    if (!res.ok) {
-      console.warn('scribe: render refused', res.status, await res.text().catch(() => ''));
-      return null;
-    }
-    return new Uint8Array(await res.arrayBuffer());
-  } catch (error) {
-    console.warn('scribe: render failed', error);
-    return null;
-  }
-}
-
-export function scribeDeps(env: ScribeEnv & { REPORTS: D1Database }): ScribeDeps {
+/** The filing policy's dependencies. `origin` is the site's own address, as the request reached it. */
+export function scribeDeps(env: ScribeEnv & { REPORTS: D1Database }, origin: string): ScribeDeps {
   return {
     filings: d1FilingStore(env.REPORTS),
     config: scribeSettings(),
-    render: (request) => renderWith(env.SCRIBE, request),
-    post: (channel, payload, file) => postMessage(env, channel, payload, file),
+    origin,
+    post: (channel, payload) => postMessage(env, channel, payload),
   };
 }
 

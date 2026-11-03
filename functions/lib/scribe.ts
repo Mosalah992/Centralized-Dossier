@@ -1,10 +1,12 @@
 // Filing: what happens to a checked filing from either door. It is recorded,
-// entered in the Cabinet if it is a report, drawn by the Scribe (scribe/) and
-// posted by the bot to its category's archive channel, pinging by level.
+// entered in the Cabinet if it is a report, and posted by the bot to its
+// category's archive channel, pinging by level. The post is the filing in
+// Discord's own embed, with a link to its parchment, which the reader's
+// browser draws on the site (web/src/views/Filing.tsx): nothing is drawn here.
 //
-// The steps that can fail without losing the filing (drawing, posting) come
-// after the ones that cannot (the row, the Cabinet entry), so a Discord outage
-// leaves a filed report that simply was not announced.
+// The step that can fail without losing the filing (posting) comes after the
+// ones that cannot (the row, the Cabinet entry), so a Discord outage leaves a
+// filed report that simply was not announced.
 //
 // Pure policy over store interfaces, like lib/solar-pins.ts: no Cloudflare
 // types here, so the tests run it in Node. The bindings are in scribe-env.ts.
@@ -12,6 +14,7 @@
 import {
   CATEGORY_INFO,
   IMPORTANCE_INFO,
+  destinationLabel,
   incidentClock,
   incidentDate,
   incidentNow,
@@ -22,7 +25,7 @@ import {
   type ParchmentRequest,
 } from '../../shared/filing';
 import type { ReportSeverity } from '../../shared/reports';
-import type { Attachment, ScribeConfig } from './discord';
+import type { ScribeConfig } from './discord';
 import { summonsFor } from './discord';
 
 export type Door = 'discord' | 'web';
@@ -127,31 +130,82 @@ export function cabinetEntry(id: number, filing: Filing, filedAt: string, channe
 /** A filer's words in a bot message: no markdown, no mentions, one line. */
 export const plain = (text: string) => text.replace(/[\\*_~`|>#]/g, (c) => `\\${c}`).replace(/@/g, '@​').replace(/\s+/g, ' ');
 
+/** A filer's prose in a bot message: as `plain`, and no masked links, but its paragraphs kept. */
+export const prose = (text: string) =>
+  text.replace(/[\\*_~`|>#[\]]/g, (c) => `\\${c}`).replace(/@/g, '@​').replace(/\n{3,}/g, '\n\n');
+
+export const parchmentOf = (record: FilingRecord): ParchmentRequest => ({
+  filing: record.filing,
+  serial: record.id,
+  stamp: record.stamp,
+});
+
+/** The page a filing's parchment is drawn on, which the bot's posts link to. */
+export const filingLink = (origin: string, id: number) => `${origin}/filings/${id}`;
+
+/** A row with one link button, to the parchment. */
+const readIt = (link: string) => ({ type: 1, components: [{ type: 2, style: 5, label: 'Read the parchment', url: link }] });
+
+/**
+ * A filing as the bot shows it: Discord's embed with the parchment's own parts
+ * (the house and entry, the title, the body, what it is, who signed it and
+ * when), edged in its level's ink, and titled with a link to the parchment
+ * once there is one. The /report wizard previews the same embed before filing.
+ */
+export function filingEmbed(request: ParchmentRequest, link: string | null, filedAt?: string): Record<string, unknown> {
+  const { filing, serial, stamp } = request;
+  const level = IMPORTANCE_INFO[filing.importance];
+  const signed = [filing.rank, filing.name].filter(Boolean).join(' ');
+  return {
+    author: { name: serial === null ? 'Thalmor Embassy · Draft' : `Thalmor Embassy · Entry No. ${serial}` },
+    title: plain(filing.title),
+    ...(link ? { url: link } : {}),
+    description: prose(filing.body),
+    color: Number.parseInt(level.ink.slice(1), 16),
+    fields: [
+      { name: CATEGORY_INFO[filing.category].name, value: destinationLabel(filing), inline: true },
+      { name: 'Importance', value: level.name, inline: true },
+      { name: 'When', value: `${incidentDate(filing.time)}, ${incidentClock(filing.time)}`, inline: true },
+      { name: 'Signed', value: plain(signed), inline: true },
+      { name: 'Answering to', value: filing.superior ? plain(filing.superior) : 'No superior', inline: true },
+      ...(stamp
+        ? [{ name: 'The Clerk’s seal', value: `${stamp.mark === 'denied' ? 'Denied' : 'Approved'}, ${incidentDate(stamp.at)}`, inline: true }]
+        : []),
+    ],
+    ...(filedAt ? { timestamp: filedAt } : {}),
+  };
+}
+
 /**
  * The bot's post for a new filing. Only the summoned roles may ping (never a
  * mention a filer typed); the filer is named, so a filing is never anonymous
  * on Discord, but not pinged.
  */
-export function announcement(record: FilingRecord, config: ScribeConfig): Record<string, unknown> {
+export function announcement(record: FilingRecord, config: ScribeConfig, origin: string): Record<string, unknown> {
   const { filing } = record;
   const summons = summonsFor(IMPORTANCE_INFO[filing.importance].summons, config);
   const by = record.filerDiscordId ? `Filed by <@${record.filerDiscordId}>` : 'Filed at the Scribe Table';
   const where = record.door === 'web' ? ' at the Scribe Table' : '';
+  const link = filingLink(origin, record.id);
   const lines = [
     summons.line,
     filing.importance === 'cataclysm' ? '**CATACLYSM · ALL HANDS ON DECK**' : null,
-    `**${CATEGORY_INFO[filing.category].name} · Entry No. ${record.id}** · ${IMPORTANCE_INFO[filing.importance].name}`,
-    plain(filing.title),
     record.filerDiscordId ? `${by}${where}.` : `${by}.`,
   ].filter(Boolean);
-  return { content: lines.join('\n'), allowed_mentions: { parse: [], roles: summons.roles } };
+  return {
+    content: lines.join('\n'),
+    embeds: [filingEmbed(parchmentOf(record), link, record.filedAt)],
+    components: [readIt(link)],
+    allowed_mentions: { parse: [], roles: summons.roles },
+  };
 }
 
 /** The bot's post for the Clerk's verdict, as a reply to the filing's own post where there is one. */
-export function verdict(record: FilingRecord): Record<string, unknown> {
+export function verdict(record: FilingRecord, origin: string): Record<string, unknown> {
   const mark = record.stamp?.mark === 'denied' ? 'Denied' : 'Approved';
   return {
     content: `**${CATEGORY_INFO[record.filing.category].name} · Entry No. ${record.id}** · ${mark} by High Command.\n${plain(record.filing.title)}`,
+    components: [readIt(filingLink(origin, record.id))],
     ...(record.discordMessageId ? { message_reference: { message_id: record.discordMessageId, fail_if_not_exists: false } } : {}),
   };
 }
@@ -161,25 +215,14 @@ export function verdict(record: FilingRecord): Record<string, unknown> {
 export interface ScribeDeps {
   filings: FilingStore;
   config: ScribeConfig;
-  render(request: ParchmentRequest): Promise<Uint8Array | null>;
-  post(channelId: string, payload: Record<string, unknown>, file?: Attachment): Promise<string | null>;
+  /** The site's own address, for the links to each parchment. */
+  origin: string;
+  post(channelId: string, payload: Record<string, unknown>): Promise<string | null>;
 }
-
-export const parchmentOf = (record: FilingRecord): ParchmentRequest => ({
-  filing: record.filing,
-  serial: record.id,
-  stamp: record.stamp,
-});
-
-export const parchmentFile = (bytes: Uint8Array, id: number): Attachment => ({
-  name: `thalmor-entry-${id}.png`,
-  type: 'image/png',
-  bytes,
-});
 
 /**
  * Record a filing and enter it in the Cabinet. Quick and certain: what is left
- * (drawing and posting, `publish`) can run after the answer is sent.
+ * (posting, `publish`) can run after the answer is sent.
  */
 export async function record(
   deps: Pick<ScribeDeps, 'filings' | 'config'>,
@@ -195,21 +238,20 @@ export async function record(
   return id;
 }
 
-/** Draw a recorded filing and post it to its channel. True when it was posted. */
+/** Post a recorded filing to its channel. True when it was posted. */
 export async function publish(deps: ScribeDeps, id: number): Promise<boolean> {
   const found = await deps.filings.get(id);
   if (!found) return false;
   const channel = deps.config.channels[found.filing.category];
   if (!channel) return false;
-  const png = await deps.render(parchmentOf(found));
-  const messageId = await deps.post(channel, announcement(found, deps.config), png ? parchmentFile(png, id) : undefined);
+  const messageId = await deps.post(channel, announcement(found, deps.config, deps.origin));
   if (messageId) await deps.filings.posted(id, channel, messageId);
   return Boolean(messageId);
 }
 
 export type StampResult = { ok: true; record: FilingRecord } | { ok: false; status: 404 | 409; error: string };
 
-/** Press the Clerk's stamp. The parchment is re-drawn with it whenever it is next asked for. */
+/** Press the Clerk's stamp. The parchment bears it whenever it is next drawn. */
 export async function stampFiling(
   deps: Pick<ScribeDeps, 'filings'>,
   id: number,
@@ -225,10 +267,9 @@ export async function stampFiling(
   return { ok: true, record: { ...found, stamp, stampedAt: now.toISOString() } };
 }
 
-/** Post the Clerk's verdict with the re-drawn parchment, to the filing's channel. */
+/** Post the Clerk's verdict to the filing's channel, linking to the stamped parchment. */
 export async function announceStamp(deps: ScribeDeps, stamped: FilingRecord): Promise<boolean> {
   const channel = stamped.discordChannelId ?? deps.config.channels[stamped.filing.category];
   if (!channel) return false;
-  const png = await deps.render(parchmentOf(stamped));
-  return Boolean(await deps.post(channel, verdict(stamped), png ? parchmentFile(png, stamped.id) : undefined));
+  return Boolean(await deps.post(channel, verdict(stamped, deps.origin)));
 }

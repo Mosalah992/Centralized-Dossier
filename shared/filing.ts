@@ -1,21 +1,21 @@
 // The Scribe's filing: what a member (or, for two kinds, anyone) writes at the
-// Scribe Table or through the bot's /report, and what the scribe/ Worker draws
-// as a parchment.
+// Scribe Table or through the bot's /report, and what the site draws as a
+// parchment (web/src/scribe/).
 //
-// One model for both doors. The Discord wizard, the website wizard, the Pages
-// routes and the renderer all check a filing with `checkFiling` below, so a
-// parchment the bot previews is the parchment the site files, field for field.
+// One model for both doors. The Discord wizard, the website wizard and the
+// Pages routes all check a filing with `checkFiling` below, so what the bot
+// previews is what the site files, field for field.
 //
-// The parchment is re-drawn from these fields whenever it is asked for (and
-// again when the Clerk stamps it), so nothing here may depend on when it is
-// read: "now" is resolved to an in-world moment once, when the filer chooses
-// it, and stored as that moment.
+// The parchment is drawn from these fields in the reader's browser whenever it
+// is shown (with the Clerk's stamp once there is one), so nothing here may
+// depend on when it is read: "now" is resolved to an in-world moment once,
+// when the filer chooses it, and stored as that moment.
 
-import { BOARD_SECTIONS, type BoardSection } from './room';
+import { BOARD_INFO, BOARD_SECTIONS, type BoardSection } from './room';
 import type { ReportSeverity } from './reports';
 import { MONTH_LENGTHS, reckon } from './reckoning';
 import { MONTHS } from './parsers/calendar';
-import type { Wing } from './wings';
+import { WING_INFO, type Wing } from './wings';
 
 // ── Categories ──────────────────────────────────────────────────────────────
 
@@ -69,6 +69,19 @@ export const CATEGORY_INFO: Record<FilingCategory, CategoryInfo> = {
 export const isFilingCategory = (value: unknown): value is FilingCategory =>
   (FILING_CATEGORIES as readonly unknown[]).includes(value);
 
+/** Where it goes, as the parchment and the bot's post say it: "To the Military Wing". */
+export function destinationLabel(filing: Pick<Filing, 'category' | 'section'>): string {
+  const to = CATEGORY_INFO[filing.category].destination;
+  switch (to.kind) {
+    case 'board':
+      return `For the Board · ${filing.section ? BOARD_INFO[filing.section].title : ''}`;
+    case 'cabinet':
+      return `To the ${WING_INFO[to.wing].name}`;
+    case 'clerk':
+      return 'For the Clerk’s Table';
+  }
+}
+
 /**
  * The board sections a Bulletin Post may be nailed to. Bounties are left out:
  * a bounty is a wanted poster with its own fields (shared/room.ts `Bounty`),
@@ -97,19 +110,26 @@ export interface ImportanceInfo {
    * and High Command. The role IDs are configuration, never this file.
    */
   summons: Summons;
+  /**
+   * The level's ink: the parchment's ribbon and the edge of the bot's post.
+   * The Cabinet's own severity inks (web/src/styles/cabinet.css), so a level
+   * reads the same everywhere.
+   */
+  ink: string;
 }
 
 export const IMPORTANCE_INFO: Record<Importance, ImportanceInfo> = {
-  routine: { name: 'Standard Routine', meaning: 'Routine', severity: 'low', summons: 'none' },
-  nominal: { name: 'Nominal', meaning: 'Trivial', severity: 'informational', summons: 'none' },
-  notable: { name: 'Notable', meaning: 'Of some weight', severity: 'medium', summons: 'none' },
+  routine: { name: 'Standard Routine', meaning: 'Routine', severity: 'low', summons: 'none', ink: '#58703c' },
+  nominal: { name: 'Nominal', meaning: 'Trivial', severity: 'informational', summons: 'none', ink: '#496b76' },
+  notable: { name: 'Notable', meaning: 'Of some weight', severity: 'medium', summons: 'none', ink: '#8b6c1d' },
   strategic: {
     name: 'Strategic',
     meaning: 'All Justiciars and departments meet',
     severity: 'high',
     summons: 'command',
+    ink: '#a85824',
   },
-  cataclysm: { name: 'Cataclysm', meaning: 'All hands on deck', severity: 'critical', summons: 'all' },
+  cataclysm: { name: 'Cataclysm', meaning: 'All hands on deck', severity: 'critical', summons: 'all', ink: '#8b251d' },
 };
 
 export const isImportance = (value: unknown): value is Importance =>
@@ -325,7 +345,7 @@ export function checkFilingSoFar(
   return { ok: true, value: { ...stand, ...(given as Partial<Filing>) } };
 }
 
-// ── The Clerk's stamp, and what the renderer is asked to draw ───────────────
+// ── The Clerk's stamp, and what a parchment is drawn from ───────────────────
 
 export const STAMP_MARKS = ['approved', 'denied'] as const;
 export type StampMark = (typeof STAMP_MARKS)[number];
@@ -337,35 +357,15 @@ export interface FilingStamp {
 }
 
 /**
- * The body of the scribe Worker's POST /render. Everything the parchment shows
- * is here, so the same request always draws the same picture.
+ * Everything a parchment shows, so the same request always draws the same
+ * sheet (web/src/scribe/Parchment.tsx). The site's routes answer it already
+ * checked: a filing is checked before it is stored.
  */
 export interface ParchmentRequest {
   filing: Filing;
   /** The archive's entry number once filed; a preview has none. */
   serial: number | null;
   stamp: FilingStamp | null;
-}
-
-export type ParchmentRequestCheck = { ok: true; value: ParchmentRequest } | { ok: false; error: string };
-
-export function checkParchmentRequest(input: unknown): ParchmentRequestCheck {
-  if (typeof input !== 'object' || input === null) return { ok: false, error: 'Nothing to draw.' };
-  const raw = input as Record<string, unknown>;
-  const filing = checkFiling(raw.filing);
-  if (!filing.ok) return { ok: false, error: `${filing.field}: ${filing.error}` };
-
-  const serial = raw.serial === undefined || raw.serial === null ? null : whole(raw.serial, 1, 99_999_999);
-  if (serial === null && raw.serial !== undefined && raw.serial !== null) return { ok: false, error: 'serial: not an entry number.' };
-
-  let stamp: FilingStamp | null = null;
-  if (raw.stamp !== undefined && raw.stamp !== null) {
-    const s = raw.stamp as Record<string, unknown>;
-    const at = checkIncidentTime(s?.at);
-    if (!(STAMP_MARKS as readonly unknown[]).includes(s?.mark) || !at) return { ok: false, error: 'stamp: not a stamp.' };
-    stamp = { mark: s.mark as StampMark, at };
-  }
-  return { ok: true, value: { filing: filing.value, serial, stamp } };
 }
 
 // ── What the website's Scribe routes answer ─────────────────────────────────
@@ -384,6 +384,14 @@ export interface FiledAnswer {
   destination: Destination['kind'];
 }
 
+/** GET /api/filings/:id: one filing, to draw as its parchment (the page the bot's posts link to). */
+export interface FilingView {
+  id: number;
+  destination: Destination['kind'];
+  filedAt: string;
+  parchment: ParchmentRequest;
+}
+
 /** GET /api/solar/clerk: a filing at the Clerk Table, waiting for or bearing High Command's stamp. */
 export interface ClerkFiling {
   id: number;
@@ -397,5 +405,5 @@ export interface ClerkFiling {
   filedAt: string;
   stamp: StampMark | null;
   stampedAt: string | null;
-  parchment: string;
+  parchment: ParchmentRequest;
 }

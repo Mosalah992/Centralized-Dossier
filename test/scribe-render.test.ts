@@ -1,44 +1,26 @@
-// The Scribe's renderer, run in Node on the same module the Worker bundles.
-// Layout is checked on satori's own measurements; only a few cases are drawn
-// to PNG, since resvg takes about half a second a page.
+// The parchment, as the reader's browser draws it (web/src/scribe/). Node has
+// no layout, so the fit is checked here on its estimate and the sheet on its
+// markup; the browser's own measuring is checked in the browser.
 
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { beforeAll, describe, expect, it } from 'vitest';
-import { init as initSatori, type SatoriNode } from 'satori/standalone';
-import { initWasm as initResvg } from '@resvg/resvg-wasm';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { describe, expect, it } from 'vitest';
 
 import { FILING_LIMITS, IMPORTANCE_LEVELS, type ParchmentRequest } from '../shared/filing';
-import { PAGE_HEIGHTS, WIDTH, deckle, parchmentPng, parchmentSvg, type ScribeAssets } from '../scribe/src/render';
-import { SAMPLES } from '../scribe/samples';
-
-const ROOT = path.resolve(__dirname, '..');
-const read = (file: string): ArrayBuffer => {
-  const bytes = fs.readFileSync(path.join(ROOT, file));
-  return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
-};
-
-let assets: ScribeAssets;
-
-beforeAll(async () => {
-  await initSatori(read('node_modules/satori/yoga.wasm'));
-  await initResvg(read('node_modules/@resvg/resvg-wasm/index_bg.wasm'));
-  assets = {
-    signature: read('node_modules/@fontsource/mr-de-haviland/files/mr-de-haviland-latin-400-normal.woff'),
-    printed: read('node_modules/@fontsource/im-fell-english-sc/files/im-fell-english-sc-latin-400-normal.woff'),
-    hand: read('node_modules/@fontsource/caveat/files/caveat-latin-400-normal.woff'),
-    handBold: read('node_modules/@fontsource/caveat/files/caveat-latin-700-normal.woff'),
-    parchment: Object.fromEntries(PAGE_HEIGHTS.map((h) => [h, read(`scribe/assets/parchment-${h}.jpg`)])) as ScribeAssets['parchment'],
-    seal: read('scribe/assets/seal-aldmeri.png'),
-  };
-});
+import { ParchmentSheet } from '../web/src/scribe/Parchment';
+import { FITS, PAGE_HEIGHTS, WIDTH, deckle, estimateFit, nextFit, seedOf } from '../web/src/scribe/sheet';
+import { SAMPLES } from './scribe-samples';
 
 const sample = (index: number) => SAMPLES[index]!.request;
 const withFiling = (request: ParchmentRequest, change: Partial<ParchmentRequest['filing']>): ParchmentRequest => ({
   ...request,
   filing: { ...request.filing, ...change },
 });
+const sheet = (request: ParchmentRequest, index = estimateFit(request)) =>
+  renderToStaticMarkup(createElement(ParchmentSheet, { request, fit: FITS[index]! }));
 
 /** Ordinary prose, as long as a filing may run. */
 function longest(): string {
@@ -48,88 +30,92 @@ function longest(): string {
   return text.slice(0, FILING_LIMITS.body).trim();
 }
 
-/** Where the body's text ends, and where the foot (signature and seal) begins. */
-async function measure(request: ParchmentRequest) {
-  const nodes: SatoriNode[] = [];
-  const drawn = await parchmentSvg(request, assets, (node) => nodes.push(node));
-  const body = nodes.find((node) => node.key === 'body')!;
-  return { ...drawn, bodyEnd: body.top + body.height };
-}
+describe('fitting the body', () => {
+  it('gives a short filing a short page in a large hand', () => {
+    expect(FITS[estimateFit(sample(1))]).toEqual({ height: 1200, size: 36 });
+  });
 
-describe('the parchment', () => {
-  it('lays every sample out with the body clear of the foot', async () => {
-    for (const { request } of SAMPLES) {
-      const { overrun, width, height } = await measure(request);
-      expect(width).toBe(WIDTH);
-      expect(PAGE_HEIGHTS).toContain(height);
-      expect(overrun).toBe(0);
+  it('writes a longer body on a longer page before it writes smaller', () => {
+    expect(FITS[estimateFit(sample(2))]!.height).toBeGreaterThan(FITS[estimateFit(sample(0))]!.height);
+    for (let i = 1; i < FITS.length; i++) {
+      const [before, after] = [FITS[i - 1]!, FITS[i]!];
+      expect(after.height > before.height || (after.height === before.height && after.size < before.size)).toBe(true);
     }
   });
 
-  it('wraps a body as long as a filing may be, under a three-line title, on the tallest page', async () => {
+  it('starts a body as long as a filing may be, under a three-line title, on the tallest page', () => {
     const request = withFiling(sample(4), {
       title: 'Talos shrine found beneath the Silver-Blood Inn and the keeper, his visitors, the words',
       body: longest(),
     });
-    const { height, size, overrun } = await measure(request);
-    expect(height).toBe(2200);
-    expect(size).toBeGreaterThanOrEqual(24);
-    expect(overrun).toBe(0);
+    expect(FITS[estimateFit(request)]!.height).toBe(2200);
   });
 
-  it('gives a short filing a short page in a large hand', async () => {
-    const { height, size } = await measure(sample(1));
-    expect(height).toBe(1200);
-    expect(size).toBe(36);
+  it('steps to the next fit while one overruns, and keeps the last however it falls', () => {
+    expect(nextFit(0)).toBe(1);
+    expect(nextFit(FITS.length - 1)).toBeNull();
+  });
+});
+
+describe('the sheet', () => {
+  it('writes every part of the filing as real text', () => {
+    const request = sample(0);
+    const html = sheet(request);
+    const { filing } = request;
+    for (const text of [filing.title, 'Troops Report', 'To the Military Wing', `Entry No. ${request.serial}`, `${filing.rank} ${filing.name}`, `Answering to ${filing.superior}`]) {
+      expect(html, text).toContain(text);
+    }
+    expect(html).toContain('Forty-two soldiers of the Dominion stood muster');
+    expect(sheet({ ...request, serial: null })).toContain('Draft');
   });
 
-  it('writes a longer body on a longer page before it writes smaller', async () => {
-    const short = await measure(sample(0));
-    const long = await measure(sample(2));
-    expect(long.height).toBeGreaterThan(short.height);
+  it('escapes what the filer wrote', () => {
+    const html = sheet(withFiling(sample(0), { title: '<img src=x onerror=alert(1)>', body: '<script>alert(1)</script> and more words besides' }));
+    expect(html).not.toContain('<script>');
+    expect(html).not.toContain('<img src=x');
+    expect(html).toContain('&lt;script&gt;');
   });
 
-  it('draws the Cataclysm’s red border and banner, and only for a Cataclysm', async () => {
-    for (const importance of IMPORTANCE_LEVELS) {
-      const { svg } = await parchmentSvg(withFiling(sample(0), { importance }), assets);
-      expect(svg.includes('#8b1a1a'), importance).toBe(importance === 'cataclysm');
+  it('lays the paper for its own page height, and loads nothing from elsewhere', () => {
+    for (const index of [0, 3, FITS.length - 1]) {
+      const html = sheet(sample(0), index);
+      expect(html).toContain(`parchment-${FITS[index]!.height}.jpg`);
+      expect(html).toContain(`width:${WIDTH}px;height:${FITS[index]!.height}px`);
+    }
+    expect(sheet(sample(0))).not.toMatch(/(?:href|src)="(?:https?:)?\/\//);
+    for (const height of PAGE_HEIGHTS) {
+      expect(fs.existsSync(path.resolve(__dirname, `../web/src/assets/scribe/parchment-${height}.jpg`)), String(height)).toBe(true);
     }
   });
 
-  it('tears the same edge every time, stamped or not', async () => {
-    const plain = await parchmentSvg(sample(0), assets);
-    const again = await parchmentSvg(sample(0), assets);
-    const stamped = await parchmentSvg({ ...sample(0), stamp: { mark: 'approved', at: sample(0).filing.time } }, assets);
-    const edge = (svg: string) => /<clipPath id="deckle"><path d="([^"]+)"/.exec(svg)?.[1];
-    expect(again.svg).toBe(plain.svg);
-    expect(edge(stamped.svg)).toBe(edge(plain.svg));
-    // Each filing tears its own way.
-    expect(deckle(WIDTH, 1500, 1)).toBe(deckle(WIDTH, 1500, 1));
-    expect(deckle(WIDTH, 1500, 1)).not.toBe(deckle(WIDTH, 1500, 2));
+  it('draws the Cataclysm’s red border and banner, and only for a Cataclysm', () => {
+    for (const importance of IMPORTANCE_LEVELS) {
+      const html = sheet(withFiling(sample(0), { importance }));
+      expect(html.includes('6px solid #8b1a1a'), importance).toBe(importance === 'cataclysm');
+      expect(html.includes('All hands on deck'), importance).toBe(importance === 'cataclysm');
+    }
   });
 
-  it('re-draws with the Clerk’s stamp in the marked space, and nothing else moves', async () => {
+  it('presses the Clerk’s stamp in the marked space, and nothing else moves', () => {
     const at = sample(0).filing.time;
-    const plain = await measure(sample(0));
-    const approved = await measure({ ...sample(0), stamp: { mark: 'approved', at } });
-    const denied = await measure({ ...sample(0), stamp: { mark: 'denied', at } });
-    // The seal is the gold PNG; a denial is the red wax.
-    expect(plain.svg).not.toContain('data:image/png');
-    expect(approved.svg).toContain('data:image/png');
-    expect(denied.svg).toContain('a01c1c');
-    for (const stamped of [approved, denied]) {
-      expect(stamped.height).toBe(plain.height);
-      expect(stamped.bodyEnd).toBe(plain.bodyEnd);
-    }
+    const plain = sheet(sample(0));
+    const approved = sheet({ ...sample(0), stamp: { mark: 'approved', at } });
+    const denied = sheet({ ...sample(0), stamp: { mark: 'denied', at } });
+    expect(plain).toContain('Clerk’s seal');
+    expect(approved).toContain('seal-aldmeri.png');
+    expect(approved).toContain('Approved');
+    expect(denied).toContain('#a01c1c');
+    expect(denied).toContain('Denied');
+    // The same page, the same torn edge and the same writing above the foot.
+    const head = (html: string) => html.slice(0, html.indexOf('Signed'));
+    expect(head(approved)).toBe(head(plain));
+    expect(head(denied)).toBe(head(plain));
   });
 
-  it('draws a PNG small enough to post, for every level', { timeout: 30_000 }, async () => {
-    for (const importance of IMPORTANCE_LEVELS) {
-      const png = await parchmentPng(withFiling(sample(3), { importance }), assets);
-      expect([...png.subarray(0, 8)]).toEqual([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
-      // Width is the first field of the IHDR chunk.
-      expect(new DataView(png.buffer, png.byteOffset).getUint32(16)).toBe(WIDTH);
-      expect(png.byteLength).toBeLessThan(2 * 1024 * 1024);
-    }
+  it('tears the same edge every time, stamped or not, and each filing its own way', () => {
+    const at = sample(0).filing.time;
+    expect(seedOf({ ...sample(0), stamp: { mark: 'approved', at } })).toBe(seedOf(sample(0)));
+    expect(deckle(WIDTH, 1500, seedOf(sample(0)))).toBe(deckle(WIDTH, 1500, seedOf(sample(0))));
+    expect(deckle(WIDTH, 1500, 1)).not.toBe(deckle(WIDTH, 1500, 2));
   });
 });

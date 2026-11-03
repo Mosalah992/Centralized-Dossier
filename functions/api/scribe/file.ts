@@ -4,7 +4,7 @@
 // still holds a mapped role; the filer's Discord id is kept (never served) so
 // the bot can name who filed it. Applications and Public Requests need no
 // seal and are limited per address instead. Either way the filing is recorded
-// and entered in the Cabinet before the answer, and drawn and posted after it.
+// and entered in the Cabinet before the answer, and posted after it.
 
 import { CATEGORY_INFO, checkFiling, type FiledAnswer } from '../../../shared/filing';
 import { OPEN_FILINGS, count, overLimit, readSeal } from '../../lib/codes';
@@ -42,7 +42,7 @@ export const onRequestPost: PagesFunction<ScribeEnv> = async ({ request, env, wa
     await count(env.GATE_ATTEMPTS, key, OPEN_FILINGS.window);
   }
 
-  const deps = scribeDeps({ ...env, REPORTS: db });
+  const deps = scribeDeps({ ...env, REPORTS: db }, new URL(request.url).origin);
   const id = await record(deps, filing, 'web', filer);
   waitUntil(publish(deps, id).catch((error) => console.warn('scribe: not posted', id, error)));
   const answer: FiledAnswer = { id, destination: CATEGORY_INFO[filing.category].destination.kind };

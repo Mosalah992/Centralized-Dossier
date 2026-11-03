@@ -1,0 +1,61 @@
+/* A filing's parchment (web/src/scribe/Parchment.tsx): a sheet laid out at
+   1100 wide and scaled to its frame, the torn paper beneath and the writing
+   over it. Route-only, with whatever shows a parchment. */
+
+.scribe-paper {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.scribe-paper__scale {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+}
+
+/* The sheet sets its own type throughout: nothing of the page around it is inherited. */
+.scribe-paper__page {
+  position: relative;
+  font: 400 16px/normal Caveat, cursive;
+  font-variant: normal;
+  letter-spacing: normal;
+  word-spacing: normal;
+  text-align: left;
+  text-transform: none;
+  text-shadow: none;
+}
+.scribe-paper__page img { max-width: none; }
+
+.scribe-paper__sheet,
+.scribe-paper__scorch {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+}
+.scribe-paper__sheet { filter: drop-shadow(0 8px 16px rgb(0 0 0 / 0.45)); }
+.scribe-paper__scorch { pointer-events: none; }
+
+.scribe-paper__writing {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Laid out (and measured) but not shown until the body's fit has settled. */
+.scribe-paper:not([data-settled]) .scribe-paper__writing { visibility: hidden; }
+
+/* ---------- The page the bot's posts link to (web/src/views/Filing.tsx) ---------- */
+
+.filing-view {
+  max-width: 760px;
+  margin: 0 auto 3rem;
+  padding: 0 1rem;
+}
+.filing-view__head { margin: 1.4rem 0 1.2rem; text-align: center; }
+.filing-view__head h1 { margin: 0; font-family: var(--display); font-size: 1.3rem; letter-spacing: 0.08em; }
+.filing-view__head p { margin: 0.4rem 0 0; font-style: italic; color: var(--stone); }
+.filing-view__sheet { max-width: 680px; margin: 0 auto; }

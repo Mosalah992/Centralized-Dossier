@@ -34,6 +34,7 @@ const EnforcementView = lazyView(() => import('./views/Enforcement').then((m) =>
 const PenalCodeView = lazyView(() => import('./views/PenalCode').then((m) => m.PenalCodeView));
 const GalleryView = lazyView(() => import('./views/Gallery').then((m) => m.GalleryView));
 const SolarView = lazyView(() => import('./views/Solar').then((m) => m.SolarView));
+const FilingView = lazyView(() => import('./views/Filing').then((m) => m.FilingView));
 
 /*
  * The Embassy's room, which is the front page — and still lazy.
@@ -108,6 +109,7 @@ setRoutePreparer((route: Route) => {
     case 'penalcode': return PenalCodeView.preload();
     case 'gallery': return GalleryView.preload();
     case 'solar': return SolarView.preload();
+    case 'filing': return FilingView.preload();
     default: return undefined;
   }
 });
@@ -171,6 +173,7 @@ export default function App() {
       : route.name === 'penalcode' ? 'Penal Code'
       : route.name === 'gallery' ? 'Gallery'
       : route.name === 'solar' ? 'The Solar'
+      : route.name === 'filing' ? `Entry No. ${route.id}`
       : route.name === 'room' && route.open ? SURFACE_TITLES[route.open]
       : null;
     document.title = name
@@ -233,6 +236,14 @@ export default function App() {
             <ErrorBoundary resetKey="solar">
               <Suspense fallback={<Consulting />}>
                 <SolarView navigate={navigate} />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+
+          {route.name === 'filing' && (
+            <ErrorBoundary resetKey={`filing-${route.id}`}>
+              <Suspense fallback={<Consulting />}>
+                <FilingView id={route.id} navigate={navigate} />
               </Suspense>
             </ErrorBoundary>
           )}

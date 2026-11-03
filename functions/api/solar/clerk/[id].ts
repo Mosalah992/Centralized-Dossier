@@ -1,6 +1,6 @@
 // POST /api/solar/clerk/:id { mark: 'approved' | 'denied' }: press the stamp.
-// The parchment is drawn again with it whenever it is next asked for, and the
-// bot posts the verdict, with the stamped parchment, to the filing's channel.
+// The parchment bears it whenever it is next drawn, and the bot posts the
+// verdict to the filing's channel, linking to the stamped parchment.
 // Behind the Solar writ; same-site JSON only, as every Solar write.
 
 import { STAMP_MARKS, type StampMark } from '../../../../shared/filing';
@@ -27,7 +27,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params, 
   if (!Number.isInteger(id) || id < 1) return solarJson({ error: 'No filing is entered under that number.' }, 404);
   if (!(STAMP_MARKS as readonly unknown[]).includes(mark)) return solarJson({ error: 'Approved or Denied: no other stamp is kept.' }, 422);
 
-  const deps = scribeDeps({ ...env, REPORTS: env.REPORTS });
+  const deps = scribeDeps({ ...env, REPORTS: env.REPORTS }, new URL(request.url).origin);
   const stamped = await stampFiling(deps, id, mark as StampMark);
   if (!stamped.ok) return solarJson({ error: stamped.error }, stamped.status);
   waitUntil(announceStamp(deps, stamped.record).catch((error) => console.warn('scribe: verdict not posted', id, error)));

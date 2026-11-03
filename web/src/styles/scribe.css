@@ -179,7 +179,7 @@
 .scribe-button--primary { color: var(--parchment); background: var(--rubric); border-color: var(--rubric); }
 .scribe-button--primary:hover { background: #8a2b12; }
 
-/* ---------- The drawn parchment ---------- */
+/* ---------- The parchment, as it will be filed (styles/parchment.css) ---------- */
 
 .scribe-parchment {
   display: grid;
@@ -191,8 +191,7 @@
   background: #2a2119;
   box-shadow: inset 0 0 18px rgb(0 0 0 / 0.6);
 }
-.scribe-parchment p { margin: 0; font-style: italic; color: var(--stone); text-align: center; }
-.scribe-parchment img { display: block; width: 100%; max-width: 560px; height: auto; }
+.scribe-parchment .scribe-paper { max-width: 560px; }
 
 .scribe-filed { text-align: center; }
 
