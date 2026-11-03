@@ -9,12 +9,15 @@
 //   node scripts/discord-setup.mjs archive-channels
 //                                               one reports channel per wing in the Archive category,
 //                                               made where missing; prints their ids for config/scribe.json
+//   node scripts/discord-setup.mjs archive-readers
+//                                               let the overseers (ARCHIVE_READERS) read and reply in those five
 //   node scripts/discord-setup.mjs register     add /archives code and /report to the Embassy's server
 //   node scripts/discord-setup.mjs endpoint     MOVE ANCARION'S INTERACTIONS ENDPOINT OFF THE QUARTERMASTER
 //                                               onto https://thalmor-archives.com/api/discord/interactions
 //
-// The first four only read. `archive-channels` makes channels (2026-11-03, at
-// the team's word), and only those it finds missing. `register` and `endpoint` change the application:
+// The first four only read. `archive-channels` makes channels and
+// `archive-readers` opens them to their readers (2026-11-03, at the team's
+// word), each changing only what it finds missing. `register` and `endpoint` change the application:
 // run them at deploy, with the team's leave, once the site that answers is up.
 // `endpoint` is the one that matters: from then on /clockin, /stock and every
 // other quartermaster command reach the quartermaster only through the archive
@@ -67,11 +70,18 @@ if (!token) {
 }
 
 async function api(method, path, body) {
-  const res = await fetch(`https://discord.com/api/v10${path}`, {
-    method,
-    headers: { Authorization: `Bot ${token}`, 'Content-Type': 'application/json' },
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  let res;
+  // Discord rate-limits permission edits per channel: wait as long as it asks.
+  for (;;) {
+    res = await fetch(`https://discord.com/api/v10${path}`, {
+      method,
+      headers: { Authorization: `Bot ${token}`, 'Content-Type': 'application/json' },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    if (res.status !== 429) break;
+    const { retry_after: wait = 1 } = await res.json().catch(() => ({}));
+    await new Promise((resolve) => setTimeout(resolve, Math.ceil(wait * 1000) + 100));
+  }
   const text = await res.text();
   if (!res.ok) throw new Error(`${method} ${path} → ${res.status} ${text}`);
   return text ? JSON.parse(text) : null;
@@ -106,6 +116,30 @@ const WING_CHANNELS = [
   ['logistics', 'logistics-reports', 'Logistics reports, filed through the Scribe'],
   ['auxiliary', 'auxiliary-reports', 'Auxiliary reports, filed through the Scribe'],
 ];
+
+/**
+ * Who reads the five reports channels (the team's choice, 2026-11-03): High
+ * Command, the two Emissaries and the department heads (the roles a Strategic
+ * filing summons), and no wing as such. They may read and reply; the channels
+ * stay hidden from everyone else, as the Archive category is.
+ */
+const ARCHIVE_READERS = [
+  ['1554489885899886723', 'Thalmor High Command'],
+  ['1498145138369761480', 'First Emissary'],
+  ['1551004932923064433', 'Second Emissary'],
+  ['1498145702918881361', 'Justiciar'],
+  ['1498145571167539301', 'High Justiciar'],
+  ['1532010143103848499', 'Battlereeve'],
+  ['1523057761825587362', 'Canonreeve'],
+  ['1551036546436694076', 'Bureaureeve'],
+  ['1552102403065520228', 'Deputy of Intelligence'],
+  ['1554917085329621012', 'Grand Magister'],
+  ['1553405196288131132', 'High Warden'],
+  ['1498145862675726446', 'Ambassador'],
+  ['1562453621839503451', 'Grand Procurator'],
+];
+/** View Channel, Send Messages, Read Message History and Add Reactions. */
+const READER_ALLOW = (1n << 10n) | (1n << 11n) | (1n << 16n) | (1n << 6n);
 
 /**
  * What the bot needs in each archive channel: to see it, post the parchment,
@@ -189,6 +223,25 @@ if (which === 'app') {
       }));
     console.log(`${kept ? 'kept   ' : 'created'}  "${wing}": "${channel.id}"   ${category.name} / #${channel.name}`);
   }
+} else if (which === 'archive-readers') {
+  const channels = await api('GET', `/guilds/${guild}/channels`);
+  for (const [, name] of WING_CHANNELS) {
+    const channel = channels.find((c) => c.parent_id === ARCHIVE_CATEGORY && c.name === name);
+    if (!channel) {
+      console.log(`missing  #${name}: run archive-channels first`);
+      continue;
+    }
+    let set = 0;
+    for (const [role] of ARCHIVE_READERS) {
+      const kept = (channel.permission_overwrites ?? []).find((o) => o.id === role && o.type === 0);
+      if (kept && (BigInt(kept.allow) & READER_ALLOW) === READER_ALLOW && BigInt(kept.deny) === 0n) continue;
+      // One overwrite at a time, so nothing else on the channel is touched.
+      await api('PUT', `/channels/${channel.id}/permissions/${role}`, { type: 0, allow: String(READER_ALLOW), deny: '0' });
+      set++;
+    }
+    console.log(`#${name}: ${set ? `opened to ${set} more` : 'already open to all'} of ${ARCHIVE_READERS.length} reader roles`);
+  }
+  console.log(`Readers: ${ARCHIVE_READERS.map(([, n]) => n).join(', ')}.`);
 } else if (which === 'register') {
   const app = await api('GET', '/applications/@me');
   for (const command of COMMANDS) {
@@ -202,6 +255,6 @@ if (which === 'app') {
   const app = await api('PATCH', '/applications/@me', { interactions_endpoint_url: ENDPOINT });
   console.log(`${app.name} now sends its interactions to ${app.interactions_endpoint_url}; the archive hands the quartermaster its own.`);
 } else {
-  console.error('usage: node scripts/discord-setup.mjs app | permissions | roles | channels | archive-channels | register | endpoint [--env <path to .env>]');
+  console.error('usage: node scripts/discord-setup.mjs app | permissions | roles | channels | archive-channels | archive-readers | register | endpoint [--env <path to .env>]');
   process.exit(1);
 }
