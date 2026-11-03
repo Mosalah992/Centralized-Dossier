@@ -221,16 +221,17 @@
 }
 .envelope__wing { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .envelope__date { flex: none; }
-/* The wax, at the point of the flap, in the wing's colour. */
+/* The wax, on the flap, in the wing's colour. It sits above the title rather
+   than behind it, which on a narrow envelope hid the title's first words. */
 .envelope__seal {
   position: absolute;
   left: 50%;
-  top: 34%;
+  top: calc(3 * var(--px));
   display: grid;
   place-items: center;
   width: calc(14 * var(--px));
   height: calc(14 * var(--px));
-  margin: calc(-7 * var(--px)) 0 0 calc(-7 * var(--px));
+  margin: 0 0 0 calc(-7 * var(--px));
   color: var(--wax-ink, #f2d27a);
   /* A disc of wax in the wing's colour, its edge stepped in whole pixels. */
   background: var(--wax, #7a5a10);
@@ -249,7 +250,13 @@
     calc(2 * var(--px)) var(--px), calc(4 * var(--px)) var(--px)
   );
 }
-.envelope__title { position: relative; z-index: 1; padding-top: 0.6rem; }
+.envelope__title { position: relative; z-index: 1; }
+/* The title is written below the wax. */
+.envelope { padding-top: calc(17 * var(--px) + 0.4rem); }
+/* A narrow envelope grows to hold a two-line title rather than clip it. */
+@media (max-width: 760px) {
+  .envelope { aspect-ratio: auto; min-height: 7.5rem; }
+}
 .describer--letter {
   bottom: calc(100% + 0.2rem);
   width: min(280px, 80vw);
