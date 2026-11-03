@@ -9,55 +9,28 @@
 // the Scribe is consecrated the table says so, as it did when it was only
 // furnished.
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { IMPORTANCE_INFO, filingName, type ClerkFiling, type StampMark } from '../../../../shared/filing';
 import { Fleuron } from '../../room/art';
 import { Stamp } from '../../room/takeovers/Stamp';
 import { Parchment } from '../../scribe/Parchment';
+import type { Clerk } from './useClerk';
 import '../../styles/clerk.css';
-
-type Table = { waiting: ClerkFiling[]; stamped: ClerkFiling[] };
 
 const when = (iso: string) => new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
 
-export function ClerkTable() {
-  const [table, setTable] = useState<Table | 'loading' | 'absent'>('loading');
+/** The table's list comes from the Solar (useClerk), which also counts it on the plaque and announces what is new. */
+export function ClerkTable({ clerk }: { clerk: Clerk }) {
+  const { table } = clerk;
   const [reading, setReading] = useState<ClerkFiling | null>(null);
   const [notice, setNotice] = useState('');
 
-  const load = useCallback(async () => {
-    try {
-      const res = await fetch('/api/solar/clerk', { headers: { Accept: 'application/json' } });
-      if (!res.ok || !(res.headers.get('content-type') ?? '').includes('application/json')) return setTable('absent');
-      setTable((await res.json()) as Table);
-    } catch {
-      setTable('absent');
-    }
-  }, []);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
-
   const stamp = async (filing: ClerkFiling, mark: StampMark) => {
     setNotice('');
-    try {
-      const res = await fetch(`/api/solar/clerk/${filing.id}`, {
-        method: 'POST',
-        headers: { Accept: 'application/json', 'content-type': 'application/json' },
-        body: JSON.stringify({ mark }),
-      });
-      const data = (await res.json().catch(() => ({}))) as ClerkFiling & { error?: string };
-      if (!res.ok) {
-        setNotice(data.error ?? 'The stamp would not take.');
-        return;
-      }
-      setReading(data);
-      await load();
-    } catch {
-      setNotice('The Clerk Table cannot be reached just now.');
-    }
+    const answer = await clerk.stamp(filing, mark);
+    if (answer.ok) setReading(answer.filing);
+    else setNotice(answer.error);
   };
 
   // Both answers sit in the card the Clerk Table's furniture opens (views/Solar.tsx).

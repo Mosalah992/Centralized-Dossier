@@ -71,3 +71,62 @@
 .clerk-reading__sheet .scribe-paper { max-width: 620px; margin: 0 auto; }
 
 .clerk-reading__verdict { display: flex; align-items: center; gap: 0.6rem; margin: 0 auto 0 0; font-style: italic; }
+
+/* ---------- What waits: the plaque's count, and the slip that announces it ---------- */
+
+/* As the room counts new notices on the board's plaque (room.css .plaque__badge). */
+.solar-furniture__badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: calc(5 * var(--px));
+  height: calc(5 * var(--px));
+  margin-left: calc(1.5 * var(--px));
+  padding: 0 var(--px);
+  font-size: 0.9em;
+  letter-spacing: 0;
+  color: var(--px-parch);
+  background: #b83a3a;
+  box-shadow: 0 0 0 var(--px) #4a0d10;
+}
+/* Something the reader has not seen yet: the wax glows, in two whole steps. */
+.solar-furniture__badge[data-new] { animation: clerk-glow 1.4s steps(1, end) infinite; }
+@keyframes clerk-glow {
+  50% { background: #e0503f; }
+}
+
+.clerk-alert {
+  /* One size at every scale of the room: a slip, not a piece of furniture. */
+  --px: 2px;
+  position: fixed;
+  z-index: 45;
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  left: 50%;
+  translate: -50% 0;
+  width: min(calc(100vw - 32px), 36rem);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.5rem 0.9rem;
+  padding: 0.7rem 0.9rem 0.8rem;
+  font: 15px / 1.35 var(--pixel);
+  color: var(--px-wood);
+  background: var(--px-parch);
+  border: var(--px) solid var(--px-parch-dark);
+  box-shadow: 0 0 0 var(--px) var(--px-ink), 0 12px 28px rgb(0 0 0 / 0.5);
+  animation: clerk-drop 0.25s ease-out;
+}
+.clerk-alert p { margin: 0; }
+.clerk-alert__seal { grid-row: span 2; display: grid; }
+.clerk-alert__head { font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--px-crimson); }
+.clerk-alert__title { font-weight: 600; overflow-wrap: anywhere; }
+.clerk-alert__more { color: var(--px-wood-1); }
+.clerk-alert__actions { grid-column: 2; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.clerk-alert .px-btn { min-height: 2.1rem; padding: 0 0.75rem; font-size: 13px; }
+@keyframes clerk-drop {
+  from { translate: -50% -1rem; opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .solar-furniture__badge[data-new],
+  .clerk-alert { animation: none; }
+}

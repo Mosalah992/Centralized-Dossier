@@ -9,8 +9,11 @@
 //
 // The map and its pieces work now, shared by everyone admitted (usePins), and
 // so does the Clerk Table, where High Command stamps what the Scribe has filed
-// (solar/ClerkTable.tsx). Canonreeve's Desk is furnished but not yet
-// consecrated: its work (decrees, books, new pieces for the table) is to come.
+// (solar/ClerkTable.tsx). Its plaque counts what waits, and a slip at the top
+// of the screen announces anything filed since the reader last opened it,
+// checked every minute (solar/useClerk.ts, ClerkAlert.tsx). Canonreeve's Desk
+// is furnished but not yet consecrated: its work (decrees, books, new pieces
+// for the table) is to come.
 //
 // It is reached only through Ancarion's plate. A reader who arrives without
 // the Solar's writ is sent back to the room, where the plate waits for them.
@@ -33,7 +36,10 @@ import { usePixelStage } from '../pixel/scale';
 import { Sprite } from '../pixel/Sprite';
 import { clear, markSolarSealed, peek } from '../solar-sealed';
 import { Fleuron } from '../room/art';
+import { ClerkAlert } from './solar/ClerkAlert';
+import { latestFiled, markClerkSeen, readClerkSeen, unseenFilings } from './solar/clerk-seen';
 import { ClerkTable } from './solar/ClerkTable';
+import { useClerk } from './solar/useClerk';
 import { Notes } from './solar/Notes';
 import { usePins } from './solar/usePins';
 import { WarTable } from './solar/WarTable';
@@ -43,17 +49,44 @@ const MapViewer = lazy(() => import('./solar/MapViewer').then((m) => ({ default:
 
 /**
  * A piece of the Solar's furniture: its sprite and plaque, which open the card
- * that says what it is for.
+ * that says what it is for. The Clerk Table's opening is the Solar's to hold
+ * (`open`, `onToggle`), so its alert can open it, and its plaque carries a count.
  */
-function Furniture({ id, name, art, place, children }: { id: string; name: string; art: string; place: Place; children: ReactNode }) {
-  const [open, setOpen] = useState(false);
+function Furniture({
+  id,
+  name,
+  art,
+  place,
+  badge,
+  open: held,
+  onToggle,
+  children,
+}: {
+  id: string;
+  name: string;
+  art: string;
+  place: Place;
+  badge?: ReactNode;
+  open?: boolean;
+  onToggle?: (open: boolean) => void;
+  children: ReactNode;
+}) {
+  const [own, setOwn] = useState(false);
+  const open = held ?? own;
   const card = useId();
   return (
     <section className={`solar-furniture solar-furniture--${id} px-at`} style={at(place)} aria-labelledby={`${card}-name`}>
-      <button type="button" className="solar-furniture__object" aria-expanded={open} aria-controls={card} onClick={() => setOpen((o) => !o)}>
+      <button
+        type="button"
+        className="solar-furniture__object"
+        aria-expanded={open}
+        aria-controls={card}
+        onClick={() => (onToggle ? onToggle(!open) : setOwn((o) => !o))}
+      >
         <Sprite src={art} className="solar-furniture__art" />
         <span className="plaque" id={`${card}-name`}>
           {name}
+          {badge}
         </span>
       </button>
       <div className="solar-card parchment" id={card} hidden={!open}>
@@ -90,6 +123,29 @@ function Chamber({ navigate }: { navigate: Navigate }) {
     navigate('/', { replace: true });
   }, [pins.status, navigate]);
 
+  // The Clerk Table: what waits there, counted on its plaque, and an alert for
+  // anything filed since this reader last opened it.
+  const clerk = useClerk();
+  const [clerkOpen, setClerkOpen] = useState(false);
+  const [seen, setSeen] = useState(() => readClerkSeen());
+  const waiting = typeof clerk.table === 'object' ? clerk.table.waiting : [];
+  const fresh = unseenFilings(waiting, seen);
+  const look = () => setSeen(markClerkSeen(latestFiled(waiting)));
+  const toggleClerk = (next: boolean) => {
+    setClerkOpen(next);
+    if (next) look();
+  };
+  // While the table lies open, whatever arrives is seen as it arrives.
+  useEffect(() => {
+    if (clerkOpen && fresh.length) look();
+  }, [clerkOpen, fresh.length]);
+  const goToClerk = () => {
+    toggleClerk(true);
+    window.requestAnimationFrame(() =>
+      document.querySelector('.solar-furniture--clerk')?.scrollIntoView({ block: 'center', behavior: 'smooth' }),
+    );
+  };
+
   return (
     <div ref={root} className="solar" data-map-open={open ? true : undefined}>
       <div className="solar__stage">
@@ -118,8 +174,22 @@ function Chamber({ navigate }: { navigate: Navigate }) {
         <Notes pins={pins} onOpen={(id) => take(id)} place={SOLAR.notes} />
         <WarTable pins={pins} onOpen={() => take()} place={SOLAR.table} />
 
-        <Furniture id="clerk" name="Clerk Table" art={clerkTableArt} place={SOLAR.clerk}>
-          <ClerkTable />
+        <Furniture
+          id="clerk"
+          name="Clerk Table"
+          art={clerkTableArt}
+          place={SOLAR.clerk}
+          open={clerkOpen}
+          onToggle={toggleClerk}
+          badge={
+            waiting.length > 0 ? (
+              <span className="solar-furniture__badge" data-new={fresh.length > 0 || undefined} aria-label={`, ${waiting.length} waiting`}>
+                {waiting.length}
+              </span>
+            ) : null
+          }
+        >
+          <ClerkTable clerk={clerk} />
         </Furniture>
 
         <Furniture id="desk" name="Canonreeve’s Desk" art={canonreeveDeskArt} place={SOLAR.desk}>
@@ -140,6 +210,8 @@ function Chamber({ navigate }: { navigate: Navigate }) {
           <MapViewer pins={pins} focus={open.focus} onClose={lay} />
         </Suspense>
       )}
+
+      {!open && !clerkOpen && <ClerkAlert fresh={fresh} onOpen={goToClerk} onLater={look} />}
     </div>
   );
 }
