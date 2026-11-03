@@ -1,113 +1,169 @@
-/* The Solar: High Command's chamber behind Ancarion (web/src/views/Solar.tsx),
-   after the First Emissary's sketch: a room framed in thick gold, the notes
-   pinned at its left, the war table with the realm map filling its head, the
-   Clerk Table and Canonreeve's Desk along its foot. And the map itself, taken
-   up and spread out over everything (MapViewer.tsx).
+/* The Solar: High Command's chamber behind Ancarion (web/src/views/Solar.tsx).
+   Since 2026-11-03 a pixel room with depth like the front page: the room's
+   hall drawn behind, the war table in the middle of the floor with the realm
+   map laid open on it, the notes pinned on the left wall, the Clerk Table and
+   Canonreeve's Desk at the foot of the room. Everything stands at its place in
+   art pixels (SOLAR in web/src/pixel/layout.ts) at the room's whole-pixel scale
+   (usePixelStage); phones stack the same pieces. And the map itself, taken up
+   and spread out over everything (MapViewer.tsx), its controls in pixels.
 
    Route-only: imported by the Solar view, never by main.tsx
-   (test/site-hardening.test.ts). The brass, parchment and button furniture it
+   (test/site-hardening.test.ts). The plaque, parchment and button furniture it
    shares with the room is restated here rather than imported, so the Solar's
    chunk does not have to bring the room's stylesheet with it. */
 
 .solar-page {
-  --brass: #b8902a;
-  --brass-dark: #5a420c;
-  --brass-light: #e3c46a;
-  padding: 2.2rem 0 1rem;
+  position: relative;
+  /* Inside the Solar the display face is the pixel one, as in the room. */
+  --display: var(--pixel);
+  --title: var(--pixel-title);
+}
+.solar-page > .volume__back {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 20;
 }
 
+/* ---------- The stage ---------- */
+
+/* One screen tall, to the window's edges; the hall laid behind everything and
+   cropped about the core, exactly as the room is. */
+.solar[data-layout='stage'] {
+  position: relative;
+  width: var(--room-w, 100%);
+  height: 100dvh;
+  margin-left: calc((100% - var(--room-w, 100%)) / 2);
+  overflow: hidden;
+  background: var(--px-ink);
+}
+.solar[data-layout='stage'] .solar__stage {
+  position: absolute;
+  left: var(--stage-x);
+  top: var(--stage-y);
+  width: calc(var(--master-w) * var(--px));
+  height: calc(var(--master-h) * var(--px));
+}
+.solar__scene { position: absolute; inset: 0; }
+.solar[data-layout='stage'] .px-at {
+  position: absolute;
+  left: calc((var(--origin-x) + var(--x)) * var(--px));
+  top: calc((var(--origin-y) + var(--y)) * var(--px));
+  width: calc(var(--w) * var(--px));
+  height: calc(var(--h) * var(--px));
+  margin: 0;
+}
+.solar__fitting { pointer-events: none; }
+.solar__sconce { --run: 0.7s; }
+
+/* The title, as the room's: a black strip for the eyebrow, Jacquard beneath. */
 .solar__title {
-  margin: 0 auto 1.2rem;
+  display: grid;
+  justify-items: center;
+  align-content: start;
   text-align: center;
 }
 .solar__title p {
   margin: 0;
-  font-family: var(--display);
-  font-size: 0.66rem;
-  letter-spacing: 0.34em;
+  padding: 0 calc(2 * var(--px));
+  font: 600 max(10px, calc(3 * var(--px))) / 1.3 var(--pixel);
+  letter-spacing: 0.24em;
   text-transform: uppercase;
-  color: var(--gold);
+  color: var(--px-gold-light);
+  background: var(--px-ink);
 }
 .solar__title h1 {
-  margin: 0.2rem 0 0;
-  font-family: var(--title);
-  font-weight: 700;
-  font-size: clamp(1.5rem, 3vw, 2.3rem);
+  margin: 0;
+  font-family: var(--pixel-title);
+  font-weight: 400;
+  font-size: calc(10 * var(--px));
+  line-height: 1;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  color: var(--px-gold-light);
+  text-shadow: var(--px) var(--px) 0 var(--px-ink);
+}
+
+/* ---------- Plaques, parchment, pins ---------- */
+
+.solar .plaque {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 calc(2 * var(--px));
+  font: 600 max(11px, calc(3.6 * var(--px))) / 1.15 var(--pixel);
   letter-spacing: 0.08em;
-  color: var(--gold-bright);
-  text-shadow: 0 2px 0 #000, 0 0 26px rgb(201 162 39 / 0.3);
-}
-
-/* ---------- The chamber ---------- */
-
-/* Thick rounded gold, dark within: the frame of the sketch. */
-.solar__chamber {
-  display: grid;
-  grid-template-columns: minmax(13rem, 0.85fr) minmax(0, 1fr) minmax(0, 1.35fr);
-  grid-template-areas:
-    'notes map  map'
-    'clerk .    desk';
-  gap: clamp(1.2rem, 2.4vw, 2.6rem);
-  padding: clamp(1.2rem, 2.6vw, 2.6rem);
-  background: url('/textures/wood.svg') 0 0 / 520px 520px, #0b0806;
-  border: clamp(10px, 1.1vw, 16px) solid transparent;
-  border-radius: 26px;
-  background-clip: padding-box;
-  box-shadow:
-    0 0 0 clamp(10px, 1.1vw, 16px) #b8902a,
-    0 0 0 calc(clamp(10px, 1.1vw, 16px) + 2px) #5a420c,
-    inset 0 0 0 2px #5a420c,
-    inset 0 0 60px rgb(0 0 0 / 0.85),
-    0 24px 50px rgb(0 0 0 / 0.7);
-  margin: clamp(10px, 1.1vw, 16px);
-}
-
-.solar-heading {
-  margin: 0 0 0.8rem;
-  font-family: var(--title);
-  font-size: clamp(1.1rem, 1.8vw, 1.6rem);
-  letter-spacing: 0.06em;
-  text-align: center;
-  color: var(--gold-bright);
-}
-.solar-heading span {
-  display: block;
-  font-family: var(--display);
-  font-size: 0.62rem;
-  letter-spacing: 0.3em;
   text-transform: uppercase;
-  color: var(--stone);
+  white-space: nowrap;
+  color: var(--px-gold-light);
+  background: none;
+  border: calc(3 * var(--px)) solid transparent;
+  border-image: url('../assets/pixel/plaque.png') 3 fill / calc(3 * var(--px)) stretch;
+  image-rendering: pixelated;
 }
-.solar-quiet { margin: 0.6rem 0 0; font-style: italic; text-align: center; color: var(--stone); }
+.solar .parchment {
+  position: relative;
+  color: var(--px-ink-1);
+  background: url('../assets/pixel/ui-parchment.png') 0 0 / calc(16 * var(--px)) repeat, var(--px-parch);
+  background-clip: padding-box;
+  border: calc(3 * var(--px)) solid transparent;
+  border-image: url('../assets/pixel/ui-scrap.png') 3 / calc(3 * var(--px)) stretch;
+  box-shadow: var(--px) var(--px) 0 var(--px-ink);
+  image-rendering: pixelated;
+}
+.solar .pin {
+  position: absolute;
+  top: calc(-1 * var(--px));
+  left: 50%;
+  width: calc(4 * var(--px));
+  height: calc(4 * var(--px));
+  margin-left: calc(-2 * var(--px));
+  background: url('../assets/pixel/ui-wax.png') 0 0 / 100% 100% no-repeat;
+  image-rendering: pixelated;
+}
+.solar-quiet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 14 * var(--px));
+  margin: 0;
+  font: max(11px, calc(3.4 * var(--px))) / 1.3 var(--pixel);
+  text-align: center;
+  color: var(--px-parch);
+}
+
+/* The room's hover: a one-art-pixel gold outline round the sprite. */
+.war-table__map:hover .war-table__art,
+.war-table__map:focus-visible .war-table__art,
+.solar-furniture__object:hover .solar-furniture__art,
+.solar-furniture__object:focus-visible .solar-furniture__art,
+.solar-furniture__object[aria-expanded='true'] .solar-furniture__art {
+  filter:
+    drop-shadow(var(--px) 0 0 var(--px-gold-light))
+    drop-shadow(calc(-1 * var(--px)) 0 0 var(--px-gold-light))
+    drop-shadow(0 var(--px) 0 var(--px-gold-light))
+    drop-shadow(0 calc(-1 * var(--px)) 0 var(--px-gold-light));
+}
 
 /* ---------- The war table ---------- */
 
-.war-table { grid-area: map; min-width: 0; }
-/* The table is as wide as the map on it, and the map no taller than leaves
-   the tables beneath it in reach. */
 .war-table__map {
   position: relative;
   display: block;
-  width: min(100%, calc((100dvh - 15rem) * 1.333 + 2 * clamp(10px, 1.2vw, 18px)));
-  min-width: min(100%, 30rem);
-  margin-inline: auto;
-  padding: clamp(10px, 1.2vw, 18px);
+  width: 100%;
+  height: 100%;
+  padding: 0;
   font: inherit;
   color: inherit;
-  background: url('/textures/wood.svg') 0 0 / 300px 300px, #3b2414;
-  border: 1px solid #5a420c;
-  box-shadow: inset 0 0 0 4px #1a110a, inset 0 0 0 5px rgb(201 162 39 / 0.5), 0 18px 30px rgb(0 0 0 / 0.65);
+  background: none;
+  border: 0;
   cursor: inherit;
-  transition: transform 0.35s var(--ease), box-shadow 0.35s var(--ease);
 }
-.war-table__sheet { position: relative; display: block; }
-.war-table__sheet img { display: block; width: 100%; height: auto; filter: drop-shadow(0 6px 8px rgb(0 0 0 / 0.55)); }
-.war-table__map:hover,
-.war-table__map:focus-visible {
-  transform: translateY(-3px);
-  box-shadow: inset 0 0 0 4px #1a110a, inset 0 0 0 5px rgb(232 205 122 / 0.8), 0 22px 34px rgb(0 0 0 / 0.7), 0 0 22px rgb(201 162 39 / 0.3);
-}
-.war-table__map:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 4px; }
+.war-table__map:focus-visible { outline: none; }
+.war-table__art { position: absolute; inset: 0; }
+/* The map, painted, whole in the bed of the table's top. */
+.war-table__sheet { position: absolute; display: block; overflow: hidden; }
+.war-table__sheet img { display: block; width: 100%; height: 100%; }
 .war-table__pin {
   position: absolute;
   transform: translate(-50%, -100%);
@@ -116,60 +172,38 @@
 }
 .war-table__invite {
   position: absolute;
-  right: 1.6rem;
-  bottom: 1.4rem;
-  padding: 0.35rem 0.9rem;
-  font: 700 0.62rem var(--display);
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: #1d1408;
-  background: url('/textures/grain.svg') 0 0 / 256px 256px, var(--brass);
-  border: 1px solid var(--brass-dark);
-  box-shadow: inset 0 1px 0 var(--brass-light), 0 3px 8px rgb(0 0 0 / 0.6);
-  opacity: 0.88;
+  left: 50%;
+  top: calc(100% + var(--px));
+  translate: -50% 0;
+}
+.war-table__map:hover .war-table__invite,
+.war-table__map:focus-visible .war-table__invite {
+  color: var(--px-ink);
+  border-image-source: none;
+  background: var(--px-gold-light);
 }
 
 /* ---------- The notes ---------- */
 
-.parchment {
-  position: relative;
-  color: var(--ink);
-  background: url('/textures/parchment.svg') 0 0 / 600px 600px, var(--parchment);
-  box-shadow: inset 0 0 26px rgb(110 70 20 / 0.45), 0 12px 22px rgb(0 0 0 / 0.6);
-  clip-path: polygon(0 1%, 4% 0, 30% 1%, 60% 0, 96% 1%, 100% 3%, 99% 50%, 100% 97%, 95% 100%, 60% 99%, 30% 100%, 3% 99%, 0 96%, 1% 50%);
-}
-.pin {
-  position: absolute;
-  top: 9px;
-  left: 48%;
-  width: 9px;
-  height: 9px;
-  background: var(--gold);
-  box-shadow: 0 0 0 2px #3a2a08, 1px 2px 2px rgb(0 0 0 / 0.5);
-  transform: rotate(45deg);
-}
+/* Pinned on the left wall: a pixel scrap, its list scrolling inside it. */
 .solar-notes {
-  grid-area: notes;
-  align-self: start;
   display: grid;
-  align-content: start;
-  max-height: min(70vh, 640px);
-  padding: 1.7rem 1rem 1rem;
-  transform: rotate(-1deg);
+  grid-template-rows: auto minmax(0, 1fr);
+  padding: calc(4 * var(--px)) calc(3 * var(--px)) calc(3 * var(--px));
 }
 .solar-notes__title {
-  margin: 0 0 0.6rem;
-  font-family: var(--display);
-  font-size: 0.86rem;
-  letter-spacing: 0.24em;
+  margin: 0 0 var(--px);
+  font: 600 max(12px, calc(4.5 * var(--px))) var(--pixel);
+  letter-spacing: 0.12em;
   text-align: center;
   text-transform: uppercase;
-  color: var(--ink);
+  color: var(--px-wood);
 }
-.solar-notes__empty { margin: 0; font-style: italic; line-height: 1.35; color: var(--ink-soft); }
+.solar-notes__empty { margin: 0; font: max(12px, calc(3.6 * var(--px))) / 1.3 var(--pixel); color: var(--px-wood-1); }
 .solar-notes__list {
   display: grid;
-  gap: 0.15rem;
+  align-content: start;
+  gap: 0;
   margin: 0;
   padding: 0;
   overflow-y: auto;
@@ -178,106 +212,150 @@
 .solar-notes__item {
   display: flex;
   align-items: flex-start;
-  gap: 0.5rem;
+  gap: calc(2 * var(--px));
   width: 100%;
-  padding: 0.4rem 0.3rem;
+  padding: var(--px) calc(0.5 * var(--px));
   font: inherit;
   text-align: left;
-  color: var(--ink);
+  color: var(--px-ink-1);
   background: none;
   border: 0;
-  border-bottom: 1px dashed rgb(77 59 38 / 0.35);
+  border-bottom: var(--px) solid var(--px-parch-1);
   cursor: inherit;
 }
 .solar-notes__item:hover,
-.solar-notes__item:focus-visible { background: rgb(201 162 39 / 0.16); }
-.solar-notes__item:focus-visible { outline: 2px solid var(--rubric); outline-offset: 1px; }
+.solar-notes__item:focus-visible { outline: none; background: var(--px-gold-light); }
 .solar-notes__item .pin-mark { flex: none; margin-top: 0.1rem; }
 .solar-notes__text { display: grid; gap: 0.1rem; min-width: 0; }
-.solar-notes__name { font-family: var(--display); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.06em; }
-.solar-notes__note { font-size: 0.92rem; line-height: 1.25; color: var(--ink-soft); overflow-wrap: anywhere; }
+.solar-notes__name { font: 600 max(12px, calc(3.8 * var(--px))) var(--pixel); letter-spacing: 0.04em; }
+.solar-notes__note { font: max(11px, calc(3.4 * var(--px))) / 1.25 var(--pixel); color: var(--px-wood-1); overflow-wrap: anywhere; }
 
 /* ---------- The Clerk Table and Canonreeve's Desk ---------- */
 
-.solar-furniture {
-  display: grid;
-  justify-items: center;
-  align-content: end;
-  gap: 0.7rem;
-}
-.solar-furniture--clerk { grid-area: clerk; }
-.solar-furniture--desk { grid-area: desk; }
-.solar-furniture__art { position: relative; width: min(100%, 22rem); filter: drop-shadow(0 16px 12px rgb(0 0 0 / 0.7)); }
-.solar-furniture--desk .solar-furniture__art { width: min(100%, 30rem); }
-.solar-art { display: block; width: 100%; height: auto; }
-.solar-furniture__stamps {
-  position: absolute;
-  right: 4%;
-  bottom: 58%;
-  display: flex;
-  align-items: flex-end;
-  gap: 0.3rem;
-  transform: rotate(-6deg);
-}
-.stamp { display: block; flex: none; }
-.stamp--art { border-radius: 50%; }
-
-.plaque {
+.solar-furniture__object {
   position: relative;
-  display: inline-flex;
-  align-items: center;
-  padding: 0.28rem 1.1rem;
-  font-family: var(--display);
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  color: #1d1408;
-  background: url('/textures/grain.svg') 0 0 / 256px 256px, var(--brass);
-  border: 1px solid var(--brass-dark);
-  box-shadow: inset 0 1px 0 var(--brass-light), inset 0 -1px 0 #7a5a12, 0 2px 3px rgb(0 0 0 / 0.7);
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: inherit;
 }
-.solar-card {
-  width: min(100%, 26rem);
-  padding: 1rem 1.2rem 0.9rem;
+.solar-furniture__object:focus-visible { outline: none; }
+.solar-furniture__art { position: absolute; inset: 0; }
+.solar-furniture__object .plaque {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + var(--px));
+  translate: -50% 0;
+}
+.solar-furniture__object:hover .plaque,
+.solar-furniture__object:focus-visible .plaque,
+.solar-furniture__object[aria-expanded='true'] .plaque {
+  color: var(--px-ink);
+  border-image-source: none;
+  background: var(--px-gold-light);
+}
+/* The card each opens: a scrap above the furniture, inside the core. Named
+   with .solar so it outranks .solar .parchment's position. */
+.solar .solar-card {
+  position: absolute;
+  bottom: calc(100% + 3 * var(--px));
+  z-index: 6;
+  width: max(15rem, calc(96 * var(--px)));
+  padding: calc(4 * var(--px)) calc(5 * var(--px)) calc(4 * var(--px));
+  font: max(12px, calc(3.8 * var(--px))) / 1.35 var(--pixel);
   text-align: center;
 }
-.solar-card .fleuron { display: block; margin: 0 auto 0.2rem; color: var(--rubric); }
-.solar-card h3 { margin: 0 0 0.4rem; font-size: 0.82rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink); }
-.solar-card p { margin: 0; line-height: 1.35; }
-.solar-card ul { display: grid; gap: 0.2rem; margin: 0 auto; padding-left: 1.1rem; text-align: left; width: fit-content; line-height: 1.3; }
-.solar-card li::marker { color: var(--rubric); }
-.solar-card__wait { margin-top: 0.5rem !important; font-style: italic; color: var(--ink-soft); }
+.solar-card[hidden] { display: none; }
+.solar-furniture--clerk .solar-card { left: 0; }
+.solar-furniture--desk .solar-card { right: 0; }
+.solar-card .fleuron { display: block; margin: 0 auto calc(var(--px)); color: var(--px-crimson); }
+.solar-card h3 { margin: 0 0 var(--px); font: 600 max(12px, calc(4 * var(--px))) var(--pixel); letter-spacing: 0.08em; text-transform: uppercase; color: var(--px-wood); }
+.solar-card p { margin: 0; }
+.solar-card ul { display: grid; gap: 0.2rem; margin: 0 auto; padding-left: 1.1rem; text-align: left; width: fit-content; }
+.solar-card li::marker { color: var(--px-crimson); }
+.solar-card__wait { margin-top: calc(2 * var(--px)) !important; color: var(--px-wood-1); }
+
+/* ---------- The stack: phones and small windows ---------- */
+
+/* The same pieces one under another on the room's lacquer: the title, the war
+   table, the notes, then the two tables. The way back stands above it all. */
+.solar-page:has(.solar[data-layout='stack']) > .volume__back { position: static; margin: 12px 0 0; }
+.solar[data-layout='stack'] {
+  margin: 12px 0 22px;
+  padding: calc(6 * var(--px)) 0 calc(14 * var(--px));
+  background: var(--px-wood);
+  box-shadow: 0 0 0 var(--px) var(--px-gold), 0 0 0 calc(2 * var(--px)) var(--px-ink);
+}
+.solar[data-layout='stack'] .solar__stage {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-areas:
+    'title title'
+    'table table'
+    'notes notes'
+    'clerk clerk'
+    'desk  desk';
+  justify-items: center;
+  align-items: end;
+  row-gap: min(calc(16 * var(--px)), 4.5rem);
+}
+.solar[data-layout='stack'] .solar__scene,
+.solar[data-layout='stack'] .solar__fitting { display: none; }
+.solar[data-layout='stack'] .px-at {
+  position: relative;
+  width: calc(var(--w) * var(--px));
+  height: calc(var(--h) * var(--px));
+}
+.solar[data-layout='stack'] .solar__title { grid-area: title; width: auto; height: auto; padding: 0 1rem; }
+.solar[data-layout='stack'] .solar__title h1 { font-size: clamp(2rem, 11vw, 3rem); }
+.solar[data-layout='stack'] .war-table { grid-area: table; margin-bottom: calc(26 * var(--px)); }
+.solar[data-layout='stack'] .solar-notes { grid-area: notes; width: auto; height: auto; max-height: 60vh; margin: 0 1rem; justify-self: stretch; }
+.solar[data-layout='stack'] .solar-furniture--clerk { grid-area: clerk; margin-bottom: calc(10 * var(--px)); }
+.solar[data-layout='stack'] .solar-furniture--desk { grid-area: desk; margin-bottom: calc(10 * var(--px)); }
+.solar[data-layout='stack'] .solar-card { position: fixed; left: 1rem; right: 1rem; bottom: 1rem; width: auto; }
 
 /* ---------- Buttons on parchment ---------- */
 
+/* Brass, flat and bevelled in whole pixels (pixel-ui.css .px-btn). */
 .btn {
-  min-height: 2.3rem;
-  padding: 0.45rem 0.95rem;
-  font: 700 0.62rem var(--display);
-  letter-spacing: 0.15em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(14 * var(--px));
+  padding: 0 calc(3 * var(--px));
+  font: 600 max(12px, calc(5 * var(--px))) / 1 var(--pixel);
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #1d1408;
-  background: url('/textures/grain.svg') 0 0 / 256px 256px, var(--brass);
-  border: 1px solid var(--brass-dark);
-  box-shadow: inset 0 1px 0 var(--brass-light), 0 2px 4px rgb(0 0 0 / 0.45);
+  color: var(--px-ink);
+  background: none;
+  border: calc(2 * var(--px)) solid transparent;
+  border-image: url('../assets/pixel/ui-button.png') 2 fill / calc(2 * var(--px)) stretch;
+  image-rendering: pixelated;
   cursor: inherit;
 }
+.btn:active:not(:disabled) { border-image-source: url('../assets/pixel/ui-button-down.png'); }
 .btn:disabled { cursor: not-allowed; opacity: 0.6; }
-.btn:focus-visible { outline: 2px solid var(--rubric); outline-offset: 2px; }
-.btn--quiet { color: var(--ink); background: transparent; border-color: var(--ink-soft); box-shadow: none; }
+.btn:focus-visible { outline: var(--px) solid var(--px-gold-light); outline-offset: var(--px); }
+.btn--quiet { color: var(--px-ink-1); border-image-source: url('../assets/pixel/ui-inset.png'); }
 
 /* ---------- The map, spread out ---------- */
 
+/* The map stays painted; everything round it is pixels: the room's panelling
+   behind, a lacquer bar with a gold line, plaques for the controls. */
 .map-viewer {
   position: fixed;
   inset: 0;
   z-index: 80;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  background: url('/textures/wood.svg') 0 0 / 480px 480px, #0d0a07;
-  animation: map-viewer-in 0.35s var(--ease) both;
+  background: url('../assets/pixel/ui-wall.png') 0 0 / calc(24 * var(--px)) repeat, var(--px-wood);
+  image-rendering: pixelated;
+  animation: map-viewer-in 0.3s steps(3) both;
 }
 .map-viewer__bar {
   display: flex;
@@ -285,55 +363,61 @@
   align-items: center;
   gap: 0.6rem 1.2rem;
   padding: 0.7rem 1rem;
-  background: rgb(8 6 4 / 0.92);
-  border-bottom: 1px solid rgb(201 162 39 / 0.45);
-  box-shadow: 0 6px 18px rgb(0 0 0 / 0.6);
+  background: var(--px-ink-1);
+  border-bottom: var(--px) solid var(--px-gold);
+  box-shadow: 0 var(--px) 0 var(--px-ink);
 }
 .map-viewer__title {
   margin: 0 auto 0 0;
-  font-family: var(--title);
-  font-size: 1.2rem;
-  letter-spacing: 0.06em;
-  color: var(--gold-bright);
+  font-family: var(--pixel-title);
+  font-weight: 400;
+  font-size: 1.9rem;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: var(--px-gold-light);
 }
 .map-viewer__title span {
   margin-left: 0.6rem;
-  font-family: var(--display);
-  font-size: 0.6rem;
-  letter-spacing: 0.26em;
+  font-family: var(--pixel);
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--stone);
+  color: var(--px-parch-1);
 }
 .map-tray,
-.map-zoom { display: flex; gap: 0.4rem; }
+.map-zoom { display: flex; gap: calc(2 * var(--px)); }
 .map-tray__piece,
 .map-zoom button,
 .map-viewer__close {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  min-height: 2.4rem;
-  padding: 0.3rem 0.8rem;
-  font: 700 0.62rem var(--display);
-  letter-spacing: 0.14em;
+  min-height: 2.6rem;
+  padding: 0 calc(3 * var(--px));
+  font: 600 max(12px, calc(5 * var(--px))) var(--pixel);
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--gold-bright);
-  background: #15100a;
-  border: 1px solid rgb(201 162 39 / 0.55);
+  color: var(--px-gold-light);
+  background: none;
+  border: calc(3 * var(--px)) solid transparent;
+  border-image: url('../assets/pixel/plaque.png') 3 fill / calc(3 * var(--px)) stretch;
+  image-rendering: pixelated;
   cursor: inherit;
 }
-.map-zoom button { justify-content: center; min-width: 2.4rem; padding: 0; font-size: 1.1rem; letter-spacing: 0; }
-.map-tray__piece[aria-pressed='true'] {
-  color: #1d1408;
-  background: url('/textures/grain.svg') 0 0 / 256px 256px, var(--brass);
-  border-color: var(--brass-dark);
-  box-shadow: 0 0 14px rgb(232 205 122 / 0.5);
+.map-zoom button { justify-content: center; min-width: 2.6rem; padding: 0; font-size: 1.3rem; letter-spacing: 0; }
+.map-tray__piece[aria-pressed='true'],
+.map-tray__piece:hover,
+.map-zoom button:hover:not(:disabled),
+.map-viewer__close:hover {
+  color: var(--px-ink);
+  border-image-source: none;
+  background: var(--px-gold-light);
 }
 .map-zoom button:disabled { opacity: 0.4; cursor: not-allowed; }
-.map-viewer__close { justify-content: center; min-width: 2.4rem; padding: 0; font-size: 1.4rem; line-height: 1; }
+.map-viewer__close { justify-content: center; min-width: 2.6rem; padding: 0; font-size: 1.5rem; line-height: 1; }
 .map-tray__piece:focus-visible,
 .map-zoom button:focus-visible,
-.map-viewer__close:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 2px; }
+.map-viewer__close:focus-visible { outline: var(--px) solid var(--px-gold-light); outline-offset: var(--px); }
 
 .map-viewer__body { position: relative; display: flex; min-height: 0; }
 .map-stage {
@@ -347,7 +431,7 @@
 }
 .map-stage:active { cursor: grabbing; }
 .map-stage[data-placing] { cursor: crosshair; }
-.map-stage:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: -4px; }
+.map-stage:focus-visible { outline: var(--px) solid var(--px-gold-light); outline-offset: calc(-2 * var(--px)); }
 .map-layer {
   position: absolute;
   left: 0;
@@ -359,18 +443,17 @@
   width: 100%;
   height: 100%;
   pointer-events: none;
-  filter: drop-shadow(0 10px 18px rgb(0 0 0 / 0.6));
 }
 .map-stage__hint {
   position: absolute;
   left: 50%;
   top: 0.9rem;
   margin: 0;
-  padding: 0.35rem 0.9rem;
-  font-style: italic;
-  color: var(--parchment);
-  background: rgb(8 6 4 / 0.82);
-  border: 1px solid rgb(201 162 39 / 0.5);
+  padding: var(--px) calc(3 * var(--px));
+  font-family: var(--pixel);
+  color: var(--px-parch);
+  background: var(--px-ink-1);
+  box-shadow: 0 0 0 var(--px) var(--px-gold-0);
   transform: translateX(-50%);
   pointer-events: none;
 }
@@ -398,13 +481,13 @@
   left: 50%;
   top: 100%;
   margin-top: 3px;
-  padding: 0.18rem 0.5rem;
-  font: 700 0.6rem/1.2 var(--display);
-  letter-spacing: 0.06em;
+  padding: 1px 6px;
+  font: 600 13px/1.2 var(--pixel);
+  letter-spacing: 0.04em;
   white-space: nowrap;
-  color: var(--gold-bright);
-  background: rgb(14 10 6 / 0.88);
-  border: 1px solid rgb(201 162 39 / 0.5);
+  color: var(--px-gold-light);
+  background: var(--px-ink-1);
+  box-shadow: 0 0 0 2px var(--px-gold-0);
   transform: translateX(-50%);
   opacity: 0;
   pointer-events: none;
@@ -430,33 +513,37 @@
   overflow-y: auto;
 }
 .map-card__form { display: grid; gap: 0.35rem; }
+.map-card { font-family: var(--pixel); }
 .map-card__kind {
   display: flex;
   align-items: center;
   gap: 0.4rem;
   margin: 0 0 0.3rem;
-  font: 700 0.62rem var(--display);
-  letter-spacing: 0.16em;
+  font: 600 max(12px, calc(4.5 * var(--px))) var(--pixel);
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--ink-soft);
+  color: var(--px-wood-1);
 }
-.map-card__name { margin: 0 0 0.3rem; font-size: 1.05rem; letter-spacing: 0.04em; color: var(--ink); overflow-wrap: anywhere; }
+.map-card__name { margin: 0 0 0.3rem; font: 600 1.15rem var(--pixel); letter-spacing: 0.02em; color: var(--px-wood); overflow-wrap: anywhere; }
 .map-card__note { margin: 0 0 0.6rem; line-height: 1.35; white-space: pre-line; overflow-wrap: anywhere; }
-.map-card__note--none { font-style: italic; color: var(--ink-soft); }
-.map-card__label { font: 700 0.6rem var(--display); letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink); }
-.map-card__label span { font-weight: 400; letter-spacing: 0.06em; text-transform: none; color: var(--ink-soft); }
+.map-card__note--none { color: var(--px-wood-1); }
+.map-card__label { font: 600 max(12px, calc(4.5 * var(--px))) var(--pixel); letter-spacing: 0.08em; text-transform: uppercase; color: var(--px-ink-1); }
+.map-card__label span { font-weight: 400; letter-spacing: 0.02em; text-transform: none; color: var(--px-wood-1); }
+/* A pixel field (pixel-ui.css .px-field). */
 .map-card__input {
   width: 100%;
-  padding: 0.4rem 0.5rem;
+  padding: 0.3rem 0.4rem;
   font: inherit;
-  color: var(--ink);
-  background: rgb(255 250 235 / 0.55);
-  border: 1px solid rgb(77 59 38 / 0.45);
+  color: var(--px-ink-1);
+  background: none;
+  border: calc(2 * var(--px)) solid transparent;
+  border-image: url('../assets/pixel/ui-field.png') 2 fill / calc(2 * var(--px)) stretch;
+  image-rendering: pixelated;
 }
 .map-card__input--note { resize: vertical; min-height: 5rem; }
-.map-card__input:focus-visible { outline: 2px solid var(--rubric); outline-offset: 1px; }
+.map-card__input:focus-visible { outline: var(--px) solid var(--px-gold); outline-offset: var(--px); }
 .map-card__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.45rem; margin-top: 0.5rem; }
-.map-card__ask { flex-basis: 100%; font-style: italic; color: var(--ink-soft); }
+.map-card__ask { flex-basis: 100%; color: var(--px-wood-1); }
 
 .map-viewer__notice {
   position: fixed;
@@ -468,23 +555,24 @@
   gap: 0.8rem;
   margin: 0;
   padding: 0.55rem 0.9rem;
-  color: var(--parchment);
-  background: #3a0d0f;
-  border: 1px solid #7c1f24;
-  box-shadow: 0 8px 20px rgb(0 0 0 / 0.6);
+  font-family: var(--pixel);
+  color: var(--px-parch);
+  background: var(--px-crimson-0);
+  box-shadow: 0 0 0 var(--px) var(--px-crimson), calc(2 * var(--px)) calc(2 * var(--px)) 0 var(--px) var(--px-ink);
   transform: translateX(-50%);
 }
 .map-viewer__notice button {
-  font: 700 0.58rem var(--display);
-  letter-spacing: 0.14em;
+  font: 600 max(12px, calc(4.5 * var(--px))) var(--pixel);
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--gold-bright);
+  color: var(--px-gold-light);
   background: none;
-  border: 1px solid rgb(201 162 39 / 0.5);
+  border: 0;
+  box-shadow: 0 0 0 var(--px) var(--px-gold-0);
   padding: 0.25rem 0.5rem;
   cursor: inherit;
 }
-.solar__loading { position: fixed; inset: auto 0 2rem; z-index: 80; text-align: center; }
+.solar__loading { position: fixed; inset: auto 0 2rem; z-index: 80; font-family: var(--pixel); text-align: center; color: var(--px-parch); }
 
 @keyframes map-viewer-in {
   from { opacity: 0; transform: scale(0.985); }
@@ -498,26 +586,8 @@
 
 /* ---------- Narrower screens ---------- */
 
-@media (max-width: 1100px) {
-  .solar__chamber {
-    grid-template-columns: minmax(12rem, 0.8fr) minmax(0, 1.6fr);
-    grid-template-areas:
-      'notes map'
-      'clerk desk';
-  }
-}
-
-/* Phones: the map first, then the notes, then the two tables. */
+/* Phones: the spread map's bar and card make room. */
 @media (max-width: 760px) {
-  .solar-page { padding-top: 1.4rem; }
-  .solar__chamber {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: 'map' 'notes' 'clerk' 'desk';
-    padding: 0.9rem;
-    border-radius: 16px;
-  }
-  .solar-notes { max-height: none; transform: none; }
-  .war-table__invite { right: 0.9rem; bottom: 0.8rem; }
   .map-viewer__title span { display: none; }
   .map-tray__piece { padding-inline: 0.55rem; }
   .map-viewer__body { flex-direction: column; }
@@ -535,7 +605,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .map-viewer,
-  .map-pin--draft { animation: none; }
-  .war-table__map,
+  .map-pin--draft,
+  .solar .sprite--strip > img { animation: none; }
   .map-pin__label { transition: none; }
 }

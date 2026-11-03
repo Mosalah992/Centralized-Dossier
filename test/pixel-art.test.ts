@@ -2,12 +2,12 @@ import { readFileSync, readdirSync } from 'node:fs';
 import sharp from 'sharp';
 import { describe, expect, it } from 'vitest';
 
-import { CORE, MASTER, PANELS, PLACES, PORTRAIT, ROOM } from '../web/src/pixel/layout';
+import { CORE, MASTER, PANELS, PLACES, PORTRAIT, ROOM, SOLAR, WAR_TABLE } from '../web/src/pixel/layout';
 import { PALETTE } from '../web/src/pixel/palette';
-import { heroScale, pixelScale, stackScale } from '../web/src/pixel/scale';
+import { heroScale, pagePixel, pixelScale, stackScale } from '../web/src/pixel/scale';
 
 const SPRITES = 'web/src/assets/pixel';
-const manifest = JSON.parse(readFileSync(`${SPRITES}/manifest.json`, 'utf8')) as Record<string, { w: number; h: number; frames?: number; fw?: number }>;
+const manifest = JSON.parse(readFileSync(`${SPRITES}/manifest.json`, 'utf8')) as Record<string, { w: number; h: number; frames?: number; fw?: number; slice?: number; tile?: boolean }>;
 const hexOf = (r: number, g: number, b: number) => `#${[r, g, b].map((c) => c.toString(16).padStart(2, '0')).join('')}`;
 
 describe('the palette', () => {
@@ -68,6 +68,60 @@ describe('the sprites, as built', () => {
     expect([manifest.portrait!.w, manifest.portrait!.h]).toEqual([PORTRAIT.door.w, PORTRAIT.door.h]);
     expect([manifest['portrait-plate']!.w, manifest['portrait-plate']!.h]).toEqual([PORTRAIT.plateArt.w, PORTRAIT.plateArt.h]);
     expect(PORTRAIT.plateArt.y + PORTRAIT.plateArt.h).toBe(PLACES.portrait.h);
+    for (const [name, place] of [
+      ['war-table', SOLAR.table], ['clerk-table', SOLAR.clerk], ['canonreeve-desk', SOLAR.desk],
+      ['solar-hanging', SOLAR.hanging], ['solar-window-l', SOLAR.windowL], ['solar-window-r', SOLAR.windowR],
+    ] as const) {
+      expect([manifest[name]!.w, manifest[name]!.h], name).toEqual([place.w, place.h]);
+    }
+  });
+
+  // CSS stretches a nine-slice's edges to any length; that is only exact if
+  // every column of a top or bottom edge, and every row of a side, is the same
+  // all along the middle. The ornament lives in the corners.
+  it.each(Object.entries(manifest).filter(([, e]) => e.slice).map(([name]) => name))(
+    '%s stretches without smearing: its edges are the same all along',
+    async (name) => {
+      const { slice } = manifest[name]!;
+      const { data, info } = await sharp(`${SPRITES}/${name}.png`).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+      const at = (x: number, y: number) => data.readUInt32BE((y * info.width + x) * 4);
+      const s = slice!;
+      for (let y = 0; y < info.height; y++) {
+        if (y >= s && y < info.height - s) continue;
+        for (let x = s + 1; x < info.width - s; x++) expect(at(x, y), `row ${y}`).toBe(at(s, y));
+      }
+      for (let x = 0; x < info.width; x++) {
+        if (x >= s && x < info.width - s) continue;
+        for (let y = s + 1; y < info.height - s; y++) expect(at(x, y), `column ${x}`).toBe(at(x, s));
+      }
+    },
+  );
+});
+
+describe('the Solar on the grid', () => {
+  it('keeps every piece inside the core, which every window shows', () => {
+    for (const [name, p] of Object.entries(SOLAR)) {
+      expect(p.x, name).toBeGreaterThanOrEqual(-CORE.width / 2);
+      expect(p.x + p.w, name).toBeLessThanOrEqual(CORE.width / 2);
+      expect(p.y, name).toBeGreaterThanOrEqual(0);
+      expect(p.y + p.h, name).toBeLessThanOrEqual(CORE.height);
+    }
+  });
+
+  it('stands the tables on the floor before the back wall, and hangs the rest on the walls', () => {
+    for (const p of [SOLAR.table, SOLAR.clerk, SOLAR.desk]) expect(p.y + p.h).toBeGreaterThan(ROOM.floor);
+    for (const p of [SOLAR.hanging, SOLAR.windowL, SOLAR.windowR]) expect(p.y + p.h).toBeLessThanOrEqual(ROOM.floor);
+    // The war table stands in the middle of the room, the two tables either side of it.
+    expect(SOLAR.table.x + SOLAR.table.w / 2).toBe(0);
+    expect(SOLAR.clerk.x + SOLAR.clerk.w).toBeLessThanOrEqual(SOLAR.table.x);
+    expect(SOLAR.desk.x).toBeGreaterThanOrEqual(SOLAR.table.x + SOLAR.table.w);
+  });
+
+  it('lays the whole map on the table at its own proportions, so every piece stands where it does on the spread map', () => {
+    const { map } = WAR_TABLE;
+    expect(map.w * 1086).toBe(map.h * 1448);
+    expect(map.x + map.w).toBeLessThanOrEqual(SOLAR.table.w);
+    expect(map.y + map.h).toBeLessThanOrEqual(SOLAR.table.h);
   });
 });
 
@@ -142,6 +196,19 @@ describe('the scale', () => {
     // And the picture's corner falls on a device pixel.
     expect(Number.isInteger(Math.round(s.left * dpr * 1000) / 1000)).toBe(true);
     expect(Number.isInteger(Math.round(s.top * dpr * 1000) / 1000)).toBe(true);
+  });
+
+  it.each([
+    // width, device pixel ratio, CSS pixels per art pixel on the pages
+    [1366, 1, 2],
+    [1920, 1, 3],
+    [2560, 1, 4],
+    [1536, 1.25, 2.4],
+    [375, 3, 2],
+    [3840, 1, 4],
+  ])('draws the pages at %ipx and %s dppx with whole device pixels (%s CSS px to the art pixel)', (width, dpr, px) => {
+    expect(pagePixel(width, dpr)).toBeCloseTo(px, 10);
+    expect(Number.isInteger(Math.round(pagePixel(width, dpr) * dpr * 1e9) / 1e9)).toBe(true);
   });
 
   it('stacks the room on a phone, and where the lettering would be too small to read', () => {

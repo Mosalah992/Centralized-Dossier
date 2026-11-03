@@ -73,3 +73,25 @@ export const PORTRAIT = {
   plateArt: { x: 0, y: 77, w: 64, h: 13 },
   plate: { x: 13, y: 81, w: 38, h: 6 },
 } as const satisfies Record<string, Place>;
+
+/**
+ * The Solar, behind Ancarion: the same hall (the room's scene), furnished for
+ * High Command. The war table stands in the middle of the floor with the
+ * realm map laid on its top; the notes are pinned on the left wall; the Clerk
+ * Table and Canonreeve's Desk stand at the foot of the room; the Dominion's
+ * hanging is on the back wall between two windows.
+ */
+export const SOLAR = {
+  hanging: { x: -30, y: 20, w: 60, h: 74 },
+  windowL: { x: -104, y: 18, w: 34, h: 76 },
+  windowR: { x: 70, y: 18, w: 34, h: 76 },
+  table: { x: -60, y: 80, w: 120, h: 96 },
+  clerk: { x: -176, y: 124, w: 80, h: 50 },
+  desk: { x: 96, y: 124, w: 80, h: 50 },
+  notes: { x: -208, y: 4, w: 66, h: 96 },
+} as const satisfies Record<string, Place>;
+
+/** Within the war table: where the map lies on its top, at the map's own 4:3. */
+export const WAR_TABLE = {
+  map: { x: 16, y: 4, w: 88, h: 66 },
+} as const satisfies Record<string, Place>;

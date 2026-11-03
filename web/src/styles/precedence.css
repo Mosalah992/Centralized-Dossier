@@ -7,17 +7,21 @@
  * cream page, and an embroidered tree drawn as dark lines on parchment reads as
  * a diagram instead of a cloth.
  *
+ * In pixels since 2026-11-03: a pixel weave (ui-cloth.png) in a gold frame,
+ * thread and medallions drawn with crisp edges so curves step in whole pixels,
+ * and the lettering in Pixelify Sans.
+ *
  * Imported by the view rather than by main.tsx: this volume is lazy-loaded, and
  * a stylesheet in the global bundle is downloaded by every reader who never
  * opens it. */
 
 .tap__hint {
   margin: 1.6rem 0 0.6rem;
-  font-family: var(--display);
-  font-size: 0.56rem;
-  letter-spacing: 0.24em;
+  font-family: var(--pixel);
+  font-size: max(11px, calc(4.5 * var(--px)));
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--ink-soft);
+  color: var(--px-wood-1);
   text-align: center;
 }
 
@@ -27,15 +31,12 @@
   margin: 0 0 1rem;
   overflow-x: auto;
   overflow-y: hidden;
-  border: 1px solid color-mix(in srgb, var(--foil) 26%, rgba(20, 16, 12, 0.6));
-  background:
-    /* The weave: two fine threadlines crossing, then the dye. */
-    repeating-linear-gradient(0deg, rgba(255, 245, 220, 0.030) 0 1px, transparent 1px 3px),
-    repeating-linear-gradient(90deg, rgba(255, 245, 220, 0.022) 0 1px, transparent 1px 3px),
-    radial-gradient(120% 90% at 50% 0%, #23261e, #14150f 60%, #0d0e0a 100%);
-  box-shadow:
-    inset 0 0 0 1px rgba(201, 162, 39, 0.1),
-    inset 0 0 60px rgba(0, 0, 0, 0.75);
+  /* The hanging in a gold frame (ui-frame.png), on a pixel weave. */
+  border: calc(7 * var(--px)) solid transparent;
+  border-image: url('../assets/pixel/ui-frame.png') 7 / calc(7 * var(--px)) stretch;
+  background: url('../assets/pixel/ui-cloth.png') 0 0 / calc(8 * var(--px)) repeat, var(--px-ink);
+  background-clip: padding-box;
+  image-rendering: pixelated;
 }
 
 .tap__cloth {
@@ -49,33 +50,39 @@
 
 .tap__thread {
   fill: none;
-  stroke: color-mix(in srgb, var(--gold) 62%, #6b4f18);
-  stroke-linecap: round;
-  stroke-width: 1.6;
+  stroke: var(--px-gold-1);
+  stroke-linecap: square;
+  stroke-width: 2;
+  shape-rendering: crispEdges;
 }
 
 /* Nearer the root is heavier, the way a couched thread thickens toward the
    trunk. Depth 3 is the drop between people and is finest. */
-.tap__thread--1 { stroke-width: 2.6; stroke: color-mix(in srgb, var(--gold) 76%, #6b4f18); }
-.tap__thread--2 { stroke-width: 1.8; }
-.tap__thread--3 { stroke-width: 1; stroke: color-mix(in srgb, var(--gold) 40%, #6b4f18); }
+.tap__thread--1 { stroke-width: 3; stroke: var(--px-gold); }
+.tap__thread--2 { stroke-width: 2; }
+.tap__thread--3 { stroke-width: 1; stroke: var(--px-gold-0); }
 
 /* ── Medallions ──────────────────────────────────────────────────────────── */
 
+.tap__ring,
+.tap__pip {
+  shape-rendering: crispEdges;
+}
+
 .tap__ring {
-  fill: #14150f;
-  stroke: var(--gold);
-  stroke-width: 1.4;
+  fill: var(--px-ink-1);
+  stroke: var(--px-gold);
+  stroke-width: 2;
 }
 
 .tap__pip {
-  fill: var(--gold);
+  fill: var(--px-gold);
 }
 
-.tap__node--root .tap__ring { stroke-width: 2.2; }
+.tap__node--root .tap__ring { stroke-width: 3; }
 .tap__node--person .tap__ring {
-  fill: var(--gold);
-  stroke: color-mix(in srgb, var(--gold) 50%, #000);
+  fill: var(--px-gold);
+  stroke: var(--px-gold-0);
 }
 
 /* The browser draws its own focus ring on a focusable <g>, which lands as a
@@ -91,24 +98,23 @@
 
 .tap__node[role='button']:hover .tap__ring,
 .tap__node[role='button']:focus-visible .tap__ring {
-  fill: #2b2a18;
-  stroke: var(--gold-bright);
+  fill: var(--px-wood);
+  stroke: var(--px-gold-light);
 }
 
-/* Keyboard focus: a second ring struck round the medallion, so it reads as the
-   same object being singled out rather than as a box drawn over the weave. */
+/* Keyboard focus: a heavier ring struck round the medallion, so it reads as
+   the same object being singled out rather than as a box drawn over the weave. */
 .tap__node[role='button']:focus-visible .tap__ring {
-  stroke: var(--gold-bright);
-  stroke-width: 2.4;
-  filter: drop-shadow(0 0 6px rgba(232, 205, 122, 0.9));
+  stroke: var(--px-gold-light);
+  stroke-width: 4;
 }
 
 .tap__node[role='button']:focus-visible .tap__label {
-  fill: var(--gold-bright);
+  fill: var(--px-gold-light);
 }
 
 /* Open branches burn brighter than shut ones. */
-.tap__node.is-open .tap__pip { fill: var(--gold-bright); }
+.tap__node.is-open .tap__pip { fill: var(--px-gold-light); }
 
 /* ── Lettering ───────────────────────────────────────────────────────────── */
 
@@ -118,28 +124,28 @@
   paint-order: stroke;
   /* Stroked in the ground colour first, so a name crossing a thread stays
      legible without a plate behind it. */
-  stroke: #14150f;
+  stroke: var(--px-ink);
   stroke-width: 3;
-  stroke-linejoin: round;
+  stroke-linejoin: miter;
 }
 
 .tap__label {
-  font-family: var(--display);
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  fill: #efe3c8;
+  font-family: var(--pixel);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  fill: var(--px-parch);
 }
 
-.tap__node--root .tap__label { font-size: 14px; letter-spacing: 0.2em; fill: var(--gold-bright); }
-.tap__node--wing .tap__label { font-size: 12px; letter-spacing: 0.18em; fill: var(--gold-bright); }
-.tap__node--rank .tap__label { font-size: 9.5px; letter-spacing: 0.16em; fill: #d8c69a; }
-.tap__node--person .tap__label { letter-spacing: 0.04em; font-size: 10.5px; }
+.tap__node--root .tap__label { font-size: 15px; font-weight: 600; letter-spacing: 0.1em; fill: var(--px-gold-light); }
+.tap__node--wing .tap__label { font-size: 13px; font-weight: 600; letter-spacing: 0.08em; fill: var(--px-gold-light); }
+.tap__node--rank .tap__label { font-size: 11px; letter-spacing: 0.08em; fill: var(--px-parch-1); }
+.tap__node--person .tap__label { letter-spacing: 0.02em; font-size: 11px; }
 
 .tap__detail {
-  font-family: var(--display);
-  font-size: 8px;
-  letter-spacing: 0.18em;
-  fill: color-mix(in srgb, var(--gold) 55%, #8d8778);
+  font-family: var(--pixel);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  fill: var(--px-stone-2);
 }
 
 .tap__node--person .tap__detail { text-transform: uppercase; }

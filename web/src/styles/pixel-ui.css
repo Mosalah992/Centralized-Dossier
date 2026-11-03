@@ -1,0 +1,295 @@
+/* The pixel kit for every page outside the room (2026-11-03): the volumes,
+   the takeovers, the Gallery and the Solar's controls.
+
+   The same palette and grid as the room. --px is one art pixel in CSS
+   pixels, a whole number of device pixels (pagePixel in
+   web/src/pixel/scale.ts, kept on the document by usePagePixel; the room
+   sets its own). Every frame, sheet and button is a nine-slice of a sprite
+   drawn in code (scripts/pixel/ui.mjs) whose edges are the same all along,
+   so a stretched edge never smears; tiles repeat at one art pixel per --px.
+
+   Words are live HTML: Jacquard 24 for titles, Pixelify Sans for the rest.
+   Long prose keeps the archive's serif (.px-prose), on pixel parchment. */
+
+@import '@fontsource/pixelify-sans/400.css';
+@import '@fontsource/pixelify-sans/600.css';
+@import '@fontsource/jacquard-24/400.css';
+
+:root {
+  --pixel: 'Pixelify Sans', var(--display);
+  --pixel-title: 'Jacquard 24', var(--title);
+  /* The palette's keys, for the HTML laid over the art (web/src/pixel/palette.ts). */
+  --px-ink: #0b0806;
+  --px-ink-1: #1a1209;
+  --px-wood: #2b1b10;
+  --px-wood-1: #4a2c16;
+  --px-wood-2: #6b4020;
+  --px-gold-0: #5a420c;
+  --px-gold-1: #8a6d1c;
+  --px-gold: #c9a227;
+  --px-gold-light: #e8cd7a;
+  --px-cream: #fff2c2;
+  --px-navy-0: #10152a;
+  --px-navy: #1d2742;
+  --px-navy-2: #2f3d63;
+  --px-parch: #e6d6b0;
+  --px-parch-1: #cdb88c;
+  --px-parch-dark: #a88c5c;
+  --px-stone-0: #3b3a38;
+  --px-stone: #5f5b55;
+  --px-stone-2: #8a857c;
+  --px-leaf-0: #2e3a16;
+  --px-leaf: #55662a;
+  --px-leaf-2: #8f9a3e;
+  --px-crimson-0: #4a0d10;
+  --px-crimson: #7c1f24;
+  --px-crimson-2: #b83a3a;
+  --px-blue-0: #0f2a4a;
+  --px-blue: #1f5e9e;
+}
+
+/* image-rendering is inherited, and a pixel sheet or frame sets it for its
+   own border and tiles. A painted picture inside one is scaled smoothly
+   again; sprites ask for pixelated by class (.sprite, .sprite--strip > img),
+   which this zero-specificity rule never outweighs. */
+:where(img, video, canvas) { image-rendering: auto; }
+
+/* ---------- Sprites ---------- */
+
+/* One of the drawn sprites (web/src/pixel/Sprite.tsx), at the art pixel. */
+.sprite {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  image-rendering: pixelated;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+/* A strip of frames, run through a window one frame wide. */
+.sprite--strip { overflow: hidden; }
+.sprite--strip > img {
+  display: block;
+  width: calc(var(--frames) * 100%);
+  max-width: none;
+  height: 100%;
+  image-rendering: pixelated;
+  animation: sprite-run var(--run, 0.6s) steps(var(--frames)) infinite;
+}
+@keyframes sprite-run { to { transform: translateX(-100%); } }
+
+/* ---------- Grounds ---------- */
+
+/* Dark panelling behind a page. */
+.px-wall {
+  background: url('../assets/pixel/ui-wall.png') 0 0 / calc(24 * var(--px)) repeat, var(--px-wood);
+  image-rendering: pixelated;
+}
+
+/* Planks behind the notices. */
+.px-planks {
+  background: url('../assets/pixel/ui-planks.png') 0 0 / calc(32 * var(--px)) calc(16 * var(--px)) repeat, var(--px-wood-2);
+  image-rendering: pixelated;
+}
+
+/* A sheet of parchment: a deckled edge, gold brackets in the corners. */
+.px-sheet {
+  color: var(--px-ink-1);
+  background: url('../assets/pixel/ui-parchment.png') 0 0 / calc(16 * var(--px)) repeat, var(--px-parch);
+  background-clip: padding-box;
+  border: calc(6 * var(--px)) solid transparent;
+  border-image: url('../assets/pixel/ui-sheet.png') 6 / calc(6 * var(--px)) stretch;
+  border-radius: 0;
+  box-shadow: calc(2 * var(--px)) calc(2 * var(--px)) 0 var(--px-ink);
+  image-rendering: pixelated;
+}
+
+/* A rougher scrap, for notices. */
+.px-scrap {
+  color: var(--px-ink-1);
+  background: url('../assets/pixel/ui-parchment.png') 0 0 / calc(16 * var(--px)) repeat, var(--px-parch);
+  background-clip: padding-box;
+  border: calc(3 * var(--px)) solid transparent;
+  border-image: url('../assets/pixel/ui-scrap.png') 3 / calc(3 * var(--px)) stretch;
+  border-radius: 0;
+  box-shadow: var(--px) var(--px) 0 var(--px-ink);
+  image-rendering: pixelated;
+}
+
+/* A recessed box on parchment, for figures. */
+.px-inset {
+  border: calc(2 * var(--px)) solid transparent;
+  border-image: url('../assets/pixel/ui-inset.png') 2 fill / calc(2 * var(--px)) stretch;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  image-rendering: pixelated;
+}
+
+/* A gold frame round a picture, which stays painted. */
+.px-frame {
+  display: block;
+  border: calc(7 * var(--px)) solid transparent;
+  border-image: url('../assets/pixel/ui-frame.png') 7 / calc(7 * var(--px)) stretch;
+  border-radius: 0;
+  background: var(--px-ink);
+  box-shadow: calc(2 * var(--px)) calc(2 * var(--px)) 0 var(--px-ink);
+  image-rendering: pixelated;
+}
+.px-frame > img,
+.px-frame > video,
+.px-frame > picture > img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 0;
+  image-rendering: auto;
+}
+
+/* A plaque: gold letters on lacquer in a gold bevel, as in the room. */
+.px-plaque {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(1.5 * var(--px));
+  padding: 0 calc(2 * var(--px));
+  font: 600 max(11px, calc(5.5 * var(--px))) / 1.2 var(--pixel);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--px-gold-light);
+  background: none;
+  border: calc(3 * var(--px)) solid transparent;
+  border-image: url('../assets/pixel/plaque.png') 3 fill / calc(3 * var(--px)) stretch;
+  border-radius: 0;
+  box-shadow: none;
+  image-rendering: pixelated;
+}
+.px-plaque--small {
+  border-width: calc(2 * var(--px));
+  border-image: url('../assets/pixel/plaque-small.png') 2 fill / calc(2 * var(--px)) stretch;
+  font-size: max(10px, calc(4.5 * var(--px)));
+}
+
+/* The gilt rule under a heading, its fleuron at the middle. */
+.px-rule {
+  display: block;
+  height: calc(7 * var(--px));
+  border: 0;
+  background:
+    url('../assets/pixel/ui-fleuron.png') center / calc(15 * var(--px)) calc(7 * var(--px)) no-repeat,
+    linear-gradient(var(--px-gold), var(--px-gold)) 0 calc(3 * var(--px)) / 100% var(--px) no-repeat,
+    linear-gradient(var(--px-gold-0), var(--px-gold-0)) 0 calc(4 * var(--px)) / 100% var(--px) no-repeat;
+  image-rendering: pixelated;
+}
+
+/* ---------- Controls ---------- */
+
+.px-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(2 * var(--px));
+  min-height: calc(14 * var(--px));
+  padding: 0 calc(3 * var(--px));
+  font: 600 max(12px, calc(5.5 * var(--px))) / 1 var(--pixel);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--px-ink);
+  background: none;
+  border: calc(2 * var(--px)) solid transparent;
+  border-image: url('../assets/pixel/ui-button.png') 2 fill / calc(2 * var(--px)) stretch;
+  border-radius: 0;
+  box-shadow: none;
+  image-rendering: pixelated;
+  cursor: inherit;
+}
+.px-btn:active:not(:disabled) { border-image-source: url('../assets/pixel/ui-button-down.png'); }
+.px-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.px-btn--quiet {
+  color: var(--px-ink-1);
+  border-image-source: url('../assets/pixel/ui-inset.png');
+}
+
+.px-field {
+  font: 400 max(14px, calc(6 * var(--px))) / 1.3 var(--pixel);
+  color: var(--px-ink-1);
+  background: none;
+  border: calc(2 * var(--px)) solid transparent;
+  border-image: url('../assets/pixel/ui-field.png') 2 fill / calc(2 * var(--px)) stretch;
+  border-radius: 0;
+  box-shadow: none;
+  image-rendering: pixelated;
+}
+
+/* The seal that closes a takeover. */
+.px-seal {
+  inline-size: calc(13 * var(--px));
+  block-size: calc(13 * var(--px));
+  padding: 0;
+  background: url('../assets/pixel/ui-seal.png') 0 0 / 100% 100% no-repeat;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  image-rendering: pixelated;
+  cursor: inherit;
+}
+
+/* Pins for parchment on a wall or a board. */
+.px-tack,
+.px-wax {
+  display: block;
+  inline-size: calc(4 * var(--px));
+  block-size: calc(4 * var(--px));
+  background: url('../assets/pixel/ui-tack.png') 0 0 / 100% 100% no-repeat;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  image-rendering: pixelated;
+}
+.px-wax { background-image: url('../assets/pixel/ui-wax.png'); }
+
+/* A flat badge, its colours from the palette (--badge, --badge-ink). */
+.px-badge {
+  display: inline-block;
+  padding: calc(0.5 * var(--px)) calc(2 * var(--px));
+  font: 600 max(11px, calc(4.5 * var(--px))) / 1.2 var(--pixel);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--badge-ink, var(--px-cream));
+  background: var(--badge, var(--px-wood-1));
+  border: 0;
+  border-radius: 0;
+  box-shadow: 0 0 0 var(--px) var(--px-ink-1);
+}
+
+/* ---------- Hover and focus ---------- */
+
+/* The room's hover: a one-art-pixel gold outline round the shape. */
+.px-glow:hover,
+.px-glow:focus-visible {
+  filter:
+    drop-shadow(var(--px) 0 0 var(--px-gold-light))
+    drop-shadow(calc(-1 * var(--px)) 0 0 var(--px-gold-light))
+    drop-shadow(0 var(--px) 0 var(--px-gold-light))
+    drop-shadow(0 calc(-1 * var(--px)) 0 var(--px-gold-light));
+}
+.px-btn:focus-visible,
+.px-field:focus-visible,
+.px-seal:focus-visible,
+.px-focus:focus-visible {
+  outline: var(--px) solid var(--px-gold-light);
+  outline-offset: var(--px);
+}
+.px-btn:hover:not(:disabled) { color: var(--px-wood); }
+
+/* ---------- Words ---------- */
+
+.px-title {
+  font-family: var(--pixel-title);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+.px-text { font-family: var(--pixel); }
+/* Long reading keeps the serif, on the pixel page. */
+.px-prose { font-family: var(--serif, 'EB Garamond', Georgia, serif); }

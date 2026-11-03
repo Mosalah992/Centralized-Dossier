@@ -118,7 +118,8 @@ export function Bookshelf({ book }: { book?: string }) {
                   key={`f${k}`}
                   className="spine spine--filler"
                   aria-hidden="true"
-                  style={{ ['--leather' as string]: f[0], ['--h' as string]: f[1], width: f[2] }}
+                  // Widths are in screen pixels at two to the art pixel; halved, they land on the grid.
+                  style={{ ['--leather' as string]: f[0], ['--h' as string]: f[1], width: `calc(${f[2] / 2} * var(--px))` }}
                 >
                   <span className="spine__art">
                     <span className="spine__band spine__band--1" />

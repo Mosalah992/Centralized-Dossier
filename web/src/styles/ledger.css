@@ -1,51 +1,66 @@
 /* An opened volume: parchment laid on the dark hall, carrying live sheet data.
-   The Google Sheet is the database; this is the archive. */
+   The Google Sheet is the database; this is the archive.
+
+   In pixels since 2026-11-03, after the room: a pixel sheet (pixel-ui.css,
+   scripts/pixel/ui.mjs) on dark panelling, every edge and rule a whole art
+   pixel (--px). Titles in Jacquard 24, everything else in Pixelify Sans but
+   long prose, which keeps the serif. */
 
 .volume {
   padding: 2.5rem 0 0;
+  /* Every label, heading and plate in a volume is set in the display face; on
+     the pixel pages that face is Pixelify Sans, and the title face Jacquard.
+     Running text keeps the body's serif, so long prose stays easy to read. */
+  --display: var(--pixel);
+  --title: var(--pixel-title);
   --cover: #31402f;
   --cover-2: #1b241a;
   --foil: var(--gold);
 }
 
+/* The hall behind a volume is the room's panelling. */
+body:has(.volume) {
+  background: url('../assets/pixel/ui-wall.png') 0 0 / calc(24 * var(--px)) repeat fixed, var(--px-wood);
+  image-rendering: pixelated;
+}
+
 .volume__back {
   display: inline-flex;
   align-items: center;
-  gap: 0.6rem;
-  font-family: var(--display);
-  font-size: 0.66rem;
-  letter-spacing: 0.28em;
-  color: var(--stone-dim);
-  padding: 0.5rem 0;
+  gap: calc(1.5 * var(--px));
+  padding: 0 calc(2 * var(--px));
+  font: 600 max(11px, calc(5.5 * var(--px))) / 1.2 var(--pixel);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--px-gold-light);
   background: none;
-  border: 0;
+  border: calc(3 * var(--px)) solid transparent;
+  border-image: url('../assets/pixel/plaque.png') 3 fill / calc(3 * var(--px)) stretch;
+  image-rendering: pixelated;
   cursor: inherit;
-  transition: color 0.25s var(--ease);
 }
 
 .volume__back:hover,
 .volume__back:focus-visible {
-  color: var(--foil);
+  outline: none;
+  color: var(--px-ink);
+  border-image-source: none;
+  background: var(--px-gold-light);
 }
 
 /* The page itself. It opens from the fold rather than fading in, so the book
    metaphor survives the transition from shelf to contents. */
 .page {
   margin-top: 1.5rem;
-  padding: clamp(2rem, 4vw, 3.4rem);
-  color: var(--ink);
-  background:
-    linear-gradient(90deg, color-mix(in srgb, var(--cover) 18%, transparent), transparent 18% 82%, color-mix(in srgb, var(--cover) 12%, transparent)),
-    repeating-linear-gradient(0deg, rgba(88, 62, 30, 0.035) 0 1px, transparent 1px 10px),
-    repeating-linear-gradient(90deg, rgba(88, 62, 30, 0.025) 0 1px, transparent 1px 14px),
-    radial-gradient(120% 80% at 15% 0%, rgba(255, 255, 255, 0.55), transparent 55%),
-    linear-gradient(170deg, var(--parchment), var(--parchment-2));
-  border: 1px solid color-mix(in srgb, var(--cover) 42%, rgba(90, 70, 30, 0.28));
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--foil) 20%, transparent),
-    0 26px 50px rgba(0, 0, 0, 0.55),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.18),
-    inset 0 0 48px rgba(90, 70, 30, 0.16);
+  padding: clamp(1.4rem, 3.4vw, 2.8rem);
+  color: var(--px-ink-1);
+  /* A pixel sheet (pixel-ui.css .px-sheet), drawn here so every volume has it. */
+  background: url('../assets/pixel/ui-parchment.png') 0 0 / calc(16 * var(--px)) repeat, var(--px-parch);
+  background-clip: padding-box;
+  border: calc(6 * var(--px)) solid transparent;
+  border-image: url('../assets/pixel/ui-sheet.png') 6 / calc(6 * var(--px)) stretch;
+  box-shadow: calc(3 * var(--px)) calc(3 * var(--px)) 0 var(--px-ink);
+  image-rendering: pixelated;
   /* The hinge the board swings on. The swing itself is a timeline in
      Page.tsx — opening the cover is only the first beat of three, and a single
      keyframe cannot express a sequence. */
@@ -61,26 +76,22 @@
   pointer-events: none;
 }
 
-.page::before {
-  inset: 0.8rem;
-  border: 1px solid color-mix(in srgb, var(--cover) 24%, rgba(90, 70, 30, 0.16));
-}
+/* The sheet's own brackets are the inner rule now. */
+.page::before { display: none; }
 
-/* The Dominion seal, stamped slightly askew at the foot of every volume. */
+/* The Dominion seal, pressed in crimson wax at the foot of every volume. */
 .page::after {
-  right: clamp(1.3rem, 3vw, 2.4rem);
-  bottom: clamp(1.2rem, 3vw, 2rem);
-  width: 5.4rem;
-  height: 5.4rem;
-  background: url('/seal.webp') center / contain no-repeat;
-  opacity: 0.85;
-  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.3));
+  right: clamp(1rem, 2.6vw, 2rem);
+  bottom: clamp(1rem, 2.6vw, 1.7rem);
+  width: calc(24 * var(--px));
+  height: calc(24 * var(--px));
+  background: url('../assets/pixel/ui-stamp.png') center / 100% 100% no-repeat;
+  image-rendering: pixelated;
 }
 
 .page__head {
   text-align: center;
   padding-bottom: 1.8rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--cover) 34%, rgba(90, 70, 30, 0.22));
   position: relative;
   z-index: 2;
 }
@@ -92,132 +103,148 @@
 .page__foil {
   position: absolute;
   left: 50%;
-  bottom: -1px;
-  width: min(21rem, 72%);
-  height: 3px;
-  background: linear-gradient(90deg, transparent, var(--cover), var(--foil), var(--cover), transparent);
+  bottom: calc(-3 * var(--px));
+  width: min(28rem, 86%);
+  height: calc(7 * var(--px));
+  /* The gilt rule (pixel-ui.css .px-rule), its fleuron at the middle. */
+  background:
+    url('../assets/pixel/ui-fleuron.png') center / calc(15 * var(--px)) calc(7 * var(--px)) no-repeat,
+    linear-gradient(var(--px-gold), var(--px-gold)) 0 calc(3 * var(--px)) / 100% var(--px) no-repeat,
+    linear-gradient(var(--px-gold-0), var(--px-gold-0)) 0 calc(4 * var(--px)) / 100% var(--px) no-repeat;
+  image-rendering: pixelated;
   transform: translateX(-50%);
   transform-origin: center;
   pointer-events: none;
 }
 
+/* A small plaque (plaque-small.png), as the room names its arches. */
 .page__classification {
   display: inline-block;
-  margin: 0 0 0.7rem;
-  padding: 0.28rem 0.72rem;
-  font-family: var(--display);
-  font-size: 0.58rem;
-  letter-spacing: 0.28em;
+  margin: 0 0 0.8rem;
+  padding: 0 calc(2 * var(--px));
+  font: 600 max(10px, calc(4.5 * var(--px))) / 1.3 var(--pixel);
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--foil) 72%, var(--parchment));
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--cover) 92%, #000), var(--cover-2));
-  border: 1px solid color-mix(in srgb, var(--foil) 36%, transparent);
-  box-shadow:
-    inset 0 1px rgba(255, 255, 255, 0.08),
-    0 4px 8px rgba(0, 0, 0, 0.12);
+  color: var(--px-gold-light);
+  border: calc(2 * var(--px)) solid transparent;
+  border-image: url('../assets/pixel/plaque-small.png') 2 fill / calc(2 * var(--px)) stretch;
+  image-rendering: pixelated;
 }
 
 .page__title {
-  font-size: clamp(1.3rem, 3vw, 1.9rem);
-  color: color-mix(in srgb, var(--cover) 46%, var(--ink));
-  letter-spacing: 0.16em;
+  font-family: var(--pixel-title);
+  font-weight: 400;
+  font-size: clamp(2.2rem, 5vw, 3.4rem);
+  line-height: 1;
+  color: var(--px-wood);
+  letter-spacing: 0.02em;
+  text-transform: none;
 }
 
 .page__subtitle {
-  margin-top: 0.7rem;
-  font-family: var(--display);
-  font-size: 0.64rem;
-  letter-spacing: 0.32em;
-  color: var(--ink-soft);
+  margin-top: 0.6rem;
+  font-family: var(--pixel);
+  font-size: max(12px, calc(5 * var(--px)));
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--px-wood-1);
 }
 
 /* ── Registers (stat tiles) ──────────────────────────────────────────────── */
 
+/* Each figure in a recessed box of its own (ui-inset.png). */
 .registers {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
-  gap: 1px;
+  gap: calc(3 * var(--px));
   margin: 2rem 0;
-  background: color-mix(in srgb, var(--cover) 22%, rgba(90, 70, 30, 0.22));
-  border: 1px solid color-mix(in srgb, var(--cover) 30%, rgba(90, 70, 30, 0.22));
 }
 
 .register {
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--cover) 8%, rgba(239, 230, 210, 0.94)), rgba(239, 230, 210, 0.92));
-  padding: 1.1rem 1rem;
+  padding: 0.8rem 0.6rem;
   text-align: center;
+  border: calc(2 * var(--px)) solid transparent;
+  border-image: url('../assets/pixel/ui-inset.png') 2 fill / calc(2 * var(--px)) stretch;
+  image-rendering: pixelated;
 }
 
 .register__label {
-  font-family: var(--display);
-  font-size: 0.58rem;
-  letter-spacing: 0.22em;
-  color: var(--ink-soft);
+  font-family: var(--pixel);
+  font-size: max(11px, calc(4.5 * var(--px)));
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--px-wood-1);
 }
 
 .register__value {
-  margin-top: 0.45rem;
-  font-family: var(--display);
-  font-size: 1.65rem;
+  margin-top: 0.35rem;
+  font-family: var(--pixel);
+  font-size: max(24px, calc(12 * var(--px)));
   font-weight: 600;
-  color: color-mix(in srgb, var(--cover) 42%, var(--ink));
+  line-height: 1;
+  color: var(--px-wood);
   font-variant-numeric: tabular-nums;
 }
 
 /* ── Tables ──────────────────────────────────────────────────────────────── */
 
 /* Wide tables scroll inside their own frame; the page never scrolls sideways. */
+/* The table sits in a recessed box; rules are one art pixel, in palette tones. */
 .table-frame {
   margin: 2rem 0;
   overflow-x: auto;
-  border: 1px solid rgba(90, 70, 30, 0.22);
+  border: calc(2 * var(--px)) solid transparent;
+  border-image: url('../assets/pixel/ui-inset.png') 2 / calc(2 * var(--px)) stretch;
+  image-rendering: pixelated;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
+  font-family: var(--pixel);
   font-size: 0.95rem;
 }
 
 caption {
   caption-side: top;
   text-align: left;
-  padding: 0.9rem 1rem;
-  font-family: var(--display);
-  font-size: 0.66rem;
-  letter-spacing: 0.26em;
-  color: var(--ink-soft);
-  background: rgba(90, 70, 30, 0.07);
-  border-bottom: 1px solid rgba(90, 70, 30, 0.18);
+  padding: 0.7rem 1rem;
+  font-family: var(--pixel);
+  font-size: max(11px, calc(4.5 * var(--px)));
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--px-wood-1);
+  background: var(--px-parch-1);
+  border-bottom: var(--px) solid var(--px-parch-dark);
 }
 
 th, td {
   padding: 0.6rem 1rem;
   text-align: left;
-  border-bottom: 1px solid rgba(90, 70, 30, 0.13);
+  border-bottom: var(--px) solid var(--px-parch-1);
   white-space: nowrap;
 }
 
+/* The head is a lacquer band with gold letters, like the room's plaques. */
 thead th {
   position: sticky;
   top: 0;
-  font-family: var(--display);
-  font-size: 0.6rem;
-  letter-spacing: 0.2em;
+  font-family: var(--pixel);
+  font-size: max(11px, calc(4.5 * var(--px)));
+  font-weight: 600;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--ink-soft);
-  background: var(--parchment-2);
-  border-bottom: 1px solid rgba(90, 70, 30, 0.3);
+  color: var(--px-gold-light);
+  background: var(--px-ink-1);
+  border-bottom: var(--px) solid var(--px-gold);
 }
 
 tbody tr:nth-child(even) td {
-  background: rgba(90, 70, 30, 0.045);
+  background: var(--px-parch-1);
 }
 
 tbody tr:hover td {
-  background: rgba(201, 162, 39, 0.14);
+  background: var(--px-gold-light);
 }
 
 td.num, th.num {
@@ -265,7 +292,7 @@ td.wrap {
 }
 
 .roster-name {
-  color: #8a4b12;
+  color: var(--px-wood-1);
   font-weight: 700;
   white-space: normal;
   line-height: 1.25;
@@ -301,7 +328,7 @@ td.wrap {
    sits on an inner span: -webkit-box applied to the td itself stops it being
    a table-cell, which skewed the whole column out of its rows. */
 .roster-notes {
-  color: #8a4b12;
+  color: var(--px-wood-1);
   font-size: 0.82rem;
   line-height: 1.35;
   white-space: normal;
@@ -315,14 +342,17 @@ td.wrap {
   overflow: hidden;
 }
 
+/* A flat pixel badge, one art pixel of ink round it. */
 .roster-token {
   display: inline-block;
   max-width: 100%;
-  padding: 0.12rem 0.62rem 0.16rem;
-  border-radius: 999px;
-  color: var(--parchment);
-  background: #5b5346;
-  font-size: 0.78rem;
+  padding: 0.1rem 0.5rem 0.14rem;
+  border-radius: 0;
+  color: var(--px-cream);
+  background: var(--px-stone);
+  box-shadow: 0 0 0 var(--px) var(--px-ink-1);
+  font-family: var(--pixel);
+  font-size: 0.8rem;
   line-height: 1.25;
   /* "Grand Ambassador" is longer than its column; clip rather than spill. */
   white-space: nowrap;
@@ -334,103 +364,106 @@ td.wrap {
 /* Unit — four values in the sheet, and all four are coloured, including the
    largest wing (61 of 98 members); leaving that one grey made the roster read
    as undifferentiated. */
+/* A square pip, four art pixels a side, in the palette. */
 .roster-unit__dot {
-  width: 0.5rem;
-  height: 0.5rem;
+  width: calc(4 * var(--px));
+  height: calc(4 * var(--px));
   flex: none;
-  border-radius: 50%;
-  background: #8a8170;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.16);
+  border-radius: 0;
+  background: var(--px-stone-2);
+  box-shadow: 0 0 0 var(--px) var(--px-ink-1);
 }
 
-.roster-unit__dot--command { background: #6b3d95; }
-.roster-unit__dot--militant-wing { background: #9a3327; }
-.roster-unit__dot--diplomatic-wing { background: #1677cf; }
-.roster-unit__dot--administrative-wing { background: #2f7e6a; }
+.roster-unit__dot--command { background: var(--px-gold); }
+.roster-unit__dot--militant-wing { background: var(--px-crimson-2); }
+.roster-unit__dot--diplomatic-wing { background: var(--px-blue); }
+.roster-unit__dot--administrative-wing { background: var(--px-leaf); }
 
 /* Rank — by seniority tier, so all 23 ranks are covered by six colours that
    descend in weight from command to entry. Flat fills: the gradients and inner
    shadows made every pill look like a button. */
 .roster-token--tier-command {
-  color: #211704;
-  background: #eec32b;
+  color: var(--px-ink);
+  background: var(--px-gold);
 }
 
-.roster-token--tier-justiciar { background: #b52020; }
-.roster-token--tier-diplomatic { background: #1668bd; }
-.roster-token--tier-talon { background: #2b313c; }
-.roster-token--tier-officer { background: #266b80; }
-.roster-token--tier-soldier { background: #5b7040; }
+.roster-token--tier-justiciar { background: var(--px-crimson); }
+.roster-token--tier-diplomatic { background: var(--px-blue); }
+.roster-token--tier-talon { background: var(--px-ink-1); }
+.roster-token--tier-officer { background: var(--px-navy-2); }
+.roster-token--tier-soldier { background: var(--px-leaf); }
 
 .roster-token--tier-support {
-  color: #35240d;
-  background: #dcc189;
+  color: var(--px-ink-1);
+  background: var(--px-gold-light);
 }
 
 .roster-token--tier-entry,
 .roster-token--tier-blank {
-  color: var(--ink-soft);
-  background: #ded4bd;
+  color: var(--px-wood-1);
+  background: var(--px-parch);
 }
 
 /* ── Marks ───────────────────────────────────────────────────────────────── */
 
+/* A box ticked in pixels: the tick is five whole art pixels. */
 .mark {
   display: inline-grid;
   place-items: center;
-  width: 1.15rem;
-  height: 1.15rem;
-  border-radius: 2px;
-  border: 2px solid #bb7a38;
-  background: rgba(255, 247, 224, 0.26);
-  box-shadow: inset 0 1px rgba(255, 255, 255, 0.18);
+  width: calc(9 * var(--px));
+  height: calc(9 * var(--px));
+  border-radius: 0;
+  border: var(--px) solid var(--px-wood-1);
+  background: var(--px-cream);
+  box-shadow: inset var(--px) var(--px) 0 var(--px-parch-1);
 }
 
 .mark--yes {
-  border-color: #1e8b5a;
-  background: linear-gradient(180deg, #1fa46a, #0d7549);
+  border-color: var(--px-leaf-0);
+  background: var(--px-leaf);
+  box-shadow: inset var(--px) var(--px) 0 var(--px-leaf-2);
 }
 
 .mark--yes::before {
   content: '';
-  width: 0.32rem;
-  height: 0.62rem;
-  border: solid var(--parchment);
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg) translateY(-1px);
+  width: calc(5 * var(--px));
+  height: calc(4 * var(--px));
+  background:
+    linear-gradient(var(--px-cream), var(--px-cream)) 0 calc(2 * var(--px)) / var(--px) var(--px) no-repeat,
+    linear-gradient(var(--px-cream), var(--px-cream)) var(--px) calc(3 * var(--px)) / var(--px) var(--px) no-repeat,
+    linear-gradient(var(--px-cream), var(--px-cream)) calc(2 * var(--px)) calc(2 * var(--px)) / var(--px) var(--px) no-repeat,
+    linear-gradient(var(--px-cream), var(--px-cream)) calc(3 * var(--px)) var(--px) / var(--px) var(--px) no-repeat,
+    linear-gradient(var(--px-cream), var(--px-cream)) calc(4 * var(--px)) 0 / var(--px) var(--px) no-repeat;
 }
 
 /* Flat like the rank pill, and only as wide as its word. */
 .status {
   display: inline-block;
-  padding: 0.2rem 0.66rem;
-  font-family: var(--display);
-  font-size: 0.56rem;
-  letter-spacing: 0.16em;
+  padding: 0.12rem 0.5rem;
+  font-family: var(--pixel);
+  font-size: max(11px, calc(4.5 * var(--px)));
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   text-align: center;
   white-space: nowrap;
-  border-radius: 999px;
-  border: 1px solid rgba(90, 70, 30, 0.32);
+  border-radius: 0;
+  border: 0;
+  color: var(--px-cream);
+  background: var(--px-stone);
+  box-shadow: 0 0 0 var(--px) var(--px-ink-1);
 }
 
-.status--active {
-  border-color: #157048;
-  background: #1a7f55;
-  color: var(--parchment);
-}
+.status--active { background: var(--px-leaf); }
 
 .status--loa,
 .status--absent {
-  border-color: #79b4d8;
-  background: #c9eaff;
-  color: #07509f;
+  background: var(--px-navy-2);
 }
 
 .status--inactive,
 .status--arrested {
-  border-color: #8f0f13;
-  background: #b81c22;
-  color: var(--parchment);
+  background: var(--px-crimson);
 }
 
 /* ── Hall of Honor ───────────────────────────────────────────────────────── */
@@ -440,12 +473,13 @@ td.wrap {
 
 .page__heading {
   margin: 2.4rem 0 0;
-  font-family: var(--display);
-  font-size: 0.78rem;
-  letter-spacing: 0.3em;
+  font-family: var(--pixel);
+  font-size: max(13px, calc(6 * var(--px)));
+  font-weight: 600;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   text-align: center;
-  color: color-mix(in srgb, var(--cover) 46%, var(--ink));
+  color: var(--px-wood);
 }
 
 .emissaries {
@@ -462,7 +496,7 @@ td.wrap {
   grid-template-columns: minmax(9rem, 12rem) 1fr;
   gap: 1.6rem;
   padding-bottom: 2.2rem;
-  border-bottom: 1px solid rgba(90, 70, 30, 0.16);
+  border-bottom: var(--px) solid var(--px-parch-1);
 }
 
 .honoree {
@@ -475,11 +509,13 @@ td.wrap {
 .honoree__portrait,
 .pair__portrait {
   margin: 0;
-  border: 1px solid color-mix(in srgb, var(--cover) 40%, rgba(90, 70, 30, 0.35));
-  outline: 4px solid color-mix(in srgb, var(--foil) 26%, transparent);
-  outline-offset: -7px;
-  background: #45474b;
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
+  /* The painting stays painted, in a pixel gold frame (pixel-ui.css .px-frame). */
+  border: calc(7 * var(--px)) solid transparent;
+  border-image: url('../assets/pixel/ui-frame.png') 7 / calc(7 * var(--px)) stretch;
+  background: var(--px-ink);
+  box-shadow: calc(2 * var(--px)) calc(2 * var(--px)) 0 var(--px-ink);
+  image-rendering: pixelated;
+  box-sizing: content-box;
 }
 
 .emissary__portrait img,
@@ -497,40 +533,44 @@ td.wrap {
 }
 
 /* Verux. The plate hangs; the painting has been removed. */
+/* The empty frame's ground: stone hatched in whole pixels. */
 .emissary__expunged {
   width: 100%;
   height: 100%;
   display: grid;
   place-items: center;
   background:
-    repeating-linear-gradient(-45deg, rgba(0, 0, 0, 0.28) 0 8px, transparent 8px 20px),
-    #33342f;
+    repeating-linear-gradient(-45deg, var(--px-stone-0) 0 calc(3 * var(--px)), var(--px-stone) calc(3 * var(--px)) calc(6 * var(--px)));
 }
 
+/* Struck in crimson, square: rotating it would smear every pixel of it. */
 .emissary__stamp {
-  padding: 0.3rem 0.8rem;
-  font-family: var(--display);
-  font-size: 0.68rem;
-  letter-spacing: 0.3em;
+  padding: calc(1 * var(--px)) calc(3 * var(--px));
+  font-family: var(--pixel);
+  font-size: max(12px, calc(5 * var(--px)));
+  font-weight: 600;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #c96a5a;
-  border: 2px solid currentColor;
-  transform: rotate(-8deg);
-  opacity: 0.85;
+  color: var(--px-crimson-2);
+  background: var(--px-ink-1);
+  border: var(--px) solid currentColor;
+  box-shadow: 0 0 0 var(--px) var(--px-ink-1);
 }
 
 .emissary__name,
 .honoree__name {
-  font-size: 1.15rem;
-  letter-spacing: 0.1em;
-  color: color-mix(in srgb, var(--cover) 40%, var(--ink));
+  font-family: var(--pixel);
+  font-size: 1.3rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--px-wood);
 }
 
 .emissary__epithet {
   margin: 0.35rem 0 0;
-  font-style: italic;
+  font-family: var(--pixel);
   font-size: 1rem;
-  color: #8a4b12;
+  color: var(--px-wood-1);
 }
 
 .emissary__deeds,
@@ -544,17 +584,23 @@ td.wrap {
 .honoree__deeds li {
   position: relative;
   padding: 0.35rem 0 0.35rem 1.4rem;
-  color: var(--ink-soft);
+  font-family: var(--pixel);
+  color: var(--px-ink-1);
 }
 
+/* A gold lozenge, five art pixels across, for each deed. */
 .emissary__deeds li::before,
 .honoree__deeds li::before {
-  content: '\2726'; /* ✦ */
+  content: '';
   position: absolute;
   left: 0;
-  top: 0.35rem;
-  color: var(--gold);
-  font-size: 0.8rem;
+  top: calc(0.35rem + 0.5em - 2.5 * var(--px));
+  width: calc(5 * var(--px));
+  height: calc(5 * var(--px));
+  background:
+    linear-gradient(var(--px-gold-light), var(--px-gold-light)) calc(2 * var(--px)) 0 / var(--px) calc(5 * var(--px)) no-repeat,
+    linear-gradient(var(--px-gold), var(--px-gold)) 0 calc(2 * var(--px)) / calc(5 * var(--px)) var(--px) no-repeat,
+    linear-gradient(var(--px-gold), var(--px-gold)) var(--px) var(--px) / calc(3 * var(--px)) calc(3 * var(--px)) no-repeat;
 }
 
 /* A drier hand in the margin, aligned to the deed text rather than its mark. */
@@ -562,7 +608,7 @@ td.wrap {
   margin: 0.9rem 0 0;
   padding-left: 1.4rem;
   font-style: italic;
-  color: color-mix(in srgb, var(--ink-soft) 74%, transparent);
+  color: var(--px-wood-1);
 }
 
 /* One plate, two records. The portrait leads and the records run beside it,
@@ -574,7 +620,7 @@ td.wrap {
   gap: 1.8rem;
   align-items: start;
   padding-bottom: 2.2rem;
-  border-bottom: 1px solid rgba(90, 70, 30, 0.16);
+  border-bottom: var(--px) solid var(--px-parch-1);
 }
 
 /* The painting's own proportions, declared so the row does not jump as it
@@ -599,19 +645,19 @@ td.wrap {
 }
 
 .emissary__bar {
-  height: 0.85rem;
-  background: #211d16;
-  opacity: 0.85;
+  height: calc(6 * var(--px));
+  background: var(--px-ink-1);
+  box-shadow: inset 0 calc(-1 * var(--px)) 0 var(--px-ink);
 }
 
 .page__credits {
   margin-top: 2.4rem;
   padding-top: 1.4rem;
-  border-top: 1px solid rgba(90, 70, 30, 0.22);
+  border-top: var(--px) solid var(--px-parch-dark);
   text-align: center;
-  font-style: italic;
+  font-family: var(--pixel);
   font-size: 0.85rem;
-  color: var(--ink-soft);
+  color: var(--px-wood-1);
 }
 
 .page__credits p {
@@ -1007,15 +1053,48 @@ button.day::before {
 .page__foot {
   margin-top: 2.5rem;
   padding-top: 1.5rem;
-  border-top: 1px solid rgba(90, 70, 30, 0.22);
+  border-top: var(--px) solid var(--px-parch-dark);
   /* The seal is stamped to the right of the foot; keep the source line clear. */
   padding-right: 6.5rem;
 }
 
 .page__source {
-  font-size: 0.82rem;
-  font-style: italic;
-  color: var(--ink-soft);
+  font-family: var(--pixel);
+  font-size: 0.85rem;
+  color: var(--px-wood-1);
+}
+
+/* ── Fluent's controls, in pixels ────────────────────────────────────────── */
+
+/* The search box and the dropdowns take the pixel field (ui-field.png): a
+   cream well, its top and left in shadow. Fluent draws its own border and an
+   animated underline; both give way. The theme (fluent/theme.ts) has already
+   squared the corners and set the pixel face. */
+.page .fui-SearchBox,
+.page .fui-Dropdown {
+  border: calc(2 * var(--px)) solid transparent;
+  border-image: url('../assets/pixel/ui-field.png') 2 fill / calc(2 * var(--px)) stretch;
+  background: none;
+  image-rendering: pixelated;
+}
+.page .fui-SearchBox::after,
+.page .fui-Dropdown::after { display: none; }
+/* The controls, and the lists and tooltips they open (portalled to <body>),
+   in the pixel face. */
+.fui-SearchBox,
+.fui-Dropdown,
+.fui-Listbox,
+.fui-Option,
+.fui-Tooltip__content,
+.fui-Button,
+.fui-SearchBox .fui-Input__input,
+.fui-Dropdown .fui-Dropdown__button { font-family: var(--pixel); }
+.fui-Listbox,
+.fui-Tooltip__content { border-radius: 0; }
+.page .fui-SearchBox:focus-within,
+.page .fui-Dropdown:focus-within {
+  outline: var(--px) solid var(--px-gold);
+  outline-offset: var(--px);
 }
 
 /* ── Small screens ───────────────────────────────────────────────────────── */

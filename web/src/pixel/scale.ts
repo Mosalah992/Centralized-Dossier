@@ -59,6 +59,46 @@ export function heroScale(width: number, height: number, dpr: number): number {
   return Math.max(1, Math.floor(Math.min((width * dpr) / 80, (height * dpr * 0.55) / 90))) / dpr;
 }
 
+/**
+ * The art pixel for every page outside the room (the volumes, the takeovers,
+ * the Gallery, the Solar's controls): whole device pixels again, 2 CSS pixels
+ * on a laptop, 3 on a 1080p screen, 4 at most, so frames and plaques stay
+ * chunky without crowding the words they hold.
+ */
+export function pagePixel(width: number, dpr: number): number {
+  const k = Math.floor((width * dpr) / 560);
+  return Math.min(Math.floor(4 * dpr), Math.max(Math.ceil(2 * dpr), k)) / dpr;
+}
+
+/**
+ * Keeps `--px` on the document current for the pages outside the room. The
+ * room sets its own on its element (usePixelStage), which wins inside it;
+ * takeovers are portalled to <body> and so take this one.
+ */
+export function usePagePixel() {
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+    let density: MediaQueryList | null = null;
+    const measure = () => root.style.setProperty('--px', `${pagePixel(root.clientWidth, window.devicePixelRatio || 1)}px`);
+    const watchDensity = () => {
+      density?.removeEventListener('change', onDensity);
+      density = window.matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`);
+      density.addEventListener('change', onDensity);
+    };
+    function onDensity() {
+      measure();
+      watchDensity();
+    }
+    measure();
+    watchDensity();
+    window.addEventListener('resize', measure);
+    return () => {
+      window.removeEventListener('resize', measure);
+      density?.removeEventListener('change', onDensity);
+    };
+  }, []);
+}
+
 /** Keeps the room's scale current as the window or its pixel density changes. */
 export function usePixelStage(ref: RefObject<HTMLElement | null>) {
   useLayoutEffect(() => {

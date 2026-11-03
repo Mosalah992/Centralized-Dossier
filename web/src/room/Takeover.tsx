@@ -21,10 +21,11 @@ const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)'
 const Nested = createContext(false);
 
 function inset(r: DOMRect | null): string {
-  if (!r) return 'inset(45% 45% 45% 45% round 24px)';
+  if (!r) return 'inset(45% 45% 45% 45%)';
   const w = window.innerWidth;
   const h = window.innerHeight;
-  return `inset(${r.top}px ${w - r.right}px ${h - r.bottom}px ${r.left}px round 18px)`;
+  // Square, as every edge in the pixel archive is.
+  return `inset(${r.top}px ${w - r.right}px ${h - r.bottom}px ${r.left}px)`;
 }
 
 interface Props {
@@ -136,11 +137,7 @@ export function Takeover({ label, closeTo, returnFocus, className = '', children
 
   const surface = (
     <div ref={ref} className={`takeover ${className}`} role="dialog" aria-modal="true" aria-label={label}>
-      <button type="button" className="takeover__close" onClick={close} aria-label={`Close ${label}`}>
-        <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
-          <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
-        </svg>
-      </button>
+      <button type="button" className="takeover__close px-seal" onClick={close} aria-label={`Close ${label}`} />
       <Nested.Provider value={true}>{children}</Nested.Provider>
     </div>
   );

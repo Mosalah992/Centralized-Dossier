@@ -19,6 +19,8 @@ import { CURSOR_HOTSPOT, drawCursor } from './pixel/cursor.mjs';
 import { drawObjects } from './pixel/objects.mjs';
 import { Raster } from './pixel/raster.mjs';
 import { drawScene } from './pixel/scene.mjs';
+import { drawSolar } from './pixel/solar.mjs';
+import { drawUi } from './pixel/ui.mjs';
 
 const OUT = 'web/src/assets/pixel';
 mkdirSync(OUT, { recursive: true });
@@ -35,6 +37,10 @@ const scene = drawScene();
 const objects = drawObjects();
 await emit('scene', scene);
 for (const [name, raster, extra] of objects) await emit(name, raster, extra);
+// The pieces the pages outside the room are built from (scripts/pixel/ui.mjs).
+for (const [name, raster, extra] of drawUi()) await emit(name, raster, extra);
+// The Solar's furniture (scripts/pixel/solar.mjs); its hall is the room's scene.
+for (const [name, raster, extra] of drawSolar()) await emit(name, raster, extra);
 
 writeFileSync(`${OUT}/manifest.json`, `${JSON.stringify(manifest, null, 2)}\n`);
 console.log(`${Object.keys(manifest).length} sprites`);

@@ -76,5 +76,104 @@
     "w": 8,
     "h": 8,
     "slice": 2
+  },
+  "ui-sheet": {
+    "w": 16,
+    "h": 16,
+    "slice": 6
+  },
+  "ui-parchment": {
+    "w": 16,
+    "h": 16,
+    "tile": true
+  },
+  "ui-wall": {
+    "w": 24,
+    "h": 24,
+    "tile": true
+  },
+  "ui-planks": {
+    "w": 32,
+    "h": 16,
+    "tile": true
+  },
+  "ui-cloth": {
+    "w": 8,
+    "h": 8,
+    "tile": true
+  },
+  "ui-frame": {
+    "w": 18,
+    "h": 18,
+    "slice": 7
+  },
+  "ui-inset": {
+    "w": 8,
+    "h": 8,
+    "slice": 2
+  },
+  "ui-field": {
+    "w": 8,
+    "h": 8,
+    "slice": 2
+  },
+  "ui-button": {
+    "w": 8,
+    "h": 8,
+    "slice": 2
+  },
+  "ui-button-down": {
+    "w": 8,
+    "h": 8,
+    "slice": 2
+  },
+  "ui-scrap": {
+    "w": 10,
+    "h": 10,
+    "slice": 3
+  },
+  "ui-seal": {
+    "w": 13,
+    "h": 13
+  },
+  "ui-fleuron": {
+    "w": 15,
+    "h": 7
+  },
+  "ui-tack": {
+    "w": 4,
+    "h": 4
+  },
+  "ui-wax": {
+    "w": 4,
+    "h": 4
+  },
+  "ui-stamp": {
+    "w": 24,
+    "h": 24
+  },
+  "war-table": {
+    "w": 120,
+    "h": 96
+  },
+  "clerk-table": {
+    "w": 80,
+    "h": 50
+  },
+  "canonreeve-desk": {
+    "w": 80,
+    "h": 50
+  },
+  "solar-hanging": {
+    "w": 60,
+    "h": 74
+  },
+  "solar-window-l": {
+    "w": 34,
+    "h": 76
+  },
+  "solar-window-r": {
+    "w": 34,
+    "h": 76
   }
 }

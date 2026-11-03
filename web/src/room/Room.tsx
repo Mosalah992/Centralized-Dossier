@@ -20,9 +20,6 @@
 
 import { Suspense, lazy, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
-import '@fontsource/pixelify-sans/400.css';
-import '@fontsource/pixelify-sans/600.css';
-import '@fontsource/jacquard-24/400.css';
 
 import boardArt from '../assets/pixel/board.png';
 import bookshelfArt from '../assets/pixel/bookshelf.png';

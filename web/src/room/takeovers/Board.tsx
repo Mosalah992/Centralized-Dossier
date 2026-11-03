@@ -20,6 +20,8 @@ import {
   type BoardSectionSummary,
   type Notice,
 } from '../../../../shared/room';
+import { PixelIcon } from '../../pixel/icons/PixelIcon';
+import type { IconName } from '../../pixel/icons/manifest';
 import { isUnseen, markSeen, readSeen } from '../board-seen';
 import { Link } from '../nav';
 import { useRoomData } from '../room-api';
@@ -28,18 +30,14 @@ import { RecruitmentNotice } from './Recruitment';
 import { Stamp } from './Stamp';
 import '../../styles/board.css';
 
-const SYMBOL: Record<BoardSection, string[]> = {
-  // A herald's horn.
-  propaganda: ['M3 10v4h4l9 5V5l-9 5H3Z', 'M19 9a4 4 0 0 1 0 6', 'M7 14l1 5h3l-1-4'],
-  // A quill over a scroll.
-  recruitment: ['M6 5h10a2 2 0 0 1 2 2v13H8a2 2 0 0 1-2-2Z', 'M6 5a2 2 0 0 0-2 2v2h2', 'M9 10h6M9 13h4', 'M21 2c-4 2-7 5-9 10l1.5 1C16 9 18 6 21 2Z'],
-  // A goblet under bunting.
-  festivities: ['M2 4q10 5 20 0', 'M6 6l1 3M12 6.5v3M18 6l-1 3', 'M8 11h8l-1 4a3 3 0 0 1-6 0Z', 'M12 18v3', 'M9 21h6'],
-  // A decree under the Embassy's seal.
-  'standing-orders': ['M5 3h14v12H5Z', 'M8 7h8M8 10h6', 'M12 15a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z', 'M10.5 20.5 9.5 23M13.5 20.5l1 2.5'],
-  // Auri-El's sun.
-  'spiritual-guidance': ['M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z', 'M12 2v3M12 19v3M2 12h3M19 12h3', 'M4.9 4.9 7 7M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1'],
-  bounties: ['M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z', 'M5 21c0-5 3-8 7-8s7 3 7 8', 'M3 3l18 18'],
+/** Each section's mark, from the pixel icon set (web/src/pixel/icons/). */
+const SYMBOL: Record<BoardSection, IconName> = {
+  propaganda: 'scroll-emblem',
+  recruitment: 'banner-assembly',
+  festivities: 'goblet',
+  'standing-orders': 'wax-stamp',
+  'spiritual-guidance': 'candle-books',
+  bounties: 'coin-pouch',
 };
 
 /** Notices the repository keeps standing in a section, ahead of anything posted. */
@@ -47,27 +45,22 @@ const STANDING: Partial<Record<BoardSection, ComponentType>> = {
   recruitment: RecruitmentNotice,
 };
 
-// Hand-placed: every parchment hangs a little differently.
-const HANG = [-3, 2, -1.5, 3, -2.5, 1.5];
+// Hand-placed: every parchment hangs a little differently, lower or higher by
+// whole art pixels (a tilt would smear the pixel art).
+const HANG = [0, 3, 1, 4, 2, 0];
 
 /** The board as it hangs with nothing on it: every section, none posted. */
 export const EMPTY_BOARD: BoardSectionSummary[] = BOARD_SECTIONS.map((id) => ({ id, ...BOARD_INFO[id], count: 0 }));
 
 function Symbol({ id }: { id: BoardSection }) {
-  return (
-    <svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      {SYMBOL[id].map((d, i) => (
-        <path key={i} d={d} />
-      ))}
-    </svg>
-  );
+  return <PixelIcon name={SYMBOL[id]} scale="px" />;
 }
 
 const when = (iso: string) => new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'long' });
 
 export function NoticeCard({ notice, index = 0 }: { notice: Notice; index?: number }) {
   return (
-    <article className={`notice parchment${notice.bounty ? ' notice--wanted' : ''}`} style={{ ['--hang' as string]: `${HANG[index % HANG.length]}deg` }}>
+    <article className={`notice parchment${notice.bounty ? ' notice--wanted' : ''}`} style={{ ['--hang' as string]: HANG[index % HANG.length] }}>
       <span className="pin" aria-hidden="true" />
       {notice.bounty ? <Poster bounty={notice.bounty} /> : <h3 className="notice__title">{notice.title}</h3>}
       {notice.bounty && <h3 className="notice__title notice__title--small">{notice.title}</h3>}
@@ -111,7 +104,7 @@ function BoardSections() {
             {sections.map((s, i) => {
               const fresh = isUnseen(s, seen);
               return (
-                <li key={s.id} style={{ ['--hang' as string]: `${HANG[i % HANG.length]}deg` }}>
+                <li key={s.id} style={{ ['--hang' as string]: HANG[i % HANG.length] }}>
                   <Link
                     href={`/board/${s.id}`}
                     className="board-section parchment"

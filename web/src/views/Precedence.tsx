@@ -313,19 +313,8 @@ export function PrecedenceView() {
           role="tree"
           aria-label="The Embassy by wing and rank"
         >
-          <defs>
-            {/* Gold thread: a soft glow beneath the stroke, so a branch reads as
-                embroidered into the cloth rather than drawn on top of it. */}
-            <filter id="tap-glow" x="-40%" y="-40%" width="180%" height="180%">
-              <feGaussianBlur stdDeviation="2.4" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-
-          <g filter="url(#tap-glow)">
+          {/* Gold thread in whole pixels: no glow, which would soften it. */}
+          <g>
             {cloth.threads.map((t) => (
               <path
                 key={t.id}

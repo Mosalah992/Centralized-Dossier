@@ -224,22 +224,24 @@ a {
   color: var(--stone-dim);
 }
 
+/* In the pixel faces, as every plate in the archive is (pixel-ui.css). */
 .site-footer__creed {
-  font-family: var(--display);
-  font-size: 0.82rem;
-  letter-spacing: 0.28em;
-  color: var(--gold);
+  font-family: var(--pixel-title);
+  font-size: 1.5rem;
+  letter-spacing: 0.02em;
+  color: var(--px-gold, var(--gold));
 }
 
 .site-footer__warning {
   margin-top: 0.7rem;
+  font-family: var(--pixel);
   font-size: 0.9rem;
-  font-style: italic;
 }
 
 /* Quieter than the warning above it — a hand in the margin, not a notice. */
 .site-footer__credit {
   margin-top: 0.9rem;
+  font-family: var(--pixel);
   font-size: 0.82rem;
   color: color-mix(in srgb, var(--stone-dim) 82%, transparent);
 }
