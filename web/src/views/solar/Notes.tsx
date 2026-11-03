@@ -2,13 +2,15 @@
 // Command wrote of it. A note opens the map on its piece.
 
 import { PIN_INFO } from '../../../../shared/solar';
+import type { Place } from '../../pixel/layout';
+import { at } from '../../pixel/place';
 import { PinMark } from './art';
 import type { Pins } from './usePins';
 
-export function Notes({ pins, onOpen }: { pins: Pins; onOpen: (id: string) => void }) {
+export function Notes({ pins, onOpen, place }: { pins: Pins; onOpen: (id: string) => void; place: Place }) {
   const sorted = [...pins.pins].sort((a, b) => a.label.localeCompare(b.label));
   return (
-    <section className="solar-notes parchment" aria-labelledby="solar-notes-title">
+    <section className="solar-notes parchment px-at" style={at(place)} aria-labelledby="solar-notes-title">
       <span className="pin" aria-hidden="true" />
       <h2 id="solar-notes-title" className="solar-notes__title">
         Notes

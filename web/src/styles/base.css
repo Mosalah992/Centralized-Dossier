@@ -72,12 +72,14 @@
 html {
   /* Anchors and in-page jumps clear the fixed heading. */
   scroll-padding-top: 2rem;
-  /* The archive's cursor: a Thalmor gauntlet, pointing, its fingertip the
-     hotspot (cut by scripts/prepare-cursor.mjs). Each declaration falls back
-     to the one before where a browser does not know it. */
-  cursor: url('../assets/cursor/gauntlet.png') 1 1, auto;
-  cursor: -webkit-image-set(url('../assets/cursor/gauntlet.png') 1x, url('../assets/cursor/gauntlet@2x.png') 2x) 1 1, auto;
-  cursor: image-set(url('../assets/cursor/gauntlet.png') 1x, url('../assets/cursor/gauntlet@2x.png') 2x) 1 1, auto;
+  /* The archive's cursor: a Thalmor gauntlet in pixels, pointing one finger
+     up, its fingertip the hotspot (scripts/pixel/cursor.mjs). It is 20 art
+     pixels square, drawn at two CSS pixels to the art pixel and at whole
+     multiples of that for denser screens, so its pixels stay square. Each
+     declaration falls back to the one before where a browser does not know it. */
+  cursor: url('../assets/cursor/gauntlet.png') 11 1, auto;
+  cursor: -webkit-image-set(url('../assets/cursor/gauntlet.png') 1x, url('../assets/cursor/gauntlet@1.5x.png') 1.5x, url('../assets/cursor/gauntlet@2x.png') 2x, url('../assets/cursor/gauntlet@3x.png') 3x) 11 1, auto;
+  cursor: image-set(url('../assets/cursor/gauntlet.png') 1x, url('../assets/cursor/gauntlet@1.5x.png') 1.5x, url('../assets/cursor/gauntlet@2x.png') 2x, url('../assets/cursor/gauntlet@3x.png') 3x) 11 1, auto;
 }
 
 /* Every control points with the same hand: the stylesheets say `inherit`
@@ -222,22 +224,24 @@ a {
   color: var(--stone-dim);
 }
 
+/* In the pixel faces, as every plate in the archive is (pixel-ui.css). */
 .site-footer__creed {
-  font-family: var(--display);
-  font-size: 0.82rem;
-  letter-spacing: 0.28em;
-  color: var(--gold);
+  font-family: var(--pixel-title);
+  font-size: 1.5rem;
+  letter-spacing: 0.02em;
+  color: var(--px-gold, var(--gold));
 }
 
 .site-footer__warning {
   margin-top: 0.7rem;
+  font-family: var(--pixel);
   font-size: 0.9rem;
-  font-style: italic;
 }
 
 /* Quieter than the warning above it — a hand in the margin, not a notice. */
 .site-footer__credit {
   margin-top: 0.9rem;
+  font-family: var(--pixel);
   font-size: 0.82rem;
   color: color-mix(in srgb, var(--stone-dim) 82%, transparent);
 }

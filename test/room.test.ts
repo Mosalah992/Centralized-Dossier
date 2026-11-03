@@ -5,6 +5,7 @@ import { REPORT_CATEGORY_NAMES } from '../shared/reports';
 import { WINGS, WING_INFO, wingOf } from '../shared/wings';
 import { isNight, refusalFor } from '../web/src/components/ancarion-script';
 import { DRAWERS, drawerOf, drawerRange } from '../web/src/room/cabinet-drawers';
+import { PANELS, PLACES } from '../web/src/pixel/layout';
 import { directionOf, parse } from '../web/src/router';
 
 const read = (path: string) => readFileSync(path, 'utf8');
@@ -128,30 +129,35 @@ describe('the room as drawn', () => {
     expect(read('wrangler.toml')).not.toContain('binding = "REGISTER"');
   });
 
-  it('stands a candle at either hand of the Scribe Table, where the torches were', () => {
+  it('stands a candle at either hand of the Scribe Table, its flame in drawn frames', () => {
     expect(room).not.toMatch(/Torch|torch--/);
     expect(room.match(/<Candle side="[lr]" \/>/g)).toHaveLength(2);
     const candle = read('web/src/room/Candle.tsx');
-    // The flame is drawn live only for a reader who has not asked for stillness,
-    // and the painted one stands in otherwise.
-    expect(candle).toContain("prefers-reduced-motion: reduce");
-    expect(candle).toContain('className="candle__still"');
-    expect(candle).toContain("import('./candle-flame')");
+    // The three.js flame gave way to four drawn frames with the pixel room.
+    expect(candle).toContain('<Sprite src={candle} frames={4} />');
+    expect(candle).not.toMatch(/from 'three'|import\('\.\/candle-flame'\)/);
     expect(read('web/src/styles/room.css')).not.toContain('torch-left.webp');
   });
 
-  it('turns the orb as a glass globe in a cradle, without its brass rings', () => {
-    expect(read('web/src/room/RoomOrb.tsx')).not.toContain('orb__band');
+  it('turns the orb as a glass globe in a cradle drawn with the room, without its brass rings', () => {
+    const orb = read('web/src/room/RoomOrb.tsx');
+    expect(orb).not.toContain('orb__band');
+    // The globe and the Wheel stay painted; only the cradle is pixels.
+    expect(orb).toContain('<Orrery bare />');
+    expect(orb).toContain('<Sprite src={stand} className="orb__stand" />');
     const css = read('web/src/styles/orb.css');
     expect(css).not.toMatch(/inset 0 0 0 \dpx #(8a6d1c|e8cd7a)/);
     expect(css).toContain('@keyframes orb-spin');
     expect(css).toMatch(/prefers-reduced-motion: reduce\) \{\s+\.orb__sky,/);
+    // The moons are lettered on the clock's plate.
+    expect(read('web/src/room/RoomClock.tsx')).toContain('Secunda {moons.secunda.name}');
   });
 
-  it('pins the note in the corner the Solar door left, and lets the Cabinet fill the other', () => {
-    const css = read('web/src/styles/room.css');
-    expect(css).toContain("'note  . scribe scribe scribe   scribe scribe . cabinet'");
-    expect(css).toContain("'shelf . archL  .      portrait .      archR  . cabinet'");
+  it('pins the note in the corner the Solar door left, above the bookshelf, and stands the globe on the Cabinet', () => {
+    expect(room).toContain('style={at(PANELS.note)}');
+    expect(PANELS.note.x).toBeLessThan(PLACES.bookshelf.x + PLACES.bookshelf.w);
+    expect(PANELS.note.y + PANELS.note.h).toBeLessThanOrEqual(PLACES.bookshelf.y);
+    expect(PLACES.globe.y + PLACES.globe.h).toBe(PLACES.cabinet.y);
   });
 
   it('hangs Ancarion as a performer, never as a second gate', () => {
@@ -172,12 +178,11 @@ describe('the room as drawn', () => {
     expect(read('web/src/room/takeovers/Cabinet.tsx')).toContain('else onSealed();');
   });
 
-  it('hangs the Summerset boughs as decoration only, still for readers who ask', () => {
+  it('hangs the Summerset boughs as decoration only', () => {
     const boughs = read('web/src/room/Boughs.tsx');
     expect(boughs).toContain('<div className="boughs" aria-hidden="true">');
     expect(room).toContain('<Boughs />');
-    const css = read('web/src/styles/room.css');
-    expect(css).toMatch(/prefers-reduced-motion: reduce\) \{\r?\n  \.bough__sway,/);
+    expect(read('web/src/styles/room.css')).toMatch(/\.boughs,\s+\.room__sconce-at,\s+\.candle \{ pointer-events: none; \}/);
   });
 
   it('keeps its motion for readers who want it', () => {
@@ -187,10 +192,17 @@ describe('the room as drawn', () => {
     expect(read('web/src/room/Takeover.tsx')).toContain('reducedMotion()');
   });
 
-  it('finds painted art at build time instead of probing for it', () => {
-    const slot = read('web/src/room/ImageSlot.tsx');
-    expect(slot).toContain("import.meta.glob<string>('../assets/room/*.webp'");
-    expect(slot).not.toContain('/art/room/');
+  it('holds every animation still for a reader who asks', () => {
+    const css = read('web/src/styles/room.css');
+    expect(css).toMatch(/prefers-reduced-motion: reduce\) \{\s+\.sprite--strip > img,\s+\.cabinet-slip \{ animation: none !important; \}/);
+  });
+
+  it('keeps Ancarion painted, in a pixel frame, on the pixel wall', () => {
+    const portrait = read('web/src/room/RoomPortrait.tsx');
+    expect(portrait).toContain('<Sprite src={frameArt} className="room-portrait__frame" />');
+    expect(portrait).toContain('{ancarion.media}');
+    expect(portrait).not.toMatch(/canvas|quantize/);
+    expect(read('web/src/styles/room.css')).toContain('transform: rotateY(-80deg);');
   });
 });
 

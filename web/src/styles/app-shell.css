@@ -18,9 +18,10 @@
   width: min(1600px, calc(100vw - 6rem));
 }
 
-/* The Solar: High Command's chamber, as wide as the Gallery's hall. */
+/* The Solar is a pixel room like the front page (solar.css) and runs to the
+   window's edges in the same way. */
 .archive-app > .shell.shell--solar {
-  width: min(1680px, calc(100vw - 4rem));
+  width: calc(100vw - 4rem);
 }
 
 /* The room runs to the window's edges at every width, less a 2rem margin:
@@ -51,30 +52,28 @@
   align-items: center;
   gap: 0.5rem;
   min-height: 2.6rem;
-  padding: 0.45rem 0.8rem;
-  color: var(--gold);
-  font-family: var(--display);
-  font-size: 0.56rem;
+  padding: 0 0.6rem;
+  color: var(--px-gold-light);
+  font-family: var(--pixel);
+  font-size: 0.72rem;
   font-weight: 600;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  background:
-    radial-gradient(circle at 18% 18%, rgb(232 205 122 / 0.08), transparent 48%),
-    linear-gradient(180deg, #241f19, #16130f);
-  border: 1px solid rgb(201 162 39 / 0.45);
-  border-radius: 999px;
-  box-shadow: 0 0.35rem 0.9rem rgb(0 0 0 / 0.42);
-  transition:
-    color 0.22s var(--ease),
-    border-color 0.22s var(--ease),
-    transform 0.22s var(--ease);
+  /* A plaque, as the room names its furniture (pixel-ui.css .px-plaque). */
+  background: none;
+  border: calc(3 * var(--px, 2px)) solid transparent;
+  border-image: url('../assets/pixel/plaque.png') 3 fill / calc(3 * var(--px, 2px)) stretch;
+  border-radius: 0;
+  box-shadow: none;
+  image-rendering: pixelated;
 }
 
 .support-seal:hover,
 .support-seal:focus-visible {
-  color: var(--gold-bright);
-  border-color: rgb(232 205 122 / 0.72);
-  transform: translateY(-1px);
+  outline: none;
+  color: var(--px-ink);
+  border-image-source: none;
+  background: var(--px-gold-light);
 }
 
 .support-seal > span:first-child {
@@ -102,8 +101,10 @@
     margin-inline: auto;
   }
 
-  /* The room keeps a 16px gutter on a phone rather than the reading column's. */
-  .archive-app.archive-app > .shell.shell--room {
+  /* The room and the Solar keep a 16px gutter on a phone rather than the
+     reading column's. */
+  .archive-app.archive-app > .shell.shell--room,
+  .archive-app.archive-app > .shell.shell--solar {
     width: auto;
     max-width: none;
     margin-inline: 16px;

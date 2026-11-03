@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
 
 import { lazyView } from './lazyView';
+import { usePagePixel } from './pixel/scale';
 import { parse, setRoutePreparer, useRoute, type Route } from './router';
 import { getTitle } from '../../shared/volumes';
 import { bindingVars } from './theme';
@@ -161,6 +162,7 @@ const PENAL_BINDING = {
 
 export default function App() {
   const [route, navigate] = useRoute();
+  usePagePixel();
 
   // The archive opens straight onto the room. There was a writ to check first
   // and a null state to hold the first paint back while /api/gate answered it;

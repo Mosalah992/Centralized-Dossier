@@ -212,7 +212,7 @@ export const SolarPlate = forwardRef<PlateHandle, Props>(function SolarPlate({ a
           </svg>
         </button>
       </form>
-      <p className="solar-plate__status" id={statusId} role="status" aria-live="polite">
+      <p className="solar-plate__status" id={statusId} role="status" aria-live="polite" data-said={status ? 'true' : undefined}>
         {status || ' '}
       </p>
     </div>

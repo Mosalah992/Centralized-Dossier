@@ -1,0 +1,179 @@
+{
+  "scene": {
+    "w": 880,
+    "h": 300
+  },
+  "bookshelf": {
+    "w": 56,
+    "h": 106
+  },
+  "board": {
+    "w": 116,
+    "h": 30
+  },
+  "arch": {
+    "w": 384,
+    "h": 92,
+    "frames": 8,
+    "fw": 48
+  },
+  "portrait": {
+    "w": 64,
+    "h": 77
+  },
+  "portrait-plate": {
+    "w": 64,
+    "h": 13
+  },
+  "cabinet": {
+    "w": 168,
+    "h": 90,
+    "frames": 3,
+    "fw": 56
+  },
+  "globe-stand": {
+    "w": 30,
+    "h": 34
+  },
+  "scribe": {
+    "w": 76,
+    "h": 42
+  },
+  "candle": {
+    "w": 48,
+    "h": 38,
+    "frames": 4,
+    "fw": 12
+  },
+  "sconce": {
+    "w": 40,
+    "h": 18,
+    "frames": 4,
+    "fw": 10
+  },
+  "bough-l": {
+    "w": 96,
+    "h": 44
+  },
+  "bough-r": {
+    "w": 96,
+    "h": 44
+  },
+  "note": {
+    "w": 64,
+    "h": 46
+  },
+  "clock": {
+    "w": 62,
+    "h": 32
+  },
+  "plaque": {
+    "w": 12,
+    "h": 10,
+    "slice": 3
+  },
+  "plaque-small": {
+    "w": 8,
+    "h": 8,
+    "slice": 2
+  },
+  "ui-sheet": {
+    "w": 16,
+    "h": 16,
+    "slice": 6
+  },
+  "ui-parchment": {
+    "w": 16,
+    "h": 16,
+    "tile": true
+  },
+  "ui-wall": {
+    "w": 24,
+    "h": 24,
+    "tile": true
+  },
+  "ui-planks": {
+    "w": 32,
+    "h": 16,
+    "tile": true
+  },
+  "ui-cloth": {
+    "w": 8,
+    "h": 8,
+    "tile": true
+  },
+  "ui-frame": {
+    "w": 18,
+    "h": 18,
+    "slice": 7
+  },
+  "ui-inset": {
+    "w": 8,
+    "h": 8,
+    "slice": 2
+  },
+  "ui-field": {
+    "w": 8,
+    "h": 8,
+    "slice": 2
+  },
+  "ui-button": {
+    "w": 8,
+    "h": 8,
+    "slice": 2
+  },
+  "ui-button-down": {
+    "w": 8,
+    "h": 8,
+    "slice": 2
+  },
+  "ui-scrap": {
+    "w": 10,
+    "h": 10,
+    "slice": 3
+  },
+  "ui-seal": {
+    "w": 13,
+    "h": 13
+  },
+  "ui-fleuron": {
+    "w": 15,
+    "h": 7
+  },
+  "ui-tack": {
+    "w": 4,
+    "h": 4
+  },
+  "ui-wax": {
+    "w": 4,
+    "h": 4
+  },
+  "ui-stamp": {
+    "w": 24,
+    "h": 24
+  },
+  "war-table": {
+    "w": 120,
+    "h": 96
+  },
+  "clerk-table": {
+    "w": 80,
+    "h": 50
+  },
+  "canonreeve-desk": {
+    "w": 80,
+    "h": 50
+  },
+  "solar-hanging": {
+    "w": 60,
+    "h": 74
+  },
+  "solar-window-l": {
+    "w": 34,
+    "h": 76
+  },
+  "solar-window-r": {
+    "w": 34,
+    "h": 76
+  }
+}

@@ -60,9 +60,10 @@ export function ClerkTable() {
     }
   };
 
+  // Both answers sit in the card the Clerk Table's furniture opens (views/Solar.tsx).
   if (table === 'loading' || table === 'absent') {
     return (
-      <div className="solar-card parchment">
+      <div className="clerk">
         <Fleuron />
         <h3>The stamps await their consecration</h3>
         <p>
@@ -74,7 +75,7 @@ export function ClerkTable() {
   }
 
   return (
-    <div className="solar-card parchment clerk">
+    <div className="clerk">
       <Fleuron />
       <h3>Awaiting the stamp</h3>
       {notice && (

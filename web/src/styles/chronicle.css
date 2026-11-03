@@ -12,6 +12,11 @@
  * backface-visibility hiding whichever is turned away. Readers who ask for less
  * motion never see it — App renders the destination spread directly — so
  * nothing below is load-bearing for reading the volume.
+ *
+ * In pixels since 2026-11-03, like the rest of the archive: the leaves are
+ * pixel parchment shaded into the gutter in whole art pixels (--px), the
+ * boards lacquer with a gold line, the pager and the search pixel plaques and
+ * fields. The text on the leaf stays in the serif: it is long prose.
  */
 
 /* The rubricator's hand, and the only face in the archive that is not Cinzel or
@@ -54,7 +59,7 @@
   position: relative;
   display: flex;
   perspective: 2400px;
-  filter: drop-shadow(0 26px 34px rgb(0 0 0 / 0.6));
+  filter: drop-shadow(calc(3 * var(--px)) calc(3 * var(--px)) 0 var(--px-ink));
 }
 
 .chron-page,
@@ -63,32 +68,20 @@
   aspect-ratio: 23 / 32;
 }
 
+/* The leaf: pixel parchment, its edge a line of darker paper. */
 .chron-page {
   position: relative;
-  background:
-    radial-gradient(ellipse at 18% 12%, rgb(255 250 230 / 0.5), transparent 55%),
-    radial-gradient(ellipse at 85% 90%, rgb(122 88 40 / 0.2), transparent 60%),
-    radial-gradient(ellipse at 50% 50%, #e9dcba 55%, #d9c69a 100%);
-  box-shadow:
-    inset 0 0 46px rgb(94 66 28 / 0.35),
-    inset 0 0 6px rgb(94 66 28 / 0.3);
+  background: url('../assets/pixel/ui-parchment.png') 0 0 / calc(16 * var(--px)) repeat, var(--px-parch);
+  box-shadow: inset 0 0 0 var(--px) var(--px-parch-dark);
+  image-rendering: pixelated;
 }
 
-/* Paper grain, generated rather than a texture file — nothing to download and
-   nothing of the game's own art to license. */
+/* The grain is in the tile now. */
 .chron-page::after,
-.chron-leaf__face::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.5;
-  mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.72 0 0 0 0 0.62 0 0 0 0 0.44 0 0 0 0.16 0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E");
-}
+.chron-leaf__face::after { content: none; }
 
-.chron-page--left { border-radius: 8px 0 0 8px; }
-.chron-page--right { border-radius: 0 8px 8px 0; }
+.chron-page--left,
+.chron-page--right { border-radius: 0; }
 
 /* Shading into the gutter, so the two leaves read as one opened book. */
 .chron-page::before {
@@ -98,18 +91,25 @@
   z-index: 1;
   pointer-events: none;
 }
+/* Stepped in whole pixels: three bands of shade toward the gutter. */
 .chron-page--left::before {
-  background: linear-gradient(270deg, rgb(74 52 22 / 0.38), transparent 22%);
+  background: linear-gradient(270deg,
+    var(--px-parch-dark) 0 calc(2 * var(--px)),
+    var(--px-parch-1) calc(2 * var(--px)) calc(6 * var(--px)),
+    transparent calc(6 * var(--px)));
 }
 .chron-page--right::before {
-  background: linear-gradient(90deg, rgb(74 52 22 / 0.38), transparent 22%);
+  background: linear-gradient(90deg,
+    var(--px-parch-dark) 0 calc(2 * var(--px)),
+    var(--px-parch-1) calc(2 * var(--px)) calc(6 * var(--px)),
+    transparent calc(6 * var(--px)));
 }
 
 .chron-spine {
-  width: 4px;
+  width: calc(2 * var(--px));
   align-self: stretch;
   z-index: 2;
-  background: linear-gradient(180deg, #3a2a16, #1e1509);
+  background: var(--px-wood);
 }
 
 /* The inside of the front board, shown only opposite the title page. */
@@ -120,20 +120,20 @@
   display: none;
   align-items: center;
   justify-content: center;
-  border-radius: 8px 0 0 8px;
-  background: radial-gradient(ellipse at 30% 30%, #3a2f22, #17120c 75%);
+  border-radius: 0;
+  background: var(--px-ink-1);
   box-shadow:
-    inset 0 0 0 3px rgb(197 161 105 / 0.3),
-    inset 0 0 60px rgb(0 0 0 / 0.6);
+    inset 0 0 0 calc(3 * var(--px)) var(--px-wood),
+    inset 0 0 0 calc(4 * var(--px)) var(--px-gold-0);
 }
 .chron-book--cover .chron-board { display: flex; }
 .chron-book--cover .chron-page--left { visibility: hidden; }
 
+/* Each volume's seal stays painted, as the archive's pictures do. */
 .chron-board__seal {
   width: 46%;
   height: auto;
-  opacity: 0.75;
-  filter: drop-shadow(0 6px 10px rgb(0 0 0 / 0.65));
+  opacity: 0.85;
 }
 
 /* ── Type on the leaf ─────────────────────────────────────────────────── */
@@ -150,12 +150,12 @@
 
 .chron-runhead {
   margin: 0 0 0.9rem;
-  font-family: var(--display);
-  font-size: 0.72rem;
-  letter-spacing: 0.18em;
+  font-family: var(--pixel);
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   text-align: center;
-  color: #6a563c;
+  color: var(--px-wood-1);
 }
 
 .chron-text {
@@ -168,10 +168,10 @@
 
 .chron-folio {
   margin: 0.8rem 0 0;
-  font-family: var(--display);
-  font-size: 0.8rem;
-  letter-spacing: 0.12em;
-  color: #6a563c;
+  font-family: var(--pixel);
+  font-size: 0.9rem;
+  letter-spacing: 0.06em;
+  color: var(--px-wood-1);
 }
 .chron-folio--left { text-align: left; }
 .chron-folio--right { text-align: right; }
@@ -346,34 +346,36 @@
   gap: 0.7rem;
 }
 
+/* Struck square in crimson: a tilt would smear its pixels. */
 .chron-title__class {
   margin: 0;
-  padding: 0.3rem 0.75rem;
-  border: 1px solid #7a2e1e;
-  font-family: var(--display);
-  font-size: 0.7rem;
-  letter-spacing: 0.28em;
+  padding: var(--px) calc(3 * var(--px));
+  border: var(--px) solid var(--px-crimson);
+  font-family: var(--pixel);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #7a2e1e;
-  opacity: 0.85;
-  transform: rotate(-2deg);
+  color: var(--px-crimson);
 }
 
 .chron-title__name {
   margin: 0.4rem 0 0;
-  font-family: var(--display);
-  font-weight: 600;
-  font-size: clamp(1.3rem, 2.6vw, 1.9rem);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #2a2016;
+  font-family: var(--pixel-title);
+  font-weight: 400;
+  font-size: clamp(2rem, 3.6vw, 2.8rem);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: var(--px-wood);
 }
 
 .chron-title__rule {
   width: 60%;
-  height: 1px;
+  height: calc(2 * var(--px));
   margin: 0.2rem 0;
-  background: linear-gradient(90deg, transparent, #a8863c, transparent);
+  background:
+    linear-gradient(var(--px-gold), var(--px-gold)) 0 0 / 100% var(--px) no-repeat,
+    var(--px-gold-0);
 }
 
 .chron-title__by {
@@ -385,10 +387,10 @@
 
 .chron-title__span {
   margin: 0;
-  font-family: var(--display);
-  font-size: 0.78rem;
-  letter-spacing: 0.16em;
-  color: #6a563c;
+  font-family: var(--pixel);
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  color: var(--px-wood-1);
 }
 
 /* ── Edge zones ───────────────────────────────────────────────────────── */
@@ -474,21 +476,26 @@
   gap: 0.5rem 0.9rem;
 }
 
+/* The pager's marks are plaques, as the room names its furniture. */
 .chron-nav__btn {
-  padding: 0.45rem 1.1rem;
-  border: 1px solid rgb(184 159 110 / 0.35);
-  border-radius: 3px;
+  padding: 0 calc(3 * var(--px));
+  border: calc(3 * var(--px)) solid transparent;
+  border-image: url('../assets/pixel/plaque.png') 3 fill / calc(3 * var(--px)) stretch;
+  border-radius: 0;
   background: none;
-  font-family: var(--display);
-  font-size: 0.85rem;
-  letter-spacing: 0.1em;
+  font-family: var(--pixel);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #b89f6e;
+  color: var(--px-gold-light);
+  image-rendering: pixelated;
   cursor: inherit;
 }
 .chron-nav__btn:hover:not(:disabled) {
-  color: #e9dcba;
-  border-color: #b89f6e;
+  color: var(--px-ink);
+  border-image-source: none;
+  background: var(--px-gold-light);
 }
 .chron-nav__btn:disabled { opacity: 0.3; cursor: inherit; }
 
@@ -516,43 +523,42 @@
 .chron-nav__num {
   min-width: 1.9rem;
   padding: 0.3rem 0.4rem;
-  border: 1px solid transparent;
-  border-radius: 3px;
+  border: 0;
+  border-radius: 0;
   background: none;
-  font-family: var(--display);
-  font-size: 0.8rem;
-  letter-spacing: 0.06em;
-  color: rgb(184 159 110 / 0.72);
+  font-family: var(--pixel);
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  color: var(--px-parch-1);
   cursor: inherit;
 }
 
 .chron-nav__num:hover {
-  color: #e9dcba;
-  border-color: rgb(184 159 110 / 0.35);
+  color: var(--px-gold-light);
+  box-shadow: inset 0 0 0 var(--px) var(--px-gold-0);
 }
 
 /* The page you are on is stated, not merely tinted: at this size a colour
    shift alone is not a reliable difference on a dark ground. */
 .chron-nav__num.is-current {
-  color: #f3e7c8;
-  border-color: #b89f6e;
-  background: rgb(184 159 110 / 0.12);
+  color: var(--px-ink);
+  background: var(--px-gold-light);
   cursor: inherit;
 }
 
 .chron-nav__gap {
   padding: 0 0.15rem;
-  font-family: var(--display);
-  font-size: 0.8rem;
-  color: rgb(184 159 110 / 0.45);
+  font-family: var(--pixel);
+  font-size: 0.95rem;
+  color: var(--px-stone-2);
   user-select: none;
 }
 
 .chron-nav__pos {
-  font-family: var(--display);
-  font-size: 0.8rem;
-  letter-spacing: 0.12em;
-  color: #b89f6e;
+  font-family: var(--pixel);
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+  color: var(--px-parch-1);
 }
 
 /* ── A notice posted for the province ─────────────────────────────────────
@@ -785,12 +791,11 @@
   max-width: 44rem;
   margin: 0 auto 1.1rem;
   padding: 0.7rem 0.9rem;
-  background: linear-gradient(180deg, rgba(24, 20, 16, 0.9), rgba(14, 12, 10, 0.92));
-  border: 1px solid color-mix(in srgb, var(--foil) 30%, transparent);
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
-    inset 0 0 26px rgba(0, 0, 0, 0.6),
-    0 8px 22px rgba(0, 0, 0, 0.45);
+  /* A lacquer plate in a gold bevel (plaque.png), as the room's plaques are. */
+  background: none;
+  border: calc(3 * var(--px)) solid transparent;
+  border-image: url('../assets/pixel/plaque.png') 3 fill / calc(3 * var(--px)) stretch;
+  image-rendering: pixelated;
 }
 
 /* The glass: a ring with an iris that breathes. */
@@ -822,18 +827,18 @@
 
 .scry__label {
   display: block;
-  font-family: var(--display);
-  font-size: 0.54rem;
-  letter-spacing: 0.3em;
+  font-family: var(--pixel);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--foil) 60%, var(--stone-dim));
+  color: var(--px-gold);
 }
 
 .scry__input {
   width: 100%;
   margin-top: 0.2rem;
   padding: 0;
-  font-family: var(--serif);
+  font-family: var(--pixel);
   font-size: 1rem;
   color: #efe3c8;
   background: none;

@@ -1,6 +1,15 @@
 /* The Gallery: the Embassy's name in torchlight, and the Embassy beneath it.
    Nothing on the page but the title and the pictures; the Dominion's name in
-   the bar above leads home. */
+   the bar above leads home.
+
+   In pixels since 2026-11-03: the room's panelling, the title in Jacquard 24,
+   and every picture and the film left painted, each in a pixel gold frame. */
+
+/* The hall behind the pictures is the room's panelling. */
+body:has(.hall) {
+  background: url('../assets/pixel/ui-wall.png') 0 0 / calc(24 * var(--px)) repeat fixed, var(--px-wood);
+  image-rendering: pixelated;
+}
 
 .hall {
   --hall-nav-height: 3.5rem;
@@ -8,32 +17,6 @@
   padding: calc(var(--hall-nav-height) + clamp(0.6rem, 2vw, 1.4rem)) 0 0;
   position: relative;
   isolation: isolate;
-}
-
-.hall::before,
-.hall::after {
-  content: '';
-  position: absolute;
-  inset: -2rem calc(50% - 50vw) auto;
-  height: min(45rem, 78vh);
-  pointer-events: none;
-  z-index: -2;
-}
-
-.hall::before {
-  background:
-    radial-gradient(60rem 26rem at 50% 12%, rgba(218, 178, 95, 0.16), transparent 70%),
-    radial-gradient(54rem 38rem at 50% 16%, rgba(230, 220, 198, 0.08), transparent 64%),
-    linear-gradient(180deg, rgba(50, 40, 30, 0.5), transparent 78%);
-  -webkit-mask-image: linear-gradient(180deg, #000 0 72%, transparent 100%);
-  mask-image: linear-gradient(180deg, #000 0 72%, transparent 100%);
-}
-
-.hall::after {
-  z-index: -1;
-  background:
-    radial-gradient(18rem 18rem at 50% 7rem, rgba(201, 162, 39, 0.08), transparent 68%);
-  opacity: 0.9;
 }
 
 .hall__hero {
@@ -46,13 +29,13 @@
 
 .hall__title {
   margin: 0;
-  font-family: var(--title);
-  font-size: clamp(2rem, 5.4vw, 6.2rem);
-  font-weight: 700;
-  line-height: 1.08;
-  color: var(--parchment);
-  letter-spacing: 0.08em;
-  text-shadow: 0 3px 18px rgba(0, 0, 0, 0.7), 0 0 34px rgb(201 162 39 / 0.18);
+  font-family: var(--pixel-title);
+  font-size: clamp(2.8rem, 7vw, 7.4rem);
+  font-weight: 400;
+  line-height: 1;
+  color: var(--px-gold-light);
+  letter-spacing: 0.02em;
+  text-shadow: calc(2 * var(--px)) calc(2 * var(--px)) 0 var(--px-ink);
 }
 
 /* "Gallery", set between two gilt rules as the registers' title pages are. */
@@ -62,24 +45,23 @@
   gap: 1.2rem;
   width: min(30rem, 100%);
   margin: clamp(0.9rem, 1.8vw, 1.4rem) 0 0;
-  font-family: var(--display);
-  font-size: clamp(0.9rem, 1.4vw, 1.25rem);
+  font-family: var(--pixel);
+  font-size: clamp(1rem, 1.6vw, 1.4rem);
   font-weight: 600;
-  letter-spacing: 0.42em;
+  letter-spacing: 0.24em;
   text-transform: uppercase;
-  color: var(--gold);
+  color: var(--px-gold);
 }
 
+/* The gilt rules either side, in whole pixels: gold over its shadow. */
 .hall__subtitle::before,
 .hall__subtitle::after {
   content: '';
   flex: 1;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--gold) 60%, transparent));
-}
-
-.hall__subtitle::after {
-  transform: scaleX(-1);
+  height: calc(2 * var(--px));
+  background:
+    linear-gradient(var(--px-gold), var(--px-gold)) 0 0 / 100% var(--px) no-repeat,
+    var(--px-gold-0);
 }
 
 /* The Embassy assembled. Shown whole and at its own proportions — every figure
@@ -102,12 +84,12 @@
   width: 100%;
   height: auto;
   aspect-ratio: 16 / 9;
-  background: #0d0b09;
-  border: 1px solid color-mix(in srgb, var(--gold) 38%, transparent);
-  box-shadow:
-    0 0 0 0.4rem rgb(16 14 12 / 0.9),
-    0 0 0 calc(0.4rem + 1px) color-mix(in srgb, var(--gold) 18%, transparent),
-    0 1.8rem 3rem rgb(0 0 0 / 0.6);
+  box-sizing: border-box;
+  background: var(--px-ink);
+  /* Painted as it was, in a pixel gold frame (pixel-ui.css .px-frame). */
+  border: calc(7 * var(--px)) solid transparent;
+  border-image: url('../assets/pixel/ui-frame.png') 7 / calc(7 * var(--px)) stretch;
+  box-shadow: calc(3 * var(--px)) calc(3 * var(--px)) 0 var(--px-ink);
 }
 
 .hall__film {
@@ -138,12 +120,12 @@
   width: 100%;
   height: auto;
   aspect-ratio: 16 / 9;
-  background: #0d0b09;
-  border: 1px solid color-mix(in srgb, var(--gold) 32%, transparent);
-  box-shadow:
-    0 0 0 0.3rem rgb(16 14 12 / 0.9),
-    0 0 0 calc(0.3rem + 1px) color-mix(in srgb, var(--gold) 14%, transparent),
-    0 1.2rem 2rem rgb(0 0 0 / 0.55);
+  box-sizing: border-box;
+  background: var(--px-ink);
+  /* Painted as it was, in a pixel gold frame (pixel-ui.css .px-frame). */
+  border: calc(7 * var(--px)) solid transparent;
+  border-image: url('../assets/pixel/ui-frame.png') 7 / calc(7 * var(--px)) stretch;
+  box-shadow: calc(3 * var(--px)) calc(3 * var(--px)) 0 var(--px-ink);
 }
 
 @media (max-width: 720px) {
@@ -157,8 +139,8 @@
 }
 
 
-/* The bar: only the Dominion's name, which leads home, on a thin smoked-glass
-   ground fixed over the page. */
+/* The bar: only the Dominion's name, which leads home, on a lacquer band with
+   a gold line under it, fixed over the page. */
 html:has(.hall-nav) {
   scroll-padding-top: calc(3.5rem + 1.25rem);
 }
@@ -168,10 +150,9 @@ html:has(.hall-nav) {
   top: 0;
   inset-inline: 0;
   z-index: 30;
-  background: rgb(16 14 12 / 0.45);
-  -webkit-backdrop-filter: blur(4px);
-  backdrop-filter: blur(4px);
-  border-bottom: 1px solid rgb(201 162 39 / 0.12);
+  background: var(--px-ink-1);
+  border-bottom: var(--px) solid var(--px-gold-0);
+  box-shadow: 0 var(--px) 0 var(--px-ink);
 }
 
 .hall-nav__bar {
@@ -181,31 +162,28 @@ html:has(.hall-nav) {
   padding-inline: clamp(1.25rem, 3vw, 2.5rem);
 }
 
-/* At least 44px tall (WCAG 2.5.5). */
+/* At least 44px tall (WCAG 2.5.5): a plaque, as the room names its doors. */
 .hall-nav__brand {
   display: inline-flex;
   align-items: center;
   min-height: 2.75rem;
-  font-family: var(--display);
-  font-size: 0.8rem;
+  padding: 0 calc(3 * var(--px));
+  font-family: var(--pixel);
+  font-size: max(12px, calc(5.5 * var(--px)));
   font-weight: 600;
   line-height: 1;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   text-decoration: none;
   white-space: nowrap;
-  color: var(--parchment);
-  transition: color 0.22s var(--ease);
+  color: var(--px-gold-light);
 }
 
 .hall-nav__brand:hover,
 .hall-nav__brand:focus-visible {
-  color: var(--gold-bright);
-}
-
-.hall-nav__brand:focus-visible {
-  outline: 1px solid var(--gold-bright);
-  outline-offset: 2px;
+  outline: none;
+  color: var(--px-ink);
+  background: var(--px-gold-light);
 }
 
 @media (max-width: 720px) {
@@ -214,8 +192,4 @@ html:has(.hall-nav) {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .hall-nav__brand {
-    transition: none;
-  }
-}
+

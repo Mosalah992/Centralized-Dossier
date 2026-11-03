@@ -13,6 +13,8 @@
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
 
 import { reportsIsOpen, useDrawer, useReport, type DrawerState, type Report } from '../../api';
+import { PixelIcon } from '../../pixel/icons/PixelIcon';
+import type { IconName } from '../../pixel/icons/manifest';
 import { openedFromRoom } from '../../router';
 import { DRAWERS, DRAWER_INFO, drawerOf, drawerRange, type Drawer } from '../cabinet-drawers';
 import { plainClick, useNavigate } from '../nav';
@@ -20,6 +22,14 @@ import { Emblem } from './cabinet/Emblem';
 import { Letter, filedOn, waxOf } from './cabinet/Letter';
 import { WING_INFO, wingOf } from '../../../../shared/wings';
 import '../../styles/cabinet.css';
+
+/** Each drawer's mark, from the pixel icon set. */
+const DRAWER_ICON: Record<Drawer, IconName> = {
+  fresh: 'letter-tray',
+  new: 'file-letter',
+  old: 'scroll-rack',
+  archive: 'chest-hand',
+};
 
 function useDrawers(unlocked: boolean, now: number): Record<Drawer, DrawerState> {
   const read = (d: Drawer) => useDrawer(unlocked, drawerRange(d, now), (r: Report) => drawerOf(r.timestamp, now) === d);
@@ -153,6 +163,7 @@ export function Cabinet({ letter, onSealed }: { letter?: string; onSealed: () =>
                 aria-controls="cabinet-drawer"
                 onClick={() => pull(d)}
               >
+                <PixelIcon name={DRAWER_ICON[d]} scale="px" className="drawer-front__icon" />
                 <span className="drawer-front__holder">
                   <span className="drawer-front__label">{DRAWER_INFO[d].label}</span>
                 </span>

@@ -13,13 +13,14 @@
   place-items: center;
   padding: 0;
 
-  color: var(--stone-dim, #8d8778);
-  background:
-    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.06), transparent 60%),
-    linear-gradient(180deg, #241f19, #16130f);
-  border: 1px solid rgba(201, 162, 39, 0.28);
-  border-radius: 50%;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45);
+  color: var(--px-stone-2, #8a857c);
+  /* A square plaque, as the room's (pixel-ui.css .px-plaque). */
+  background: none;
+  border: calc(3 * var(--px, 2px)) solid transparent;
+  border-image: url('../assets/pixel/plaque.png') 3 fill / calc(3 * var(--px, 2px)) stretch;
+  border-radius: 0;
+  box-shadow: none;
+  image-rendering: pixelated;
   cursor: inherit;
   /* var(--ease), like every other transition in the archive. This rule used the
      bare `ease` keyword — the only one that did, and an oversight rather than a
@@ -33,16 +34,16 @@
 
 .ambience:hover,
 .ambience:focus-visible {
-  color: var(--gold-bright, #e8cd7a);
-  border-color: rgba(201, 162, 39, 0.6);
-  transform: translateY(-1px);
+  outline: none;
+  color: var(--px-ink, #0b0806);
+  border-image-source: none;
+  background: var(--px-gold-light, #e8cd7a);
 }
 
 /* Lit while the track is actually sounding — not merely while it is wanted,
    so a reader can see when the browser has refused to play it yet. */
 .ambience--sounding {
-  color: var(--gold, #c9a227);
-  border-color: rgba(201, 162, 39, 0.5);
+  color: var(--px-gold-light, #e8cd7a);
 }
 
 .ambience svg {
@@ -50,8 +51,9 @@
   height: 1.15rem;
   fill: none;
   stroke: currentColor;
-  stroke-width: 1.6;
-  stroke-linecap: round;
+  stroke-width: 2;
+  stroke-linecap: square;
+  shape-rendering: crispEdges;
 }
 
 @media (prefers-reduced-motion: reduce) {

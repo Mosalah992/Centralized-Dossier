@@ -32,6 +32,7 @@ import App from './App';
 import { installClickSpark } from './click-spark';
 import { reloadForNewBuild } from './stale-build';
 import './styles/base.css';
+import './styles/pixel-ui.css';
 import './styles/ledger.css';
 import './styles/app-shell.css';
 

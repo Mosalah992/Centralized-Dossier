@@ -129,24 +129,22 @@ const brown = (alpha: number) => `rgba(90, 70, 30, ${alpha})`;
 /**
  * Shared by both themes.
  *
- * The archive is square-cornered and set in Garamond at 17px; Fluent is
- * round-cornered and set in Segoe at 14px, and a control keeping either default
- * announces itself as imported. The radius goes to 2px — the value base.css
- * already uses on :focus-visible — rather than to 0, because a hairline radius
- * survives a border better than a true corner does.
+ * The volumes are pixel pages (2026-11-03, pixel-ui.css): square corners, and
+ * Pixelify Sans for everything but long prose. Fluent is round-cornered and set
+ * in Segoe at 14px, and a control keeping either default announces itself as
+ * imported, so every radius is 0. The base face stays the serif: FluentProvider
+ * sets it on the root that wraps a whole volume, prose included. The controls
+ * take the pixel face, and their pixel borders, in ledger.css.
  *
- * Type is nudged to 15px rather than to the body's 17px: a control set at
- * running-text size reads as running text, and these are furniture. Per
- * invariant 5 the display face stays a tracked Roman capital, and it is applied
- * at the label rather than through fontFamilyBase — Fluent puts fontFamilyBase
- * on input values too, and Cinzel is not a face to type a search term in.
+ * Type is nudged to 15px: a control set at running-text size reads as running
+ * text, and these are furniture.
  */
 const SHAPE = {
   borderRadiusNone: '0',
-  borderRadiusSmall: '2px',
-  borderRadiusMedium: '2px',
-  borderRadiusLarge: '2px',
-  borderRadiusXLarge: '3px',
+  borderRadiusSmall: '0',
+  borderRadiusMedium: '0',
+  borderRadiusLarge: '0',
+  borderRadiusXLarge: '0',
 
   fontFamilyBase: "'EB Garamond', 'Iowan Old Style', Georgia, serif",
   fontSizeBase200: '13px',

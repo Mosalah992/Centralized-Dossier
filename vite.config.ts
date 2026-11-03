@@ -1,7 +1,9 @@
+/// <reference types="vitest/config" />
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 import { defineConfig } from 'vite';
+import { configDefaults } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 
 import { archivesEditor } from './editor/vite-plugin-editor';
@@ -25,11 +27,18 @@ export default defineConfig({
     // Matches pages_build_output_dir in wrangler.toml.
     outDir: 'dist',
     emptyOutDir: true,
-    // A font is never inlined as a data: URL, however small: the content
-    // policy's font-src is 'self' only, so the browser would refuse it (the
-    // Scribe's smallest subsets are under Vite's 4 kB limit). Anything else
-    // keeps Vite's own rule.
-    assetsInlineLimit: (file) => (/\.(woff2?|ttf|otf)$/i.test(file) ? false : undefined),
+    /*
+     * Fonts are always files. Vite inlines anything under 4 KB as a data: URI,
+     * which caught the small Cyrillic subsets of Pixelify Sans, and the CSP in
+     * public/_headers allows fonts only from 'self', so the browser refused
+     * them. test/bundle.test.ts checks no stylesheet carries a data: font.
+     */
+    assetsInlineLimit: (file) => (/\.(woff2?|ttf|otf)$/.test(file) ? false : undefined),
+  },
+  test: {
+    // Other sessions' worktrees live under .claude/worktrees; their tests read
+    // their own checkouts, not this one.
+    exclude: [...configDefaults.exclude, '.claude/**'],
   },
   server: {
     port: 5173,

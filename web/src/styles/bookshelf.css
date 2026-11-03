@@ -1,78 +1,93 @@
 /* The book press and the reader, ported from the Bruma Joint Archives and
-   re-cut in the Embassy's lacquered wood with gold edging. Route-only:
-   imported by the room's Bookshelf takeover. */
+   re-cut in the Embassy's lacquered wood with gold edging. In pixels since
+   2026-11-03: the case, its boards and every spine are flat palette colour
+   bevelled in whole art pixels (--px), nothing rotated, nothing blurred.
+   Route-only: imported by the room's Bookshelf takeover. */
 
 .bookcase {
   max-width: 1040px;
   margin: 0 auto;
 }
+/* The case: lacquered wood, lit along its top and left, a gold line inside. */
 .bookcase__frame {
   position: relative;
-  margin-top: 18px;
-  padding: 22px 24px 14px;
-  background: url('/textures/wood.svg') 0 0 / 480px 480px, #1a110a;
+  margin-top: calc(10 * var(--px));
+  padding: calc(10 * var(--px)) calc(10 * var(--px)) calc(6 * var(--px));
+  background: var(--px-wood);
+  border: calc(4 * var(--px)) solid var(--px-wood-1);
   box-shadow:
-    inset 0 0 0 12px #2b1b10,
-    inset 0 0 0 14px #1a0f07,
-    0 30px 60px rgba(0, 0, 0, 0.65);
-  transform: rotate(-0.3deg);
+    inset var(--px) var(--px) 0 var(--px-gold-0),
+    inset calc(-1 * var(--px)) calc(-1 * var(--px)) 0 var(--px-ink-1),
+    0 0 0 var(--px) var(--px-ink),
+    calc(3 * var(--px)) calc(3 * var(--px)) 0 var(--px) var(--px-ink);
 }
-/* Cornice across the top of the press. */
+/* Cornice across the top of the press: a lit edge, the wood, a gold line. */
 .bookcase__frame::before {
   content: '';
   position: absolute;
-  left: -14px;
-  right: -14px;
-  top: -18px;
-  height: 20px;
-  background: url('/textures/wood.svg') 0 0 / 300px 300px, #4a2c16;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.6);
+  left: calc(-8 * var(--px));
+  right: calc(-8 * var(--px));
+  top: calc(-10 * var(--px));
+  height: calc(7 * var(--px));
+  background:
+    linear-gradient(var(--px-wood-2), var(--px-wood-2)) 0 0 / 100% var(--px) no-repeat,
+    linear-gradient(var(--px-gold), var(--px-gold)) 0 calc(5 * var(--px)) / 100% var(--px) no-repeat,
+    var(--px-wood-1);
+  box-shadow: 0 var(--px) 0 var(--px-ink);
 }
 .bookcase__shelf {
   position: relative;
   display: flex;
   align-items: flex-end;
-  gap: 3px;
-  min-height: 280px;
-  padding: 26px 18px 0;
-  background: #110904;
-  box-shadow: inset 0 18px 30px rgba(0, 0, 0, 0.8);
+  gap: var(--px);
+  min-height: calc(140 * var(--px));
+  padding: calc(12 * var(--px)) calc(8 * var(--px)) 0;
+  /* The back of the shelf, a band of shadow under the board above. */
+  background:
+    linear-gradient(var(--px-ink), var(--px-ink)) 0 0 / 100% calc(6 * var(--px)) no-repeat,
+    var(--px-ink-1);
   /* Fillers run past the edge; clip sideways only, so a lifted book and its
      title plate can still rise above the shelf. */
   overflow-x: clip;
 }
-.bookcase__shelf + .bookcase__shelf { margin-top: 18px; }
+.bookcase__shelf + .bookcase__shelf { margin-top: calc(10 * var(--px)); }
+/* The board each row stands on: a lit lip, the wood, its shadow beneath. */
 .bookcase__board {
   position: absolute;
-  left: -12px;
-  right: -12px;
-  bottom: -16px;
-  height: 18px;
+  left: calc(-6 * var(--px));
+  right: calc(-6 * var(--px));
+  bottom: calc(-8 * var(--px));
+  height: calc(8 * var(--px));
   z-index: 2;
-  background: url('/textures/wood.svg') 0 0 / 300px 300px, #4a2c16;
-  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.7);
+  background:
+    linear-gradient(var(--px-wood-2), var(--px-wood-2)) 0 0 / 100% var(--px) no-repeat,
+    linear-gradient(var(--px-wood), var(--px-wood)) 0 100% / 100% var(--px) no-repeat,
+    var(--px-wood-1);
+  box-shadow: 0 var(--px) 0 var(--px-ink);
 }
 /* The iron rod the laws are chained to, as at Hereford. */
 .bookcase__rod {
   position: absolute;
-  left: 8px;
-  right: 8px;
-  bottom: 6px;
-  height: 3px;
+  left: calc(4 * var(--px));
+  right: calc(4 * var(--px));
+  bottom: calc(3 * var(--px));
+  height: calc(2 * var(--px));
   z-index: 1;
-  background: #5f5b55;
-  box-shadow: 0 1px 0 #1c1a17;
+  background:
+    linear-gradient(var(--px-stone-2), var(--px-stone-2)) 0 0 / 100% var(--px) no-repeat,
+    var(--px-stone);
+  box-shadow: 0 var(--px) 0 var(--px-ink);
 }
 
 /* A spine: old calf with raised bands and a tan lettering-piece. */
+/* Whole art pixels wide and tall, so every spine lands on the grid. */
 .spine {
   position: relative;
   flex: none;
-  width: 62px;
-  height: calc(var(--h, 0.9) * 250px);
+  width: calc(30 * var(--px));
+  height: round(calc(var(--h, 0.9) * 124 * var(--px)), var(--px));
   text-decoration: none;
-  transform-origin: bottom center;
-  transition: transform 0.3s var(--ease), filter 0.3s var(--ease);
+  transition: transform 0.2s steps(2);
 }
 .spine__art {
   position: absolute;
@@ -81,93 +96,105 @@
   /* Plain leather until the volumes have art of their own: the speckled
      leather texture read as a starry filter (2026-10-23). */
   background: var(--leather, #3a2414);
-  /* The rounded back of the spine, in light and shade. */
+  /* The rounded back of the spine, stepped: a lit column, a shaded one, an
+     ink outline. */
   box-shadow:
-    inset 9px 0 10px -4px rgba(0, 0, 0, 0.7),
-    inset -9px 0 10px -4px rgba(0, 0, 0, 0.75),
-    inset 0 0 0 1px rgba(0, 0, 0, 0.6),
-    0 0 6px rgba(0, 0, 0, 0.6);
+    inset calc(2 * var(--px)) 0 0 color-mix(in srgb, var(--leather, #3a2414) 70%, var(--px-gold-light)),
+    inset calc(-3 * var(--px)) 0 0 color-mix(in srgb, var(--leather, #3a2414) 55%, var(--px-ink)),
+    0 0 0 var(--px) var(--px-ink);
 }
+/* A raised band: dark, its top edge catching the light. */
 .spine__band {
   position: absolute;
   left: 0;
   right: 0;
-  height: 6px;
-  background: #1a100a;
-  box-shadow: inset 0 1px 0 rgba(190, 140, 90, 0.45), 0 1px 0 rgba(0, 0, 0, 0.6);
+  height: calc(3 * var(--px));
+  background: var(--px-ink-1);
+  box-shadow: inset 0 var(--px) 0 var(--px-gold-0);
 }
 .spine__band--1 { top: 9%; }
 .spine__band--2 { bottom: 22%; }
 .spine__band--3 { bottom: 8%; }
+/* The lettering-piece: tan leather in an ink line, a lit inner edge. */
 .spine__label {
   position: absolute;
   top: 16%;
-  left: 10px;
-  right: 10px;
+  left: calc(5 * var(--px));
+  right: calc(6 * var(--px));
   max-height: 52%;
-  padding: 8px 2px;
+  padding: calc(4 * var(--px)) var(--px);
   display: grid;
   place-items: center;
   writing-mode: vertical-rl;
-  font-family: var(--display);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  color: #1d130a;
-  background: url('/textures/grain.svg') 0 0 / 256px 256px, #bf8a43;
-  box-shadow: inset 0 0 0 1px rgba(60, 35, 10, 0.7), inset 0 0 0 3px rgba(240, 200, 120, 0.35);
+  font-family: var(--pixel);
+  font-size: max(12px, calc(5.5 * var(--px)));
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--px-ink-1);
+  background: var(--px-parch-dark);
+  box-shadow:
+    inset var(--px) var(--px) 0 var(--px-parch-1),
+    0 0 0 var(--px) var(--px-ink-1);
   overflow: hidden;
 }
-/* The chain from the book down to the rod. */
+/* The chain from the book down to the rod: links of whole pixels. */
 .spine__chain {
   position: absolute;
   left: 50%;
-  bottom: -8px;
-  width: 4px;
-  height: 14px;
-  margin-left: -2px;
-  border-left: 2px dotted #8a857c;
+  bottom: calc(-4 * var(--px));
+  width: var(--px);
+  height: calc(7 * var(--px));
+  margin-left: calc(-0.5 * var(--px));
+  background: repeating-linear-gradient(var(--px-stone-2) 0 var(--px), transparent var(--px) calc(2 * var(--px)));
 }
+/* The title, on a plaque as the room names its furniture. */
 .spine__title {
   position: absolute;
-  bottom: calc(100% + 12px);
-  left: -4px;
+  bottom: calc(100% + 6 * var(--px));
+  left: calc(-2 * var(--px));
   z-index: 3;
   width: max-content;
   max-width: 240px;
-  padding: 0.45rem 0.8rem;
-  font-family: var(--display);
-  font-size: 0.78rem;
-  letter-spacing: 0.08em;
+  padding: calc(2 * var(--px)) calc(3 * var(--px));
+  font-family: var(--pixel);
+  font-size: max(12px, calc(5.5 * var(--px)));
+  font-weight: 600;
+  letter-spacing: 0.06em;
   text-align: left;
-  color: #1d1408;
-  background: url('/textures/grain.svg') 0 0 / 256px 256px, #b98f2a;
-  border: 1px solid #5a420c;
-  box-shadow: inset 0 1px 0 #e3c46a, 0 6px 14px rgba(0, 0, 0, 0.6);
+  color: var(--px-gold-light);
+  border: calc(3 * var(--px)) solid transparent;
+  border-image: url('../assets/pixel/plaque.png') 3 fill / calc(3 * var(--px)) stretch;
+  image-rendering: pixelated;
   opacity: 0;
-  transform: translateY(6px);
   pointer-events: none;
-  transition: opacity 0.2s var(--ease), transform 0.2s var(--ease);
 }
 .spine__title em {
   display: block;
-  font-family: var(--serif);
-  font-size: 0.85rem;
-  letter-spacing: 0;
+  font-family: var(--pixel);
+  font-weight: 400;
+  font-style: normal;
+  font-size: max(11px, calc(4.5 * var(--px)));
+  letter-spacing: 0.02em;
+  color: var(--px-parch-1);
 }
+/* Lifted a few art pixels and outlined in gold, as the room's furniture is. */
 .spine:hover,
 .spine:focus-visible {
-  transform: translateY(-14px) rotate(-1.5deg);
-  filter: drop-shadow(0 0 12px rgb(201 162 39 / 0.5));
+  transform: translateY(calc(-6 * var(--px)));
+  filter:
+    drop-shadow(var(--px) 0 0 var(--px-gold-light))
+    drop-shadow(calc(-1 * var(--px)) 0 0 var(--px-gold-light))
+    drop-shadow(0 var(--px) 0 var(--px-gold-light))
+    drop-shadow(0 calc(-1 * var(--px)) 0 var(--px-gold-light));
   z-index: 4;
 }
 .spine:hover .spine__title,
 .spine:focus-visible .spine__title {
   opacity: 1;
-  transform: translateY(0);
 }
+/* The shelf's other books, in shadow. */
 .spine--filler {
-  filter: brightness(0.62) saturate(0.8);
+  filter: brightness(0.6);
   pointer-events: none;
 }
 
@@ -617,3 +644,6 @@
 .bookcase__board { border-top: 1.5px solid var(--gold); }
 .spine:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 3px; }
 
+@media (prefers-reduced-motion: reduce) {
+  .spine { transition: none; }
+}

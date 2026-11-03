@@ -71,15 +71,15 @@ const useStyles = makeStyles({
    * Every label in the archive is a wide-tracked Roman capital — the section
    * plates, the table headers, the gate's eyebrow. Fluent's Field label is a
    * 14px sentence-case Segoe line, which is the single most obviously imported
-   * thing about an untreated Fluent control. Per invariant 5 this is Cinzel and
-   * stays Cinzel: a calligraphic face comes apart at this size.
+   * thing about an untreated Fluent control. On the pixel pages (2026-11-03)
+   * it is Pixelify Sans, the face of every plaque and label in the room.
    */
   field: {
     [`& .${fieldClassNames.label}`]: {
-      fontFamily: "'Cinzel', 'Trajan Pro', 'EB Garamond', Georgia, serif",
-      fontSize: '0.6rem',
+      fontFamily: "'Pixelify Sans', 'EB Garamond', Georgia, serif",
+      fontSize: '0.8rem',
       fontWeight: 600,
-      letterSpacing: '0.2em',
+      letterSpacing: '0.12em',
       textTransform: 'uppercase',
       color: tokens.colorNeutralForeground3,
     },
@@ -94,9 +94,9 @@ const useStyles = makeStyles({
   tally: {
     width: '100%',
     margin: 0,
-    fontFamily: "'Cinzel', 'Trajan Pro', 'EB Garamond', Georgia, serif",
-    fontSize: '0.6rem',
-    letterSpacing: '0.22em',
+    fontFamily: "'Pixelify Sans', 'EB Garamond', Georgia, serif",
+    fontSize: '0.8rem',
+    letterSpacing: '0.12em',
     textTransform: 'uppercase',
     color: tokens.colorNeutralForeground3,
   },

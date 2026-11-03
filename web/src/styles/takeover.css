@@ -1,6 +1,8 @@
 /* One of the room's surfaces taking over the screen. Ported from the Bruma
-   Joint Archives and re-lit for the Embassy: a black chamber, one lamp's worth
-   of gold light, and a close control of gold wax. Route-only. */
+   Joint Archives and re-lit for the Embassy: a dark chamber, and a close
+   control of gold. In pixels since 2026-11-03: the room's panelling behind,
+   the pixel seal (pixel-ui.css .px-seal) to close, square edges throughout.
+   Route-only. */
 
 html.is-taken-over { overflow: hidden; }
 
@@ -10,88 +12,81 @@ html.is-taken-over { overflow: hidden; }
   z-index: 60;
   overflow-y: auto;
   padding: 1.6rem 1.5rem 2.5rem;
-  color: var(--stone);
-  background: url('/textures/wood.svg') 0 0 / 480px 480px, #0d0a07;
-  background-blend-mode: soft-light;
-  box-shadow: inset 0 0 220px 90px rgb(0 0 0 / 0.9);
-}
-/* One lamp's worth of light over whatever has taken over the screen. */
-.takeover::before {
-  content: '';
-  position: fixed;
-  left: 50%;
-  top: 30%;
-  z-index: -1;
-  width: 60vw;
-  height: 50vh;
-  margin-left: -30vw;
-  border-radius: 50%;
-  background: #d9a441;
-  filter: blur(110px);
-  opacity: 0.12;
-  pointer-events: none;
+  color: var(--px-parch);
+  /* The display face inside a takeover is the pixel one, as in the room. */
+  --display: var(--pixel);
+  --title: var(--pixel-title);
+  background: url('../assets/pixel/ui-wall.png') 0 0 / calc(24 * var(--px)) repeat, var(--px-wood);
+  image-rendering: pixelated;
 }
 .takeover--reading {
   z-index: 70;
-  background: url('/textures/wood.svg') 0 0 / 480px 480px, #080604;
-  box-shadow: inset 0 0 260px 140px rgb(0 0 0 / 0.92);
+  background-color: var(--px-ink-1);
 }
 
-/* The close control: a disc of gold wax with a cross pressed into it. */
+/* The close control: the pixel seal, a gold boss with its cross cut in black. */
 .takeover__close {
   position: fixed;
   top: 16px;
   right: 18px;
   z-index: 5;
-  display: grid;
-  place-items: center;
-  width: 48px;
-  height: 48px;
-  color: #2a1d08;
-  background: url('/textures/grain.svg') 0 0 / 256px 256px, var(--brass);
-  border: none;
-  border-radius: 47% 53% 50% 48% / 52% 46% 54% 48%;
-  box-shadow: inset 0 0 0 3px var(--brass-dark), inset 0 0 8px rgb(0 0 0 / 0.5), 0 3px 8px rgb(0 0 0 / 0.6);
-  cursor: inherit;
-  transition: transform 0.2s var(--ease);
+  /* A hand's width to press, the seal drawn at its own size in the middle:
+     four art pixels of margin all round keep it on the grid. */
+  inline-size: calc(21 * var(--px));
+  block-size: calc(21 * var(--px));
+  background-size: calc(13 * var(--px));
+  background-position: center;
+  /* The gold outline comes on in two steps, as the room's sprites move. */
+  transition: filter 0.12s steps(2);
 }
-.takeover__close:hover { transform: rotate(12deg) scale(1.05); }
-.takeover__close:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 3px; }
+.takeover__close:hover {
+  filter:
+    drop-shadow(var(--px) 0 0 var(--px-gold-light))
+    drop-shadow(calc(-1 * var(--px)) 0 0 var(--px-gold-light))
+    drop-shadow(0 var(--px) 0 var(--px-gold-light))
+    drop-shadow(0 calc(-1 * var(--px)) 0 var(--px-gold-light));
+}
 
 .takeover__heading {
   margin: 0;
-  font-size: clamp(1.4rem, 3.5vw, 2rem);
-  letter-spacing: 0.14em;
+  font-family: var(--pixel-title);
+  font-weight: 400;
+  font-size: clamp(2.2rem, 5vw, 3.2rem);
+  line-height: 1;
+  letter-spacing: 0.02em;
   text-align: center;
-  color: var(--gold-bright);
-  text-shadow: 0 2px 0 #000;
+  color: var(--px-gold-light);
+  text-shadow: var(--px) var(--px) 0 var(--px-ink);
 }
 .takeover__sub {
-  margin: 0.2rem 0 1.4rem;
-  font-style: italic;
+  margin: 0.5rem 0 1.4rem;
+  font-family: var(--pixel);
+  font-size: max(12px, calc(5 * var(--px)));
+  letter-spacing: 0.04em;
   text-align: center;
-  color: var(--stone-dim);
+  color: var(--px-parch-1);
 }
 
 .takeover .loading {
   margin: 3rem auto;
-  font-style: italic;
+  font-family: var(--pixel);
   text-align: center;
-  color: var(--stone-dim);
+  color: var(--px-parch-1);
 }
 
 .crumb {
   margin: 0 0 0.6rem;
-  font-family: var(--display);
-  font-size: 0.78rem;
-  letter-spacing: 0.12em;
+  font-family: var(--pixel);
+  font-size: max(12px, calc(5 * var(--px)));
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
-.crumb a { color: var(--gold-bright); text-decoration: none; }
-.crumb a:hover { text-decoration: underline; }
+.crumb a { color: var(--px-gold-light); text-decoration: none; }
+.crumb a:hover { text-decoration: underline; text-decoration-thickness: var(--px); }
 
 @media (max-width: 860px) {
   .takeover { padding: 4.6rem 16px 2rem; }
-  .takeover__close { top: 12px; right: 12px; width: 44px; height: 44px; }
+  .takeover__close { top: 12px; right: 12px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -96,6 +96,8 @@ const entryAt = (kind: keyof typeof RADIUS): number => RADIUS[kind] + 4;
  *
  * Cubic with both handles pulled vertically, which is what gives the woven
  * droop — a straight line reads as a wire and an elbow reads as a flowchart.
+ * Drawn with crisp edges (precedence.css), the curve comes out as a run of
+ * whole pixels, as a pixel artist would step it.
  */
 function thread(x1: number, y1: number, x2: number, y2: number): string {
   const mid = (y1 + y2) / 2;

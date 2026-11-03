@@ -1,23 +1,25 @@
 /* The Orrery as a glass globe in a brass cradle beside the room's clock: the
-   Wheel of Mundus turning inside a globe that turns slowly itself, the moons'
-   phases lettered beneath. The wheel brings its own stylesheet (orrery.css)
-   when its chunk arrives; this is only the globe around it.
+   Wheel of Mundus turning inside a globe that turns slowly itself. The wheel
+   brings its own stylesheet (orrery.css) when its chunk arrives; this is only
+   the globe around it.
+
+   On the pixel wall (2026-11-02) the globe keeps its painted glass and sits in
+   a cradle drawn with the room (globe-stand.png): the glass is 26 art pixels
+   across, centred over the cup, at the room's scale (--px). The moons' phases
+   moved to the clock's plate.
 
    The globe has no rim of its own (its brass rings came off on 2026-10-23):
    it is glass, lit from the upper left and shaded to its far side. It turns
    because the stars behind the wheel drift across it and two faint meridians
    sweep round, as lines of longitude do on a spinning globe. */
 
-.orb {
-  display: grid;
-  justify-items: center;
-  gap: 0.1rem;
-  margin: 0;
-}
+.orb { margin: 0; }
 .orb__sphere {
-  position: relative;
+  position: absolute;
+  left: calc(2 * var(--px));
+  top: 0;
   display: block;
-  width: min(100%, 12rem);
+  width: calc(26 * var(--px));
   aspect-ratio: 1;
   border-radius: 50%;
   background: #05050a;
@@ -76,24 +78,7 @@
   pointer-events: none;
 }
 /* The cradle comes up under the globe and cups it. */
-.orb__stand { display: block; width: min(64%, 7.5rem); margin-top: -28%; position: relative; z-index: 1; }
-.orb__moons {
-  display: grid;
-  justify-items: center;
-  gap: 0.05rem;
-  margin-top: 0.2rem;
-  font-size: 0.86rem;
-  font-style: italic;
-  color: var(--stone);
-}
-.orb__moons b {
-  margin-right: 0.35rem;
-  font: 600 0.56rem var(--display);
-  font-style: normal;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--gold);
-}
+.orb__stand { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
 
 @keyframes orb-spin {
   to { transform: translateX(-50%); }
@@ -108,10 +93,6 @@
   75% { transform: scaleX(0.707); }
   90% { opacity: 1; }
   100% { transform: scaleX(1); opacity: 0; }
-}
-
-@media (max-width: 860px) {
-  .orb__sphere { width: min(100%, 8.5rem); }
 }
 
 @media (prefers-reduced-motion: reduce) {
