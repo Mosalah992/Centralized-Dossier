@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest';
 import { incidentNow, type Filing, type FilingStamp } from '../shared/filing';
 import { parseReportRecord } from '../shared/reports';
 import { wingOf } from '../shared/wings';
-import { grantFor, scribeConfig, summonsFor, verifyDiscord } from '../functions/lib/discord';
+import { channelFor, grantFor, scribeConfig, summonsFor, verifyDiscord } from '../functions/lib/discord';
 import {
   CODE_ATTEMPTS,
   admitHolder,
@@ -65,7 +65,7 @@ const config = scribeConfig({
     REPLACE_WITH_ROLE_ID: { rank: 'Nobody', office: '', precedence: 99 },
   },
   summons: { command: [ROLE.command, 'REPLACE_WITH_DEPARTMENT_HEADS_ROLE_ID'], all: [ROLE.all] },
-  channels: { troops: CHANNEL, application: CHANNEL, bulletin: 'REPLACE_WITH_BULLETIN_CHANNEL_ID' },
+  channels: { military: CHANNEL, application: CHANNEL, bulletin: 'REPLACE_WITH_BULLETIN_CHANNEL_ID', troops: '777777777777777777' },
 });
 
 const troops = SAMPLES[0]!.request.filing;
@@ -74,7 +74,14 @@ describe('the role map', () => {
   it('keeps only real Discord ids, so placeholders read as nothing configured', () => {
     expect([...config.roles.keys()]).toEqual([ROLE.justiciar, ROLE.agent]);
     expect(config.summons.command).toEqual([ROLE.command]);
-    expect(config.channels).toEqual({ troops: CHANNEL, application: CHANNEL });
+    // A key the Scribe does not post under (an old kind's) is dropped too.
+    expect(config.channels).toEqual({ military: CHANNEL, application: CHANNEL });
+    expect(Object.keys(scribeConfig().channels).sort()).toEqual(
+      ['application', 'auxiliary', 'bulletin', 'diplomatic', 'intelligence', 'logistics', 'military', 'public-request'],
+    );
+    expect(channelFor({ category: 'report', wing: 'military' }, config)).toBe(CHANNEL);
+    expect(channelFor({ category: 'report', wing: 'auxiliary' }, config)).toBeNull();
+    expect(channelFor({ category: 'application', wing: null }, config)).toBe(CHANNEL);
   });
 
   it('commits only Discord ids or REPLACE_WITH_ placeholders, so nothing is dropped by mistake', () => {
@@ -192,6 +199,7 @@ describe('codes and the seal', () => {
 
 describe('the /report wizard', () => {
   const draft = { id: 'd1a2f3e4-5678-90ab-cdef-1234567890ab' };
+  const next = (d: Parameters<typeof stepWhat>[0]) => JSON.stringify(stepWhat(d, true)).match(/"label":"Next","custom_id":"[^"]+","disabled":(true|false)/)?.[1];
 
   it('reads only its own custom ids', () => {
     expect(readCustomId(`scribe:cat:${draft.id}`)).toEqual({ step: 'cat', draftId: draft.id });
@@ -201,33 +209,56 @@ describe('the /report wizard', () => {
 
   it('offers someone without a commission only the open kinds, at the open levels', () => {
     expect(categoriesFor(false)).toEqual(['application', 'public-request']);
-    expect(choose(draft, 'cat', 'troops', false).category).toBeUndefined();
+    expect(choose(draft, 'cat', 'report', false).category).toBeUndefined();
     const applying = choose(draft, 'cat', 'application', false);
     expect(choose(applying, 'lvl', 'cataclysm', false).importance).toBeUndefined();
     expect(choose(applying, 'lvl', 'notable', false).importance).toBe('notable');
   });
 
   it('clears a level the new kind cannot carry, and asks for a section only for the board', () => {
-    const report = choose(choose(draft, 'cat', 'troops', true), 'lvl', 'cataclysm', true);
+    const report = choose(choose(draft, 'cat', 'report', true), 'lvl', 'cataclysm', true);
     expect(report.importance).toBe('cataclysm');
     expect(choose(report, 'cat', 'public-request', true).importance).toBeUndefined();
     const post = choose(choose(draft, 'cat', 'bulletin', true), 'lvl', 'routine', true);
-    const next = (d: typeof post) => JSON.stringify(stepWhat(d, true)).match(/"label":"Next","custom_id":"[^"]+","disabled":(true|false)/)?.[1];
     expect(next(post)).toBe('true');
     expect(next(choose(post, 'sec', 'festivities', true))).toBe('false');
     expect(next(choose(post, 'sec', 'bounties', true))).toBe('true');
   });
 
+  it('asks a report for its wing and its kind, in five rows at most', () => {
+    const report = choose(choose(draft, 'cat', 'report', true), 'lvl', 'routine', true);
+    const rows = (d: typeof report) => (stepWhat(d, true).components as { components: { custom_id: string; options?: { label: string }[] }[] }[]);
+    expect(rows(report)).toHaveLength(5);
+    expect(rows(report)[1]!.components[0]!.options!.map((o) => o.label)).toEqual(['Embassy', 'Intelligence', 'Military', 'Logistics', 'Auxiliary']);
+    expect(rows(report)[2]!.components[0]!.options).toHaveLength(8);
+    expect(next(report)).toBe('true');
+    const filed = choose(choose(report, 'wing', 'auxiliary', true), 'kind', 'intelligence', true);
+    expect(filed).toMatchObject({ wing: 'auxiliary', kind: 'intelligence' });
+    expect(next(filed)).toBe('false');
+    expect(choose(filed, 'wing', 'scholarship', true).wing).toBe('auxiliary');
+    // Another kind of filing forgets the wing and the kind.
+    expect(choose(filed, 'cat', 'bulletin', true)).toMatchObject({ wing: null, kind: null });
+  });
+
   it('asks a rank of members only', () => {
     const required = (d: Parameters<typeof modalWho>[0]) =>
       (modalWho(d).components as { components: { custom_id: string; required: boolean }[] }[])[0]!.components[0]!.required;
-    expect(required({ ...draft, category: 'troops' })).toBe(true);
+    expect(required({ ...draft, category: 'report' })).toBe(true);
     expect(required({ ...draft, category: 'application' })).toBe(false);
     expect(modalValues({ components: [{ components: [{ custom_id: 'rank', value: 'Agent' }] }] })).toEqual({ rank: 'Agent' });
   });
 
   it('judges a step by its own fields only', () => {
-    const partial = { ...draft, category: 'troops' as const, importance: 'routine' as const, rank: 'Agent', name: 'Celarwen', title: '' };
+    const partial = {
+      ...draft,
+      category: 'report' as const,
+      wing: 'military' as const,
+      kind: 'activity' as const,
+      importance: 'routine' as const,
+      rank: 'Agent',
+      name: 'Celarwen',
+      title: '',
+    };
     expect(checkSoFar(partial, ['title'])).toMatchObject({ ok: false });
     expect(checkSoFar({ ...partial, title: 'A patrol' }, ['rank', 'name', 'superior', 'title'])).toMatchObject({ ok: true });
   });
@@ -280,7 +311,7 @@ function memoryFilings(): FilingStore & { rows: FilingRecord[]; entries: Cabinet
 describe('filing', () => {
   it('enters a report in the Cabinet under its wing, with its fields laid out as a record', () => {
     const entry = cabinetEntry(9, troops, '2026-11-02T12:00:00.000Z', CHANNEL)!;
-    expect(entry).toMatchObject({ id: 'scribe-9', category: 'Military', subcategory: 'Troops Report', severity: 'low', authorName: troops.name });
+    expect(entry).toMatchObject({ id: 'scribe-9', category: 'Military', subcategory: 'Inspection Report', severity: 'low', authorName: troops.name });
     expect(wingOf(entry.category)).toBe('military');
     const fields = parseReportRecord(entry.body).filter((b) => b.kind === 'field');
     expect(fields.map((f) => f.kind === 'field' && f.label)).toEqual(['Entry', 'Rank', 'Incident', 'Answering to', 'Importance']);
@@ -339,7 +370,7 @@ describe('filing', () => {
     expect(embed.color).toBe(0x58703c);
     expect(embed.timestamp).toBe(filed.filedAt);
     expect(Object.fromEntries(embed.fields.map((f) => [f.name, f.value]))).toMatchObject({
-      'Troops Report': 'To the Military Wing',
+      'Inspection Report': 'To the Military Wing',
       Importance: 'Standard Routine',
       Signed: `${troops.rank} ${troops.name}`,
       'Answering to': troops.superior,

@@ -12,9 +12,10 @@
 // types here, so the tests run it in Node. The bindings are in scribe-env.ts.
 
 import {
-  CATEGORY_INFO,
   IMPORTANCE_INFO,
   destinationLabel,
+  destinationOf,
+  filingName,
   incidentClock,
   incidentDate,
   incidentNow,
@@ -26,7 +27,7 @@ import {
 } from '../../shared/filing';
 import type { ReportSeverity } from '../../shared/reports';
 import type { ScribeConfig } from './discord';
-import { summonsFor } from './discord';
+import { channelFor, summonsFor } from './discord';
 
 export type Door = 'discord' | 'web';
 
@@ -96,12 +97,12 @@ const capital = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 /**
  * A report as the Cabinet keeps it, or null for a filing that is not a report.
  * The category is the wing's own name ("Military"), which the Cabinet's
- * `wingOf` reads directly; the Scribe's category becomes the subcategory. The
- * filing's own fields lead the body as `Label: value` lines, which the Cabinet
- * lays out as a record (shared/reports.ts parseReportRecord).
+ * `wingOf` reads directly; the kind of report ("Incident Report") becomes the
+ * subcategory. The filing's own fields lead the body as `Label: value` lines,
+ * which the Cabinet lays out as a record (shared/reports.ts parseReportRecord).
  */
 export function cabinetEntry(id: number, filing: Filing, filedAt: string, channelId: string | null): CabinetEntry | null {
-  const to = CATEGORY_INFO[filing.category].destination;
+  const to = destinationOf(filing);
   if (to.kind !== 'cabinet') return null;
   const level = IMPORTANCE_INFO[filing.importance];
   const fields = [
@@ -114,7 +115,7 @@ export function cabinetEntry(id: number, filing: Filing, filedAt: string, channe
   return {
     id: `scribe-${id}`,
     category: capital(to.wing),
-    subcategory: CATEGORY_INFO[filing.category].name,
+    subcategory: filingName(filing),
     severity: level.severity,
     title: filing.title,
     body: `${fields.join('\n')}\n\n${filing.body}`,
@@ -163,7 +164,7 @@ export function filingEmbed(request: ParchmentRequest, link: string | null, file
     description: prose(filing.body),
     color: Number.parseInt(level.ink.slice(1), 16),
     fields: [
-      { name: CATEGORY_INFO[filing.category].name, value: destinationLabel(filing), inline: true },
+      { name: filingName(filing), value: destinationLabel(filing), inline: true },
       { name: 'Importance', value: level.name, inline: true },
       { name: 'When', value: `${incidentDate(filing.time)}, ${incidentClock(filing.time)}`, inline: true },
       { name: 'Signed', value: plain(signed), inline: true },
@@ -204,7 +205,7 @@ export function announcement(record: FilingRecord, config: ScribeConfig, origin:
 export function verdict(record: FilingRecord, origin: string): Record<string, unknown> {
   const mark = record.stamp?.mark === 'denied' ? 'Denied' : 'Approved';
   return {
-    content: `**${CATEGORY_INFO[record.filing.category].name} · Entry No. ${record.id}** · ${mark} by High Command.\n${plain(record.filing.title)}`,
+    content: `**${filingName(record.filing)} · Entry No. ${record.id}** · ${mark} by High Command.\n${plain(record.filing.title)}`,
     components: [readIt(filingLink(origin, record.id))],
     ...(record.discordMessageId ? { message_reference: { message_id: record.discordMessageId, fail_if_not_exists: false } } : {}),
   };
@@ -233,7 +234,7 @@ export async function record(
 ): Promise<number> {
   const filedAt = now.toISOString();
   const id = await deps.filings.insert(filing, door, filerDiscordId, filedAt);
-  const entry = cabinetEntry(id, filing, filedAt, deps.config.channels[filing.category] ?? null);
+  const entry = cabinetEntry(id, filing, filedAt, channelFor(filing, deps.config));
   if (entry) await deps.filings.enter(id, entry);
   return id;
 }
@@ -242,7 +243,7 @@ export async function record(
 export async function publish(deps: ScribeDeps, id: number): Promise<boolean> {
   const found = await deps.filings.get(id);
   if (!found) return false;
-  const channel = deps.config.channels[found.filing.category];
+  const channel = channelFor(found.filing, deps.config);
   if (!channel) return false;
   const messageId = await deps.post(channel, announcement(found, deps.config, deps.origin));
   if (messageId) await deps.filings.posted(id, channel, messageId);
@@ -269,7 +270,7 @@ export async function stampFiling(
 
 /** Post the Clerk's verdict to the filing's channel, linking to the stamped parchment. */
 export async function announceStamp(deps: ScribeDeps, stamped: FilingRecord): Promise<boolean> {
-  const channel = stamped.discordChannelId ?? deps.config.channels[stamped.filing.category];
+  const channel = stamped.discordChannelId ?? channelFor(stamped.filing, deps.config);
   if (!channel) return false;
   return Boolean(await deps.post(channel, verdict(stamped, deps.origin)));
 }

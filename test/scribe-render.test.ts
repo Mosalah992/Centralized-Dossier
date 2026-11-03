@@ -62,7 +62,7 @@ describe('the sheet', () => {
     const request = sample(0);
     const html = sheet(request);
     const { filing } = request;
-    for (const text of [filing.title, 'Troops Report', 'To the Military Wing', `Entry No. ${request.serial}`, `${filing.rank} ${filing.name}`, `Answering to ${filing.superior}`]) {
+    for (const text of [filing.title, 'Inspection Report', 'To the Military Wing', `Entry No. ${request.serial}`, `${filing.rank} ${filing.name}`, `Answering to ${filing.superior}`]) {
       expect(html, text).toContain(text);
     }
     expect(html).toContain('Forty-two soldiers of the Dominion stood muster');

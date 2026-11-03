@@ -8,7 +8,7 @@
 // role or leaves the server loses the code with it.
 
 import bundled from '../../config/scribe.json';
-import { FILING_CATEGORIES, type FilingCategory, type Summons } from '../../shared/filing';
+import { FILING_CATEGORIES, REPORT_WINGS, type Filing, type FilingCategory, type ReportWing, type Summons } from '../../shared/filing';
 
 export const SNOWFLAKE = /^\d{17,20}$/;
 
@@ -23,7 +23,17 @@ export interface ScribeConfig {
   roles: Map<string, Grant>;
   /** Role ids pinged for a Strategic (`command`) and a Cataclysm (`all`) filing. */
   summons: Record<Exclude<Summons, 'none'>, string[]>;
-  channels: Partial<Record<FilingCategory, string>>;
+  channels: Partial<Record<ChannelKey, string>>;
+}
+
+/** What config/scribe.json keys a channel by: a report's wing, or the kind of anything else. */
+export type ChannelKey = Exclude<FilingCategory, 'report'> | ReportWing;
+const CHANNEL_KEYS: readonly ChannelKey[] = [...FILING_CATEGORIES.filter((c): c is Exclude<FilingCategory, 'report'> => c !== 'report'), ...REPORT_WINGS];
+
+/** The channel the bot posts a filing to: a report to its wing's, anything else to its kind's. Null when none is set. */
+export function channelFor(filing: Pick<Filing, 'category' | 'wing'>, config: ScribeConfig): string | null {
+  const key: ChannelKey = filing.category === 'report' ? (filing.wing ?? 'diplomatic') : filing.category;
+  return config.channels[key] ?? null;
 }
 
 /**
@@ -50,9 +60,9 @@ export function scribeConfig(raw: unknown = bundled): ScribeConfig {
 
   const channels: ScribeConfig['channels'] = {};
   const rawChannels = (source.channels ?? {}) as Record<string, unknown>;
-  for (const category of FILING_CATEGORIES) {
-    const id = rawChannels[category];
-    if (typeof id === 'string' && SNOWFLAKE.test(id)) channels[category] = id;
+  for (const key of CHANNEL_KEYS) {
+    const id = rawChannels[key];
+    if (typeof id === 'string' && SNOWFLAKE.test(id)) channels[key] = id;
   }
 
   return { roles, summons: { command: ids(summons.command), all: ids(summons.all) }, channels };

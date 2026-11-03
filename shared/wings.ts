@@ -1,12 +1,13 @@
-// The Embassy's six wings, after the First Emissary's table (2026-10-22). A
-// report's wing seals its letter in the Cabinet: the wax in the wing's colour,
-// struck with the wing's emblem. Reports still arrive under the Discord
-// collector's categories (REPORT_CATEGORY_NAMES); `wingOf` reads one into the
-// other, and the collector, the API and the Scribe Table are unchanged.
+// The Embassy's wings, after the First Emissary's table (2026-10-22), and the
+// Auxiliary, added with the reporting structure (2026-11-03). A report's wing
+// seals its letter in the Cabinet: the wax in the wing's colour, struck with
+// the wing's emblem. Collected reports still arrive under the Discord
+// collector's categories (REPORT_CATEGORY_NAMES) and `wingOf` reads one into
+// the other; the Scribe files under the wing's own name.
 
 import type { REPORT_CATEGORY_NAMES } from './reports';
 
-export const WINGS = ['intelligence', 'military', 'logistics', 'diplomatic', 'legal', 'scholarship'] as const;
+export const WINGS = ['intelligence', 'military', 'logistics', 'diplomatic', 'legal', 'scholarship', 'auxiliary'] as const;
 export type Wing = (typeof WINGS)[number];
 
 export type Emblem = 'eye' | 'blades' | 'key' | 'laurel' | 'scales' | 'star';
@@ -62,6 +63,15 @@ export const WING_INFO: Record<Wing, WingInfo> = {
     ink: '#93dcdc',
     emblem: 'star',
     covers: 'Magical research, lessons, examinations, scholarly discoveries, and authorised studies of artefacts.',
+  },
+  // Struck with the Military's blades until the room has an emblem of its own
+  // (web/src/room/takeovers/cabinet/Emblem.tsx); the bronze wax tells them apart.
+  auxiliary: {
+    name: 'Auxiliary Wing',
+    wax: '#6b4a24',
+    ink: '#e3c49a',
+    emblem: 'blades',
+    covers: 'Auxiliary patrols, woodland reconnaissance, support to the other wings, and what the auxiliaries see and learn in the field.',
   },
 };
 

@@ -19,19 +19,8 @@ import { WING_INFO, type Wing } from './wings';
 
 // ── Categories ──────────────────────────────────────────────────────────────
 
-export const FILING_CATEGORIES = [
-  'bulletin',
-  'troops',
-  'logistics',
-  'bureau',
-  'embassy',
-  'patrol',
-  'training',
-  'lesson-magic',
-  'lesson-language',
-  'application',
-  'public-request',
-] as const;
+/** What is filed. A report also names its wing and its kind (below). */
+export const FILING_CATEGORIES = ['report', 'bulletin', 'application', 'public-request'] as const;
 export type FilingCategory = (typeof FILING_CATEGORIES)[number];
 
 /** Where a filing goes once filed. */
@@ -43,7 +32,8 @@ export type Destination =
 
 export interface CategoryInfo {
   name: string;
-  destination: Destination;
+  /** Where it files: a report into its wing's drawer of the Cabinet. */
+  to: Destination['kind'];
   /**
    * Filed without a personal code. Applications and Public Requests come from
    * people who are not (yet) members; the site throttles them per address
@@ -53,30 +43,121 @@ export interface CategoryInfo {
 }
 
 export const CATEGORY_INFO: Record<FilingCategory, CategoryInfo> = {
-  bulletin: { name: 'Bulletin Post', destination: { kind: 'board' }, open: false },
-  troops: { name: 'Troops Report', destination: { kind: 'cabinet', wing: 'military' }, open: false },
-  logistics: { name: 'Logistics Report', destination: { kind: 'cabinet', wing: 'logistics' }, open: false },
-  bureau: { name: 'Bureau Report', destination: { kind: 'cabinet', wing: 'intelligence' }, open: false },
-  embassy: { name: 'Embassy Report', destination: { kind: 'cabinet', wing: 'diplomatic' }, open: false },
-  patrol: { name: 'Patrol Log', destination: { kind: 'cabinet', wing: 'military' }, open: false },
-  training: { name: 'Training Log', destination: { kind: 'cabinet', wing: 'military' }, open: false },
-  'lesson-magic': { name: 'Lesson Log (Magic)', destination: { kind: 'cabinet', wing: 'scholarship' }, open: false },
-  'lesson-language': { name: 'Lesson Log (Language)', destination: { kind: 'cabinet', wing: 'scholarship' }, open: false },
-  application: { name: 'Application to the Thalmor', destination: { kind: 'clerk' }, open: true },
-  'public-request': { name: 'Public Request', destination: { kind: 'clerk' }, open: true },
+  report: { name: 'Report', to: 'cabinet', open: false },
+  bulletin: { name: 'Bulletin Post', to: 'board', open: false },
+  application: { name: 'Application to the Thalmor', to: 'clerk', open: true },
+  'public-request': { name: 'Public Request', to: 'clerk', open: true },
 };
 
 export const isFilingCategory = (value: unknown): value is FilingCategory =>
   (FILING_CATEGORIES as readonly unknown[]).includes(value);
 
+// ── Reports: a wing and a kind ──────────────────────────────────────────────
+//
+// The Embassy's reporting structure (the team's tables, 2026-11-03): every
+// wing files the same eight kinds of report, so a Military Activity Report and
+// an Embassy Activity Report differ only in the wing.
+
+/** The wings a report is filed under, in the table's order. The Embassy's is the Diplomatic wing. */
+export const REPORT_WINGS = ['diplomatic', 'intelligence', 'military', 'logistics', 'auxiliary'] as const satisfies readonly Wing[];
+export type ReportWing = (typeof REPORT_WINGS)[number];
+
+/** Each wing as a filer chooses it. */
+export const REPORT_WING_NAMES: Record<ReportWing, string> = {
+  diplomatic: 'Embassy',
+  intelligence: 'Intelligence',
+  military: 'Military',
+  logistics: 'Logistics',
+  auxiliary: 'Auxiliary',
+};
+
+export const REPORT_KINDS = [
+  'activity',
+  'incident',
+  'investigation',
+  'operation',
+  'intelligence',
+  'inspection',
+  'personnel',
+  'administrative',
+] as const;
+export type ReportKind = (typeof REPORT_KINDS)[number];
+
+export interface ReportKindInfo {
+  name: string;
+  /** What it is for, as the team's table says it. */
+  purpose: string;
+  /** The same, short enough for a Discord menu (100 letters). */
+  brief: string;
+}
+
+export const REPORT_KIND_INFO: Record<ReportKind, ReportKindInfo> = {
+  activity: {
+    name: 'Activity Report',
+    purpose: 'A general account of duties, patrols, assignments, meetings, diplomatic engagements, or other activities performed.',
+    brief: 'Duties, patrols, assignments, meetings and engagements',
+  },
+  incident: {
+    name: 'Incident Report',
+    purpose: 'Unexpected events, disputes, security breaches, accidents, misconduct, or confrontations.',
+    brief: 'Unexpected events, disputes, breaches, accidents, misconduct',
+  },
+  investigation: {
+    name: 'Investigation Report',
+    purpose: 'Inquiries, evidence, observations, interviews, suspected violations, and investigative findings.',
+    brief: 'Inquiries, evidence, interviews and findings',
+  },
+  operation: {
+    name: 'Operation Report',
+    purpose: 'Organised missions, coordinated assignments, military operations, diplomatic missions, or logistical undertakings.',
+    brief: 'Organised missions and coordinated undertakings',
+  },
+  intelligence: {
+    name: 'Intelligence Report',
+    purpose: 'Information gathered about individuals, organisations, locations, political developments, threats, or other matters of interest.',
+    brief: 'What was learned of people, groups, places, politics and threats',
+  },
+  inspection: {
+    name: 'Inspection Report',
+    purpose: 'Examinations of personnel, equipment, facilities, inventories, procedures, or operational readiness.',
+    brief: 'Examinations of personnel, equipment, stores or readiness',
+  },
+  personnel: {
+    name: 'Personnel Report',
+    purpose: 'Conduct, performance, attendance, training progress, qualifications, commendations, and disciplinary concerns.',
+    brief: 'Conduct, performance, attendance, training and discipline',
+  },
+  administrative: {
+    name: 'Administrative Report',
+    purpose: 'Resources, finances, supplies, institutional affairs, policy implementation, and general departmental administration.',
+    brief: 'Resources, finances, supplies, policy and administration',
+  },
+};
+
+export const isReportWing = (value: unknown): value is ReportWing => (REPORT_WINGS as readonly unknown[]).includes(value);
+export const isReportKind = (value: unknown): value is ReportKind => (REPORT_KINDS as readonly unknown[]).includes(value);
+
+/** What a filing is called: "Incident Report", "Bulletin Post". */
+export function filingName(filing: Pick<Filing, 'category' | 'kind'>): string {
+  return filing.category === 'report' && filing.kind ? REPORT_KIND_INFO[filing.kind].name : CATEGORY_INFO[filing.category].name;
+}
+
+/** Where a filing goes: a report to its wing. */
+export function destinationOf(filing: Pick<Filing, 'category' | 'wing'>): Destination {
+  const to = CATEGORY_INFO[filing.category].to;
+  return to === 'cabinet' ? { kind: 'cabinet', wing: filing.wing ?? 'diplomatic' } : { kind: to };
+}
+
 /** Where it goes, as the parchment and the bot's post say it: "To the Military Wing". */
-export function destinationLabel(filing: Pick<Filing, 'category' | 'section'>): string {
-  const to = CATEGORY_INFO[filing.category].destination;
+export function destinationLabel(filing: Pick<Filing, 'category' | 'wing' | 'section'>): string {
+  const to = destinationOf(filing);
   switch (to.kind) {
     case 'board':
       return `For the Board · ${filing.section ? BOARD_INFO[filing.section].title : ''}`;
-    case 'cabinet':
-      return `To the ${WING_INFO[to.wing].name}`;
+    case 'cabinet': {
+      const { name } = WING_INFO[to.wing];
+      return `To ${name.endsWith('Wing') ? 'the ' : ''}${name}`;
+    }
     case 'clerk':
       return 'For the Clerk’s Table';
   }
@@ -193,6 +274,10 @@ export function incidentClock(time: IncidentTime): string {
 /** Every field a filer writes, in the order the wizards ask for them. */
 export interface Filing {
   category: FilingCategory;
+  /** Reports only: the wing it is filed under. */
+  wing: ReportWing | null;
+  /** Reports only: what kind of report it is. */
+  kind: ReportKind | null;
   importance: Importance;
   /** Bulletin Posts only: the board section it is nailed to. */
   section: BulletinSection | null;
@@ -268,6 +353,15 @@ export function checkFiling(input: unknown): FilingCheck {
   const category = raw.category;
   const info = CATEGORY_INFO[category];
 
+  let wing: ReportWing | null = null;
+  let kind: ReportKind | null = null;
+  if (category === 'report') {
+    if (!isReportWing(raw.wing)) return fail('wing', 'Choose the wing it is filed under.');
+    if (!isReportKind(raw.kind)) return fail('kind', 'Choose what kind of report it is.');
+    wing = raw.wing;
+    kind = raw.kind;
+  }
+
   if (!isImportance(raw.importance)) return fail('importance', 'Choose how much it matters.');
   if (!importanceFor(category).includes(raw.importance)) {
     return fail('importance', `Only a member filing under a code may mark it ${IMPORTANCE_INFO[raw.importance].name}.`);
@@ -306,32 +400,35 @@ export function checkFiling(input: unknown): FilingCheck {
 
   const body = prose(raw.body);
   if (!body || body.length < FILING_LIMITS.bodyMinimum) {
-    return fail('body', `Write the ${info.name} itself, ${FILING_LIMITS.bodyMinimum} letters at least.`);
+    return fail('body', `Write the ${filingName({ category, kind })} itself, ${FILING_LIMITS.bodyMinimum} letters at least.`);
   }
   if (body.length > FILING_LIMITS.body) return fail('body', `It runs to ${FILING_LIMITS.body} letters at most.`);
 
   return {
     ok: true,
-    value: { category, importance, section, rank, name, superior: superior || null, title, time, body },
+    value: { category, wing, kind, importance, section, rank, name, superior: superior || null, title, time, body },
   };
 }
 
 /**
  * A filing given step by step (the bot's wizard and the Scribe Table's), judged
  * by what it has so far: the fields not yet reached are filled with stand-ins
- * that pass, and only a problem with one of `fields` is reported. On success
- * the value is the cleaned filing, stand-ins included; take only the fields
- * the step asked for.
+ * that pass, and only a problem with one of `fields` is reported. A field the
+ * step asks for gets no stand-in, so one left unanswered is reported too. On
+ * success the value is the cleaned filing, stand-ins included; take only the
+ * fields the step asked for.
  */
 export function checkFilingSoFar(
   draft: Partial<Filing>,
   fields: readonly FilingField[],
   now: IncidentTime = incidentNow(),
 ): { ok: true; value: Filing } | { ok: false; field: FilingField; error: string } {
-  const stand: Filing = {
-    category: 'troops',
+  const stand: Partial<Filing> = {
+    category: 'report',
+    wing: 'military',
+    kind: 'activity',
     importance: 'routine',
-    section: draft.category === 'bulletin' ? 'propaganda' : null,
+    section: 'propaganda',
     rank: 'Agent',
     name: 'Scribe',
     superior: null,
@@ -339,10 +436,11 @@ export function checkFilingSoFar(
     time: now,
     body: 'x'.repeat(FILING_LIMITS.bodyMinimum),
   };
+  for (const field of fields) delete stand[field];
   const given = Object.fromEntries(Object.entries(draft).filter(([, v]) => v !== undefined));
   const checked = checkFiling({ ...stand, ...given });
   if (checked.ok || fields.includes(checked.field)) return checked;
-  return { ok: true, value: { ...stand, ...(given as Partial<Filing>) } };
+  return { ok: true, value: { ...stand, ...(given as Partial<Filing>) } as Filing };
 }
 
 // ── The Clerk's stamp, and what a parchment is drawn from ───────────────────

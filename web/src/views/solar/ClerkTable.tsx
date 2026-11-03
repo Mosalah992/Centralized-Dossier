@@ -11,7 +11,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { CATEGORY_INFO, IMPORTANCE_INFO, type ClerkFiling, type StampMark } from '../../../../shared/filing';
+import { IMPORTANCE_INFO, filingName, type ClerkFiling, type StampMark } from '../../../../shared/filing';
 import { Fleuron } from '../../room/art';
 import { Stamp } from '../../room/takeovers/Stamp';
 import { Parchment } from '../../scribe/Parchment';
@@ -90,7 +90,7 @@ export function ClerkTable() {
             <li key={f.id}>
               <button type="button" className="clerk__item" onClick={() => setReading(f)}>
                 <span className="clerk__kind" data-level={f.importance}>
-                  {CATEGORY_INFO[f.category].name} · No. {f.id}
+                  {filingName(f.parchment.filing)} · No. {f.id}
                   {f.importance === 'strategic' || f.importance === 'cataclysm' ? ` · ${IMPORTANCE_INFO[f.importance].name}` : ''}
                 </span>
                 <span className="clerk__title">{f.title}</span>
@@ -110,7 +110,7 @@ export function ClerkTable() {
               <li key={f.id}>
                 <button type="button" className="clerk__item" onClick={() => setReading(f)}>
                   <span className="clerk__kind">
-                    {CATEGORY_INFO[f.category].name} · No. {f.id} · {f.stamp === 'denied' ? 'Denied' : 'Approved'}
+                    {filingName(f.parchment.filing)} · No. {f.id} · {f.stamp === 'denied' ? 'Denied' : 'Approved'}
                   </span>
                   <span className="clerk__title">{f.title}</span>
                 </button>
@@ -145,7 +145,7 @@ function Reading({ filing, onStamp, onClose }: { filing: ClerkFiling; onStamp: (
     <dialog ref={dialog} className="clerk-reading" aria-labelledby="clerk-reading-title" onClose={onClose}>
       <header className="clerk-reading__bar">
         <h2 id="clerk-reading-title">
-          {CATEGORY_INFO[filing.category].name} · Entry No. {filing.id}
+          {filingName(filing.parchment.filing)} · Entry No. {filing.id}
         </h2>
         <button type="button" className="btn btn--quiet" onClick={() => dialog.current?.close()}>
           Close

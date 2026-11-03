@@ -11,6 +11,8 @@
 - [x] Fill `config/scribe.json` and the Discord vars (Ancarion's public id and key).
 - [x] Draw the parchment in the browser for the Workers Free plan (2026-11-03): the Worker dropped, `/filings/:id` added, Discord posts as embeds linking to it.
 - [x] Set the secrets `DISCORD_BOT_TOKEN` (Ancarion's) and `CODE_PEPPER` (2026-11-03).
+- [x] The team's reporting structure (2026-11-03): a report is a wing and one of eight kinds; the Auxiliary wing; a channel per wing in the Archive category.
+- [ ] An emblem of its own for the Auxiliary wing (the room's art; it borrows the Military's blades).
 - [ ] Apply migration 0006 remotely; deploy the site and verify on pages.dev.
 - [ ] With the team's leave: `discord-setup.mjs endpoint` (moves Ancarion off the quartermaster), then `register`; check /clockin still answers through the relay.
 - [ ] Test the bot end to end in a private channel, then the archive channels and the domain.

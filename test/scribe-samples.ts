@@ -1,5 +1,5 @@
-// Filings for the sample sheet (scripts/scribe-samples.mjs) and the renderer's
-// tests: one of every importance, a Cataclysm, a long body, and both stamps.
+// Filings for the parchment's and the bot's tests: one of every importance, a
+// Cataclysm, a long body, and both stamps.
 // Every name here is invented except Ondolemar's, who is the realm's own.
 
 import type { ParchmentRequest } from '../shared/filing';
@@ -8,12 +8,14 @@ const at = (monthIndex: number, day: number, hour: number, minute: number) => ({
 
 export const SAMPLES: { label: string; request: ParchmentRequest }[] = [
   {
-    label: 'Standard Routine · Troops Report',
+    label: 'Standard Routine · Military Inspection Report',
     request: {
       serial: 214,
       stamp: null,
       filing: {
-        category: 'troops',
+        category: 'report',
+        wing: 'military',
+        kind: 'inspection',
         importance: 'routine',
         section: null,
         rank: 'Captain',
@@ -27,12 +29,14 @@ export const SAMPLES: { label: string; request: ParchmentRequest }[] = [
     },
   },
   {
-    label: 'Nominal · Patrol Log',
+    label: 'Nominal · Auxiliary Activity Report',
     request: {
       serial: 215,
       stamp: null,
       filing: {
-        category: 'patrol',
+        category: 'report',
+        wing: 'auxiliary',
+        kind: 'activity',
         importance: 'nominal',
         section: null,
         rank: 'Agent',
@@ -46,12 +50,14 @@ export const SAMPLES: { label: string; request: ParchmentRequest }[] = [
     },
   },
   {
-    label: 'Notable · Bureau Report (long)',
+    label: 'Notable · Intelligence Investigation Report (long)',
     request: {
       serial: 216,
       stamp: null,
       filing: {
-        category: 'bureau',
+        category: 'report',
+        wing: 'intelligence',
+        kind: 'investigation',
         importance: 'notable',
         section: null,
         rank: 'Inquisitor',
@@ -70,12 +76,14 @@ export const SAMPLES: { label: string; request: ParchmentRequest }[] = [
     },
   },
   {
-    label: 'Strategic · Embassy Report',
+    label: 'Strategic · Embassy Incident Report',
     request: {
       serial: 217,
       stamp: null,
       filing: {
-        category: 'embassy',
+        category: 'report',
+        wing: 'diplomatic',
+        kind: 'incident',
         importance: 'strategic',
         section: null,
         rank: 'Justiciar',
@@ -89,12 +97,14 @@ export const SAMPLES: { label: string; request: ParchmentRequest }[] = [
     },
   },
   {
-    label: 'Cataclysm · Troops Report',
+    label: 'Cataclysm · Military Operation Report',
     request: {
       serial: 218,
       stamp: null,
       filing: {
-        category: 'troops',
+        category: 'report',
+        wing: 'military',
+        kind: 'operation',
         importance: 'cataclysm',
         section: null,
         rank: 'Commander',
@@ -114,6 +124,8 @@ export const SAMPLES: { label: string; request: ParchmentRequest }[] = [
       stamp: { mark: 'approved', at: at(9, 10, 15, 0) },
       filing: {
         category: 'application',
+        wing: null,
+        kind: null,
         importance: 'routine',
         section: null,
         rank: '',
@@ -133,6 +145,8 @@ export const SAMPLES: { label: string; request: ParchmentRequest }[] = [
       stamp: { mark: 'denied', at: at(9, 11, 9, 30) },
       filing: {
         category: 'public-request',
+        wing: null,
+        kind: null,
         importance: 'nominal',
         section: null,
         rank: 'Smith',

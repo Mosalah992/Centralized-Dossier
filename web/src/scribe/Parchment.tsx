@@ -16,7 +16,7 @@ import '@fontsource/im-fell-english-sc/latin-400.css';
 import '@fontsource/mr-de-haviland/latin-400.css';
 import '@fontsource/mr-de-haviland/latin-ext-400.css';
 
-import { CATEGORY_INFO, IMPORTANCE_INFO, destinationLabel, incidentClock, incidentDate, type ParchmentRequest } from '../../../shared/filing';
+import { IMPORTANCE_INFO, destinationLabel, filingName, incidentClock, incidentDate, type ParchmentRequest } from '../../../shared/filing';
 import paper1200 from '../assets/scribe/parchment-1200.jpg';
 import paper1500 from '../assets/scribe/parchment-1500.jpg';
 import paper1850 from '../assets/scribe/parchment-1850.jpg';
@@ -254,7 +254,7 @@ export function ParchmentSheet({
           </Box>
           <Box style={{ marginTop: 18, justifyContent: 'space-between', alignItems: 'flex-end', fontFamily: PRINTED, color: PRINT }}>
             <Box style={{ flexDirection: 'column' }}>
-              <Box style={{ fontSize: 34 }}>{CATEGORY_INFO[filing.category].name}</Box>
+              <Box style={{ fontSize: 34 }}>{filingName(filing)}</Box>
               <Box style={{ fontSize: 20, color: FADED }}>{destinationLabel(filing)}</Box>
             </Box>
             <Box style={{ flexDirection: 'column', alignItems: 'flex-end' }}>

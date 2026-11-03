@@ -10,8 +10,15 @@ import {
   IMPORTANCE_INFO,
   IMPORTANCE_LEVELS,
   OPEN_IMPORTANCE,
+  REPORT_KINDS,
+  REPORT_KIND_INFO,
+  REPORT_WINGS,
+  REPORT_WING_NAMES,
   checkFiling,
+  checkFilingSoFar,
   destinationLabel,
+  destinationOf,
+  filingName,
   importanceFor,
   incidentClock,
   incidentDate,
@@ -25,27 +32,52 @@ import { SAMPLES } from './scribe-samples';
 const valid = SAMPLES[0]!.request.filing;
 
 describe('the filing model', () => {
-  it('files every category where the plan sends it', () => {
-    const where = Object.fromEntries(
-      FILING_CATEGORIES.map((c) => {
-        const to = CATEGORY_INFO[c].destination;
-        return [c, to.kind === 'cabinet' ? to.wing : to.kind];
-      }),
-    );
-    expect(where).toEqual({
+  it('files every category where the plan sends it, a report to its own wing', () => {
+    expect(Object.fromEntries(FILING_CATEGORIES.map((c) => [c, CATEGORY_INFO[c].to]))).toEqual({
+      report: 'cabinet',
       bulletin: 'board',
-      troops: 'military',
-      logistics: 'logistics',
-      bureau: 'intelligence',
-      embassy: 'diplomatic',
-      patrol: 'military',
-      training: 'military',
-      'lesson-magic': 'scholarship',
-      'lesson-language': 'scholarship',
       application: 'clerk',
       'public-request': 'clerk',
     });
     expect(FILING_CATEGORIES.filter((c) => CATEGORY_INFO[c].open)).toEqual(['application', 'public-request']);
+    for (const wing of REPORT_WINGS) expect(destinationOf({ category: 'report', wing })).toEqual({ kind: 'cabinet', wing });
+    expect(destinationOf({ category: 'bulletin', wing: null })).toEqual({ kind: 'board' });
+  });
+
+  it('keeps the team’s reporting structure: five wings, each filing the same eight kinds', () => {
+    expect(REPORT_WINGS.map((w) => REPORT_WING_NAMES[w])).toEqual(['Embassy', 'Intelligence', 'Military', 'Logistics', 'Auxiliary']);
+    expect(REPORT_KINDS.map((k) => REPORT_KIND_INFO[k].name)).toEqual([
+      'Activity Report',
+      'Incident Report',
+      'Investigation Report',
+      'Operation Report',
+      'Intelligence Report',
+      'Inspection Report',
+      'Personnel Report',
+      'Administrative Report',
+    ]);
+    // Discord's menus take a hundred letters of description.
+    for (const k of REPORT_KINDS) expect(REPORT_KIND_INFO[k].brief.length).toBeLessThanOrEqual(100);
+    for (const w of REPORT_WINGS) expect(WING_INFO[w].name).toBeTruthy();
+    expect(filingName({ category: 'report', kind: 'incident' })).toBe('Incident Report');
+    expect(filingName({ category: 'bulletin', kind: null })).toBe('Bulletin Post');
+  });
+
+  it('asks a report for its wing and its kind, and nothing else for them', () => {
+    expect(checkFiling({ ...valid, wing: null })).toMatchObject({ ok: false, field: 'wing' });
+    expect(checkFiling({ ...valid, wing: 'scholarship' })).toMatchObject({ ok: false, field: 'wing' });
+    expect(checkFiling({ ...valid, kind: 'patrol' })).toMatchObject({ ok: false, field: 'kind' });
+    const post = checkFiling({ ...valid, category: 'bulletin', section: 'propaganda' });
+    expect(post).toMatchObject({ ok: true, value: { wing: null, kind: null } });
+    // A step's own fields are never stood in for: an unanswered one is reported.
+    expect(checkFilingSoFar({ category: 'report', wing: 'military' }, ['category', 'wing', 'kind', 'importance', 'section'])).toMatchObject({
+      ok: false,
+      field: 'kind',
+    });
+    expect(checkFilingSoFar({ category: 'report', wing: 'military', kind: 'activity' }, ['category', 'wing', 'kind', 'importance'])).toMatchObject({
+      ok: false,
+      field: 'importance',
+    });
   });
 
   it('maps the five levels onto the Cabinet’s severities, and only the top two summon anyone', () => {
@@ -63,7 +95,7 @@ describe('the filing model', () => {
     expect(importanceFor('application')).toEqual(OPEN_IMPORTANCE);
     const raised = checkFiling({ ...valid, category: 'public-request', importance: 'cataclysm' });
     expect(raised).toMatchObject({ ok: false, field: 'importance' });
-    expect(checkFiling({ ...valid, category: 'troops', importance: 'cataclysm' }).ok).toBe(true);
+    expect(checkFiling({ ...valid, category: 'report', importance: 'cataclysm' }).ok).toBe(true);
   });
 
   it('accepts every sample', () => {
@@ -132,9 +164,11 @@ describe('the filing model', () => {
   });
 
   it('says where a filing goes in the same words on the parchment and in the post', () => {
-    expect(destinationLabel({ category: 'bulletin', section: 'propaganda' })).toBe(`For the Board · ${BOARD_INFO.propaganda.title}`);
-    expect(destinationLabel({ category: 'troops', section: null })).toBe(`To the ${WING_INFO.military.name}`);
-    expect(destinationLabel({ category: 'application', section: null })).toBe('For the Clerk’s Table');
+    expect(destinationLabel({ category: 'bulletin', wing: null, section: 'propaganda' })).toBe(`For the Board · ${BOARD_INFO.propaganda.title}`);
+    expect(destinationLabel({ category: 'report', wing: 'military', section: null })).toBe(`To the ${WING_INFO.military.name}`);
+    expect(destinationLabel({ category: 'report', wing: 'auxiliary', section: null })).toBe('To the Auxiliary Wing');
+    expect(destinationLabel({ category: 'report', wing: 'diplomatic', section: null })).toBe(`To ${WING_INFO.diplomatic.name}`);
+    expect(destinationLabel({ category: 'application', wing: null, section: null })).toBe('For the Clerk’s Table');
   });
 
   it('inks each level as the Cabinet and the Scribe Table do', () => {

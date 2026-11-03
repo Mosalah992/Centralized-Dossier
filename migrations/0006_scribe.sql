@@ -23,11 +23,16 @@ CREATE TABLE IF NOT EXISTS codes (
 CREATE INDEX IF NOT EXISTS codes_live_holder ON codes(discord_user_id) WHERE revoked_at IS NULL;
 
 -- Every filing, from either door. The id is the parchment's entry number. The
--- parchment itself is never stored: it is drawn again from these fields
--- (scribe/), and again with the Clerk's stamp once there is one.
+-- parchment itself is never stored: the reader's browser draws it from these
+-- fields (web/src/scribe/), with the Clerk's stamp once there is one.
 CREATE TABLE IF NOT EXISTS filings (
   id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+  -- report, bulletin, application or public-request (shared/filing.ts).
   category           TEXT NOT NULL,
+  -- A report's wing (diplomatic is the Embassy's) and its kind of report;
+  -- null for anything else.
+  wing               TEXT CHECK (wing IN ('diplomatic', 'intelligence', 'military', 'logistics', 'auxiliary')),
+  kind               TEXT CHECK (kind IN ('activity', 'incident', 'investigation', 'operation', 'intelligence', 'inspection', 'personnel', 'administrative')),
   importance         TEXT NOT NULL CHECK (importance IN ('routine', 'nominal', 'notable', 'strategic', 'cataclysm')),
   section            TEXT,
   rank               TEXT NOT NULL,

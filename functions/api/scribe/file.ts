@@ -6,7 +6,7 @@
 // seal and are limited per address instead. Either way the filing is recorded
 // and entered in the Cabinet before the answer, and posted after it.
 
-import { CATEGORY_INFO, checkFiling, type FiledAnswer } from '../../../shared/filing';
+import { CATEGORY_INFO, checkFiling, destinationOf, type FiledAnswer } from '../../../shared/filing';
 import { OPEN_FILINGS, count, overLimit, readSeal } from '../../lib/codes';
 import { publish, record } from '../../lib/scribe';
 import { NOT_CONSECRATED, addressOf, readBody, refuseForeignWrite, scribeJson, sealOf } from '../../lib/scribe-http';
@@ -45,6 +45,6 @@ export const onRequestPost: PagesFunction<ScribeEnv> = async ({ request, env, wa
   const deps = scribeDeps({ ...env, REPORTS: db }, new URL(request.url).origin);
   const id = await record(deps, filing, 'web', filer);
   waitUntil(publish(deps, id).catch((error) => console.warn('scribe: not posted', id, error)));
-  const answer: FiledAnswer = { id, destination: CATEGORY_INFO[filing.category].destination.kind };
+  const answer: FiledAnswer = { id, destination: destinationOf(filing).kind };
   return scribeJson(answer, 201);
 };

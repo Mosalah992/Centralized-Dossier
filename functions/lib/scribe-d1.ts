@@ -37,7 +37,7 @@ export function d1CodeStore(db: D1Database): CodeStore {
 }
 
 const COLUMNS =
-  'id, category, importance, section, rank, name, superior, title, incident, body, door, filer_discord_id, stamp, stamp_incident, stamped_at, filed_at, discord_channel_id, discord_message_id, report_id';
+  'id, category, wing, kind, importance, section, rank, name, superior, title, incident, body, door, filer_discord_id, stamp, stamp_incident, stamped_at, filed_at, discord_channel_id, discord_message_id, report_id';
 
 const parseTime = (text: unknown): IncidentTime | null => {
   try {
@@ -57,6 +57,8 @@ function toRecord(row: Record<string, unknown>): FilingRecord | null {
     id: Number(row.id),
     filing: {
       category: row.category as Filing['category'],
+      wing: text(row.wing) as Filing['wing'],
+      kind: text(row.kind) as Filing['kind'],
       importance: row.importance as Filing['importance'],
       section: text(row.section) as Filing['section'],
       rank: String(row.rank ?? ''),
@@ -85,11 +87,11 @@ export function d1FilingStore(db: D1Database): FilingStore {
     async insert(filing, door, filerDiscordId, filedAt) {
       const row = await db
         .prepare(
-          `INSERT INTO filings (category, importance, section, rank, name, superior, title, incident, body, door, filer_discord_id, filed_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`,
+          `INSERT INTO filings (category, wing, kind, importance, section, rank, name, superior, title, incident, body, door, filer_discord_id, filed_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`,
         )
         .bind(
-          filing.category, filing.importance, filing.section, filing.rank, filing.name, filing.superior,
+          filing.category, filing.wing, filing.kind, filing.importance, filing.section, filing.rank, filing.name, filing.superior,
           filing.title, JSON.stringify(filing.time), filing.body, door, filerDiscordId, filedAt,
         )
         .first<{ id: number }>();

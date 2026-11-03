@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { CATEGORY_INFO, destinationLabel, type FilingView as Filed } from '../../../shared/filing';
+import { destinationLabel, filingName, type FilingView as Filed } from '../../../shared/filing';
 import { Consulting, Notice } from '../components/Notice';
 import type { Navigate } from '../router';
 import { Parchment } from '../scribe/Parchment';
@@ -59,7 +59,7 @@ export function FilingView({ id, navigate }: { id: number; navigate: Navigate })
         <>
           <header className="filing-view__head">
             <h1>
-              {CATEGORY_INFO[state.parchment.filing.category].name} · Entry No. {state.id}
+              {filingName(state.parchment.filing)} · Entry No. {state.id}
             </h1>
             <p>{where(state)}</p>
           </header>

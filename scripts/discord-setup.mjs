@@ -6,11 +6,15 @@
 //   node scripts/discord-setup.mjs permissions  what the bot may do in each channel config/scribe.json posts to
 //   node scripts/discord-setup.mjs roles        the server's roles and their ids, for config/scribe.json
 //   node scripts/discord-setup.mjs channels     the server's text channels and their ids
+//   node scripts/discord-setup.mjs archive-channels
+//                                               one reports channel per wing in the Archive category,
+//                                               made where missing; prints their ids for config/scribe.json
 //   node scripts/discord-setup.mjs register     add /archives code and /report to the Embassy's server
 //   node scripts/discord-setup.mjs endpoint     MOVE ANCARION'S INTERACTIONS ENDPOINT OFF THE QUARTERMASTER
 //                                               onto https://thalmor-archives.com/api/discord/interactions
 //
-// The first four only read. `register` and `endpoint` change the application:
+// The first four only read. `archive-channels` makes channels (2026-11-03, at
+// the team's word), and only those it finds missing. `register` and `endpoint` change the application:
 // run them at deploy, with the team's leave, once the site that answers is up.
 // `endpoint` is the one that matters: from then on /clockin, /stock and every
 // other quartermaster command reach the quartermaster only through the archive
@@ -84,9 +88,23 @@ const COMMANDS = [
   },
   {
     name: 'report',
-    description: 'Write a report, a log, a board post, an application or a public request',
+    description: 'Write a report, a board post, an application or a public request',
     contexts: [0],
   },
+];
+
+/**
+ * The Archive category, and a channel in it for each wing the Scribe files
+ * reports under (shared/filing.ts REPORT_WINGS), keyed as config/scribe.json
+ * keys them. Each takes the category's own permissions, so it is as private.
+ */
+const ARCHIVE_CATEGORY = '1565081105462202500';
+const WING_CHANNELS = [
+  ['diplomatic', 'embassy-reports', 'Embassy reports, filed through the Scribe'],
+  ['intelligence', 'intelligence-reports', 'Intelligence reports, filed through the Scribe'],
+  ['military', 'military-reports', 'Military reports, filed through the Scribe'],
+  ['logistics', 'logistics-reports', 'Logistics reports, filed through the Scribe'],
+  ['auxiliary', 'auxiliary-reports', 'Auxiliary reports, filed through the Scribe'],
 ];
 
 /**
@@ -154,6 +172,23 @@ if (which === 'app') {
   for (const c of channels.filter((c) => c.type === 0 || c.type === 5 || c.type === 15)) {
     console.log(`${c.id}  ${parents.get(c.parent_id) ?? '—'} / #${c.name}`);
   }
+} else if (which === 'archive-channels') {
+  const channels = await api('GET', `/guilds/${guild}/channels`);
+  const category = channels.find((c) => c.id === ARCHIVE_CATEGORY && c.type === 4);
+  if (!category) throw new Error(`No category ${ARCHIVE_CATEGORY} in the server.`);
+  for (const [wing, name, topic] of WING_CHANNELS) {
+    const kept = channels.find((c) => c.parent_id === ARCHIVE_CATEGORY && c.name === name);
+    const channel =
+      kept ??
+      (await api('POST', `/guilds/${guild}/channels`, {
+        name,
+        type: 0,
+        topic,
+        parent_id: ARCHIVE_CATEGORY,
+        permission_overwrites: category.permission_overwrites ?? [],
+      }));
+    console.log(`${kept ? 'kept   ' : 'created'}  "${wing}": "${channel.id}"   ${category.name} / #${channel.name}`);
+  }
 } else if (which === 'register') {
   const app = await api('GET', '/applications/@me');
   for (const command of COMMANDS) {
@@ -167,6 +202,6 @@ if (which === 'app') {
   const app = await api('PATCH', '/applications/@me', { interactions_endpoint_url: ENDPOINT });
   console.log(`${app.name} now sends its interactions to ${app.interactions_endpoint_url}; the archive hands the quartermaster its own.`);
 } else {
-  console.error('usage: node scripts/discord-setup.mjs app | permissions | roles | channels | register | endpoint [--env <path to .env>]');
+  console.error('usage: node scripts/discord-setup.mjs app | permissions | roles | channels | archive-channels | register | endpoint [--env <path to .env>]');
   process.exit(1);
 }

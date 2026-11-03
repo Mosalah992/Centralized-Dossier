@@ -4,7 +4,7 @@
     "Every id is a Discord snowflake (17 to 20 digits). A value that is not one, such as the REPLACE_WITH_ placeholders below, is ignored, so the Scribe works without a channel or a ping until it is filled in.",
     "roles: role id -> { rank, office, precedence }. A member's code fills in the rank of their highest-precedence mapped role. A member with no mapped role is not issued a code and may file only Applications and Public Requests.",
     "summons: who is pinged. command = Strategic (the Justiciars and the department heads); all = Cataclysm (every member and High Command).",
-    "channels: the archive channel each category posts to. The Clerk's verdict on an Application or Public Request is posted to that category's channel too.",
+    "channels: where the bot posts. A report goes to its wing's channel (diplomatic is the Embassy's; the five are in the Archive category, made by: node scripts/discord-setup.mjs archive-channels), anything else to its own kind's. The Clerk's verdict is posted where the filing was.",
     "List the server's roles and channels with: node scripts/discord-setup.mjs roles"
   ],
   "roles": {
@@ -198,14 +198,11 @@
   },
   "channels": {
     "bulletin": "1511078787004240105",
-    "troops": "1553839057950351540",
-    "logistics": "1556143527426269255",
-    "bureau": "1551053776960356362",
-    "embassy": "1527724048283603054",
-    "patrol": "1537488961495113839",
-    "training": "1537463344624181368",
-    "lesson-magic": "1554926912420315186",
-    "lesson-language": "1564581419349581894",
+    "diplomatic": "1567133600397402112",
+    "intelligence": "1567133602263859372",
+    "military": "1567133604256030842",
+    "logistics": "1567133605975687178",
+    "auxiliary": "1567133609175945256",
     "application": "1498145033176617000",
     "public-request": "1551633292837523557"
   }

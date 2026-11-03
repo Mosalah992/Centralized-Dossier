@@ -3,7 +3,7 @@
 // (functions/api/discord/interactions.ts) keeps the draft between steps and
 // sends what these return.
 //
-//   1  what it is and how much it matters      selects     (scribe:cat|lvl|sec)
+//   1  what it is and how much it matters      selects     (scribe:cat|wing|kind|lvl|sec)
 //   2  who files it, and its title              modal       (scribe:who)
 //   3  when it happened                          Now, or a modal (scribe:now|hour)
 //   4  the body                                  modal       (scribe:body)
@@ -18,8 +18,15 @@ import {
   FILING_CATEGORIES,
   FILING_LIMITS,
   IMPORTANCE_INFO,
+  REPORT_KINDS,
+  REPORT_KIND_INFO,
+  REPORT_WINGS,
+  REPORT_WING_NAMES,
   checkFilingSoFar,
+  filingName,
   importanceFor,
+  isReportKind,
+  isReportWing,
   incidentClock,
   incidentDate,
   incidentNow,
@@ -58,7 +65,11 @@ export function stepWhat(draft: Draft, member: boolean, note?: string): Record<s
   const categories = categoriesFor(member);
   const levels = draft.category ? importanceFor(draft.category) : [];
   const ready = Boolean(
-    draft.category && draft.importance && levels.includes(draft.importance) && (draft.category !== 'bulletin' || draft.section),
+    draft.category &&
+      draft.importance &&
+      levels.includes(draft.importance) &&
+      (draft.category !== 'bulletin' || draft.section) &&
+      (draft.category !== 'report' || (draft.wing && draft.kind)),
   );
   const rows: unknown[] = [
     row({
@@ -68,6 +79,28 @@ export function stepWhat(draft: Draft, member: boolean, note?: string): Record<s
       options: categories.map((c) => ({ label: CATEGORY_INFO[c].name, value: c, default: draft.category === c })),
     }),
   ];
+  // A report names its wing and its kind: five rows in all, Discord's most.
+  if (draft.category === 'report') {
+    rows.push(
+      row({
+        type: 3,
+        custom_id: customId('wing', draft.id),
+        placeholder: 'Which wing is it filed under?',
+        options: REPORT_WINGS.map((w) => ({ label: REPORT_WING_NAMES[w], value: w, default: draft.wing === w })),
+      }),
+      row({
+        type: 3,
+        custom_id: customId('kind', draft.id),
+        placeholder: 'What kind of report?',
+        options: REPORT_KINDS.map((k) => ({
+          label: REPORT_KIND_INFO[k].name,
+          value: k,
+          description: REPORT_KIND_INFO[k].brief,
+          default: draft.kind === k,
+        })),
+      }),
+    );
+  }
   if (draft.category) {
     rows.push(
       row({
@@ -109,6 +142,14 @@ export function choose(draft: Draft, step: string, value: string | undefined, me
     next.category = value as FilingCategory;
     if (next.importance && !importanceFor(next.category).includes(next.importance)) delete next.importance;
     if (next.category !== 'bulletin') next.section = null;
+    if (next.category !== 'report') {
+      next.wing = null;
+      next.kind = null;
+    }
+  } else if (step === 'wing' && next.category === 'report' && isReportWing(value)) {
+    next.wing = value;
+  } else if (step === 'kind' && next.category === 'report' && isReportKind(value)) {
+    next.kind = value;
   } else if (step === 'lvl' && next.category && importanceFor(next.category).includes(value as Filing['importance'])) {
     next.importance = value as Filing['importance'];
   } else if (step === 'sec' && (BULLETIN_SECTIONS as readonly string[]).includes(value ?? '')) {
@@ -236,7 +277,7 @@ export function readHour(values: Record<string, string>, now: IncidentTime): Inc
 // ── Step 4: the body ────────────────────────────────────────────────────────
 
 export function stepBody(draft: Draft): Record<string, unknown> {
-  const name = draft.category ? CATEGORY_INFO[draft.category].name : 'filing';
+  const name = draft.category ? filingName({ category: draft.category, kind: draft.kind ?? null }) : 'filing';
   return {
     content: `**The Scribe** · 4 of 5 · Now write the ${name} itself.`,
     flags: EPHEMERAL,
@@ -246,7 +287,7 @@ export function stepBody(draft: Draft): Record<string, unknown> {
 }
 
 export function modalBody(draft: Draft): Record<string, unknown> {
-  const name = draft.category ? CATEGORY_INFO[draft.category].name : 'Filing';
+  const name = draft.category ? filingName({ category: draft.category, kind: draft.kind ?? null }) : 'Filing';
   return {
     custom_id: customId('body', draft.id),
     title: 'The Scribe · 4 of 5 · The body',
@@ -267,7 +308,7 @@ export function modalBody(draft: Draft): Record<string, unknown> {
 /** The checked filing as the bot will post it. Its parchment is drawn on the site once it is filed. */
 export function stepPreview(draft: Draft, filing: Filing): Record<string, unknown> {
   return {
-    content: `**The Scribe** · 5 of 5 · Your ${CATEGORY_INFO[filing.category].name}, as it will be filed. Its parchment is drawn on the archive’s site once it is.`,
+    content: `**The Scribe** · 5 of 5 · Your ${filingName(filing)}, as it will be filed. Its parchment is drawn on the archive’s site once it is.`,
     embeds: [filingEmbed({ filing, serial: null, stamp: null }, null)],
     flags: EPHEMERAL,
     components: [

@@ -224,17 +224,23 @@ describe('the drawers of the Cabinet', () => {
   });
 });
 
-describe('the six wings', () => {
+describe('the wings', () => {
   it('reads every collector category into a wing', () => {
     expect(REPORT_CATEGORY_NAMES.map(wingOf)).toEqual([
       'logistics', 'diplomatic', 'logistics', 'logistics', 'military', 'intelligence',
     ]);
+    expect(wingOf('Auxiliary')).toBe('auxiliary');
   });
 
   it('gives every wing its own name, wax and emblem', () => {
     const info = WINGS.map((w) => WING_INFO[w]);
-    for (const key of ['name', 'wax', 'emblem'] as const) {
+    for (const key of ['name', 'wax'] as const) {
       expect(new Set(info.map((i) => i[key])).size, key).toBe(WINGS.length);
     }
+    // The Auxiliary (2026-11-03) borrows the Military's blades until the room
+    // draws it an emblem of its own (cabinet/Emblem.tsx); every other wing's is its own.
+    const drawn = WINGS.filter((w) => w !== 'auxiliary');
+    expect(new Set(drawn.map((w) => WING_INFO[w].emblem)).size, 'emblem').toBe(drawn.length);
+    expect(WING_INFO.auxiliary.emblem).toBe(WING_INFO.military.emblem);
   });
 });

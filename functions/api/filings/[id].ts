@@ -10,7 +10,7 @@
 // A sealed filing the reader may not see is answered exactly as a number that
 // was never filed, and privately: a sealed answer is never cached.
 
-import { CATEGORY_INFO, type FilingView } from '../../../shared/filing';
+import { destinationOf, type FilingView } from '../../../shared/filing';
 import { hasReportsWrit } from '../../lib/reports';
 import { parchmentOf } from '../../lib/scribe';
 import { REPORTS_COOKIE_NAME, SOLAR_COOKIE_NAME, readCookie } from '../../lib/session';
@@ -38,7 +38,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
   const found = await d1FilingStore(env.REPORTS).get(id);
   if (!found) return refuse(404, 'No filing is entered under that number.');
 
-  const to = CATEGORY_INFO[found.filing.category].destination.kind;
+  const to = destinationOf(found.filing).kind;
   const shown = to === 'board' && found.stamp?.mark !== 'denied';
   if (!shown) {
     const solar =

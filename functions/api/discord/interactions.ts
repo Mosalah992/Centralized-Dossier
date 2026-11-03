@@ -17,7 +17,7 @@
 
 import { CATEGORY_INFO, checkFiling, incidentNow } from '../../../shared/filing';
 import { codeHash, newCode, normalizeCode } from '../../lib/codes';
-import { editOriginal, grantFor, verifyDiscord } from '../../lib/discord';
+import { channelFor, editOriginal, grantFor, verifyDiscord } from '../../lib/discord';
 import { forwardInteraction, isScribeInteraction } from '../../lib/interactions-relay';
 import {
   EPHEMERAL,
@@ -198,6 +198,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, waitUnti
   // ── The buttons and selects ──
   switch (id.step) {
     case 'cat':
+    case 'wing':
+    case 'kind':
     case 'lvl':
     case 'sec':
       draft = choose(draft, id.step, i.data?.values?.[0], member);
@@ -235,7 +237,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, waitUnti
           entry = await record(deps, filing, 'discord', user.id);
           await drafts.remove(draft.id);
           const posted = await publish(deps, entry);
-          const channel = deps.config.channels[filing.category];
+          const channel = channelFor(filing, deps.config);
           await edit(
             env,
             i.token,

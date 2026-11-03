@@ -24,8 +24,13 @@ import {
   FILING_CATEGORIES,
   FILING_LIMITS,
   IMPORTANCE_INFO,
+  REPORT_KINDS,
+  REPORT_KIND_INFO,
+  REPORT_WINGS,
+  REPORT_WING_NAMES,
   checkFiling,
   checkFilingSoFar,
+  filingName,
   importanceFor,
   incidentClock,
   incidentDate,
@@ -58,6 +63,8 @@ const STEPS: { id: Step; label: string }[] = [
 
 const STEP_OF: Record<FilingField, Step> = {
   category: 'what',
+  wing: 'what',
+  kind: 'what',
   importance: 'what',
   section: 'what',
   rank: 'who',
@@ -68,10 +75,10 @@ const STEP_OF: Record<FilingField, Step> = {
   body: 'body',
 };
 
-function whereTo(category: FilingCategory): string {
-  const to = CATEGORY_INFO[category].destination;
-  if (to.kind === 'board') return 'Nailed to the bulletin board';
-  if (to.kind === 'cabinet') return `Entered in the Cabinet, ${WING_INFO[to.wing].name}`;
+function whereTo(filing: { category: FilingCategory; wing?: Filing['wing'] }): string {
+  const to = CATEGORY_INFO[filing.category].to;
+  if (to === 'board') return 'Nailed to the bulletin board';
+  if (to === 'cabinet') return filing.wing ? `Entered in the Cabinet, ${WING_INFO[filing.wing].name}` : 'Entered in the Cabinet, under its wing';
   return 'Laid on the Clerk Table for High Command';
 }
 
@@ -206,7 +213,12 @@ function Wizard({ initial, notice }: { initial: ScribeHolder | null; notice?: st
       )}
 
       {step === 'what' && (
-        <Form heading={heading} title="What are you filing?" onSubmit={() => advance(['category', 'importance', 'section'], 'who')} back={() => go('seal')}>
+        <Form
+          heading={heading}
+          title="What are you filing?"
+          onSubmit={() => advance(['category', 'wing', 'kind', 'importance', 'section'], 'who')}
+          back={() => go('seal')}
+        >
           <fieldset className="scribe-choices">
             <legend>The kind of filing</legend>
             {FILING_CATEGORIES.filter((c) => member || CATEGORY_INFO[c].open).map((c) => (
@@ -220,17 +232,44 @@ function Wizard({ initial, notice }: { initial: ScribeHolder | null; notice?: st
                     const levels = importanceFor(c);
                     change({
                       category: c,
+                      wing: c === 'report' ? draft.wing ?? null : null,
+                      kind: c === 'report' ? draft.kind ?? null : null,
                       importance: draft.importance && levels.includes(draft.importance) ? draft.importance : undefined,
                       section: c === 'bulletin' ? draft.section ?? null : null,
                     });
                   }}
                 />
                 <span className="scribe-choice__name">{CATEGORY_INFO[c].name}</span>
-                <span className="scribe-choice__note">{whereTo(c)}</span>
+                <span className="scribe-choice__note">{whereTo({ category: c })}</span>
               </label>
             ))}
           </fieldset>
           {!member && <p className="scribe-note">Members of the Embassy may file every kind once they give their code.</p>}
+
+          {/* A report names its wing, then which of the eight kinds it is: every wing files the same eight. */}
+          {draft.category === 'report' && (
+            <>
+              <fieldset className="scribe-choices scribe-choices--inline">
+                <legend>The wing it is filed under</legend>
+                {REPORT_WINGS.map((w) => (
+                  <label key={w} className="scribe-choice">
+                    <input type="radio" name="wing" value={w} checked={draft.wing === w} onChange={() => change({ wing: w })} />
+                    <span className="scribe-choice__name">{REPORT_WING_NAMES[w]}</span>
+                  </label>
+                ))}
+              </fieldset>
+              <fieldset className="scribe-choices">
+                <legend>The kind of report</legend>
+                {REPORT_KINDS.map((k) => (
+                  <label key={k} className="scribe-choice">
+                    <input type="radio" name="kind" value={k} checked={draft.kind === k} onChange={() => change({ kind: k })} />
+                    <span className="scribe-choice__name">{REPORT_KIND_INFO[k].name}</span>
+                    <span className="scribe-choice__note">{REPORT_KIND_INFO[k].purpose}</span>
+                  </label>
+                ))}
+              </fieldset>
+            </>
+          )}
 
           {draft.category && (
             <fieldset className="scribe-choices scribe-choices--levels">
@@ -305,7 +344,7 @@ function Wizard({ initial, notice }: { initial: ScribeHolder | null; notice?: st
       {step === 'when' && <WhenStep heading={heading} draft={draft} onBack={() => go('who')} onTime={(time) => advance(['time'], 'body', { time })} />}
 
       {step === 'body' && (
-        <Form heading={heading} title={`Write the ${draft.category ? CATEGORY_INFO[draft.category].name : 'filing'}`} onSubmit={() => advance(['body'], 'parchment')} back={() => go('when')}>
+        <Form heading={heading} title={`Write the ${draft.category ? filingName({ category: draft.category, kind: draft.kind ?? null }) : 'filing'}`} onSubmit={() => advance(['body'], 'parchment')} back={() => go('when')}>
           <label className="scribe-field">
             <span className="scribe-hidden">The body</span>
             <textarea rows={14} value={draft.body ?? ''} maxLength={FILING_LIMITS.body} onChange={(e) => change({ body: e.target.value })} />
@@ -344,7 +383,7 @@ function Wizard({ initial, notice }: { initial: ScribeHolder | null; notice?: st
           </h3>
           <p>
             {filed.destination === 'board' && `It is nailed to the board, under ${draft.section ? BOARD_INFO[draft.section].title : 'its section'}.`}
-            {filed.destination === 'cabinet' && `It is entered in the Cabinet. ${whereTo(draft.category)}.`}
+            {filed.destination === 'cabinet' && `It is entered in the Cabinet. ${whereTo({ category: draft.category, wing: draft.wing })}.`}
             {filed.destination === 'clerk' && 'It lies on the Clerk Table until High Command stamps it.'}
           </p>
           <p>
