@@ -53,19 +53,22 @@ REPORTS_EPOCH = "1"
 SOLAR_EPOCH = "1"
 
 # The Scribe's Discord application (functions/api/discord/interactions.ts):
-# AN APPLICATION OF ITS OWN. The Embassy's other bot (Archivist Ancarion)
-# already sends its commands to the quartermaster Worker, and an application
-# has one interactions endpoint, so sharing it would take /clockin away from
-# the quartermaster. `node scripts/discord-setup.mjs app` prints both values.
-# They are public (the Developer Portal's General Information page);
-# the placeholders are refused as they stand, so until they are filled in the
-# bot's endpoint answers every request 401 and nothing else changes. Set the
-# application's Interactions Endpoint URL to
-#   https://thalmor-archives.com/api/discord/interactions
-DISCORD_APP_ID = "REPLACE_WITH_DISCORD_APPLICATION_ID"
-DISCORD_PUBLIC_KEY = "REPLACE_WITH_DISCORD_PUBLIC_KEY"
+# ARCHIVIST ANCARION, the Embassy's established bot (the team's choice,
+# 2026-11-03). Both values are public and were read from Discord with
+# `node scripts/discord-setup.mjs app`.
+DISCORD_APP_ID = "1524083694598623553"
+DISCORD_PUBLIC_KEY = "f922e225bd23543b487bd91265f3b846ae032796f522dd045cc6b896ef330455"
 # The Embassy's own server, the same one the collectors read.
 DISCORD_GUILD_ID = "1498139135758831749"
+
+# Ancarion has one interactions endpoint, and before the Scribe it was the
+# quartermaster Worker's (/clockin, /clockout, /stock and the rest). Once
+# `node scripts/discord-setup.mjs endpoint` moves it to the archive, the archive
+# answers the Scribe's interactions and hands every other one, byte for byte,
+# to this address (functions/lib/interactions-relay.ts). Clock-ins then depend
+# on the archive being up: accepted, as the quartermaster's source is not kept
+# here. Unset, every non-Scribe interaction is answered "cannot be reached".
+QUARTERMASTER_INTERACTIONS_URL = "https://thalmor-quartermaster.salaz4r.workers.dev"
 
 # Secret (set with `npx wrangler pages secret put GOOGLE_SERVICE_ACCOUNT_JSON`):
 #   GOOGLE_SERVICE_ACCOUNT_JSON - contents of the service-account key shared
@@ -76,11 +79,11 @@ DISCORD_GUILD_ID = "1498139135758831749"
 #   REPORTS_COOKIE_SECRET       - signing secret for Reports-only writs.
 #   SOLAR_PASSPHRASE            - word spoken at Ancarion's plate to open the Solar.
 #   SOLAR_COOKIE_SECRET         - signing secret for Solar-only writs.
-#   SCRIBE_BOT_TOKEN            - the Scribe application's bot token (not the
-#                                 collector's): re-checks a code holder's roles and
-#                                 posts filings. Invite the bot with
-#                                 `node scripts/discord-setup.mjs invite`, which asks
-#                                 for the permissions it needs.
+#   DISCORD_BOT_TOKEN           - Archivist Ancarion's bot token, under the name the
+#                                 collector Workers use for theirs: re-checks a code
+#                                 holder's roles and posts filings. In the repo's
+#                                 .env the live copy is DISCORD_TOKEN (2026-11-03);
+#                                 DISCORD_BOT_TOKEN there is a revoked one.
 #   CODE_PEPPER                 - any long random string. Codes are stored as
 #                                 HMAC(CODE_PEPPER, code) and the Scribe Table's
 #                                 seal is signed under a key derived from it;

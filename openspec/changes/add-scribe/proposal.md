@@ -12,6 +12,7 @@ applications and public requests at the Clerk Table for High Command to stamp.
 ## Scope and boundaries
 
 - New Worker `scribe/` (`thalmor-scribe`), reached only by service binding.
+- Archivist Ancarion's interactions endpoint moves to the archive, which relays every non-Scribe interaction to the quartermaster Worker unchanged; clock-ins then depend on the archive.
 - New Pages routes: `/api/discord/interactions`, `/api/scribe/{seal,preview,file}`,
   `/api/filings/:id/parchment.png`, `/api/room/{status,board,board/:section}`,
   `/api/solar/clerk` and `/api/solar/clerk/:id`.

@@ -46,6 +46,7 @@ import {
 import type { AttemptStore } from '../functions/lib/reports';
 import { boardSummary, noticeOf } from '../functions/lib/board';
 import { clerkTable } from '../functions/lib/clerk';
+import { QUARTERMASTER_DOWN, RELAY_TIMEOUT_MS, forwardInteraction, isScribeInteraction } from '../functions/lib/interactions-relay';
 import { SAMPLES } from '../scribe/samples';
 
 const ROLE = { justiciar: '111111111111111111', agent: '222222222222222222', command: '333333333333333333', all: '444444444444444444' };
@@ -402,5 +403,90 @@ describe('the Scribe’s routes', () => {
   it('verify Discord’s signature before reading an interaction', () => {
     const text = source('functions/api/discord/interactions.ts');
     expect(text.indexOf('verifyDiscord(')).toBeLessThan(text.indexOf('JSON.parse(body)'));
+  });
+});
+
+describe('the relay to the quartermaster', () => {
+  const body = '{"type":2,"data":{"name":"clockin","options":[{"name":"time","value":"18:00"}]},"token":"t","note":"ünïcödé"}';
+  const raw = new TextEncoder().encode(body).buffer as ArrayBuffer;
+  const signed = { raw, signature: 'ab'.repeat(64), timestamp: '1793650000', contentType: 'application/json' };
+  const QM = 'https://thalmor-quartermaster.example.workers.dev';
+
+  it('keeps the Scribe’s own interactions and hands on every other', () => {
+    expect(isScribeInteraction({ type: 2, data: { name: 'report' } })).toBe(true);
+    expect(isScribeInteraction({ type: 2, data: { name: 'archives' } })).toBe(true);
+    expect(isScribeInteraction({ type: 4, data: { name: 'archives' } })).toBe(true);
+    expect(isScribeInteraction({ type: 3, data: { custom_id: 'scribe:cat:d1a2f3e4-5678' } })).toBe(true);
+    expect(isScribeInteraction({ type: 5, data: { custom_id: 'scribe:who:d1a2f3e4-5678' } })).toBe(true);
+    expect(isScribeInteraction({ type: 2, data: { name: 'clockin' } })).toBe(false);
+    expect(isScribeInteraction({ type: 2, data: { name: 'stock' } })).toBe(false);
+    expect(isScribeInteraction({ type: 3, data: { custom_id: 'stock:page:2' } })).toBe(false);
+    expect(isScribeInteraction({ type: 5, data: { custom_id: 'report-not-ours' } })).toBe(false);
+  });
+
+  it('hands on the body byte for byte, with Discord’s signature headers, and relays the answer as given', async () => {
+    let seen: { url: string; init: RequestInit } | null = null;
+    const fake = (async (url: string, init: RequestInit) => {
+      seen = { url, init };
+      return new Response('{"type":4,"data":{"content":"Clocked in."}}', { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }) as unknown as typeof fetch;
+    const res = await forwardInteraction(QM, 2, signed, fake);
+    expect(seen!.url).toBe(QM);
+    expect(seen!.init.method).toBe('POST');
+    expect(new Uint8Array(seen!.init.body as ArrayBuffer)).toEqual(new Uint8Array(raw));
+    expect(seen!.init.headers).toMatchObject({
+      'X-Signature-Ed25519': signed.signature,
+      'X-Signature-Timestamp': signed.timestamp,
+      'Content-Type': 'application/json',
+    });
+    expect(res.status).toBe(200);
+    expect(res.headers.get('Content-Type')).toBe('application/json');
+    expect(await res.text()).toBe('{"type":4,"data":{"content":"Clocked in."}}');
+  });
+
+  it('relays the quartermaster’s own refusal, and answers plainly when it fails, is missing or is too slow', async () => {
+    const refusing = (async () => new Response('Bad signature', { status: 401, headers: { 'Content-Type': 'text/plain' } })) as unknown as typeof fetch;
+    const refused = await forwardInteraction(QM, 2, signed, refusing);
+    expect([refused.status, await refused.text()]).toEqual([401, 'Bad signature']);
+
+    const plain = async (res: Response) => (await res.json()) as { type: number; data: { content?: string; flags?: number; choices?: unknown[] } };
+    const failing = (async () => new Response('boom', { status: 502 })) as unknown as typeof fetch;
+    expect(await plain(await forwardInteraction(QM, 2, signed, failing))).toEqual({
+      type: 4,
+      data: { content: QUARTERMASTER_DOWN, flags: 64, allowed_mentions: { parse: [] } },
+    });
+    const throwing = (async () => {
+      throw new TypeError('fetch failed');
+    }) as unknown as typeof fetch;
+    expect((await plain(await forwardInteraction(QM, 3, signed, throwing))).data.content).toBe(QUARTERMASTER_DOWN);
+
+    let called = false;
+    const never = (async () => {
+      called = true;
+      return new Response('{}');
+    }) as unknown as typeof fetch;
+    expect((await plain(await forwardInteraction(undefined, 2, signed, never))).data.content).toBe(QUARTERMASTER_DOWN);
+    expect(called).toBe(false);
+
+    const slow = ((_url: string, init: RequestInit) =>
+      new Promise<Response>((_resolve, reject) => init.signal!.addEventListener('abort', () => reject(init.signal!.reason)))) as unknown as typeof fetch;
+    const started = Date.now();
+    expect((await plain(await forwardInteraction(QM, 2, signed, slow, 30))).data.content).toBe(QUARTERMASTER_DOWN);
+    expect(Date.now() - started).toBeLessThan(RELAY_TIMEOUT_MS);
+    // Autocomplete may not answer with a message: it gets no choices instead.
+    expect(await plain(await forwardInteraction(QM, 4, signed, slow, 30))).toEqual({ type: 8, data: { choices: [] } });
+  });
+
+  it('gives Discord’s three seconds a margin', () => {
+    expect(RELAY_TIMEOUT_MS).toBeLessThanOrEqual(2600);
+  });
+
+  it('hands on before the Scribe consults anything of its own, and never its own commands', () => {
+    const text = readFileSync('functions/api/discord/interactions.ts', 'utf8');
+    const forward = text.indexOf('forwardInteraction(');
+    expect(text.indexOf('verifyDiscord(')).toBeLessThan(forward);
+    expect(text.indexOf('if (!isScribeInteraction(i))')).toBeLessThan(forward);
+    expect(forward).toBeLessThan(text.indexOf('if (!env.REPORTS)'));
+    expect(text).toContain('const raw = await request.arrayBuffer();');
   });
 });

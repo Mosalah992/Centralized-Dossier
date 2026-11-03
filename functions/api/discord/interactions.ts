@@ -1,9 +1,14 @@
-// POST /api/discord/interactions: the Embassy bot's interactions endpoint,
+// POST /api/discord/interactions: Archivist Ancarion's interactions endpoint,
 // ported from the Bruma Joint Archives' (signature check, role map, deferred
 // answers) and given the Scribe's two commands:
 //
 //   /archives code   a personal code for the Scribe Table, shown only to the member
 //   /report          the wizard: what, who, when, the body, then the parchment
+//
+// Every other interaction (/clockin, /stock and the quartermaster's others) is
+// handed on unchanged to the quartermaster Worker (lib/interactions-relay.ts),
+// before anything here that the Scribe needs is consulted, so the
+// quartermaster keeps working whether or not the Scribe is configured.
 //
 // Discord signs every request; anything unsigned is refused before it is read.
 // Every answer is ephemeral, so a code or a draft never sits in a channel. A
@@ -13,6 +18,7 @@
 import { CATEGORY_INFO, checkFiling, incidentNow } from '../../../shared/filing';
 import { codeHash, newCode, normalizeCode } from '../../lib/codes';
 import { editOriginal, grantFor, verifyDiscord, type Attachment } from '../../lib/discord';
+import { forwardInteraction, isScribeInteraction } from '../../lib/interactions-relay';
 import {
   EPHEMERAL,
   RESPOND,
@@ -71,20 +77,30 @@ const edit = (env: ScribeEnv, token: string, payload: Record<string, unknown>, f
 
 const LAPSED = 'This draft has lapsed: drafts keep for an hour. Begin again with /report.';
 
-export const onRequestPost: PagesFunction<ScribeEnv> = async ({ request, env, waitUntil }) => {
-  const body = await request.text();
-  const signed =
-    env.DISCORD_PUBLIC_KEY &&
-    (await verifyDiscord(
-      env.DISCORD_PUBLIC_KEY,
-      request.headers.get('X-Signature-Ed25519') ?? '',
-      request.headers.get('X-Signature-Timestamp') ?? '',
-      body,
-    ));
+interface Env extends ScribeEnv {
+  /** Where Ancarion's other interactions go: the quartermaster Worker. */
+  QUARTERMASTER_INTERACTIONS_URL?: string;
+}
+
+export const onRequestPost: PagesFunction<Env> = async ({ request, env, waitUntil }) => {
+  // Read once, as bytes: the quartermaster is handed exactly what Discord signed.
+  const raw = await request.arrayBuffer();
+  const body = new TextDecoder().decode(raw);
+  const signature = request.headers.get('X-Signature-Ed25519') ?? '';
+  const timestamp = request.headers.get('X-Signature-Timestamp') ?? '';
+  const signed = env.DISCORD_PUBLIC_KEY && (await verifyDiscord(env.DISCORD_PUBLIC_KEY, signature, timestamp, body));
   if (!signed) return new Response('Bad request signature.', { status: 401 });
 
   const i = JSON.parse(body) as Interaction;
   if (i.type === PING) return answer(PING);
+  if (!isScribeInteraction(i)) {
+    return forwardInteraction(env.QUARTERMASTER_INTERACTIONS_URL, i.type, {
+      raw,
+      signature,
+      timestamp,
+      contentType: request.headers.get('Content-Type') ?? 'application/json',
+    });
+  }
 
   if (!env.REPORTS) return say('The Scribe is not yet consecrated. Ask an administrator.');
   if (!i.member || i.guild_id !== env.DISCORD_GUILD_ID) return say('Use the Scribe inside the Embassy’s own server, where your roles can be read.');

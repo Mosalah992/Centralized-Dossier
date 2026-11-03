@@ -104,8 +104,8 @@ export interface DiscordEnv {
   DISCORD_APP_ID?: string;
   /** The application's public key (hex), for checking interaction signatures. */
   DISCORD_PUBLIC_KEY?: string;
-  /** The Scribe's own bot token, for re-checking roles and posting filings. Secret; never the collector's. */
-  SCRIBE_BOT_TOKEN?: string;
+  /** Archivist Ancarion's bot token, for re-checking roles and posting filings. Secret. */
+  DISCORD_BOT_TOKEN?: string;
   /** The Embassy's server, whose roles grant codes. */
   DISCORD_GUILD_ID?: string;
 }
@@ -116,10 +116,10 @@ export type MemberCheck = { kind: 'member'; roles: string[] } | { kind: 'gone' }
 
 /** A member's roles as Discord has them now. `unknown` when Discord cannot be asked. */
 export async function memberRoles(env: DiscordEnv, userId: string): Promise<MemberCheck> {
-  if (!env.SCRIBE_BOT_TOKEN || !env.DISCORD_GUILD_ID || !SNOWFLAKE.test(userId)) return { kind: 'unknown' };
+  if (!env.DISCORD_BOT_TOKEN || !env.DISCORD_GUILD_ID || !SNOWFLAKE.test(userId)) return { kind: 'unknown' };
   try {
     const res = await fetch(`${API}/guilds/${env.DISCORD_GUILD_ID}/members/${userId}`, {
-      headers: { Authorization: `Bot ${env.SCRIBE_BOT_TOKEN}` },
+      headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` },
     });
     if (res.status === 404) return { kind: 'gone' };
     if (!res.ok) return { kind: 'unknown' };
@@ -157,12 +157,12 @@ export async function postMessage(
   payload: Record<string, unknown>,
   file?: Attachment,
 ): Promise<string | null> {
-  if (!env.SCRIBE_BOT_TOKEN || !SNOWFLAKE.test(channelId)) return null;
+  if (!env.DISCORD_BOT_TOKEN || !SNOWFLAKE.test(channelId)) return null;
   const { body, headers } = messageBody(payload, file);
   try {
     const res = await fetch(`${API}/channels/${channelId}/messages`, {
       method: 'POST',
-      headers: { ...headers, Authorization: `Bot ${env.SCRIBE_BOT_TOKEN}` },
+      headers: { ...headers, Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` },
       body,
     });
     if (!res.ok) {
