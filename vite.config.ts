@@ -27,6 +27,13 @@ export default defineConfig({
     // Matches pages_build_output_dir in wrangler.toml.
     outDir: 'dist',
     emptyOutDir: true,
+    /*
+     * Fonts are always files. Vite inlines anything under 4 KB as a data: URI,
+     * which caught the small Cyrillic subsets of Pixelify Sans, and the CSP in
+     * public/_headers allows fonts only from 'self', so the browser refused
+     * them. test/bundle.test.ts checks no stylesheet carries a data: font.
+     */
+    assetsInlineLimit: (file) => (/\.(woff2?|ttf|otf)$/.test(file) ? false : undefined),
   },
   test: {
     // Other sessions' worktrees live under .claude/worktrees; their tests read

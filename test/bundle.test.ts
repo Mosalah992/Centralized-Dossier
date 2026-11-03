@@ -235,6 +235,19 @@ describe.skipIf(!entry)('the room', () => {
  * The Solar, behind Ancarion: a page of its own, so neither the entry nor the
  * room carries the war table, and the spread-out map is a chunk again beyond.
  */
+/*
+ * The CSP allows fonts only from 'self' (public/_headers), so a font inlined
+ * as a data: URI is refused by the browser. vite.config.ts keeps fonts files.
+ */
+describe.skipIf(!entry)('the fonts', () => {
+  it('ship as files, never inlined into a stylesheet', () => {
+    const carriers = readdirSync(DIST)
+      .filter((f) => f.endsWith('.css'))
+      .filter((f) => readFileSync(new URL(f, DIST), 'utf8').includes('data:font'));
+    expect(carriers).toEqual([]);
+  });
+});
+
 describe.skipIf(!entry)('the Solar', () => {
   it('is absent from the entry and the room', () => {
     const room = readdirSync(DIST)
