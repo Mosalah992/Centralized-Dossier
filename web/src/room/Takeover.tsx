@@ -80,17 +80,44 @@ export function Takeover({ label, closeTo, returnFocus, className = '', children
     };
   }, [returnFocus]);
 
+  // Where this surface opened (a book's own address, inside the shelf's), and
+  // whether it is still on screen: closing steps back until the address has
+  // left it, so a book closes to its shelf and a board section to the room.
+  const openedAt = useRef(window.location.pathname.replace(/\/+$/, ''));
+  const shown = useRef(true);
+  useEffect(
+    () => () => {
+      shown.current = false;
+    },
+    [],
+  );
+  const stillHere = () => {
+    const path = window.location.pathname.replace(/\/+$/, '');
+    return shown.current && (path === openedAt.current || path.startsWith(`${openedAt.current}/`));
+  };
+
   const close = useCallback(() => {
     if (closing.current) return;
     closing.current = true;
     // Opened from the room: step back through history, so Back and the seal
-    // agree. A deep link has no room entry behind it, so it is replaced.
+    // agree, and as far as the room itself. A surface's own pages (a board
+    // section) are history entries of their own, and stepping back only one
+    // of them left the surface open, frozen mid-shrink and deaf to its seal.
+    // A deep link has no room entry behind it, so it is replaced.
     let left = false;
+    const leave = (steps: number) => {
+      if (steps > 0 && !stillHere()) return;
+      if (openedFromRoom() && steps < 8) {
+        window.addEventListener('popstate', () => window.setTimeout(() => leave(steps + 1), 0), { once: true });
+        window.history.back();
+      } else {
+        navigate(closeTo, { replace: true });
+      }
+    };
     const done = () => {
       if (left) return;
       left = true;
-      if (openedFromRoom()) window.history.back();
-      else navigate(closeTo, { replace: true });
+      leave(0);
     };
     const el = ref.current;
     if (!el || reducedMotion()) return done();
