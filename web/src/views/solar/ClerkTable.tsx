@@ -159,7 +159,7 @@ function Reading({ filing, onStamp, onClose }: { filing: ClerkFiling; onStamp: (
         {filing.stamp ? (
           <p className="clerk-reading__verdict">
             <Stamp mark={filing.stamp === 'denied' ? 'denied' : 'aldmeri'} size={40} />
-            {filing.stamp === 'denied' ? 'Denied' : 'Approved'} by High Command. The bot posts the verdict to Discord.
+            {filing.stamp === 'denied' ? 'Denied' : 'Approved'} by High Command, Filed in the Archives.
           </p>
         ) : (
           <>
