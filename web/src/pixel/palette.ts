@@ -5,7 +5,9 @@
 // pixel artist would pick them rather than as a darkened copy of one colour.
 //
 // Keyed by single characters so sprites can be drawn as rows of letters.
-// Shared word for word with the icon set (web/src/pixel/icons/palette.ts).
+// The icon set letters the same colours in an alphabet of its own
+// (web/src/pixel/icons/palette.ts); test/pixel-icons.test.ts holds the two to
+// this one list.
 //
 // Read by the tests and, through Node's type stripping, by the build scripts:
 // keep this file to plain, erasable syntax.

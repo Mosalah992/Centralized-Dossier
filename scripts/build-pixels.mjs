@@ -9,8 +9,13 @@
 // --preview also writes the whole room composed at 1x, for looking at.
 
 import { mkdirSync, writeFileSync } from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
+import sharp from 'sharp';
 
 import { MASTER, PANELS, PLACES } from '../web/src/pixel/layout.ts';
+import { CURSOR_HOTSPOT, drawCursor } from './pixel/cursor.mjs';
 import { drawObjects } from './pixel/objects.mjs';
 import { Raster } from './pixel/raster.mjs';
 import { drawScene } from './pixel/scene.mjs';
@@ -33,6 +38,23 @@ for (const [name, raster, extra] of objects) await emit(name, raster, extra);
 
 writeFileSync(`${OUT}/manifest.json`, `${JSON.stringify(manifest, null, 2)}\n`);
 console.log(`${Object.keys(manifest).length} sprites`);
+
+// The cursor, at two CSS pixels to the art pixel (40 by 40, the size the
+// First Emissary chose), and at whole multiples of that for denser screens,
+// so every art pixel stays square at 1x, 1.5x, 2x and 3x (base.css).
+const CURSOR_OUT = 'web/src/assets/cursor';
+const CURSOR_SCALES = { '': 2, '@1.5x': 3, '@2x': 4, '@3x': 6 };
+mkdirSync(CURSOR_OUT, { recursive: true });
+const cursorFile = path.join(os.tmpdir(), 'thalmor-cursor.png');
+const cursor = drawCursor();
+await cursor.save(cursorFile);
+for (const [suffix, k] of Object.entries(CURSOR_SCALES)) {
+  await sharp(cursorFile)
+    .resize({ width: cursor.width * k, kernel: 'nearest' })
+    .png({ compressionLevel: 9, palette: true })
+    .toFile(`${CURSOR_OUT}/gauntlet${suffix}.png`);
+}
+console.log(`cursor ${cursor.width}x${cursor.height}, hotspot ${CURSOR_HOTSPOT.x * 2 + 1} ${CURSOR_HOTSPOT.y * 2 + 1} at 1x`);
 
 const at = process.argv.indexOf('--preview');
 if (at > 0) {

@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { EAGLE } from '../web/src/pixel/icons/emblem';
 import { ICON_NAMES, ICON_SIZE, SHEET_COLUMNS } from '../web/src/pixel/icons/manifest';
 import { CLEAR, PALETTE, PIXEL_KEY } from '../web/src/pixel/icons/palette';
+import { PALETTE as ROOM_PALETTE } from '../web/src/pixel/palette';
 import type { PixelSprite } from '../web/src/pixel/icons/sprite';
 
 const SPRITES = import.meta.glob<PixelSprite>('../web/src/pixel/icons/sprites/*.ts', {
@@ -40,6 +41,11 @@ describe('the pixel palette', () => {
       crimson: ['#4a0d10', '#7c1f24', '#b83a3a'],
       flame: ['#ffb347', '#ffe08a'],
     });
+  });
+
+  // The room's palette is the list; the icons only letter it differently.
+  it('is the room palette, colour for colour', () => {
+    expect(Object.values(PALETTE).flat().sort()).toEqual(ROOM_PALETTE.map((s) => s.hex).sort());
   });
 
   it('gives every colour one letter, and no letter a colour outside it', () => {

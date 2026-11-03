@@ -71,6 +71,32 @@ describe('the sprites, as built', () => {
   });
 });
 
+describe('the cursor', () => {
+  const allowed = new Set(PALETTE.map((s) => s.hex));
+  it.each([
+    ['gauntlet.png', 2],
+    ['gauntlet@1.5x.png', 3],
+    ['gauntlet@2x.png', 4],
+    ['gauntlet@3x.png', 6],
+  ])('%s is the 20-pixel gauntlet at %i screen pixels to the art pixel, in palette colours', async (file, k) => {
+    const { data, info } = await sharp(`web/src/assets/cursor/${file}`).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+    expect([info.width, info.height]).toEqual([20 * k, 20 * k]);
+    for (let i = 0; i < data.length; i += 4) {
+      if (data[i + 3] === 0) continue;
+      expect(data[i + 3]).toBe(255);
+      expect(allowed.has(hexOf(data[i]!, data[i + 1]!, data[i + 2]!))).toBe(true);
+    }
+  });
+
+  it('clicks where the fingertip is', async () => {
+    const css = readFileSync('web/src/styles/base.css', 'utf8');
+    const spots = [...css.matchAll(/gauntlet[^;]*\) (\d+) (\d+), auto;/g)].map((m) => [Number(m[1]), Number(m[2])]);
+    expect(spots.length).toBeGreaterThan(0);
+    const { data, info } = await sharp('web/src/assets/cursor/gauntlet.png').ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+    for (const [x, y] of spots) expect(data[(y! * info.width + x!) * 4 + 3], `${x},${y}`).toBe(255);
+  });
+});
+
 describe('the room on the grid', () => {
   it('keeps every object inside the core, which every window shows', () => {
     for (const [name, p] of Object.entries({ ...PLACES, ...PANELS })) {

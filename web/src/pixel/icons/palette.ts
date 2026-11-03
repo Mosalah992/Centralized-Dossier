@@ -1,7 +1,8 @@
-// The one palette every piece of pixel art in the Archives is drawn from:
-// the icons here and the room the front page is being rebuilt as. The room
-// keeps the same list, so a value changed here must change there too, and
-// test/pixel-icons.test.ts pins every value so that cannot happen quietly.
+// The icons' letters for the one palette every piece of pixel art in the
+// Archives is drawn from (web/src/pixel/palette.ts, the room's). The colours
+// are the room's own; only the alphabet differs, since the icons were drawn
+// in this one. test/pixel-icons.test.ts holds the two to one list, so a value
+// changed in one must change in the other.
 //
 // Each family runs dark to light. Nothing is ever blended between them:
 // a pixel is one of these colours or it is empty.

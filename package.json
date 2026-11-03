@@ -23,7 +23,9 @@
     "volumes:publish": "npm run volumes:emit && npm run typecheck && npm run build",
     "editor": "vite --open /editor",
     "volumes:check": "node scripts/check-volumes.mjs",
-    "assets:portrait": "node scripts/prepare-portrait-video.mjs"
+    "assets:portrait": "node scripts/prepare-portrait-video.mjs",
+    "assets:pixels": "node scripts/build-pixels.mjs",
+    "assets:icons": "node scripts/build-pixel-icons.mjs"
   },
   "dependencies": {
     "@fluentui/react-components": "^9.74.6",
