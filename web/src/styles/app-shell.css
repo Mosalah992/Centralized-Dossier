@@ -111,6 +111,20 @@
   }
 }
 
+/* Phones: the support seal and the sound plaque stay fixed at the foot of the
+   screen, so they keep small (the seal shows only its cup; its link keeps its
+   full name for screen readers) and every page ends with room to scroll its
+   last lines clear of them. */
+@media (max-width: 760px) {
+  .support-seal {
+    width: 2.6rem;
+    justify-content: center;
+    padding: 0;
+  }
+  .support-seal > span:last-child { display: none; }
+  .archive-app { padding-bottom: calc(2.6rem + 2 * clamp(0.75rem, 2vw, 1.4rem)); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .support-seal {
     transition-duration: 0.01ms !important;

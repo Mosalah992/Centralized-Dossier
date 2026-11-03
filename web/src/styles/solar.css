@@ -317,7 +317,27 @@
 .solar[data-layout='stack'] .solar-notes { grid-area: notes; width: auto; height: auto; max-height: 60vh; margin: 0 1rem; justify-self: stretch; }
 .solar[data-layout='stack'] .solar-furniture--clerk { grid-area: clerk; margin-bottom: calc(10 * var(--px)); }
 .solar[data-layout='stack'] .solar-furniture--desk { grid-area: desk; margin-bottom: calc(10 * var(--px)); }
-.solar[data-layout='stack'] .solar-card { position: fixed; left: 1rem; right: 1rem; bottom: 1rem; width: auto; }
+/* Each card opens in the page, under its own furniture and its plaque, and
+   pushes what follows down: pinned to the screen's foot it covered the next
+   piece, and the Support and sound plaques covered it. */
+.solar[data-layout='stack'] .solar-furniture.px-at {
+  width: 100%;
+  height: auto;
+  display: grid;
+  justify-items: center;
+  padding: 0 1rem;
+}
+.solar[data-layout='stack'] .solar-furniture__object {
+  width: calc(var(--w) * var(--px));
+  height: calc(var(--h) * var(--px));
+}
+.solar[data-layout='stack'] .solar-card {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  max-width: 32rem;
+  margin-top: calc(var(--px) + max(11px, calc(5.5 * var(--px))) * 1.2 + 10 * var(--px));
+}
 
 /* ---------- Buttons on parchment ---------- */
 
