@@ -25,6 +25,11 @@ export default defineConfig({
     // Matches pages_build_output_dir in wrangler.toml.
     outDir: 'dist',
     emptyOutDir: true,
+    // A font is never inlined as a data: URL, however small: the content
+    // policy's font-src is 'self' only, so the browser would refuse it (the
+    // Scribe's smallest subsets are under Vite's 4 kB limit). Anything else
+    // keeps Vite's own rule.
+    assetsInlineLimit: (file) => (/\.(woff2?|ttf|otf)$/i.test(file) ? false : undefined),
   },
   server: {
     port: 5173,

@@ -73,6 +73,13 @@ describe('browser security policy', () => {
       expect(secured.headers.get(name)).toBe(value);
     }
   });
+
+  it('never builds a font into a data: URL, which font-src would refuse', () => {
+    expect(read('public/_headers')).toMatch(/font-src 'self';/);
+    const config = read('vite.config.ts');
+    expect(config).toContain('assetsInlineLimit:');
+    expect(config).toMatch(/woff2\?\|ttf\|otf\)\$\/i\.test\(file\) \? false/);
+  });
 });
 
 describe('initial-load ownership', () => {
