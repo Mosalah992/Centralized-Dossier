@@ -14,6 +14,8 @@
 //   node scripts/discord-setup.mjs register     add /archives code and /report to the Embassy's server
 //   node scripts/discord-setup.mjs endpoint     MOVE ANCARION'S INTERACTIONS ENDPOINT OFF THE QUARTERMASTER
 //                                               onto https://thalmor-archives.com/api/discord/interactions
+//                                  --back       the way back: hand it to the quartermaster again
+//                                               (the Scribe's commands then go unanswered)
 //
 // The first four only read. `archive-channels` makes channels and
 // `archive-readers` opens them to their readers (2026-11-03, at the team's
@@ -46,6 +48,8 @@ const fileEnv = existsSync(envFile)
   : {};
 const guild = process.env.DISCORD_GUILD_ID ?? '1498139135758831749';
 const ENDPOINT = 'https://thalmor-archives.com/api/discord/interactions';
+/** Where Ancarion's interactions went before the Scribe (wrangler.toml QUARTERMASTER_INTERACTIONS_URL). */
+const QUARTERMASTER = 'https://thalmor-quartermaster.salaz4r.workers.dev';
 
 const candidates = ['DISCORD_BOT_TOKEN', 'DISCORD_TOKEN']
   .flatMap((key) => [
@@ -252,8 +256,14 @@ if (which === 'app') {
     console.log(`Registered /${done.name} in ${guild}.`);
   }
 } else if (which === 'endpoint') {
-  const app = await api('PATCH', '/applications/@me', { interactions_endpoint_url: ENDPOINT });
-  console.log(`${app.name} now sends its interactions to ${app.interactions_endpoint_url}; the archive hands the quartermaster its own.`);
+  // Discord sends the new address a signed PING and refuses it unless it answers.
+  const back = args.includes('--back');
+  const app = await api('PATCH', '/applications/@me', { interactions_endpoint_url: back ? QUARTERMASTER : ENDPOINT });
+  console.log(
+    back
+      ? `${app.name} sends its interactions straight to the quartermaster again (${app.interactions_endpoint_url}).`
+      : `${app.name} now sends its interactions to ${app.interactions_endpoint_url}; the archive hands the quartermaster its own.`,
+  );
 } else {
   console.error('usage: node scripts/discord-setup.mjs app | permissions | roles | channels | archive-channels | archive-readers | register | endpoint [--env <path to .env>]');
   process.exit(1);
