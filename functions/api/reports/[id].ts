@@ -3,6 +3,7 @@
 
 import { REPORTS_COOKIE_NAME, readCookie } from '../../lib/session';
 import { refuseWithoutReportsWrit, reportsJson, type ReportsEnv } from '../../lib/reports';
+import { isReportId } from '../../../shared/reports';
 import { REPORT_COLUMNS, toReport } from './index';
 
 interface Env extends ReportsEnv {
@@ -14,9 +15,10 @@ export const onRequestGet: PagesFunction<Env, 'id'> = async ({ request, env, par
   if (refusal) return refusal;
 
   const id = String(params.id ?? '');
-  // Filing ids are Discord message ids. Anything else cannot exist, and is
-  // refused before it reaches the database.
-  if (!/^\d{1,24}$/.test(id)) return reportsJson({ error: 'No such filing.' }, 404);
+  // Filing ids are Discord message ids or the Scribe's `scribe-<n>`. Anything
+  // else cannot exist, and is refused before it reaches the database. The writ
+  // check above still runs first.
+  if (!isReportId(id)) return reportsJson({ error: 'No such filing.' }, 404);
 
   try {
     const row = await env.REPORTS?.prepare(`SELECT ${REPORT_COLUMNS} FROM reports WHERE id = ?`)

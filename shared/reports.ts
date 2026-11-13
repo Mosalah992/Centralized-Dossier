@@ -12,6 +12,16 @@ export const REPORT_CATEGORY_NAMES = [
   'Logistics', 'Administration', 'Mining', 'Supply', 'Military', 'Informants',
 ] as const;
 
+/**
+ * A filing's id in the Reports register. Two producers write the same table:
+ * the collector stores Discord message ids (digits), and the Scribe stores
+ * `scribe-<filing number>` (functions/lib/scribe.ts cabinetEntry). The browser
+ * route and GET /api/reports/:id must accept exactly the same two forms, or a
+ * report that exists in the register opens as "No such volume".
+ */
+export const REPORT_ID = /^(?:\d{1,24}|scribe-[1-9]\d{0,7})$/;
+export const isReportId = (value: string): boolean => REPORT_ID.test(value);
+
 export interface DiscordReportMessage {
   id: string;
   content?: string;
