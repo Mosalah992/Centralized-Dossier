@@ -4,6 +4,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { VolumeSlug } from '../../shared/types';
+import { isReportId } from '../../shared/reports';
 import { ALL_SLUGS } from '../../shared/volumes';
 import { transition, type Direction } from './transitions';
 
@@ -37,8 +38,9 @@ export function parse(pathname: string): Route {
   // The Cabinet keeps the reports: its address is still /reports, and one
   // report's is still /reports/:id, which opens that letter unfolded.
   if (path === '/reports') return { name: 'room', open: 'cabinet' };
-  const filing = /^\/reports\/(\d{1,24})$/.exec(path);
-  if (filing) return { name: 'room', open: 'cabinet', sub: filing[1]! };
+  const filing = /^\/reports\/([^/]{1,40})$/.exec(path);
+  if (filing && isReportId(filing[1]!)) return { name: 'room', open: 'cabinet', sub: filing[1]! };
+  if (filing) return { name: 'missing' };
   // The Code is asked for as "/Penalcode" as often as not; any casing opens it.
   if (path.toLowerCase() === '/penalcode') return { name: 'penalcode' };
 

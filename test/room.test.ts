@@ -63,6 +63,11 @@ describe('the room routes', () => {
     expect(parse('/reports')).toEqual({ name: 'room', open: 'cabinet' });
     expect(parse('/reports/123')).toEqual({ name: 'room', open: 'cabinet', sub: '123' });
     expect(parse('/reports/abc')).toEqual({ name: 'missing' });
+    // The Scribe files into the same register as `scribe-<n>`.
+    expect(parse('/reports/scribe-41')).toEqual({ name: 'room', open: 'cabinet', sub: 'scribe-41' });
+    expect(parse('/reports/scribe-0')).toEqual({ name: 'missing' });
+    expect(parse('/reports/scribe-')).toEqual({ name: 'missing' });
+    expect(parse('/reports/scribe-41x')).toEqual({ name: 'missing' });
     expect(parse('/archives/roster')).toEqual({ name: 'volume', slug: 'roster' });
     expect(parse('/penalcode')).toEqual({ name: 'penalcode' });
   });
